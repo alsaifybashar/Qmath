@@ -8,7 +8,7 @@ interface Props {
 
 const Layout = ({ children }: Props) => {
     return (
-        <div>
+        <div id="layout-root">
             <NavMenu />
             <Container>
                 {children}
