@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using web_app.Model;
 
 namespace web_app.Controllers;
 

@@ -1,4 +1,4 @@
-﻿namespace web_app;
+﻿namespace web_app.Model;
 
 public class WeatherForecast
 {
@@ -13,17 +13,17 @@ public class WeatherForecast
 
 public class Questions
 {
-    public string QuestionText{get; set;}
+    public string QuestionText { get; set; }
 
 }
 
-public class Answers 
+public class Answers
 {
-    public string AnswersText{get; set;}
+    public string AnswersText { get; set; }
 }
 
 public class SubQuestions
 {
-    public string[] subQuestionText{get;set;}
+    public string[] subQuestionText { get; set; }
 }
 
