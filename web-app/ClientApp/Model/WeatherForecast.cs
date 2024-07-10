@@ -11,19 +11,3 @@ public class WeatherForecast
     public string? Summary { get; set; }
 }
 
-public class Questions
-{
-    public string QuestionText{get; set;}
-
-}
-
-public class Answers 
-{
-    public string AnswersText{get; set;}
-}
-
-public class SubQuestions
-{
-    public string[] subQuestionText{get;set;}
-}
-

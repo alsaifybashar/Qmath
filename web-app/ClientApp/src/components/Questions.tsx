@@ -1,5 +1,6 @@
 import { useEffect, useState, ChangeEvent} from 'react';
 import {MathInput} from "./MathInput";
+import {MathStatic} from "./MathStatic";
 // import {  EditableMathField, MathField } from 'react-mathquill'
 // import 'react-mathquill/mathquill.css';
 
@@ -19,7 +20,7 @@ interface Question {
     // success: boolean;
 }
 
-const FetchData = () => {
+const Questions = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [questions, setQuestions] = useState<Question[]>([]);
     // const [latex, setLatex] = useState<string | undefined>();
@@ -105,7 +106,11 @@ const FetchData = () => {
                                         <div key={mainQuestionKey+mainIndex}>
                                             
                                                 <div className="mainQuestion">
-                                                    <label>Question {mainIndex+1}. {question.questionText}</label>
+                                                    {/* <label>Question {mainIndex+1}. {question.questionText}</label> */}
+                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                        <p style={{ margin: 0, whiteSpace: 'pre-wrap'  }}>Question {mainIndex + 1}.  </p>
+                                                        <MathStatic latex={`${question.questionText}`} />
+                                                    </div>
                                                     {/* <input 
                                                         type="text" 
                                                         name={`${mainIndex}`}
@@ -173,7 +178,7 @@ const FetchData = () => {
                             width: 100%;
                         }
                         .subQuestion {
-                            color: red;
+                            
                             display: flex;
                             flex-direction: column;
                             width: 100%;
@@ -187,4 +192,4 @@ const FetchData = () => {
 }
 
 
-export { FetchData };
+export { Questions };
