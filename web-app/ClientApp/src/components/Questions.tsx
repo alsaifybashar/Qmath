@@ -1,6 +1,11 @@
-import { useEffect, useState, ChangeEvent} from 'react';
+import { useEffect, useState, ChangeEvent, useRef} from 'react';
 import {MathInput} from "./MathInput";
 import {MathStatic} from "./MathStatic";
+import {Overlay, OverlayTrigger, Button, Tooltip} from 'react-bootstrap';
+import { MathKeyBoard } from "./MathKeyboard";
+import { MathField } from 'react-mathquill';
+
+
 // import {  EditableMathField, MathField } from 'react-mathquill'
 // import 'react-mathquill/mathquill.css';
 
@@ -23,7 +28,12 @@ interface Question {
 const Questions = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [questions, setQuestions] = useState<Question[]>([]);
+    const [visible, setVisible] = useState<boolean>(false);
     // const [latex, setLatex] = useState<string | undefined>();
+    const [activeInputRef, setActiveInputRef] = useState<MathField | null>(null);
+
+    // const [show, setShow] = useState(false);
+    // const target = useRef(null);
 
     const mainQuestionKey: string = "main";
     const subQuestionKey: string = mainQuestionKey+"sub";
@@ -32,13 +42,17 @@ const Questions = () => {
 
     const handleChange = (mainIndex: number, manualValue: string, subIndex?: number) => {
         const value = manualValue; 
+        console.log(manualValue);
         const key = subIndex!==undefined ? `${mainIndex}${subIndex}`:`${mainIndex}`;
         setFormValues(prev => ({
           ...prev,
           [key]: value,
         }));
       };
-    
+
+      const handleFocus = (mathField: MathField) => {
+        setActiveInputRef(mathField);
+      };
 
     // Takes the place of componentDidMount()
     useEffect(() => {
@@ -94,13 +108,15 @@ const Questions = () => {
     }
 
     const renderQuestions = (questions: Question[]) => {
+
+        const placement = "right";
+        
         return (
             // <Card>
             //     <Card.Body>
             <div className="outer">
                 <div className="Card">
                     <form onSubmit={event => submitMainQuestions(event)}>
-
                                 { questions.map((question, mainIndex) => 
                                     
                                         <div key={mainQuestionKey+mainIndex}>
@@ -118,7 +134,12 @@ const Questions = () => {
                                                         value={formValues[mainIndex] || ''}
                                                         onChange={(e) => handleChange(e, mainIndex)}
                                                     ></input> */}
-                                                    <MathInput mainIndex={mainIndex} handleChange={handleChange}/>
+                                                    <MathInput 
+                                                        handleChange={handleChange} 
+                                                        mainIndex={mainIndex} 
+                                                        onFocus={handleFocus}
+                                                        setActiveInputRef={setActiveInputRef}
+                                                    />
                                                 </div>
                                                 { question.subQuestionText && question.subQuestionText.map((SubQuestionText, subIndex) => 
                                                         <div className="subQuestion">
@@ -130,7 +151,13 @@ const Questions = () => {
                                                                 value={formValues[`${mainIndex}${subIndex}`] || ''}
                                                                 onChange={(e) => handleChange(e, mainIndex, subIndex)}
                                                             ></input> */}
-                                                            <MathInput mainIndex={mainIndex} handleChange={handleChange} subIndex={subIndex}/>
+                                                            <MathInput 
+                                                                handleChange={handleChange} 
+                                                                mainIndex={mainIndex} 
+                                                                subIndex={subIndex} 
+                                                                onFocus={handleFocus}
+                                                                setActiveInputRef={setActiveInputRef}
+                                                            />
                                                         </div>
                                                     ) 
                                                 }
@@ -141,6 +168,8 @@ const Questions = () => {
                                 <button type="submit">Rätta</button>
                             </form>
                     </div>
+                    <MathKeyBoard visible={visible} onHide={() => {setVisible(false)}} setVisible={setVisible} activeInputRef={activeInputRef}
+                    />
                 </div>
             //     </Card.Body>
             // </Card>

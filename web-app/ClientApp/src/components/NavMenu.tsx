@@ -7,6 +7,8 @@ const NavMenu = () => {
     const [collapsed, setCollapsed] = useState<boolean>(true);
     const toggleNavbar = () => setCollapsed(!collapsed);
 
+    const temp_course_code = "tdde41"
+
     return (
         <header>
             <Navbar className="navbar-expand-sm navbar-toggleable-sm ng-white border-bottom box-shadow mb-3" light>
@@ -20,6 +22,9 @@ const NavMenu = () => {
                             </NavItem>
                             <NavItem>
                                 <NavLink tag={Link} className="text-dark" to="/questions">Questions</NavLink>
+                            </NavItem>
+                            <NavItem>
+                                <NavLink tag={Link} className="text-dark" to={`/documentation/${temp_course_code}`}>Documentation</NavLink>
                             </NavItem>
                         </ul>
                     </Collapse>

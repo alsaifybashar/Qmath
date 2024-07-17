@@ -1,5 +1,6 @@
 import { Questions } from "./components/Questions";
 import { Home } from "./components/Home";
+import { Documentation } from "./components/Documentation";
 
 const AppRoutes = [
   {
@@ -9,6 +10,10 @@ const AppRoutes = [
   {
     path: '/questions',
     element: <Questions/>
+  },
+  {
+    path: '/documentation/:coursecode?',
+    element: <Documentation/>
   }
 ];
 
