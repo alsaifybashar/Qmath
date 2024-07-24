@@ -1,36 +1,21 @@
 import { useEffect, useState, ChangeEvent, useRef} from 'react';
-import {MathInput} from "./MathInput";
-import {MathStatic} from "./MathStatic";
+import {MathInput} from "../common/MathInput";
+import {MathStatic} from "../common/MathStatic";
 import {Overlay, OverlayTrigger, Button, Tooltip} from 'react-bootstrap';
-import { MathKeyBoard } from "./MathKeyboard";
+import { MathKeyBoard } from "../common/MathKeyboard";
 import { MathField } from 'react-mathquill';
-
-
-// import {  EditableMathField, MathField } from 'react-mathquill'
-// import 'react-mathquill/mathquill.css';
-
+import { useDatabase } from '../../contexts/DatabaseContext';
+import {QuestionWithSub} from "../../interfaces"
 
 // import { Card } from 'react-bootstrap';
 
-// interface Forecast {
-//     date: string;
-//     temperatureC: number;
-//     temperatureF: number;
-//     summary?: string;
-// };
-
-interface Question {
-    questionText: string;
-    subQuestionText?: string[]; // Optional sub questions
-    // success: boolean;
-}
-
 const Questions = () => {
     const [loading, setLoading] = useState<boolean>(true);
-    const [questions, setQuestions] = useState<Question[]>([]);
+    const [questions, setQuestions] = useState<QuestionWithSub[]>([]);
     const [visible, setVisible] = useState<boolean>(false);
     // const [latex, setLatex] = useState<string | undefined>();
     const [activeInputRef, setActiveInputRef] = useState<MathField | null>(null);
+    const {GETQuestions} = useDatabase();
 
     // const [show, setShow] = useState(false);
     // const target = useRef(null);
@@ -50,18 +35,15 @@ const Questions = () => {
         }));
       };
 
-      const handleFocus = (mathField: MathField) => {
-        setActiveInputRef(mathField);
-      };
-
     // Takes the place of componentDidMount()
     useEffect(() => {
         const populateQuestionData = async () => {
-            const response = await fetch('questions');
-            const data = await response.json();
-            console.log(data);
-            setQuestions(data);
-            setLoading(false);
+            const data = await GETQuestions("questions");
+            if(data){
+                console.log(data);
+                setQuestions(data);
+                setLoading(false);
+            }
         }
 
         populateQuestionData()
@@ -107,7 +89,7 @@ const Questions = () => {
         }
     }
 
-    const renderQuestions = (questions: Question[]) => {
+    const renderQuestions = (questions: QuestionWithSub[]) => {
 
         const placement = "right";
         
@@ -127,35 +109,20 @@ const Questions = () => {
                                                         <p style={{ margin: 0, whiteSpace: 'pre-wrap'  }}>Question {mainIndex + 1}.  </p>
                                                         <MathStatic latex={`${question.questionText}`} />
                                                     </div>
-                                                    {/* <input 
-                                                        type="text" 
-                                                        name={`${mainIndex}`}
-                                                        id={`${mainIndex}`}
-                                                        value={formValues[mainIndex] || ''}
-                                                        onChange={(e) => handleChange(e, mainIndex)}
-                                                    ></input> */}
                                                     <MathInput 
                                                         handleChange={handleChange} 
                                                         mainIndex={mainIndex} 
-                                                        onFocus={handleFocus}
+                                                        // onFocus={handleFocus}
                                                         setActiveInputRef={setActiveInputRef}
                                                     />
                                                 </div>
                                                 { question.subQuestionText && question.subQuestionText.map((SubQuestionText, subIndex) => 
                                                         <div className="subQuestion">
                                                             <label>{mainIndex+1}.{subIndex+1}. {SubQuestionText}</label>
-                                                            {/* <input 
-                                                                type="text" 
-                                                                name={`${mainIndex}${subIndex}`}
-                                                                id={`${mainIndex}${subIndex}`}
-                                                                value={formValues[`${mainIndex}${subIndex}`] || ''}
-                                                                onChange={(e) => handleChange(e, mainIndex, subIndex)}
-                                                            ></input> */}
                                                             <MathInput 
                                                                 handleChange={handleChange} 
                                                                 mainIndex={mainIndex} 
                                                                 subIndex={subIndex} 
-                                                                onFocus={handleFocus}
                                                                 setActiveInputRef={setActiveInputRef}
                                                             />
                                                         </div>
@@ -168,7 +135,7 @@ const Questions = () => {
                                 <button type="submit">Rätta</button>
                             </form>
                     </div>
-                    <MathKeyBoard visible={visible} onHide={() => {setVisible(false)}} setVisible={setVisible} activeInputRef={activeInputRef}
+                    <MathKeyBoard isVisible={visible} activeInputRef={activeInputRef}
                     />
                 </div>
             //     </Card.Body>

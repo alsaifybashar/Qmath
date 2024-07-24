@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container } from 'reactstrap';
-import { NavMenu } from './NavMenu';
+import { NavMenu } from '../layout/NavMenu';
 
 interface Props {
   children?: React.ReactNode;

@@ -1,6 +1,7 @@
-import { Questions } from "./components/Questions";
-import { Home } from "./components/Home";
-import { Documentation } from "./components/Documentation";
+import { Questions } from "./components/pages/Questions";
+import { Home } from "./components/pages/Home";
+import { Documentation } from "./components/pages/Documentation";
+import  Editor from "./components/pages/Editor";
 
 const AppRoutes = [
   {
@@ -14,6 +15,10 @@ const AppRoutes = [
   {
     path: '/documentation/:coursecode?',
     element: <Documentation/>
+  }
+  ,{
+    path: "editor",
+    element: <Editor/>
   }
 ];
 

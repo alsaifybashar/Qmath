@@ -10,10 +10,10 @@ interface Props {
     handleChange?: (mainIndex: number, manualValue: string, subIndex?: number) => void;
     mainIndex?: number;
     subIndex?: number;
-    onFocus: (mathField: MathField) => void;
+    // onFocus: (mathField: MathField) => void;
     setActiveInputRef: (mathField: MathField) => void;
 }
-export const MathInput = ({handleChange, mainIndex, subIndex, onFocus, setActiveInputRef}: Props) => {
+export const MathInput = ({handleChange, mainIndex, subIndex/*, onFocus*/, setActiveInputRef}: Props) => {
   const [latex, setLatex] = useState("");
   const mathFieldRef = useRef<MathField | null>(null);
 
@@ -30,6 +30,10 @@ export const MathInput = ({handleChange, mainIndex, subIndex, onFocus, setActive
     }
   }, [latex]);
 
+  const handleFocus = (mathField: MathField) => {
+    setActiveInputRef(mathField);
+  };
+
   return (
     <>
             <div>
@@ -37,7 +41,7 @@ export const MathInput = ({handleChange, mainIndex, subIndex, onFocus, setActive
                     latex={latex}
                     onFocus={() => {
                       if (mathFieldRef.current) {
-                        onFocus(mathFieldRef.current);
+                        handleFocus(mathFieldRef.current);
                       }
                     }}
                     onChange={(mathField) => {

@@ -26,6 +26,9 @@ const NavMenu = () => {
                             <NavItem>
                                 <NavLink tag={Link} className="text-dark" to={`/documentation/${temp_course_code}`}>Documentation</NavLink>
                             </NavItem>
+                            <NavItem>
+                                <NavLink tag={Link} className="text-dark" to="/editor">Editor</NavLink>
+                            </NavItem>
                         </ul>
                     </Collapse>
                 </Container>
