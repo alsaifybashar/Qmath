@@ -43,7 +43,7 @@ const Questions = () => {
     // Takes the place of componentDidMount()
     useEffect(() => {
         const populateQuestionData = async () => {
-            const response = await fetch('questions');
+            const response = await fetch(`questions/getQ`).then();
             const data = await response.json();
             console.log(data);
             setQuestions(data);
@@ -57,10 +57,10 @@ const Questions = () => {
         //submit to backend, return more questions
         // TODO - Maybe add a success status to indicate if question has been completed to display success message {{question: text, success: true}, {question: text, success: false}, ...}
         event.preventDefault();
-        const answers = await fetch("answers");
+        const answers = await fetch("questions/getA");
         const answersData = await answers.json(); // TODO - maybe post answers instead and let backend compare and return true or false
         
-        const subQuestions = await fetch("subquestions");
+        const subQuestions = await fetch("questions/getSQ");
         const subQuestionsData = await subQuestions.json();
 
         for (let index = 0; index < answersData.length; index++) {
