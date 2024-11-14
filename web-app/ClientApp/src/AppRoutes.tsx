@@ -1,7 +1,8 @@
 import { Questions } from "./components/pages/Questions";
 import { Home } from "./components/pages/Home";
 import { Documentation } from "./components/pages/Documentation";
-import  Editor from "./components/pages/Editor";
+import Editor from "./components/pages/Editor";
+import Login from "./components/pages/Login";
 
 const AppRoutes = [
   {
@@ -17,8 +18,12 @@ const AppRoutes = [
     element: <Documentation/>
   }
   ,{
-    path: "editor",
+    path: "/editor",
     element: <Editor/>
+  }
+  ,{
+    path: "/login",
+    element: <Login/>
   }
 ];
 
