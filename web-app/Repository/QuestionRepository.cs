@@ -14,8 +14,21 @@ namespace web_app.Repository
         public Question GetQuestionsByWeight()
         {
             Question ans = _context.Questions.OrderByDescending(q => q.Id).First();
+
+            Question ans = _context.Questions.OrderByDescending(q => q.weight).First();
+            //console.writeline(ans);
             return ans;
+
+            // Get a list of all topics and their respective weights from the database
+            // Input them as a list of weights and randomly choose a topic with the reverse of that score
+            // Randomize a question from that topic 
+            // Need a separate table for user topic weights 
+
+            // Hur ser databasen ut exakt, vad har vi för tables? Samma som repository?
+            // Tror inte merge mellan master och server add fick med allt
+            // Hur får jag igång databas så det funkar på min sida också? Skicka över fil?
         }
+
 
         public Question GetQuestions(int id)
         {
