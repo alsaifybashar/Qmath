@@ -40,6 +40,35 @@ builder.Services.AddDbContext<AnswersContext>(options =>
             schema: "Answer"));
 });
 
+//builder.Services.AddDbContext<CourseContext>(options =>
+//{
+//    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+//             o => o.MigrationsHistoryTable(
+//            tableName: HistoryRepository.DefaultTableName,
+//            schema: "Course"));
+//});
+
+builder.Services.AddDbContext<TopicContext>(options =>
+{
+    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+             o => o.MigrationsHistoryTable(
+            tableName: HistoryRepository.DefaultTableName,
+            schema: "Topic"));
+});
+builder.Services.AddDbContext<SubTopicContext>(options =>
+{
+    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+             o => o.MigrationsHistoryTable(
+            tableName: HistoryRepository.DefaultTableName,
+            schema: "SubTopic"));
+});
+builder.Services.AddDbContext<UserContext>(options =>
+{
+    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+             o => o.MigrationsHistoryTable(
+            tableName: HistoryRepository.DefaultTableName,
+            schema: "User"));
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

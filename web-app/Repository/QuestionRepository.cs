@@ -13,7 +13,7 @@ namespace web_app.Repository
 
         public Question GetQuestionsByWeight()
         {
-            Question ans = _context.Questions.OrderByDescending(q => q.weight).First();
+            Question ans = _context.Questions.OrderByDescending(q => q.Id).First();
             return ans;
         }
 
@@ -22,7 +22,6 @@ namespace web_app.Repository
             Question ans = _context.Questions.First(q => q.Id == id);
             return ans;
         }
-
 
         public void InsertQuestion(Question q)
         {
@@ -33,10 +32,17 @@ namespace web_app.Repository
         public Question GetQuestions()
         {
             //dum test grej innan vi har inserted fråga
-            //Question q = new Question { Course= "q", CourseCategory ="q", DifficultyLevel=1, QuestionText="text", weight=2};
+            //Question q = new Question { Course = "q", CourseCategory = "q", DifficultyLevel = 1, QuestionText = "svar1", weight = 2 };
             //InsertQuestion(q);
-            Question q1 = GetQuestionsByWeight();
-            return q1;
+            //Question q1 = new Question { Course = "q", CourseCategory = "q", DifficultyLevel = 1, QuestionText = "svar2", weight = 2 };
+            //InsertQuestion(q1);
+            //Question q2 = new Question { Course = "q", CourseCategory = "q", DifficultyLevel = 2, QuestionText = "svar3", weight = 2 };
+            //InsertQuestion(q2);
+            //Question q3 = new Question { Course = "q", CourseCategory = "q", DifficultyLevel = 2, QuestionText = "svar4", weight = 2 };
+            //InsertQuestion(q3);
+
+            Question q4 = GetQuestionsByWeight();
+            return q4;
         }
 
         public void InsertQuestion(string text)

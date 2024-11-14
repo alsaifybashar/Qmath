@@ -8,10 +8,5 @@ namespace web_app.Model.Context
 
         public AnswersContext(DbContextOptions<AnswersContext> options) : base(options)
         { }
-
-        //protected override void OnModelCreating(ModelBuilder modelBuilder)
-        //{
-        //    modelBuilder.HasDefaultSchema("answers");
-        //}
     }
 }

@@ -15,5 +15,4 @@ public class Question
 
     public required int DifficultyLevel { get; set;}
 
-    public int weight { get; set;}
 }
