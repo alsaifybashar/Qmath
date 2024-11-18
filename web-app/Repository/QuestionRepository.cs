@@ -15,7 +15,6 @@ namespace web_app.Repository
         {
             Question ans = _context.Questions.OrderByDescending(q => q.Id).First();
 
-            Question ans = _context.Questions.OrderByDescending(q => q.weight).First();
             //console.writeline(ans);
             return ans;
 
