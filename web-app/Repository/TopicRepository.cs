@@ -29,5 +29,11 @@ namespace web_app.Repository
             _context.Topics.Add(topic); 
             _context.SaveChanges();
         }
+
+        public void insertTopic(Model.Topic topic)
+        {
+            _context.Add(topic);
+            _context.SaveChanges();
+        }
     }
 }

@@ -62,7 +62,11 @@ namespace web_app.Repository
             int wrong = _context.SubTopics.Where(x => x.Id == id).Select(x => x.WrongAns).First();
             return wrong;
         }
-
+        public void insertSubTopic(Model.SubTopic topic)
+        {
+            _context.Add(topic);
+            _context.SaveChanges();
+        }
 
     }
 }

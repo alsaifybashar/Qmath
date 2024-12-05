@@ -10,7 +10,7 @@
         public double getPriority(int id);
         public int getWrong(int id);
         public int getRight(int id);
-
+        public void insertSubTopic(Model.SubTopic topic);
 
     }
 }

@@ -2,6 +2,8 @@
 {
     public interface IUserRepository
     {
-        string UserName(string username);
+        //string UserName(string username);
+        public void insertUser(Model.User user);
+
     }
 }

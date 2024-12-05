@@ -61,5 +61,14 @@ namespace web_app.Repository
         {
             return;
         }
+
+        public Question[] GetQuestionList(int[] list) { 
+            Question[] ans = new Question[5];
+            for (int i = 0; i < list.Length; i++) {
+                ans[i] = GetQuestions(list[i]);
+            }
+            return ans;
+        }
+
     }
 }
