@@ -4,6 +4,7 @@ using web_app.Model.context;
 using web_app.Model.Context;
 using web_app.Repository;
 using web_app.Repository.IRepository;
+using MySql.EntityFrameworkCore.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,60 +16,94 @@ builder.Services.AddScoped<ISubQuestionRepository, SubQuestionRepository>();
 builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
 
 
+var connectionString = "server=localhost;database=QMath;user=root;password=yourpassword;";
+
 
 builder.Services.AddDbContext<QuestionContext>(options =>
 {
-    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
-     o => o.MigrationsHistoryTable(
-            tableName: HistoryRepository.DefaultTableName,
-            schema: "Question"));
+    options.UseMySQL(connectionString);
 });
 
 builder.Services.AddDbContext<SubQuestionContext>(options =>
 {
-    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
-            o => o.MigrationsHistoryTable(
-            tableName: HistoryRepository.DefaultTableName,
-            schema: "SubQuestion"));
+    options.UseMySQL(connectionString);
 });
 
 builder.Services.AddDbContext<AnswersContext>(options =>
 {
-    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
-             o => o.MigrationsHistoryTable(
-            tableName: HistoryRepository.DefaultTableName,
-            schema: "Answer"));
+    options.UseMySQL(connectionString);
 });
 
-//builder.Services.AddDbContext<CourseContext>(options =>
+
+builder.Services.AddDbContext<TopicContext>(options =>
+{
+    options.UseMySQL(connectionString);
+});
+
+builder.Services.AddDbContext<SubTopicContext>(options =>
+{
+    options.UseMySQL(connectionString);
+});
+
+builder.Services.AddDbContext<UserContext>(options =>
+{
+    options.UseMySQL(connectionString);
+});
+//builder.Services.AddDbContext<QuestionContext>(options =>
+//{
+//    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+//     o => o.MigrationsHistoryTable(
+//            tableName: HistoryRepository.DefaultTableName,
+//            schema: "Question"));
+//});
+
+//builder.Services.AddDbContext<SubQuestionContext>(options =>
+//{
+//    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+//            o => o.MigrationsHistoryTable(
+//            tableName: HistoryRepository.DefaultTableName,
+//            schema: "SubQuestion"));
+//});
+
+//builder.Services.AddDbContext<AnswersContext>(options =>
 //{
 //    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
 //             o => o.MigrationsHistoryTable(
 //            tableName: HistoryRepository.DefaultTableName,
-//            schema: "Course"));
+//            schema: "Answer"));
 //});
 
-builder.Services.AddDbContext<TopicContext>(options =>
-{
-    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
-             o => o.MigrationsHistoryTable(
-            tableName: HistoryRepository.DefaultTableName,
-            schema: "Topic"));
-});
-builder.Services.AddDbContext<SubTopicContext>(options =>
-{
-    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
-             o => o.MigrationsHistoryTable(
-            tableName: HistoryRepository.DefaultTableName,
-            schema: "SubTopic"));
-});
-builder.Services.AddDbContext<UserContext>(options =>
-{
-    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
-             o => o.MigrationsHistoryTable(
-            tableName: HistoryRepository.DefaultTableName,
-            schema: "User"));
-});
+////builder.Services.AddDbContext<CourseContext>(options =>
+////{
+////    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+////             o => o.MigrationsHistoryTable(
+////            tableName: HistoryRepository.DefaultTableName,
+////            schema: "Course"));
+////});
+
+//builder.Services.AddDbContext<TopicContext>(options =>
+//{
+//    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+//             o => o.MigrationsHistoryTable(
+//            tableName: HistoryRepository.DefaultTableName,
+//            schema: "Topic"));
+//});
+//builder.Services.AddDbContext<SubTopicContext>(options =>
+//{
+//    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+//             o => o.MigrationsHistoryTable(
+//            tableName: HistoryRepository.DefaultTableName,
+//            schema: "SubTopic"));
+//});
+//builder.Services.AddDbContext<UserContext>(options =>
+//{
+//    options.UseSqlServer("server = DESKTOP-IHI3C6H\\SQLEXPRESS;database=QMath;trusted_connection=true;trustservercertificate=true;",
+//             o => o.MigrationsHistoryTable(
+//            tableName: HistoryRepository.DefaultTableName,
+//            schema: "User"));
+//});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
