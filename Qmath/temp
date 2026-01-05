@@ -1,8 +1,0 @@
-public void ConfigureServices(IServiceCollection services)
-{
-    services.AddControllersWithViews();
-    services.AddSpaStaticFiles(configuration =>
-    {
-        configuration.RootPath = "ClientApp/build";
-    });
-}
