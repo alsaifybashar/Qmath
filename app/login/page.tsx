@@ -123,7 +123,7 @@ export default function LoginPage() {
                                     <input type="checkbox" className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500" />
                                     Remember me
                                 </label>
-                                <Link href="#" className="text-blue-600 hover:underline font-medium">Forgot password?</Link>
+                                <Link href="/forgot-password" className="text-blue-600 hover:underline font-medium">Forgot password?</Link>
                             </div>
 
                             <button type="submit" className="w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold rounded-xl shadow-lg hover:opacity-90 transition-all">
@@ -135,9 +135,9 @@ export default function LoginPage() {
                         <div className="pt-4 text-center">
                             <p className="text-zinc-600 dark:text-zinc-400">
                                 Don't have an account?{' '}
-                                <button className="text-blue-600 font-bold hover:underline">
+                                <Link href="/register" className="text-blue-600 font-bold hover:underline">
                                     Create an account
-                                </button>
+                                </Link>
                             </p>
                         </div>
                     </div>

@@ -504,10 +504,10 @@ function Sidebar({ activeTab, setActiveTab }: any) {
         <aside className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-zinc-900 border-r border-[#EFEFEF] dark:border-zinc-800 hidden lg:flex flex-col p-6 z-50">
             {/* Logo */}
             <div className="flex items-center gap-3 mb-10 px-2">
-                <div className="w-8 h-8 bg-[#5347CE] rounded-lg flex items-center justify-center text-white font-bold text-xl skew-x-[-10deg]">
-                    N
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl skew-x-[-10deg]">
+                    Q
                 </div>
-                <span className="text-xl font-bold tracking-tight text-[#1A1A1A] dark:text-white">Nexus</span>
+                <span className="text-xl font-bold tracking-tight text-[#1A1A1A] dark:text-white">Qmath</span>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-8">
@@ -556,7 +556,7 @@ function Sidebar({ activeTab, setActiveTab }: any) {
             </div>
 
             <div className="mt-4 text-[10px] text-zinc-400 text-center">
-                @ 2026 Nexus.io, Inc.
+                @ 2026 Qmath, Inc.
             </div>
         </aside>
     )
@@ -616,8 +616,8 @@ function NavItem({ icon, label, active = false, badge, badgeColor = "bg-red-500 
         <button
             onClick={onClick}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${active
-                    ? 'bg-[#F3F4F6] text-[#1A1A1A] dark:bg-zinc-800 dark:text-white'
-                    : 'text-zinc-500 hover:text-zinc-700 hover:bg-gray-50 dark:hover:text-zinc-300 dark:hover:bg-zinc-800/50'
+                ? 'bg-[#F3F4F6] text-[#1A1A1A] dark:bg-zinc-800 dark:text-white'
+                : 'text-zinc-500 hover:text-zinc-700 hover:bg-gray-50 dark:hover:text-zinc-300 dark:hover:bg-zinc-800/50'
                 }`}
         >
             <div className="flex items-center gap-3">
