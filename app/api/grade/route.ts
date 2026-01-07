@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AdaptiveLearningEngine } from "@/lib/adaptive-engine/engine";
+import { BayesianKnowledgeTracing } from "@/lib/adaptive-engine/knowledge-tracing";
 import { AttemptEvent } from "@/lib/data-model/types";
+
+// Create a reusable BKT instance
+const bkt = new BayesianKnowledgeTracing();
 
 export async function POST(req: NextRequest) {
     try {
@@ -11,23 +14,36 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
         }
 
-        // 1. Calculate new mastery
-        // In a real system, we would fetch difficulty from DB based on attempt.question_id
-        const mockDifficulty = 0.5;
-        const newMastery = AdaptiveLearningEngine.calculateMasteryUpdate(currentMastery, attempt, mockDifficulty);
+        // 1. Calculate new mastery using Bayesian Knowledge Tracing
+        const newMastery = bkt.updateMastery(currentMastery, attempt.is_correct);
 
         // 2. Determine next step (Scaffold or Advance)
         let action = "continue";
-        if (!attempt.is_correct) {
+        if (!attempt.is_correct && currentMastery < 0.4) {
+            // Scaffold if wrong and low mastery
             action = "scaffold";
-            // Logic to fetch sub-questions would go here
+        } else if (!attempt.is_correct) {
+            // Just continue if wrong but decent mastery
+            action = "retry";
         }
+
+        // 3. Predict probability of correct on next attempt
+        const predictedSuccess = bkt.predictCorrect(newMastery);
+
+        // 4. Check if topic is mastered
+        const isMastered = bkt.isMastered(newMastery, 0.85);
 
         return NextResponse.json({
             success: true,
             new_mastery: newMastery,
+            predicted_success: predictedSuccess,
+            is_mastered: isMastered,
             action: action,
-            feedback: attempt.is_correct ? "Great job!" : "Let's break this down."
+            feedback: attempt.is_correct
+                ? "Great job! Your mastery is improving."
+                : action === "scaffold"
+                    ? "Let's break this down into simpler steps."
+                    : "Not quite right. Try again!"
         });
 
     } catch (e) {

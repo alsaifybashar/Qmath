@@ -1,271 +1,420 @@
 'use client';
 
-import { Activity, Book, Calendar, ChevronRight, Clock, Info, LayoutDashboard, Settings, Target, TrendingUp, Zap, AlertTriangle } from 'lucide-react';
+import {
+    Target,
+    TrendingUp,
+    TrendingDown,
+    Clock,
+    Zap,
+    Brain,
+    AlertTriangle,
+    CheckCircle2,
+    Calendar as CalendarIcon,
+    MoreHorizontal,
+    ChevronRight,
+    Award,
+    BookOpen,
+    Activity,
+    Flame,
+    BarChart3,
+    Info // Added import
+} from 'lucide-react';
+import { useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Header } from '@/components/Header';
 
-// --- MOCK DATA ---
+// =============================================================================
+// MOCK DATA
+// =============================================================================
 const STUDENT_DATA = {
-    user_id: "uuid-123",
     name: "Alex Andersson",
-    program: "Engineering Physics – Year 2",
-    university: "KTH Royal Institute of Technology",
-    active_courses: ["Linear Algebra", "Calculus II", "Mechanics"],
-    exam_dates: [
-        { course: "Linear Algebra", date: "2026-01-20", daysLeft: 14 },
-        { course: "Calculus II", date: "2026-02-10", daysLeft: 35 }
-    ],
-    stats: {
-        readiness_score: 68,
-        study_streak: 12,
-        avg_session: 42,
-        productive_time: "18:00 - 20:00"
-    },
-    risk: {
-        level: "Medium",
-        reason: "Exam proximity (Linear Algebra) and unresolved core topics in Eigenvalues."
-    },
-    topics: {
-        "Linear Algebra": [
-            { name: "Vector spaces", mastery: 82, status: "good" },
-            { name: "Eigenvalues", mastery: 48, status: "warning" },
-            { name: "Diagonalization", mastery: 31, status: "danger" }
+    level: 3,
+    xp_current: 440,
+    xp_next: 800,
+
+    // Streak Data
+    streak: {
+        current: 2,
+        best: 12,
+        daily_goal_minutes: 60,
+        week_activity: [
+            { day: "S", active: false },
+            { day: "M", active: true }, // Current streak start
+            { day: "T", active: true },
+            { day: "W", active: false },
+            { day: "T", active: false },
+            { day: "F", active: false },
+            { day: "S", active: false },
         ]
     },
-    recommendations: [
-        { type: "Concept", title: "Eigenvalues – conceptual understanding", time: "15 min", impact: "High" },
-        { type: "Problem", title: "Diagonalization – exam-level problems", time: "30 min", impact: "High" },
-        { type: "Review", title: "Flashcard review (12 cards due)", time: "5 min", impact: "Medium" }
+
+    // Study Hours (Bar Chart)
+    study_hours: {
+        total: 28.5,
+        trend: "+6 hrs",
+        history: [
+            { day: "16 Jun", hours: 2.5 },
+            { day: "17 Jun", hours: 4.0 },
+            { day: "18 Jun", hours: 1.5 },
+            { day: "19 Jun", hours: 5.0 },
+            { day: "20 Jun", hours: 3.5 },
+            { day: "21 Jun", hours: 6.0 }, // Peak
+            { day: "22 Jun", hours: 4.0 },
+        ]
+    },
+
+    // Mastery & Progress (Line Chart approximation)
+    mastery_trend: [45, 48, 42, 55, 62, 58, 72],
+
+    // Exam Readiness (Gauge)
+    exam_readiness: 68,
+
+    // Stats Grid
+    stats: {
+        questions: 289,
+        correct: 220,
+        incorrect: 69,
+        accuracy: 79,
+        speed: "9 Sec/Q"
+    },
+
+    // Focus Recommendations
+    focus_next: [
+        { topic: "Eigenvalues", type: "Concept", time: "20 min", impact: "High", color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
+        { topic: "Diagonalization", type: "Practice", time: "30 min", impact: "High", color: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" },
+        { topic: "Vector Spaces", type: "Review", time: "15 min", impact: "Medium", color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
     ]
 };
 
-export default function ProfilePage() {
+// =============================================================================
+// MAIN DASHBOARD
+// =============================================================================
+export default function InsightDashboard() {
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white transition-colors duration-300 pb-20">
-            <Header />
+        <div className="min-h-screen bg-[#F3F6F8] dark:bg-black text-[#1F2937] dark:text-zinc-100 font-sans p-4 md:p-8">
 
-            <main className="max-w-6xl mx-auto px-4 pt-24 space-y-8">
+            {/* Header */}
+            <header className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-[#111827] dark:text-white">Student Dashboard</h1>
+                    <p className="text-zinc-500 mt-1">Welcome back, Alex! You're on a 2-day streak.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="hidden md:flex flex-col items-end">
+                        <span className="text-sm font-bold text-[#111827] dark:text-white">{STUDENT_DATA.name}</span>
+                        <span className="text-xs text-zinc-500">Engineering Physics</span>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-lg shadow-blue-600/20">
+                        AA
+                    </div>
+                </div>
+            </header>
 
-                {/* 1. PROFILE HEADER */}
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div className="flex items-center gap-6">
-                        <div className="h-20 w-20 rounded-full bg-blue-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/30">
-                            AA
+            {/* BENTO GRID */}
+            <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+                {/* 1. STUDY STREAK CARD */}
+                <Card className="col-span-1 lg:col-span-1 flex flex-col justify-between relative group/card">
+                    <InfoTooltip
+                        title="Study Streak"
+                        explanation="Tracks consecutive days with at least 1 completed learning session."
+                        calculation="Streak = Current contiguous days with >0 activity."
+                    />
+                    <div>
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-xl text-orange-500">
+                                    <Flame size={20} fill="currentColor" />
+                                </div>
+                                <h3 className="font-bold text-gray-900 dark:text-gray-100">Study Streak</h3>
+                            </div>
+                            <button className="text-xs font-semibold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">Calendar</button>
                         </div>
+
+                        <div className="flex justify-between items-center gap-2 mb-6">
+                            {STUDENT_DATA.streak.week_activity.map((day, i) => (
+                                <div key={i} className="flex flex-col items-center gap-2">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${day.active
+                                        ? 'bg-green-500 text-white shadow-md shadow-green-500/30'
+                                        : 'bg-gray-100 text-gray-400 dark:bg-zinc-800'
+                                        }`}>
+                                        {day.active && <CheckCircle2 size={14} />}
+                                    </div>
+                                    <span className="text-[10px] font-medium text-gray-400">{day.day}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-zinc-800">
                         <div>
-                            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">{STUDENT_DATA.name}</h1>
-                            <p className="text-zinc-500 dark:text-zinc-400 font-medium">{STUDENT_DATA.program}</p>
-                            <div className="flex items-center gap-2 text-sm text-zinc-400 mt-1">
-                                <Building2 className="w-4 h-4" /> {STUDENT_DATA.university}
-                            </div>
+                            <div className="text-xs text-gray-500 mb-0.5">Current Streak</div>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{STUDENT_DATA.streak.current} <span className="text-sm font-medium text-gray-400">Days</span></div>
+                        </div>
+                        <div className="h-8 w-px bg-gray-200 dark:bg-zinc-700"></div>
+                        <div>
+                            <div className="text-xs text-gray-500 mb-0.5">Longest Streak</div>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{STUDENT_DATA.streak.best} <span className="text-sm font-medium text-gray-400">Days</span></div>
                         </div>
                     </div>
+                </Card>
 
-                    <div className="flex flex-col gap-3 w-full md:w-auto">
-                        <div className="bg-blue-50 dark:bg-blue-900/20 px-5 py-3 rounded-xl border border-blue-100 dark:border-blue-800">
-                            <div className="text-xs text-blue-600 dark:text-blue-400 uppercase font-bold tracking-wider mb-1">Next Exam</div>
-                            <div className="flex items-center justify-between gap-8">
-                                <span className="font-semibold text-zinc-900 dark:text-white">{STUDENT_DATA.exam_dates[0].course}</span>
-                                <span className="text-blue-600 font-bold">{STUDENT_DATA.exam_dates[0].daysLeft} days left</span>
-                            </div>
+                {/* 2. EXAM READINESS GAUGE (Hero Card) */}
+                <Card className="col-span-1 lg:col-span-1 flex flex-col items-center justify-center relative overflow-hidden group/card">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                    <InfoTooltip
+                        title="Exam Readiness"
+                        explanation="Estimated probability of passing the upcoming exam if taken today."
+                        calculation="Weighted sum of topic mastery scores × topic exam weights."
+                    />
+                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 mt-2">Exam Readiness</h3>
+
+                    <div className="relative w-40 h-40 mb-2">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" fill="none" strokeWidth="10" className="stroke-gray-100 dark:stroke-zinc-800" />
+                            <motion.circle
+                                initial={{ strokeDasharray: "0 264" }}
+                                animate={{ strokeDasharray: `${STUDENT_DATA.exam_readiness * 2.64} 264` }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                cx="50" cy="50" r="42" fill="none" strokeWidth="10"
+                                strokeLinecap="round"
+                                className="stroke-blue-600 drop-shadow-lg"
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-4xl font-extrabold text-gray-900 dark:text-white">{STUDENT_DATA.exam_readiness}%</span>
+                            <span className="text-xs font-bold text-green-500 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded mt-1">On Track</span>
                         </div>
                     </div>
-                </div>
+                    <p className="text-xs text-gray-500 text-center px-4">You are ready for 68% of the expected exam content.</p>
+                </Card>
 
-                {/* 2. LEARNING SNAPSHOT & HABITS & RISK */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-                    {/* Learning Snapshot */}
-                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                        <div className="flex items-center gap-2 mb-6 text-zinc-500 dark:text-zinc-400 font-medium uppercase tracking-widest text-xs">
-                            <Target className="w-4 h-4" /> Learning Snapshot
-                        </div>
-
-                        <div className="flex items-center gap-6 mb-6">
-                            <div className="relative h-24 w-24 flex items-center justify-center">
-                                <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                    <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-zinc-100 dark:text-zinc-800" />
-                                    <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - STUDENT_DATA.stats.readiness_score / 100)} className="text-blue-500 transition-all duration-1000 ease-out" strokeLinecap="round" />
-                                </svg>
-                                <span className="text-2xl font-bold">{STUDENT_DATA.stats.readiness_score}%</span>
+                {/* 3. TOTAL STUDY HOURS (Bar Chart) */}
+                <Card className="col-span-1 lg:col-span-2 relative group/card">
+                    <InfoTooltip
+                        title="Total Study Hours"
+                        explanation="Total duration of active learning engagement."
+                        calculation="Sum of all active session times. Idle time is excluded."
+                    />
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-xl text-red-500">
+                                <Clock size={20} />
                             </div>
-                            <div className="flex-1">
-                                <div className="text-sm font-medium text-zinc-900 dark:text-white mb-1">Exam Readiness</div>
-                                <p className="text-xs text-zinc-500 leading-relaxed">
-                                    You are strong in computation but <span className="text-orange-500 font-semibold">weak in conceptual understanding</span> of eigenvalues.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            {STUDENT_DATA.active_courses.map(course => (
-                                <div key={course} className="space-y-1">
-                                    <div className="flex justify-between text-xs font-medium">
-                                        <span>{course}</span>
-                                        <span className={course === 'Linear Algebra' ? 'text-orange-500' : 'text-green-500'}>{course === 'Linear Algebra' ? 'Needs Work' : 'On Track'}</span>
-                                    </div>
-                                    <div className="h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                        <div className={`h-full rounded-full ${course === 'Linear Algebra' ? 'bg-orange-500 w-[60%]' : 'bg-green-500 w-[85%]'}`}></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Study Habits */}
-                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                        <div className="flex items-center gap-2 mb-6 text-zinc-500 dark:text-zinc-400 font-medium uppercase tracking-widest text-xs">
-                            <Clock className="w-4 h-4" /> Study Habits
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-2xl">
-                                <div className="text-2xl font-bold text-zinc-900 dark:text-white">{STUDENT_DATA.stats.avg_session}m</div>
-                                <div className="text-xs text-zinc-500">Avg Session</div>
-                            </div>
-                            <div className="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-2xl">
-                                <div className="text-2xl font-bold text-zinc-900 dark:text-white">{STUDENT_DATA.stats.study_streak}</div>
-                                <div className="text-xs text-zinc-500">Day Streak 🔥</div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-800/20">
-                            <div className="flex items-start gap-3">
-                                <Zap className="w-5 h-5 text-blue-500 mt-0.5" />
-                                <div>
-                                    <div className="text-sm font-bold text-blue-700 dark:text-blue-400 mb-1">Peak Performance</div>
-                                    <p className="text-xs text-blue-600/80 dark:text-blue-400/70 leading-relaxed">
-                                        You perform best in 25–40 minute sessions between <span className="font-semibold">{STUDENT_DATA.stats.productive_time}</span>.
-                                    </p>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-gray-100">Total Study Hours</h3>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-bold text-gray-900 dark:text-white">{STUDENT_DATA.study_hours.total}</span>
+                                    <span className="text-xs font-bold text-green-500 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded">{STUDENT_DATA.study_hours.trend}</span>
+                                    <span className="text-xs text-gray-400">in last 7 days</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Risk Indicator */}
-                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
-                        <div className="flex items-center gap-2 mb-6 text-zinc-500 dark:text-zinc-400 font-medium uppercase tracking-widest text-xs">
-                            <AlertTriangle className="w-4 h-4" /> Risk Meter
-                        </div>
-
-                        <div className="flex-1 flex flex-col justify-center items-center text-center">
-                            <div className="inline-block px-4 py-1.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 font-bold text-sm mb-4">
-                                {STUDENT_DATA.risk.level} Risk
-                            </div>
-                            <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-[200px]">
-                                {STUDENT_DATA.risk.reason}
-                            </p>
-                        </div>
-
-                        <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800 text-xs text-center text-zinc-400">
-                            Silent indicator based on engagement & failure rates.
+                        <div className="flex gap-2">
+                            <button className="px-3 py-1.5 bg-gray-50 dark:bg-zinc-800 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-zinc-700">Daily</button>
+                            <button className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">Weekly</button>
                         </div>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* 3. TOPIC MAP (Strengths & Weaknesses) */}
-                    <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                        <div className="flex justify-between items-center mb-8">
-                            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Topic Mastery: Linear Algebra</h2>
-                            <select className="bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-sm outline-none">
-                                <option>Linear Algebra</option>
-                                <option>Calculus II</option>
-                            </select>
-                        </div>
-
-                        <div className="space-y-4">
-                            {STUDENT_DATA.topics["Linear Algebra"].map((topic, i) => (
-                                <div key={i} className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 cursor-pointer">
-                                    <div className={`w-2 h-2 rounded-full ${topic.status === 'good' ? 'bg-green-500' : topic.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
-                                        }`} />
-
-                                    <div className="flex-1">
-                                        <div className="flex justify-between mb-1">
-                                            <span className="font-semibold text-zinc-900 dark:text-white">{topic.name}</span>
-                                            <span className="text-zinc-500 font-mono text-sm">{topic.mastery}%</span>
-                                        </div>
-                                        <div className="h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full ${topic.status === 'good' ? 'bg-green-500' : topic.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                                style={{ width: `${topic.mastery}%` }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-blue-500 transition-colors" />
+                    <div className="h-40 flex items-end justify-between gap-4 px-2">
+                        {STUDENT_DATA.study_hours.history.map((item, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
+                                <div className="relative w-full bg-gray-100 dark:bg-zinc-800 rounded-t-xl rounded-b-md overflow-hidden h-32 flex items-end">
+                                    <motion.div
+                                        initial={{ height: 0 }}
+                                        animate={{ height: `${(item.hours / 8) * 100}%` }}
+                                        className={`w-full ${item.hours >= 6 ? 'bg-blue-600' : 'bg-blue-400'} rounded-t-xl transition-all group-hover:bg-blue-500`}
+                                    />
                                 </div>
-                            ))}
+                                <span className="text-[10px] font-bold text-gray-400">{item.day.split(' ')[0]}</span>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
+                {/* 4. QUESTIONS & ACCURACY (Stats Grid) */}
+                <Card className="col-span-1 lg:col-span-2 relative group/card">
+                    <InfoTooltip
+                        title="Performance Stats"
+                        explanation="Key metrics derived from your problem-solving history."
+                        calculation="Accuracy = Correct / Total. Speed = Avg time per question."
+                    />
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-500">
+                                <CheckCircle2 size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-gray-100">Total Questions Attempted</h3>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-bold text-gray-900 dark:text-white">{STUDENT_DATA.stats.questions}</span>
+                                    <span className="text-xs font-bold text-green-500 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded">+22</span>
+                                    <span className="text-xs text-gray-400">in last 7 days</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* 4. RECOMMENDATIONS (Focus Next) */}
-                    <div className="bg-zinc-900 text-white rounded-3xl p-8 shadow-sm flex flex-col relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <StatBox label="Correct" value={STUDENT_DATA.stats.correct} color="text-green-500" icon={<CheckCircle2 size={14} />} />
+                        <StatBox label="Incorrect" value={STUDENT_DATA.stats.incorrect} color="text-red-500" icon={<AlertTriangle size={14} />} />
+                        <StatBox label="Accuracy" value={`${STUDENT_DATA.stats.accuracy}%`} color="text-blue-500" icon={<Target size={14} />} />
+                        <StatBox label="Speed" value={STUDENT_DATA.stats.speed} color="text-orange-500" icon={<Zap size={14} />} />
+                    </div>
+                </Card>
 
-                        <h2 className="text-xl font-bold mb-6 relative z-10 flex items-center gap-2">
-                            <Zap className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                {/* 5. STRENGTHS & WEAKNESSES (Line Chart Styled) */}
+                <Card className="col-span-1 lg:col-span-1 flex flex-col relative group/card">
+                    <InfoTooltip
+                        title="Mastery Trend"
+                        explanation="Your knowledge growth curve over the last week."
+                        calculation="Daily average of Bayesian Knowledge Tracing (BKT) scores."
+                    />
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-bold text-gray-900 dark:text-white">Mastery Trend</h3>
+                        <span className="text-xs font-bold text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded-lg">Last 7 Days</span>
+                    </div>
+
+                    <div className="flex-1 relative min-h-[120px] flex items-end">
+                        <div className="absolute inset-0 flex items-center justify-between">
+                            {/* Grid lines */}
+                            <div className="w-full h-px bg-gray-100 dark:bg-zinc-800 absolute top-0"></div>
+                            <div className="w-full h-px bg-gray-100 dark:bg-zinc-800 absolute top-1/2"></div>
+                            <div className="w-full h-px bg-gray-100 dark:bg-zinc-800 absolute bottom-0"></div>
+                        </div>
+
+                        {/* Simple SVG Line Chart */}
+                        <svg className="w-full h-full overflow-visible">
+                            <motion.path
+                                initial={{ pathLength: 0 }}
+                                animate={{ pathLength: 1 }}
+                                transition={{ duration: 2 }}
+                                d={`M0,${100 - STUDENT_DATA.mastery_trend[0]} 
+                                   L${100 / 6 * 1},${100 - STUDENT_DATA.mastery_trend[1]} 
+                                   L${100 / 6 * 2},${100 - STUDENT_DATA.mastery_trend[2]}
+                                   L${100 / 6 * 3},${100 - STUDENT_DATA.mastery_trend[3]}
+                                   L${100 / 6 * 4},${100 - STUDENT_DATA.mastery_trend[4]}
+                                   L${100 / 6 * 5},${100 - STUDENT_DATA.mastery_trend[5]}
+                                   L100,${100 - STUDENT_DATA.mastery_trend[6]}`}
+                                fill="none"
+                                stroke="#8B5CF6"
+                                strokeWidth="3"
+                                vectorEffect="non-scaling-stroke"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                            {/* Area under curve */}
+                            <path
+                                d={`M0,${100 - STUDENT_DATA.mastery_trend[0]} 
+                                   L${100 / 6 * 1},${100 - STUDENT_DATA.mastery_trend[1]} 
+                                   L${100 / 6 * 2},${100 - STUDENT_DATA.mastery_trend[2]}
+                                   L${100 / 6 * 3},${100 - STUDENT_DATA.mastery_trend[3]}
+                                   L${100 / 6 * 4},${100 - STUDENT_DATA.mastery_trend[4]}
+                                   L${100 / 6 * 5},${100 - STUDENT_DATA.mastery_trend[5]}
+                                   L100,${100 - STUDENT_DATA.mastery_trend[6]}
+                                   L100,120 L0,120 Z`}
+                                fill="url(#gradient)"
+                                opacity="0.2"
+                            />
+                            <defs>
+                                <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+                                    <stop offset="0%" stopColor="#8B5CF6" />
+                                    <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+
+                        {/* Current Value Pill */}
+                        <div className="absolute top-[10%] right-0 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg shadow-purple-600/30">
+                            {STUDENT_DATA.mastery_trend[6]}% Mastery
+                        </div>
+                    </div>
+                </Card>
+
+                {/* 6. LEVEL / GAMIFICATION CARD */}
+                <Card className="col-span-1 lg:col-span-1 flex items-center justify-between bg-gradient-to-br from-indigo-600 to-purple-700 text-white">
+                    <div>
+                        <div className="text-xs font-medium text-indigo-100 mb-1">Current Level</div>
+                        <div className="text-4xl font-bold">{STUDENT_DATA.level}</div>
+                        <div className="text-xs text-indigo-200 mt-2">{STUDENT_DATA.xp_next - STUDENT_DATA.xp_current} XP to Level {STUDENT_DATA.level + 1}</div>
+                    </div>
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
+                        <Award size={32} className="text-yellow-300" />
+                    </div>
+                </Card>
+
+                {/* 7. FOCUS NEXT LIST (Action) */}
+                <Card className="col-span-1 lg:col-span-2 xl:col-span-2">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Target size={18} className="text-red-500" />
                             Recommended Focus
-                        </h2>
-
-                        <div className="space-y-4 relative z-10">
-                            {STUDENT_DATA.recommendations.map((rec, i) => (
-                                <div key={i} className="p-4 bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl border border-white/10 transition-all cursor-pointer group">
-                                    <div className="flex justify-between mb-2">
-                                        <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${rec.type === 'Concept' ? 'bg-purple-500/30 text-purple-200' :
-                                                rec.type === 'Problem' ? 'bg-blue-500/30 text-blue-200' :
-                                                    'bg-green-500/30 text-green-200'
-                                            }`}>
-                                            {rec.type}
-                                        </span>
-                                        <span className="text-xs text-zinc-400">{rec.time}</span>
+                        </h3>
+                        <button className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400">Start Session</button>
+                    </div>
+                    <div className="space-y-3">
+                        {STUDENT_DATA.focus_next.map((item, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 rounded-xl hover:bg-white dark:hover:bg-zinc-700 border border-transparent hover:border-gray-200 dark:hover:border-zinc-600 transition-all cursor-pointer group">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold ${item.color}`}>
+                                        {i + 1}
                                     </div>
-                                    <div className="font-medium text-sm mb-2 group-hover:text-blue-300 transition-colors">{rec.title}</div>
-                                    <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-                                        <TrendingUp className="w-3 h-3" /> Impact: <span className="text-white">{rec.impact}</span>
+                                    <div>
+                                        <div className="text-sm font-bold text-gray-900 dark:text-white">{item.topic}</div>
+                                        <div className="text-xs text-gray-500">{item.type} • {item.time}</div>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-
-                        <button className="mt-auto w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/30 relative z-10">
-                            Start Adaptive Session
-                        </button>
+                                <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
+                            </div>
+                        ))}
                     </div>
-                </div>
-
-                {/* 5. SETTINGS PREVIEW */}
-                <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Preferences</h3>
-                        <button className="text-sm font-medium text-blue-600 hover:underline">Manage all settings</button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-                        <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-                            <span className="text-sm font-medium">Daily Goal</span>
-                            <span className="text-sm font-bold">45 min</span>
-                        </div>
-                        <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-                            <span className="text-sm font-medium">Difficulty</span>
-                            <span className="text-sm font-bold">Adaptive</span>
-                        </div>
-                        <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-                            <span className="text-sm font-medium">AI Coach</span>
-                            <span className="text-sm font-bold">Proactive</span>
-                        </div>
-                    </div>
-                </div>
+                </Card>
 
             </main>
         </div>
     );
 }
 
-// Simple Icon Component for reuse
-function Building2({ className }: { className?: string }) {
+// =============================================================================
+// SUB-COMPONENTS
+// =============================================================================
+
+function Card({ children, className = "" }: { children: React.ReactNode, className?: string }) {
     return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-            <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12h12" /><path d="M6 7h12" /><path d="M6 17h12" /><path d="M2 22h20" />
-        </svg>
+        <div className={`bg-white dark:bg-zinc-900 rounded-[24px] p-6 shadow-[0_2px_20px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-zinc-800 ${className}`}>
+            {children}
+        </div>
+    );
+}
+
+function StatBox({ label, value, color, icon }: { label: string, value: string | number, color: string, icon: React.ReactNode }) {
+    return (
+        <div className="p-3 bg-gray-50 dark:bg-zinc-800 rounded-2xl flex flex-col gap-3">
+            <div className={`flex items-center gap-2 text-xs font-bold ${color}`}>
+                {icon} {label}
+            </div>
+            <div className="text-lg font-bold text-gray-900 dark:text-white">{value}</div>
+        </div>
+    )
+}
+
+function InfoTooltip({ title, explanation, calculation }: { title: string, explanation: string, calculation: string }) {
+    return (
+        <div className="absolute right-4 top-4 z-20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300">
+            <div className="relative group">
+                <div className="p-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full text-gray-400 hover:text-blue-500 cursor-help">
+                    <Info size={14} />
+                </div>
+
+                {/* Tooltip Content */}
+                <div className="absolute right-0 top-full mt-2 w-64 p-4 bg-gray-900/95 dark:bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-gray-800 dark:border-zinc-200 text-white dark:text-gray-900 text-xs pointer-events-none opacity-0 group-hover:opacity-100 transition-all transform origin-top-right z-30">
+                    <div className="font-bold mb-1 text-sm">{title}</div>
+                    <div className="mb-2 opacity-90">{explanation}</div>
+                    <div className="pt-2 border-t border-gray-700 dark:border-gray-200 opacity-70">
+                        <span className="font-semibold">Calc:</span> {calculation}
+                    </div>
+                </div>
+            </div>
+        </div>
     )
 }

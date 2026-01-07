@@ -14,6 +14,9 @@ export function Header() {
         >
             {/* Navigation Links - Centered Glass Pill */}
             <nav className="pointer-events-auto flex items-center gap-1 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md px-2 py-2 rounded-full border border-black/5 dark:border-white/10 shadow-sm">
+                <Link href="/why-qmath" className="px-5 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-all">
+                    Varför Qmath
+                </Link>
                 <Link href="/#courses" className="px-5 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-all">
                     Kurser
                 </Link>
