@@ -19,7 +19,7 @@ export default function LoginPage() {
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         if (email === 'admin' && password === 'admin') {
-            router.push('/profile');
+            router.push('/dashboard');
         } else {
             console.log('Invalid credentials');
         }
