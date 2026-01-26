@@ -72,9 +72,9 @@ export function FillBlankInput({ question, onAnswer }: FillBlankProps) {
                                     disabled={isSubmitted}
                                     className={`
                                         min-w-[80px] w-[120px] bg-transparent border-b-2 text-center focus:outline-none transition-colors font-bold
-                                        ${isCorrect ? 'border-green-500 text-green-600' : ''}
-                                        ${isWrong ? 'border-red-500 text-red-600' : ''}
-                                        ${!isSubmitted ? 'border-zinc-300 dark:border-zinc-700 focus:border-blue-500' : ''}
+                                        ${isCorrect ? 'border-green-500 text-green-600 dark:text-green-400' : ''}
+                                        ${isWrong ? 'border-red-500 text-red-600 dark:text-red-400' : ''}
+                                        ${!isSubmitted ? 'border-zinc-300 dark:border-zinc-700 focus:border-blue-500 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500' : ''}
                                     `}
                                     placeholder={blankConfig.placeholder || "..."}
                                 />

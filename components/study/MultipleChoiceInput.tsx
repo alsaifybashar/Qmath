@@ -7,7 +7,7 @@ import { MultipleChoiceQuestion, MultipleChoiceOption } from '@/types/study';
 import { MathRenderer } from './MathRenderer';
 
 interface MCQProps {
-    question: MultipleChoiceQuestion;
+    question: MultipleChoiceQuestion | any; // Allow flexible question format
     onAnswer: (optionId: string, isCorrect: boolean) => void;
     disabled?: boolean;
     showFeedback?: boolean;
@@ -18,12 +18,17 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [shake, setShake] = useState(false);
 
+    // Handle both data structures: question.question or question.content.question
+    const questionData = question?.question || question?.content?.question;
+    const options = question?.options || question?.content?.options || [];
+    const correctOptionId = question?.correctOptionId || question?.content?.correctOptionId;
+
     // Reset state when question changes
     useEffect(() => {
         setSelectedId(null);
         setIsSubmitted(false);
         setShake(false);
-    }, [question.id]);
+    }, [question?.id]);
 
     const handleSelect = (optionId: string) => {
         if (disabled || isSubmitted) return;
@@ -31,7 +36,7 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
         setSelectedId(optionId);
         setIsSubmitted(true);
 
-        const isCorrect = optionId === question.correctOptionId;
+        const isCorrect = optionId === correctOptionId;
 
         // Haptic feedback (if supported on mobile)
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -49,30 +54,39 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
         }, 300); // 300ms delay for visual feedback before any transition
     };
 
+    // Safety check - if no question data, show loading state
+    if (!questionData) {
+        return (
+            <div className="w-full max-w-2xl mx-auto p-4 text-center text-zinc-500">
+                Loading question...
+            </div>
+        );
+    }
+
     return (
         <div className="w-full max-w-2xl mx-auto flex flex-col h-full">
             {/* Question Area - Top */}
             <div className="flex-1 mb-6">
                 <div className="text-lg md:text-xl font-medium text-zinc-800 dark:text-zinc-100 leading-relaxed">
-                    {question.question.text}
+                    {questionData.text}
                 </div>
-                {question.question.math && (
+                {questionData.math && (
                     <div className="my-6 flex justify-center p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                        <MathRenderer text={question.question.math} block />
+                        <MathRenderer text={questionData.math} block />
                     </div>
                 )}
-                {question.question.image && (
+                {questionData.image && (
                     <div className="my-6 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
-                        <img src={question.question.image} alt="Question Diagram" className="w-full h-auto object-cover" />
+                        <img src={questionData.image} alt="Question Diagram" className="w-full h-auto object-cover" />
                     </div>
                 )}
             </div>
 
             {/* Options Area - Bottom (Thumb Zone) */}
             <div className="space-y-3 pb-4">
-                {question.options.map((option) => {
+                {options.map((option: MultipleChoiceOption) => {
                     const isSelected = selectedId === option.id;
-                    const isCorrectOption = option.id === question.correctOptionId;
+                    const isCorrectOption = option.id === correctOptionId;
 
                     // Determine visual state
                     let stateClass = "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10";

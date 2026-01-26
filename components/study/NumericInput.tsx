@@ -34,7 +34,7 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
             handleSubmit();
         } else {
             // Validate max length
-            if (value.length >= (question.inputConfig.maxDigits || 10)) return;
+            if (value.length >= (question.inputConfig?.maxDigits || 10)) return;
 
             // Prevent multiple decimals
             if (key === '.' && value.includes('.')) return;
@@ -104,11 +104,11 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
         '7', '8', '9',
         '4', '5', '6',
         '1', '2', '3',
-        question.inputConfig.allowNegative ? '±' : '', '0', '.'
+        question.inputConfig?.allowNegative ? '±' : '', '0', '.'
     ].filter(k => k !== '');
 
     // Add Fraction key if needed
-    if (question.inputConfig.allowFraction) {
+    if (question.inputConfig?.allowFraction) {
         // Insert nicely
         if (!keys.includes('.')) keys.push('.'); // Ensure dot is there
         // Replace dot with slash or add slash? Usually standard keypad has both or toggles.
