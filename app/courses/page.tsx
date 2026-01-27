@@ -79,11 +79,8 @@ export default function CoursesPage() {
                         <Link href="/" className="font-bold text-xl">Qmath</Link>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Link href="/practice" className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                            Practice
-                        </Link>
                         <Link href="/study" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-all">
-                            Start Study
+                            Start Studying
                         </Link>
                     </div>
                 </div>
@@ -221,10 +218,10 @@ export default function CoursesPage() {
                         Back to Dashboard
                     </Link>
                     <Link
-                        href="/practice"
+                        href="/study"
                         className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-all"
                     >
-                        Start Practice
+                        Start Studying
                         <ChevronRight className="w-4 h-4" />
                     </Link>
                 </motion.div>

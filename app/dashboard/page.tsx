@@ -121,14 +121,12 @@ const NAV_SECTIONS = [
             { href: '/dashboard', icon: Home, label: 'Dashboard', active: true },
             { href: '/courses', icon: BookOpen, label: 'Courses' },
             { href: '/flashcards', icon: Layers, label: 'Flashcards' },
-            { href: '/ai/chat', icon: MessageSquare, label: 'Messages', badge: '3' },
         ]
     },
     {
         label: 'TOOLS',
         items: [
             { href: '/study', icon: Brain, label: 'Study' },
-            { href: '/practice', icon: Target, label: 'Practice' },
             { href: '/exams', icon: FileText, label: 'Exams' },
         ]
     },
@@ -148,11 +146,10 @@ const SEARCH_ITEMS = [
         category: 'Pages', items: [
             { name: 'Dashboard', href: '/dashboard', icon: Home },
             { name: 'Courses', href: '/courses', icon: BookOpen },
-            { name: 'Practice', href: '/practice', icon: Target },
             { name: 'Flashcards', href: '/flashcards', icon: Layers },
             { name: 'Exams', href: '/exams', icon: FileText },
             { name: 'Progress', href: '/progress', icon: BarChart3 },
-            { name: 'AI Tutor', href: '/ai/chat', icon: Brain },
+            { name: 'Study', href: '/study', icon: Brain },
             { name: 'Settings', href: '/settings', icon: Settings },
             { name: 'Profile', href: '/profile', icon: User },
             { name: 'Help', href: '/help', icon: HelpCircle },
@@ -162,9 +159,7 @@ const SEARCH_ITEMS = [
         category: 'Quick Actions', items: [
             { name: 'Start Study Session', href: '/study', icon: Play },
             { name: 'Review Flashcards', href: '/flashcards/review', icon: Layers },
-            { name: 'Practice Problems', href: '/practice', icon: Target },
             { name: 'Take Exam', href: '/exam', icon: FileText },
-            { name: 'Ask AI Tutor', href: '/ai/chat', icon: Brain },
         ]
     },
 ];
@@ -238,19 +233,12 @@ function Sidebar({ isOpen, onToggle }: { isOpen: boolean, onToggle: () => void }
                                             : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-300'
                                             }`} />
                                         {isOpen && (
-                                            <>
-                                                <span className={`flex-1 text-sm ${item.active
-                                                    ? 'font-medium'
-                                                    : 'group-hover:text-zinc-900 dark:group-hover:text-white'
-                                                    }`}>
-                                                    {item.label}
-                                                </span>
-                                                {item.badge && (
-                                                    <span className="px-2 py-0.5 text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-md">
-                                                        {item.badge}
-                                                    </span>
-                                                )}
-                                            </>
+                                            <span className={`flex-1 text-sm ${item.active
+                                                ? 'font-medium'
+                                                : 'group-hover:text-zinc-900 dark:group-hover:text-white'
+                                                }`}>
+                                                {item.label}
+                                            </span>
                                         )}
                                     </Link>
                                 ))}
@@ -481,13 +469,9 @@ export default function DashboardPage() {
                             <p className="text-zinc-500 mt-1">What would you like to do today?</p>
                         </div>
                         <div className="flex gap-3">
-                            <Link href="/ai/chat" className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition font-medium flex items-center gap-2">
-                                <Brain className="w-4 h-4" />
-                                AI Tutor
-                            </Link>
                             <Link href="/study" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition font-medium flex items-center gap-2">
                                 <Play className="w-4 h-4" />
-                                Start Session
+                                Start Studying
                             </Link>
                         </div>
                     </motion.div>
