@@ -1,17 +1,32 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Mail, CheckCircle2 } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Mail, CheckCircle2, Loader2 } from 'lucide-react';
+import { useState, useTransition } from 'react';
 import { motion } from 'framer-motion';
+import { forgotPassword } from '@/app/actions/auth';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmitted(true);
+        setError(null);
+
+        const formData = new FormData();
+        formData.append('email', email);
+
+        startTransition(async () => {
+            const result = await forgotPassword(null, formData);
+            if (result?.error) {
+                setError(result.error);
+            } else {
+                setSubmitted(true);
+            }
+        });
     };
 
     if (submitted) {
@@ -78,6 +93,13 @@ export default function ForgotPasswordPage() {
                         </p>
                     </div>
 
+                    {/* Error Display */}
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-xl">
+                            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
@@ -95,9 +117,17 @@ export default function ForgotPasswordPage() {
 
                         <button
                             type="submit"
-                            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all"
+                            disabled={isPending}
+                            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
-                            Reset password
+                            {isPending ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Sending...
+                                </>
+                            ) : (
+                                'Reset password'
+                            )}
                         </button>
                     </form>
                 </div>

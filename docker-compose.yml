@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: qmath_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qmath
+      POSTGRES_PASSWORD: qmath_dev_password_2026
+      POSTGRES_DB: qmath
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qmath -d qmath"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local

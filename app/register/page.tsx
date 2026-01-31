@@ -1,17 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Building2, GraduationCap, Mail, User, Lock, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Building2, Mail, User, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import 'katex/dist/katex.min.css';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
+import { register } from '@/app/actions/auth';
 
 const BlockMath = dynamic(() => import('react-katex').then((mod) => mod.BlockMath), { ssr: false });
 
 export default function RegisterPage() {
-    const router = useRouter();
     const [step, setStep] = useState(1);
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -22,13 +25,39 @@ export default function RegisterPage() {
         agreeTerms: false
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (step < 2) {
-            setStep(step + 1);
+        setError(null);
+        setFieldErrors({});
+
+        if (step === 1) {
+            // Validate passwords match before proceeding
+            if (formData.password !== formData.confirmPassword) {
+                setError('Passwords do not match');
+                return;
+            }
+            if (formData.password.length < 6) {
+                setError('Password must be at least 6 characters');
+                return;
+            }
+            setStep(2);
         } else {
-            // Registration complete, redirect to onboarding
-            router.push('/onboarding/welcome');
+            // Submit to backend
+            const data = new FormData();
+            data.append('name', `${formData.firstName} ${formData.lastName}`);
+            data.append('email', formData.email);
+            data.append('password', formData.password);
+
+            startTransition(async () => {
+                const result = await register(null, data);
+                if (result?.errors) {
+                    setFieldErrors(result.errors);
+                }
+                if (result?.message) {
+                    setError(result.message);
+                }
+                // If successful, the register action redirects to /login
+            });
         }
     };
 
@@ -99,6 +128,13 @@ export default function RegisterPage() {
                         </p>
                     </div>
 
+                    {/* Error Display */}
+                    {error && (
+                        <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-xl">
+                            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {step === 1 ? (
                             <>
@@ -115,6 +151,7 @@ export default function RegisterPage() {
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         />
                                     </div>
+                                    {fieldErrors.email && <p className="mt-1 text-sm text-red-500">{fieldErrors.email[0]}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Password</label>
@@ -122,14 +159,15 @@ export default function RegisterPage() {
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                                         <input
                                             type="password"
-                                            placeholder="At least 8 characters"
+                                            placeholder="At least 6 characters"
                                             required
-                                            minLength={8}
+                                            minLength={6}
                                             className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                             value={formData.password}
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                         />
                                     </div>
+                                    {fieldErrors.password && <p className="mt-1 text-sm text-red-500">{fieldErrors.password[0]}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Confirm Password</label>
@@ -162,6 +200,7 @@ export default function RegisterPage() {
                                                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                             />
                                         </div>
+                                        {fieldErrors.name && <p className="mt-1 text-sm text-red-500">{fieldErrors.name[0]}</p>}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Last Name</label>
@@ -212,12 +251,32 @@ export default function RegisterPage() {
 
                         <button
                             type="submit"
-                            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
+                            disabled={isPending}
+                            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
-                            {step === 1 ? 'Continue' : 'Create Account'}
-                            <ArrowRight className="w-5 h-5" />
+                            {isPending ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Creating account...
+                                </>
+                            ) : (
+                                <>
+                                    {step === 1 ? 'Continue' : 'Create Account'}
+                                    <ArrowRight className="w-5 h-5" />
+                                </>
+                            )}
                         </button>
                     </form>
+
+                    {step === 2 && (
+                        <button
+                            type="button"
+                            onClick={() => setStep(1)}
+                            className="w-full py-3 text-zinc-600 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-white transition-colors"
+                        >
+                            ← Back to Step 1
+                        </button>
+                    )}
 
                     <div className="text-center pt-4">
                         <p className="text-zinc-600 dark:text-zinc-400">

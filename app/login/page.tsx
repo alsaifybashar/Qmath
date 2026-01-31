@@ -1,29 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Building2, Github, Globe, Mail } from 'lucide-react';
+import { ArrowLeft, Mail, Globe } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import 'katex/dist/katex.min.css';
 
 // Dynamically import KaTeX components with no SSR
 const BlockMath = dynamic(() => import('react-katex').then((mod) => mod.BlockMath), { ssr: false });
 
-import { useRouter } from 'next/navigation';
+import { useActionState } from 'react';
 import { useState } from 'react';
+import { authenticate } from '@/app/actions/auth';
 
 export default function LoginPage() {
-    const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (email === 'admin' && password === 'admin') {
-            router.push('/dashboard');
-        } else {
-            console.log('Invalid credentials');
-        }
-    };
+    const [errorMessage, formAction, isPending] = useActionState(
+        authenticate,
+        undefined,
+    );
 
     return (
         <div className="min-h-screen w-full flex bg-white dark:bg-black transition-colors duration-300">
@@ -75,8 +68,8 @@ export default function LoginPage() {
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-zinc-50 dark:bg-black">
                 <div className="max-w-md w-full space-y-8">
                     <div className="text-center lg:text-left">
-                        <h2 className="text-3xl font-bold text-zinc-900 dark:text-white">Sign in or create account</h2>
-                        <p className="text-zinc-500 mt-2">Enter your details to access your dashboard.</p>
+                        <h2 className="text-3xl font-bold text-zinc-900 dark:text-white">Sign in to your account</h2>
+                        <p className="text-zinc-500 mt-2">Enter your credentials to access your dashboard.</p>
                     </div>
 
                     <div className="space-y-4">
@@ -95,26 +88,27 @@ export default function LoginPage() {
                             <div className="relative flex justify-center text-xs uppercase"><span className="bg-zinc-50 dark:bg-black px-2 text-zinc-500">Or continue with email</span></div>
                         </div>
 
-                        {/* Email Form */}
-                        <form onSubmit={handleLogin} className="space-y-4">
+                        {/* Email Form - Now using NextAuth */}
+                        <form action={formAction} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Email address</label>
                                 <input
-                                    type="text"
+                                    type="email"
+                                    name="email"
                                     placeholder="name@university.edu"
                                     className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Password</label>
                                 <input
                                     type="password"
+                                    name="password"
                                     placeholder="••••••••"
                                     className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    minLength={6}
                                 />
                             </div>
 
@@ -126,8 +120,19 @@ export default function LoginPage() {
                                 <Link href="/forgot-password" className="text-blue-600 hover:underline font-medium">Forgot password?</Link>
                             </div>
 
-                            <button type="submit" className="w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold rounded-xl shadow-lg hover:opacity-90 transition-all">
-                                Log in
+                            {/* Error Message */}
+                            {errorMessage && (
+                                <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-xl">
+                                    <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={isPending}
+                                className="w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold rounded-xl shadow-lg hover:opacity-90 transition-all disabled:opacity-50"
+                            >
+                                {isPending ? 'Signing in...' : 'Log in'}
                             </button>
                         </form>
 
