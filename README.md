@@ -2,16 +2,35 @@
 
 Qmath is an AI-driven intelligent tutoring system designed for university-level mathematics. It combines adaptive learning algorithms with a comprehensive exam archive to provide students with personalized practice and access to historical exam materials.
 
+> **🔑 Quick Reference**
+> 
+> **Student Login**: `test@qmath.se` / `test123456`  
+> **Admin Login**: `admin@qmath.se` / `admin123456`  
+> **Admin Panel**: [http://localhost:3000/admin](http://localhost:3000/admin)
+
 ---
 
 ## ✨ Features
 
+### For Students
 - **Adaptive Learning Engine**: IRT-based question selection with Bayesian Knowledge Tracing
-- **Exam Archive**: Search and download old exams from various courses
+- **Exam Archive**: Search and download old exams from various courses (liutentor.se inspired)
 - **Spaced Repetition**: Optimized review scheduling for long-term retention
 - **Real-time Progress Tracking**: Visual analytics of mastery across topics
-- **Admin Panel**: Upload and manage exam PDFs
+- **Minimal Design**: Clean, modern interface with centered search
+
+### For Administrators
+- **Comprehensive Admin Panel**: Full-featured dashboard with sidebar navigation
+- **Dashboard**: Real-time stats, activity feeds, top courses, system status
+- **User Management**: Promote/demote admins, view user activity, delete accounts
+- **Exam Management**: Upload, edit, delete exams with download statistics
+- **Activity Logs**: Monitor all system events with filtering and search
+- **Settings**: Configure site settings, file uploads, and system preferences
+
+### General
 - **Dark Mode**: Full dark theme support throughout the platform
+- **Role-Based Access**: Student and admin roles with protected routes
+- **Session Management**: Secure JWT-based authentication
 
 ---
 
@@ -42,6 +61,28 @@ npm run dev
 
 # 7. Open http://localhost:3000
 ```
+
+### 🔐 Default Login Credentials
+
+After running the seed scripts, use these credentials to log in:
+
+#### **Student Account**
+- **Email**: `test@qmath.se`
+- **Password**: `test123456`
+- **Access**: Exam archive, adaptive learning, progress tracking
+
+#### **Admin Account**
+- **Email**: `admin@qmath.se`
+- **Password**: `admin123456`
+- **Access**: Full admin panel + all student features
+
+#### Admin Panel Routes:
+- `/admin` - Dashboard with stats and activity
+- `/admin/users` - User management
+- `/admin/exams` - Exam management  
+- `/admin/upload-exam` - Upload new exams
+- `/admin/logs` - Activity logs
+- `/admin/settings` - System settings
 
 ---
 
@@ -128,12 +169,18 @@ Qmath/
 │   │       └── upload-exam/    # Admin exam upload
 │   ├── (auth)/                 # Auth pages (login, register)
 │   ├── dashboard/              # Student dashboard
-│   ├── archive/                # Exam archive (NEW)
-│   ├── admin/                  # Admin panel
-│   │   └── upload-exam/        # Exam upload form
+│   ├── archive/                # Exam archive (liutentor.se style)
+│   ├── admin/                  # Admin panel (NEW)
+│   │   ├── page.tsx            # Dashboard with stats
+│   │   ├── users/              # User management
+│   │   ├── exams/              # Exam management
+│   │   ├── upload-exam/        # Exam upload form
+│   │   ├── logs/               # Activity logs
+│   │   └── settings/           # System settings
 │   └── study/                  # Practice interface
 ├── components/                 # React components
 │   ├── Header.tsx              # Main navigation
+│   ├── AdminLayout.tsx         # Admin sidebar layout (NEW)
 │   ├── ExamResultsTable.tsx    # Exam search results
 │   └── LoginPromptModal.tsx    # Auth prompt
 ├── db/                         # Database layer
@@ -159,23 +206,31 @@ Qmath/
 ## 🎓 User Roles & Access
 
 ### Student (Default)
-- Access adaptive learning practice
-- Search and download exams (requires login)
-- View personal progress and analytics
+- ✅ Access adaptive learning practice
+- ✅ Search and download exams (requires login)
+- ✅ View personal progress and analytics
+- ✅ Track mastery across topics
+- 🔒 **No admin panel access**
 
-### Admin
-- All student permissions
-- Upload exam PDFs at `/admin/upload-exam`
-- Manage exam archive
+### Administrator
+**All student permissions PLUS:**
+- ✅ **Dashboard** (`/admin`) - View stats, activity feed, top courses, system status
+- ✅ **User Management** (`/admin/users`) - Promote/demote admins, delete users, search
+- ✅ **Exam Management** (`/admin/exams`) - View all exams, download stats, delete
+- ✅ **Upload Exams** (`/admin/upload-exam`) - Add new exam PDFs to archive
+- ✅ **Activity Logs** (`/admin/logs`) - Monitor system events, filter by type
+- ✅ **Settings** (`/admin/settings`) - Configure site, users, file uploads
 
 ### Default Credentials
 
-After running `npm run db:seed`:
+After running `npm run db:seed` and `npm run db:seed:admin`:
 
-| Type | Email | Password | Role |
-|------|-------|----------|------|
-| Student | `test@qmath.se` | `test123456` | `student` |
-| Admin | `admin@qmath.se` | `admin123456` | `admin` |
+| Role | Email | Password | Access Level |
+|------|-------|----------|--------------|
+| **Student** | `test@qmath.se` | `test123456` | Public pages + exam archive |
+| **Admin** | `admin@qmath.se` | `admin123456` | All features + admin panel |
+
+> **Note**: Both accounts have full access to the exam archive and adaptive learning features. The admin account additionally has access to the complete admin panel.
 
 ---
 
@@ -209,6 +264,98 @@ The exam archive mimics the design and functionality of liutentor.se, allowing s
 - **Protected download**: `/api/exams/download/{id}` (requires auth)
 - **File storage**: PDFs stored in `/uploads/exams/{courseCode}/`
 - **Login modal**: Prompts unauthenticated users to sign in
+
+---
+
+## 🎛️ Admin Panel
+
+The admin panel provides comprehensive control over the Qmath platform with a clean sidebar navigation interface.
+
+### Accessing the Admin Panel
+
+1. Log in with admin credentials (`admin@qmath.se` / `admin123456`)
+2. Navigate to `/admin` or click your profile menu
+3. Use the sidebar to navigate between admin sections
+
+### Admin Pages Overview
+
+#### 1. **Dashboard** (`/admin`)
+- **Overview Stats**: Total users, exams, downloads, searches
+- **Activity Feed**: Recent user registrations, exam uploads, downloads
+- **Top Courses**: Most downloaded exams ranking
+- **System Status**: Database, API, Authentication health
+- **Storage Info**: Current storage usage visualization
+- **Alerts**: System notifications and warnings
+
+#### 2. **User Management** (`/admin/users`)
+- **User Statistics**: Total users, admins, students breakdown
+- **Search Functionality**: Filter users by email or name
+- **User Table**: Display all users with avatar, name, email, role, join date
+- **Actions**:
+  - 🔼 Promote student to admin
+  - 🔽 Demote admin to student
+  - 🗑️ Delete user account (with confirmation)
+- **Protection**: Cannot delete your own account
+
+#### 3. **Exam Management** (`/admin/exams`)
+- **Exam Statistics**: Total exams, with solutions, downloads, unique courses
+- **Search & Filter**: Find exams by course code or name
+- **Exam Table**: Course, date, type, solution status, size, downloads
+- **Actions**:
+  - 👁️ View exam details
+  - ✏️ Edit exam metadata
+  - 🗑️ Delete exam (removes file and database entry)
+- **Quick Upload**: Direct link to upload page
+
+#### 4. **Upload Exam** (`/admin/upload-exam`)
+- **Form Fields**:
+  - Course Code (e.g., SF1672)
+  - Course Name (e.g., Linear Algebra)
+  - Exam Date (date picker)
+  - Exam Type (Final/Midterm/Retake dropdown)
+  - Has Solution (checkbox)
+  - PDF File upload
+- **Validation**: PDF-only, file size limits
+- **Auto-organization**: Files stored in `/uploads/exams/{courseCode}/`
+- **Instant availability**: Exams appear in search immediately
+
+#### 5. **Activity Logs** (`/admin/logs`)
+- **Event Tracking**: All system activities logged with timestamps
+- **Filter Options**: All, User Register, Exam Upload, Exam Download, Role Change, Error
+- **Log Details**:
+  - Event type with color-coded icons
+  - User email who performed action
+  - IP address
+  - Metadata (course codes, affected resources)
+  - Relative and absolute timestamps
+- **Statistics**: Event counts by category
+
+#### 6. **Settings** (`/admin/settings`)
+- **General Settings**:
+  - Site Name configuration
+  - Site URL
+  - Support Email
+- **User Settings**:
+  - Allow/disable new registrations
+  - Require email verification toggle
+  - Enable notifications
+- **File Upload Settings**:
+  - Maximum file size (MB)
+  - Allowed file types
+- **Database Actions**:
+  - Export database
+  - Clear cache
+- **System Info**: Version, database type, Node.js, Next.js versions
+
+### Admin Panel Features
+
+✅ **Sidebar Navigation**: Persistent navigation across all admin pages  
+✅ **Responsive Design**: Works on desktop and tablet  
+✅ **Real-time Stats**: Live updates of key metrics  
+✅ **Role-Based Access**: Automatic redirect for non-admin users  
+✅ **Dark Mode**: Full theme support  
+✅ **Search & Filter**: Quick find functionality on all pages  
+✅ **Confirmation Dialogs**: Prevent accidental destructive actions  
 
 ---
 
@@ -370,13 +517,31 @@ CMD ["npm", "start"]
 
 ## 🔒 Security
 
+### Authentication & Authorization
 - ✅ Passwords hashed with bcryptjs (10 rounds)
 - ✅ HTTP-only session cookies
-- ✅ Protected routes via middleware
+- ✅ JWT-based session management with NextAuth v5
 - ✅ Role-based access control (admin vs student)
+- ✅ Session validation on every admin route
+
+### Route Protection
+- ✅ Protected routes via middleware
+- ✅ Admin panel routes require `role: 'admin'` in session
+- ✅ Automatic redirect for unauthorized access
+- ✅ Cannot delete own admin account (self-protection)
+
+### Data Protection
 - ✅ Exam PDFs served via authenticated API (not publicly accessible)
-- ✅ CSRF protection via NextAuth
+- ✅ File uploads validated (PDF only, size limits)
 - ✅ SQL injection protection via Drizzle ORM
+- ✅ CSRF protection via NextAuth
+- ✅ User emails stored with unique constraints
+
+### Admin Panel Security
+- ✅ All admin actions require authentication check
+- ✅ Confirmation dialogs for destructive actions (delete user, delete exam)
+- ✅ Activity logging for audit trail
+- ✅ IP address tracking for security events
 
 ---
 
