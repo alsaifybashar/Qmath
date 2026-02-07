@@ -7,7 +7,7 @@ dotenv.config({ path: '.env.local' });
 const url = process.env.DATABASE_URL?.replace('file:', '') || 'qmath.db';
 
 export default {
-    schema: './db/schema.ts',
+    schema: ['./db/schema.ts', './db/dashboard-schema.ts'],
     out: './db/migrations',
     dialect: 'sqlite',
     dbCredentials: {

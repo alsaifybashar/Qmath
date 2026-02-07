@@ -15,7 +15,12 @@ export async function authenticate(
     formData: FormData,
 ) {
     try {
-        await signIn('credentials', formData);
+        const email = formData.get('email');
+        const password = formData.get('password');
+        await signIn('credentials', {
+            email: typeof email === 'string' ? email : '',
+            password: typeof password === 'string' ? password : '',
+        });
     } catch (error) {
         if (error instanceof AuthError) {
             switch (error.type) {
