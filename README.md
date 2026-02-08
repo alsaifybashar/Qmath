@@ -1,6 +1,8 @@
 # Qmath - Adaptive Learning Platform
 
-Qmath is an AI-driven intelligent tutoring system designed for university-level mathematics. It combines adaptive learning algorithms with a comprehensive exam archive to provide students with personalized practice and access to historical exam materials.
+Qmath is an AI-driven intelligent tutoring system designed for university-level mathematics. It combines adaptive learning algorithms with AI-powered content generation and a comprehensive exam archive to provide students with personalized practice and access to historical exam materials.
+
+**🤖 Powered by Anthropic Claude** for intelligent math problem generation
 
 > **🔑 Quick Reference**
 > 
@@ -14,6 +16,8 @@ Qmath is an AI-driven intelligent tutoring system designed for university-level 
 
 ### For Students
 - **Adaptive Learning Engine**: IRT-based question selection with Bayesian Knowledge Tracing
+- **AI-Generated Content**: Dynamic problem generation using Claude AI with multiple content types
+- **Free-Form Symbolic Input**: Enter mathematical expressions with real-time LaTeX preview and equivalence checking
 - **Exam Archive**: Search and download old exams from various courses (liutentor.se inspired)
 - **Spaced Repetition**: Optimized review scheduling for long-term retention
 - **Real-time Progress Tracking**: Visual analytics of mastery across topics
@@ -24,6 +28,7 @@ Qmath is an AI-driven intelligent tutoring system designed for university-level 
 - **Dashboard**: Real-time stats, activity feeds, top courses, system status
 - **User Management**: Promote/demote admins, view user activity, delete accounts
 - **Exam Management**: Upload, edit, delete exams with download statistics
+- **Exam Upload API**: Upload exam PDFs for AI-powered question extraction
 - **Activity Logs**: Monitor all system events with filtering and search
 - **Settings**: Configure site settings, file uploads, and system preferences
 
@@ -92,11 +97,15 @@ Create a `.env.local` file in the root directory:
 
 ```env
 # Database
-DATABASE_URL="file:./db/qmath.db"
+DATABASE_URL="file:./qmath.db"
 
 # NextAuth
 AUTH_SECRET="your-secret-key-here"
 NEXTAUTH_URL="http://localhost:3000"
+
+# AI Content Generation (Anthropic Claude)
+ANTHROPIC_API_KEY="your-anthropic-api-key"
+AI_PROVIDER="anthropic"  # or "mock" for development without API
 
 # Optional: For production
 NODE_ENV="development"
@@ -126,7 +135,13 @@ Qmath uses **SQLite** for local development with Drizzle ORM for type-safe queri
 | `questions` | Practice problems (MCQ, numeric, proof) |
 | `userMastery` | BKT mastery tracking per topic |
 | `attemptLogs` | Interaction logs for analytics |
-| `exams` | **NEW**: Exam archive metadata (course, date, PDF path) |
+| `exams` | Exam archive metadata (course, date, PDF path) |
+| `source_exams` | **NEW**: Uploaded source exams for AI processing |
+| `exam_questions` | **NEW**: Extracted questions from source exams |
+| `course_areas` | **NEW**: Curriculum areas for content organization |
+| `generated_content` | **NEW**: AI-generated content with polymorphic data |
+| `content_attempts` | **NEW**: Student attempts on generated content |
+| `content_quality` | **NEW**: Quality metrics for generated content |
 
 ### Database Commands
 
@@ -165,12 +180,17 @@ Qmath/
 │   │   ├── exams/
 │   │   │   ├── search/         # Public exam search
 │   │   │   └── download/[id]/  # Protected download
+│   │   ├── content/            # AI Content APIs (NEW)
+│   │   │   ├── generate/       # Generate AI content
+│   │   │   ├── validate/       # Validate math answers
+│   │   │   └── upload-exam/    # Upload exam for processing
 │   │   └── admin/
 │   │       └── upload-exam/    # Admin exam upload
 │   ├── (auth)/                 # Auth pages (login, register)
 │   ├── dashboard/              # Student dashboard
+│   ├── features/               # Features showcase (NEW)
 │   ├── archive/                # Exam archive (liutentor.se style)
-│   ├── admin/                  # Admin panel (NEW)
+│   ├── admin/                  # Admin panel
 │   │   ├── page.tsx            # Dashboard with stats
 │   │   ├── users/              # User management
 │   │   ├── exams/              # Exam management
@@ -180,21 +200,37 @@ Qmath/
 │   └── study/                  # Practice interface
 ├── components/                 # React components
 │   ├── Header.tsx              # Main navigation
-│   ├── AdminLayout.tsx         # Admin sidebar layout (NEW)
+│   ├── AdminLayout.tsx         # Admin sidebar layout
 │   ├── ExamResultsTable.tsx    # Exam search results
-│   └── LoginPromptModal.tsx    # Auth prompt
+│   ├── LoginPromptModal.tsx    # Auth prompt
+│   └── content/                # AI Content Components (NEW)
+│       ├── FreeFormInput.tsx   # Symbolic math input
+│       ├── ContentCard.tsx     # AI content display cards
+│       └── index.ts            # Component exports
 ├── db/                         # Database layer
 │   ├── drizzle.ts              # DB connection
-│   ├── schema.ts               # Table definitions
+│   ├── schema.ts               # Core table definitions
+│   ├── content-schema.ts       # AI content tables (NEW)
 │   └── seeds/                  # Seed scripts
 │       ├── seed.ts             # Main data
 │       ├── seed-admin.ts       # Admin user
 │       └── seed-exams.ts       # Sample exams
 ├── lib/                        # Utilities
-│   └── adaptive-engine/        # Learning algorithms
-├── uploads/                    # Uploaded exam PDFs
-│   └── exams/
-│       └── {courseCode}/       # Organized by course
+│   ├── adaptive-engine/        # Learning algorithms
+│   └── content-generation/     # AI Content Generation (NEW)
+│       ├── content-generator.ts # Main generator with Anthropic
+│       ├── symbolic-validator.ts # Math equivalence checker
+│       ├── types.ts            # TypeScript definitions
+│       ├── prompts/            # AI prompt templates
+│       │   ├── free-form-symbolic.ts
+│       │   ├── faded-example.ts
+│       │   ├── parsons-problem.ts
+│       │   └── error-spotting.ts
+│       └── index.ts            # Exports
+├── scripts/                    # CLI scripts
+│   └── test-ai-generation.ts   # Test AI content generation
+├── uploads/                    # Uploaded files
+│   └── exams/                  # Exam PDFs by course
 ├── auth.ts                     # NextAuth config
 ├── auth.config.ts              # Auth callbacks
 ├── middleware.ts               # Route protection
@@ -382,6 +418,70 @@ Qmath uses three complementary algorithms:
 
 ---
 
+## 🤖 AI Content Generation
+
+Qmath uses **Anthropic Claude** to dynamically generate mathematics problems tailored to each topic and difficulty level.
+
+### Supported Content Types
+
+| Type | Description | Status |
+|------|-------------|--------|
+| **Free-Form Symbolic** | Enter mathematical expressions with equivalence checking | ✅ Complete |
+| **Faded Worked Examples** | Step-by-step solutions with progressive blanks | 🚧 Template Ready |
+| **Parsons Problems** | Arrange proof steps in correct order | 🚧 Template Ready |
+| **Error Spotting** | Find mistakes in given solutions | 🚧 Template Ready |
+| **Multiple Choice** | AI-generated distractors | 📋 Planned |
+| **Numeric Input** | Exact value with tolerance | 📋 Planned |
+| **Matrix Input** | Grid-based matrix entry | 📋 Planned |
+| **Graph Sketching** | Interactive function plotting | 📋 Planned |
+
+### Free-Form Symbolic Input
+
+The flagship feature allows students to enter mathematical expressions:
+
+- **Real-time LaTeX Preview**: See rendered math as you type
+- **Confidence Tagging**: Students rate their confidence (affects scoring)
+- **Progressive Hints**: 3 AI-generated hints per problem
+- **Mathematical Equivalence**: `x+1` and `1+x` are correctly marked equivalent
+- **Detailed Explanations**: Step-by-step solutions after submission
+
+### Testing AI Generation
+
+```bash
+# Test with your Anthropic API key
+DATABASE_URL="file:./qmath.db" npx tsx scripts/test-ai-generation.ts
+```
+
+Example output:
+```
+✅ Anthropic API key found
+📚 Using topic: Vectors in Rⁿ
+🤖 Generating free-form symbolic content...
+✅ Content generated successfully!
+📝 Problem: Find the magnitude of vector sum
+⏱️  Generation time: 8531ms
+```
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/content/generate` | POST | Generate new AI content |
+| `/api/content/validate` | POST | Validate student answers |
+| `/api/content/upload-exam` | POST | Upload exam for processing |
+
+### Configuration
+
+```env
+# Required for AI generation
+ANTHROPIC_API_KEY="sk-ant-..."
+
+# Provider selection
+AI_PROVIDER="anthropic"  # or "mock" for development
+```
+
+---
+
 ## 🛠️ Development Workflow
 
 ### Daily Development
@@ -431,6 +531,7 @@ npm run db:seed
 | **Auth** | NextAuth.js v5 | Session management, JWT |
 | **Database** | SQLite | Local-first data storage |
 | **ORM** | Drizzle ORM | Type-safe queries |
+| **AI** | **Anthropic Claude** | Content generation, math problems |
 | **Math Rendering** | KaTeX | LaTeX equations |
 | **File Upload** | Next.js FormData API | Exam PDF handling |
 | **Icons** | Lucide React | Consistent iconography |
@@ -452,6 +553,7 @@ npm run db:seed
 | `npm run db:seed:admin` | Create admin user |
 | `npm run db:seed:exams` | Seed sample exams |
 | `npm run db:reset` | Clear and re-seed DB |
+| `npx tsx scripts/test-ai-generation.ts` | Test AI content generation |
 
 ---
 
@@ -461,11 +563,15 @@ npm run db:seed
 
 ```env
 # Database (for production, consider PostgreSQL)
-DATABASE_URL="file:./db/qmath.db"  # or PostgreSQL connection string
+DATABASE_URL="file:./qmath.db"  # or PostgreSQL connection string
 
 # Auth
 AUTH_SECRET="your-production-secret"
 NEXTAUTH_URL="https://yourdomain.com"
+
+# AI Content Generation
+ANTHROPIC_API_KEY="sk-ant-..."
+AI_PROVIDER="anthropic"
 
 # Node
 NODE_ENV="production"

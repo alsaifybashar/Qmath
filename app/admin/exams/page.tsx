@@ -40,9 +40,7 @@ export default function AdminExamsPage() {
     useEffect(() => {
         if (status === 'unauthenticated') {
             router.push('/login?callbackUrl=/admin/exams');
-        } else if (session?.user?.role !== 'admin') {
-            router.push('/');
-        } else {
+        } else if (status === 'authenticated') {
             setLoading(false);
         }
     }, [session, status, router]);
@@ -86,7 +84,7 @@ export default function AdminExamsPage() {
         );
     }
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session) {
         return null;
     }
 

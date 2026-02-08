@@ -45,9 +45,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         if (status === 'unauthenticated') {
             router.push('/login?callbackUrl=/admin');
-        } else if (session?.user?.role !== 'admin') {
-            router.push('/');
-        } else {
+        } else if (status === 'authenticated') {
             fetchStats();
         }
     }, [session, status, router]);
@@ -76,7 +74,8 @@ export default function AdminDashboard() {
         );
     }
 
-    if (!session || session.user.role !== 'admin') {
+    // Admin access is enforced by app/admin/layout.tsx (server-side)
+    if (!session) {
         return null;
     }
 

@@ -37,11 +37,7 @@ export default function AdminUploadExamPage() {
         return null;
     }
 
-    if (session?.user?.role !== 'admin') {
-        router.push('/');
-        return null;
-    }
-
+    // Admin access enforced by app/admin/layout.tsx
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (selectedFile && selectedFile.type === 'application/pdf') {

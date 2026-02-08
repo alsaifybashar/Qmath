@@ -1,266 +1,505 @@
 'use client';
 
-import Link from 'next/link';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Header } from '@/components/Header';
-import {
-    Brain, BarChart3, Target, BookOpen, Zap, Clock, Users, Trophy,
-    Sparkles, ArrowRight, CheckCircle2, Play, Shield, Globe
-} from 'lucide-react';
+import { BookOpen, Layers, Library, Trophy, ArrowRight, Sparkles } from 'lucide-react';
+import LearningPaths, { LearningPath } from '@/components/features/LearningPaths';
+import FlashcardReview, { FlashcardDeck, DeckProgressRing } from '@/components/features/FlashcardReview';
+import PersonalLibrary, { LibraryItem } from '@/components/features/PersonalLibrary';
+import QuizEngine, { QuizConfig } from '@/components/features/QuizEngine';
+import { FreeFormInput, ContentCard } from '@/components/content';
+import type { FreeFormProblem } from '@/components/content';
 
-const features = [
+// Demo data
+const demoLearningPaths: LearningPath[] = [
     {
-        icon: Brain,
-        title: 'Adaptive Learning Engine',
-        description: 'Our BKT and IRT algorithms analyze your solving patterns to serve the perfect question at the perfect time, maximizing learning efficiency.',
-        color: 'from-purple-500 to-pink-500',
-        details: ['Bayesian Knowledge Tracing', 'Item Response Theory', 'Personalized difficulty curves']
+        id: 'calc-1',
+        title: 'Calculus I',
+        description: 'Limits, derivatives, and basic integration',
+        icon: '📐',
+        color: 'blue',
+        totalXP: 1200,
+        completedXP: 450,
+        nodes: [
+            {
+                id: 'limits-intro',
+                title: 'Introduction to Limits',
+                description: 'Understanding the concept of limits and continuity',
+                type: 'theory',
+                status: 'completed',
+                xpReward: 50,
+                estimatedMinutes: 15,
+                masteryLevel: 92
+            },
+            {
+                id: 'limits-practice',
+                title: 'Limit Calculations',
+                description: 'Practice evaluating limits algebraically',
+                type: 'practice',
+                status: 'completed',
+                xpReward: 100,
+                estimatedMinutes: 30,
+                masteryLevel: 85
+            },
+            {
+                id: 'derivatives-intro',
+                title: 'Introduction to Derivatives',
+                description: 'The derivative as rate of change',
+                type: 'theory',
+                status: 'in_progress',
+                xpReward: 50,
+                estimatedMinutes: 20
+            },
+            {
+                id: 'derivatives-rules',
+                title: 'Differentiation Rules',
+                description: 'Power rule, product rule, chain rule',
+                type: 'examples',
+                status: 'available',
+                xpReward: 75,
+                estimatedMinutes: 25
+            },
+            {
+                id: 'integration-basics',
+                title: 'Basic Integration',
+                description: 'Antiderivatives and indefinite integrals',
+                type: 'theory',
+                status: 'locked',
+                xpReward: 50,
+                estimatedMinutes: 20,
+                prerequisites: ['derivatives-rules']
+            }
+        ]
     },
     {
-        icon: BarChart3,
-        title: 'Real-time Analytics',
-        description: 'Track your learning velocity, identify weak spots, and visualize your progress with comprehensive analytics dashboards.',
-        color: 'from-blue-500 to-cyan-500',
-        details: ['Learning velocity tracking', 'Knowledge gap detection', 'Study time optimization']
-    },
-    {
-        icon: Target,
-        title: 'Exam Simulation',
-        description: 'Practice under real exam conditions with timed simulations that mirror your university\'s exam format.',
-        color: 'from-green-500 to-emerald-500',
-        details: ['University-specific exams', 'Time pressure training', 'Performance analytics']
-    },
-    {
-        icon: BookOpen,
-        title: 'Dynamic Scaffolding',
-        description: 'When you struggle, we automatically break problems into simpler steps to rebuild your understanding.',
-        color: 'from-orange-500 to-amber-500',
-        details: ['Step-by-step breakdowns', 'Prerequisite detection', 'Concept reinforcement']
-    },
-    {
-        icon: Zap,
-        title: 'Spaced Repetition',
-        description: 'Our SM-2 based flashcard system ensures you review concepts at optimal intervals for long-term retention.',
-        color: 'from-yellow-500 to-orange-500',
-        details: ['SM-2/FSRS algorithm', 'Optimal review scheduling', 'Memory strength tracking']
-    },
-    {
-        icon: Sparkles,
-        title: 'AI Tutor',
-        description: 'Get instant explanations and personalized help from our AI tutor that understands mathematical concepts.',
-        color: 'from-indigo-500 to-purple-500',
-        details: ['24/7 availability', 'Step-by-step explanations', 'Concept clarification']
+        id: 'linear-algebra',
+        title: 'Linear Algebra',
+        description: 'Vectors, matrices, and linear transformations',
+        icon: '🔢',
+        color: 'purple',
+        totalXP: 800,
+        completedXP: 200,
+        nodes: [
+            {
+                id: 'vectors-intro',
+                title: 'Vectors in Rⁿ',
+                description: 'Vector operations and geometric interpretation',
+                type: 'theory',
+                status: 'completed',
+                xpReward: 50,
+                estimatedMinutes: 15,
+                masteryLevel: 88
+            },
+            {
+                id: 'matrices-intro',
+                title: 'Matrix Operations',
+                description: 'Addition, multiplication, and properties',
+                type: 'practice',
+                status: 'available',
+                xpReward: 100,
+                estimatedMinutes: 35
+            },
+            {
+                id: 'determinants',
+                title: 'Determinants',
+                description: 'Computing and interpreting determinants',
+                type: 'examples',
+                status: 'locked',
+                xpReward: 75,
+                estimatedMinutes: 25
+            }
+        ]
     }
 ];
 
-const stats = [
-    { value: '50,000+', label: 'Practice Problems' },
-    { value: '95%', label: 'Exam Pass Rate' },
-    { value: '10,000+', label: 'Active Students' },
-    { value: '25+', label: 'Universities' }
+const demoFlashcardDeck: FlashcardDeck = {
+    id: 'calc-formulas',
+    title: 'Calculus Formulas',
+    description: 'Essential derivatives and integrals',
+    masteryLevel: 72,
+    totalCards: 25,
+    dueToday: 5,
+    cards: [
+        {
+            id: 'card-1',
+            front: 'What is the derivative of sin(x)?',
+            back: 'cos(x)',
+            frontMath: '\\frac{d}{dx}\\sin(x) = ?',
+            backMath: '\\cos(x)',
+            difficulty: 2,
+            dueDate: new Date(),
+            interval: 3,
+            easeFactor: 2.5,
+            repetitions: 4,
+            topicId: 'trig-derivatives',
+            topicTitle: 'Trigonometric Derivatives'
+        },
+        {
+            id: 'card-2',
+            front: 'What is the integral of 1/x?',
+            back: 'ln|x| + C',
+            frontMath: '\\int \\frac{1}{x} dx = ?',
+            backMath: '\\ln|x| + C',
+            difficulty: 2,
+            dueDate: new Date(),
+            interval: 2,
+            easeFactor: 2.3,
+            repetitions: 3,
+            topicId: 'basic-integrals',
+            topicTitle: 'Basic Integrals'
+        },
+        {
+            id: 'card-3',
+            front: 'What is the chain rule formula?',
+            frontMath: '\\frac{d}{dx}[f(g(x))] = ?',
+            back: 'f\'(g(x)) · g\'(x)',
+            backMath: "f'(g(x)) \\cdot g'(x)",
+            difficulty: 3,
+            dueDate: new Date(),
+            interval: 1,
+            easeFactor: 2.1,
+            repetitions: 2,
+            topicId: 'chain-rule',
+            topicTitle: 'Chain Rule'
+        }
+    ]
+};
+
+const demoLibraryItems: LibraryItem[] = [
+    {
+        id: 'item-1',
+        type: 'problem',
+        title: 'Integration by Parts - Challenging Problem',
+        description: 'A difficult integration problem using integration by parts twice',
+        courseId: 'calc-2',
+        courseTitle: 'Calculus II',
+        savedAt: new Date('2024-01-15'),
+        tags: ['integration', 'challenging'],
+        isFavorite: true,
+        difficulty: 4
+    },
+    {
+        id: 'item-2',
+        type: 'topic',
+        title: 'Eigenvalues and Eigenvectors',
+        description: 'Complete guide to finding and interpreting eigenvalues',
+        courseId: 'linear-algebra',
+        courseTitle: 'Linear Algebra',
+        savedAt: new Date('2024-01-10'),
+        tags: ['eigenvalues', 'matrices'],
+        isFavorite: false,
+        progressPercent: 65
+    },
+    {
+        id: 'item-3',
+        type: 'flashcard_deck',
+        title: 'Trig Identities',
+        description: '25 essential trigonometric identities',
+        courseId: 'calc-1',
+        courseTitle: 'Calculus I',
+        savedAt: new Date('2024-01-08'),
+        tags: ['trigonometry', 'formulas'],
+        isFavorite: true
+    },
+    {
+        id: 'item-4',
+        type: 'exam',
+        title: 'Midterm Exam - Fall 2023',
+        description: 'Past exam covering chapters 1-5',
+        courseId: 'calc-2',
+        courseTitle: 'Calculus II',
+        savedAt: new Date('2024-01-05'),
+        tags: ['exam', 'practice'],
+        isFavorite: false
+    }
 ];
 
-export default function FeaturesPage() {
+const demoQuizConfig: QuizConfig = {
+    title: 'Calculus Quick Quiz',
+    description: 'Test your knowledge of basic calculus concepts',
+    showTimer: true,
+    showProgress: true,
+    allowSkip: true,
+    shuffleQuestions: false,
+    shuffleOptions: false,
+    timeLimit: 300,
+    questions: [
+        {
+            id: 'q1',
+            content: 'What is the derivative of x²?',
+            mathContent: '\\frac{d}{dx}(x^2) = ?',
+            options: [
+                { id: 'a', content: 'x', mathContent: 'x' },
+                { id: 'b', content: '2x', mathContent: '2x' },
+                { id: 'c', content: '2', mathContent: '2' },
+                { id: 'd', content: 'x²', mathContent: 'x^2' }
+            ],
+            correctOptionId: 'b',
+            explanation: 'Using the power rule, d/dx(xⁿ) = nxⁿ⁻¹, so d/dx(x²) = 2x.',
+            difficulty: 1,
+            topicId: 'power-rule',
+            topicTitle: 'Power Rule'
+        },
+        {
+            id: 'q2',
+            content: 'What is the integral of cos(x)?',
+            mathContent: '\\int \\cos(x) dx = ?',
+            options: [
+                { id: 'a', content: '-sin(x) + C', mathContent: '-\\sin(x) + C' },
+                { id: 'b', content: 'sin(x) + C', mathContent: '\\sin(x) + C' },
+                { id: 'c', content: 'cos(x) + C', mathContent: '\\cos(x) + C' },
+                { id: 'd', content: '-cos(x) + C', mathContent: '-\\cos(x) + C' }
+            ],
+            correctOptionId: 'b',
+            explanation: 'The integral of cos(x) is sin(x) + C, since d/dx(sin(x)) = cos(x).',
+            difficulty: 2,
+            topicId: 'trig-integrals',
+            topicTitle: 'Trigonometric Integrals'
+        },
+        {
+            id: 'q3',
+            content: 'What is the limit as x approaches 0 of sin(x)/x?',
+            mathContent: '\\lim_{x \\to 0} \\frac{\\sin(x)}{x} = ?',
+            options: [
+                { id: 'a', content: '0' },
+                { id: 'b', content: '1' },
+                { id: 'c', content: '∞' },
+                { id: 'd', content: 'Does not exist' }
+            ],
+            correctOptionId: 'b',
+            explanation: 'This is a famous limit. Using L\'Hôpital\'s rule or the squeeze theorem, we can show that lim(x→0) sin(x)/x = 1.',
+            difficulty: 2,
+            topicId: 'limits',
+            topicTitle: 'Limits'
+        }
+    ]
+};
+
+// Demo AI-generated content
+const demoFreeFormProblem: FreeFormProblem = {
+    id: 'demo-1',
+    problem: 'Simplify the following expression:',
+    problemMath: '\\frac{x^2 - 1}{x - 1}',
+    expectedAnswer: 'x + 1',
+    alternativeForms: ['1 + x', '(x+1)'],
+    hints: [
+        'Try factoring the numerator',
+        'Remember: a² - b² = (a+b)(a-b)',
+        'x² - 1 = (x+1)(x-1)'
+    ],
+    explanation: 'Factor the numerator as a difference of squares: x² - 1 = (x+1)(x-1). Then cancel (x-1) from numerator and denominator, leaving x+1.',
+    difficulty: 0.4
+};
+
+const demoContentCards = [
+    {
+        id: 'content-1',
+        contentType: 'free_form_symbolic' as const,
+        title: 'Simplify Rational Expression',
+        preview: 'Factor and simplify (x²-4)/(x-2)',
+        difficulty: 0.3,
+        estimatedMinutes: 5,
+        tags: ['algebra', 'factoring']
+    },
+    {
+        id: 'content-2',
+        contentType: 'faded_worked_example' as const,
+        title: 'Product Rule Derivative',
+        preview: 'Learn to differentiate f(x)·g(x) step by step',
+        difficulty: 0.5,
+        estimatedMinutes: 10,
+        tags: ['calculus', 'derivatives']
+    },
+    {
+        id: 'content-3',
+        contentType: 'error_spotting' as const,
+        title: 'Find the Integration Error',
+        preview: 'Identify the mistake in this integration by parts solution',
+        difficulty: 0.7,
+        estimatedMinutes: 8,
+        tags: ['calculus', 'integration']
+    },
+    {
+        id: 'content-4',
+        contentType: 'parsons_problem' as const,
+        title: 'Proof: Triangle Inequality',
+        preview: 'Arrange the proof steps in correct order',
+        difficulty: 0.6,
+        estimatedMinutes: 12,
+        tags: ['analysis', 'proofs']
+    }
+];
+
+type DemoTab = 'paths' | 'flashcards' | 'library' | 'quiz' | 'ai-content';
+
+export default function FeaturesDemo() {
+    const [activeTab, setActiveTab] = useState<DemoTab>('paths');
+    const [libraryItems, setLibraryItems] = useState(demoLibraryItems);
+
+    const tabs = [
+        { id: 'paths' as DemoTab, label: 'Learning Paths', icon: BookOpen },
+        { id: 'flashcards' as DemoTab, label: 'Flashcards', icon: Layers },
+        { id: 'library' as DemoTab, label: 'My Library', icon: Library },
+        { id: 'quiz' as DemoTab, label: 'Quiz', icon: Trophy },
+        { id: 'ai-content' as DemoTab, label: 'AI Content', icon: Sparkles }
+    ];
+
     return (
-        <main className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-white">
-            <Header />
-
-            {/* Hero Section */}
-            <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-3xl rounded-full"></div>
-
-                <div className="max-w-4xl mx-auto text-center relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 text-sm font-medium mb-8"
-                    >
-                        <Sparkles className="w-4 h-4" />
-                        Powered by Advanced AI
-                    </motion.div>
-
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white py-12 px-4">
+                <div className="max-w-6xl mx-auto">
                     <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-4xl font-bold mb-4"
+                    >
+                        Feature Demo
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-5xl md:text-7xl font-bold tracking-tight mb-6"
+                        className="text-white/80 text-lg"
                     >
-                        Features that{' '}
-                        <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                            transform
-                        </span>
-                        <br />how you learn
-                    </motion.h1>
-
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto mb-12"
-                    >
-                        Every feature is designed to accelerate your mastery of engineering mathematics through intelligent, adaptive learning.
+                        Explore the new learning features powered by modern UI/UX design
                     </motion.p>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="flex flex-col sm:flex-row gap-4 justify-center"
-                    >
-                        <Link
-                            href="/register"
-                            className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
-                        >
-                            Start Free Trial
-                            <ArrowRight className="w-5 h-5" />
-                        </Link>
-                        <Link
-                            href="/demo"
-                            className="px-8 py-4 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white rounded-full font-semibold transition-all flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-800"
-                        >
-                            <Play className="w-5 h-5" />
-                            Watch Demo
-                        </Link>
-                    </motion.div>
                 </div>
-            </section>
+            </div>
 
-            {/* Stats Bar */}
-            <section className="py-12 border-y border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+            {/* Tab navigation */}
+            <div className="sticky top-0 z-30 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
                 <div className="max-w-6xl mx-auto px-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        {stats.map((stat, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.1 }}
-                                className="text-center"
+                    <div className="flex gap-1 py-2">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${activeTab === tab.id
+                                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
+                                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                                    }`}
                             >
-                                <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                    {stat.value}
-                                </div>
-                                <div className="text-sm text-zinc-500 mt-1">{stat.label}</div>
-                            </motion.div>
+                                <tab.icon className="w-4 h-4" />
+                                {tab.label}
+                            </button>
                         ))}
                     </div>
                 </div>
-            </section>
+            </div>
 
-            {/* Features Grid */}
-            <section className="py-24 px-4">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold mb-4">Everything you need to excel</h2>
-                        <p className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-                            A complete toolkit designed by engineers, for engineers.
-                        </p>
-                    </div>
+            {/* Content */}
+            <div className="max-w-6xl mx-auto px-4 py-8">
+                {activeTab === 'paths' && (
+                    <LearningPaths paths={demoLearningPaths} />
+                )}
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {features.map((feature, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.1 }}
-                                className="group relative bg-white dark:bg-zinc-900 rounded-2xl p-8 border border-zinc-200 dark:border-zinc-800 hover:border-transparent hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300"
-                            >
-                                <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity`}></div>
-
-                                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.color} mb-6`}>
-                                    <feature.icon className="w-6 h-6 text-white" />
+                {activeTab === 'flashcards' && (
+                    <div className="space-y-8">
+                        {/* Deck overview */}
+                        <div className="flex items-center gap-6 p-6 bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+                            <DeckProgressRing deck={demoFlashcardDeck} />
+                            <div>
+                                <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{demoFlashcardDeck.title}</h3>
+                                <p className="text-zinc-500">{demoFlashcardDeck.description}</p>
+                                <div className="flex gap-4 mt-2 text-sm">
+                                    <span className="text-blue-600">{demoFlashcardDeck.dueToday} due today</span>
+                                    <span className="text-zinc-400">{demoFlashcardDeck.totalCards} total cards</span>
                                 </div>
+                            </div>
+                        </div>
 
-                                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                                <p className="text-zinc-600 dark:text-zinc-400 mb-6">{feature.description}</p>
+                        {/* Flashcard review */}
+                        <FlashcardReview
+                            deck={demoFlashcardDeck}
+                            onReview={(cardId, quality) => console.log('Review:', cardId, quality)}
+                            onComplete={() => console.log('Session complete!')}
+                        />
+                    </div>
+                )}
 
-                                <ul className="space-y-2">
-                                    {feature.details.map((detail, j) => (
-                                        <li key={j} className="flex items-center gap-2 text-sm text-zinc-500">
-                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                            {detail}
-                                        </li>
-                                    ))}
-                                </ul>
+                {activeTab === 'library' && (
+                    <PersonalLibrary
+                        items={libraryItems}
+                        onToggleFavorite={(id) => {
+                            setLibraryItems(items =>
+                                items.map(item =>
+                                    item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+                                )
+                            );
+                        }}
+                        onRemove={(id) => {
+                            setLibraryItems(items => items.filter(item => item.id !== id));
+                        }}
+                        onAddTag={(id, tag) => console.log('Add tag:', id, tag)}
+                    />
+                )}
+
+                {activeTab === 'quiz' && (
+                    <QuizEngine
+                        config={demoQuizConfig}
+                        onComplete={(results, totalTime) => {
+                            console.log('Quiz complete:', { results, totalTime });
+                        }}
+                    />
+                )}
+
+                {activeTab === 'ai-content' && (
+                    <div className="space-y-8">
+                        {/* Section header */}
+                        <div className="text-center">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 mb-4"
+                            >
+                                <Sparkles className="w-4 h-4 text-purple-500" />
+                                <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                                    AI-Generated Content
+                                </span>
                             </motion.div>
-                        ))}
+                            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+                                Practice with AI-Generated Problems
+                            </h2>
+                            <p className="text-zinc-500 max-w-lg mx-auto">
+                                Automatically generated practice problems based on exam patterns and pedagogical research.
+                            </p>
+                        </div>
+
+                        {/* Content cards grid */}
+                        <div>
+                            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
+                                Available Problems
+                            </h3>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                {demoContentCards.map((card) => (
+                                    <ContentCard
+                                        key={card.id}
+                                        {...card}
+                                        onStart={() => console.log('Start:', card.id)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Interactive demo */}
+                        <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800">
+                            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
+                                Try It: Free-Form Input
+                            </h3>
+                            <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6">
+                                <FreeFormInput
+                                    problem={demoFreeFormProblem}
+                                    showConfidence={true}
+                                    onComplete={(result) => {
+                                        console.log('Problem completed:', result);
+                                    }}
+                                />
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </section>
-
-            {/* Additional Features */}
-            <section className="py-24 px-4 bg-zinc-50 dark:bg-zinc-950">
-                <div className="max-w-6xl mx-auto">
-                    <div className="grid md:grid-cols-3 gap-6">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            className="p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800"
-                        >
-                            <Shield className="w-10 h-10 text-green-500 mb-4" />
-                            <h3 className="text-lg font-bold mb-2">University Aligned</h3>
-                            <p className="text-zinc-600 dark:text-zinc-400 text-sm">
-                                Content aligned with curricula from top European technical universities.
-                            </p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.1 }}
-                            className="p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800"
-                        >
-                            <Clock className="w-10 h-10 text-blue-500 mb-4" />
-                            <h3 className="text-lg font-bold mb-2">Study Planner</h3>
-                            <p className="text-zinc-600 dark:text-zinc-400 text-sm">
-                                AI-powered scheduling that adapts to your goals and available time.
-                            </p>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.2 }}
-                            className="p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800"
-                        >
-                            <Globe className="w-10 h-10 text-purple-500 mb-4" />
-                            <h3 className="text-lg font-bold mb-2">Multi-language</h3>
-                            <p className="text-zinc-600 dark:text-zinc-400 text-sm">
-                                Available in Swedish and English with more languages coming soon.
-                            </p>
-                        </motion.div>
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="py-24 px-4">
-                <div className="max-w-4xl mx-auto text-center">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to transform your learning?</h2>
-                    <p className="text-xl text-zinc-600 dark:text-zinc-400 mb-8">
-                        Join thousands of engineering students who've improved their grades with Qmath.
-                    </p>
-                    <Link
-                        href="/register"
-                        className="inline-flex items-center gap-2 px-10 py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg transition-all shadow-xl shadow-blue-500/20 hover:shadow-2xl hover:scale-105"
-                    >
-                        Get Started Free
-                        <ArrowRight className="w-5 h-5" />
-                    </Link>
-                </div>
-            </section>
-
-            {/* Footer */}
-            <footer className="py-12 border-t border-zinc-200 dark:border-zinc-900 text-center text-zinc-500 text-sm">
-                <p>© 2026 Qmath EdTech AB. All rights reserved.</p>
-            </footer>
-        </main>
+                )}
+            </div>
+        </div>
     );
 }

@@ -1,32 +1,41 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { db } from '@/db/drizzle';
-import { eq, and, sql, gte } from 'drizzle-orm';
+import { eq, and, gte } from 'drizzle-orm';
 import {
-    userCity,
     userStreaks,
     userTopicMastery,
     questionAttempts,
     userAchievements,
     studySessions,
 } from '@/db/dashboard-schema';
-import { courses } from '@/db/schema';
-import VirtualCity, { type CityState } from '@/components/dashboard/VirtualCity';
-import DailyFocus, { type DailyRecommendation } from '@/components/dashboard/DailyFocus';
-import StreakTracker, { type StreakData } from '@/components/dashboard/StreakTracker';
-import KnowledgeMap, { type TopicNode } from '@/components/dashboard/KnowledgeMap';
-import PomodoroTimer from '@/components/dashboard/PomodoroTimer';
-import StudyStats from '@/components/dashboard/StudyStats';
-import ErrorAnalysis from '@/components/dashboard/ErrorAnalysis';
-import QuickNav from '@/components/dashboard/QuickNav';
-import { generateDailyFocus, getPersonalizedTip, type UserPerformanceData, type TopicData } from '@/lib/dashboard/recommendation-engine';
-import { calculateCityProgress, type UserCityData } from '@/lib/dashboard/city-system';
+import { courses, topics } from '@/db/schema';
 
 import { checkAndMaintainStreak } from '@/lib/dashboard/streak-system';
+
+import ConstellationBG from '@/components/dashboard/ConstellationBG';
+import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
+import {
+    StatCard,
+    WeeklyActivityChart,
+    StreakCard,
+    CourseCard,
+    MasteryTopicCard,
+    QuickActions,
+    AIRecommendationCard,
+} from '@/components/dashboard/DashboardCards';
 
 export const metadata = {
     title: 'Dashboard | Qmath',
     description: 'Your personalized learning dashboard',
+};
+
+const C = {
+    bg: '#F0F2F8',
+    text: '#1A1D2E',
+    textMuted: '#A0A5C0',
+    blue: '#4361EE',
+    green: '#22C55E',
 };
 
 export default async function DashboardPage() {
@@ -41,76 +50,53 @@ export default async function DashboardPage() {
 
     // Calculate time ranges
     const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    // Verify and maintain streak (handle freeze days or resets)
+    // Verify and maintain streak
     await checkAndMaintainStreak(userId);
-
-    // Fetch dashboard data
-    const userStreaksData = await db.query.userStreaks.findFirst({
-        where: eq(userStreaks.userId, userId),
-    });
 
     // Fetch all dashboard data in parallel
     const [
-        cityData,
+        streakData,
         masteryData,
         userCourses,
         recentAttempts,
-        last24hAttempts,
         last7dAttempts,
         achievements,
         studySessionsData,
+        topicsData,
     ] = await Promise.all([
-        // Get city state
-        db.select().from(userCity).where(eq(userCity.userId, userId)).limit(1),
-
-        // Get mastery for recommendations
+        db.query.userStreaks.findFirst({
+            where: eq(userStreaks.userId, userId),
+        }),
         db
             .select({
                 topicId: userTopicMastery.topicId,
                 masteryLevel: userTopicMastery.masteryLevel,
                 totalAttempts: userTopicMastery.totalAttempts,
                 correctAttempts: userTopicMastery.correctAttempts,
-                lastPracticedAt: userTopicMastery.lastPracticedAt,
-                nextReviewDate: userTopicMastery.nextReviewDate,
             })
             .from(userTopicMastery)
             .where(eq(userTopicMastery.userId, userId)),
-
-        // Get user's courses
-        db.select().from(courses).limit(1),
-
-        // Get all question attempts for stats
+        db.select().from(courses).limit(6),
         db
             .select({
                 id: questionAttempts.id,
                 isCorrect: questionAttempts.isCorrect,
-                difficultyLevel: questionAttempts.difficultyLevel,
                 timestamp: questionAttempts.timestamp,
-                startedAt: questionAttempts.startedAt,
-                errorType: questionAttempts.errorType,
             })
-            .from(questionAttempts)
-            .where(eq(questionAttempts.userId, userId)),
-
-        // Get last 24h attempts
-        db
-            .select({ isCorrect: questionAttempts.isCorrect })
             .from(questionAttempts)
             .where(
                 and(
                     eq(questionAttempts.userId, userId),
-                    gte(questionAttempts.timestamp, oneDayAgo)
+                    gte(questionAttempts.timestamp, thirtyDaysAgo)
                 )
             ),
-
-        // Get last 7d attempts
         db
             .select({
                 isCorrect: questionAttempts.isCorrect,
-                difficultyLevel: questionAttempts.difficultyLevel,
+                timestamp: questionAttempts.timestamp,
             })
             .from(questionAttempts)
             .where(
@@ -119,11 +105,7 @@ export default async function DashboardPage() {
                     gte(questionAttempts.timestamp, sevenDaysAgo)
                 )
             ),
-
-        // Get achievements
         db.select().from(userAchievements).where(eq(userAchievements.userId, userId)),
-
-        // Get study sessions for time calculation
         db
             .select({
                 startedAt: studySessions.startedAt,
@@ -131,320 +113,291 @@ export default async function DashboardPage() {
             })
             .from(studySessions)
             .where(eq(studySessions.userId, userId)),
+        db.select().from(topics).limit(20),
     ]);
 
-    // Calculate study time in minutes
+    // Calculate metrics
     const totalStudyMinutes = studySessionsData.reduce((acc, session) => {
         if (session.startedAt && session.endedAt) {
             const duration = (session.endedAt.getTime() - session.startedAt.getTime()) / 60000;
-            return acc + Math.min(duration, 180); // Cap at 3 hours per session
+            return acc + Math.min(duration, 180);
         }
         return acc;
     }, 0);
 
-    // Calculate hard question accuracy
-    const hardQuestions = last7dAttempts.filter((a) => (a.difficultyLevel || 0) >= 4);
-    const hardCorrect = hardQuestions.filter((a) => a.isCorrect).length;
-    const hardQuestionAccuracy = hardQuestions.length > 0 ? (hardCorrect / hardQuestions.length) * 100 : 0;
-
-    // Calculate 7-day accuracy
     const last7dCorrect = last7dAttempts.filter((a) => a.isCorrect).length;
-    const last7dAccuracy = last7dAttempts.length > 0 ? (last7dCorrect / last7dAttempts.length) * 100 : 0;
+    const accuracy = last7dAttempts.length > 0
+        ? Math.round((last7dCorrect / last7dAttempts.length) * 100)
+        : 0;
 
-    // Count mastered topics
-    const topicsMastered = masteryData.filter((m) => (m.masteryLevel || 0) >= 4).length;
+    const currentStreak = streakData?.currentStreak || 0;
+    const longestStreak = streakData?.longestStreak || 0;
 
-    // Get recent achievements (last 7 days)
-    const recentAchievementIds = achievements
-        .filter((a) => a.earnedAt && a.earnedAt.getTime() > sevenDaysAgo.getTime())
-        .map((a) => a.achievementId);
+    // Calculate user level based on XP (questions answered * 10)
+    const totalXP = recentAttempts.length * 10;
+    const userLevel = Math.floor(totalXP / 500) + 1;
 
-    // Build city data for progression calculation
-    const userCityData: UserCityData = {
-        totalXp: cityData[0]?.totalXp || 0,
-        questionsCompleted: recentAttempts.length,
-        questionsLast24h: last24hAttempts.length,
-        questionsLast7d: last7dAttempts.length,
-        currentStreak: userStreaksData?.currentStreak || 0,
-        longestStreak: userStreaksData?.longestStreak || 0,
-        accuracyLast7d: last7dAccuracy,
-        hardQuestionAccuracy,
-        studyMinutes: totalStudyMinutes,
-        topicsMastered,
-        achievementsUnlocked: achievements.length,
-        recentAchievements: recentAchievementIds,
-    };
-
-    // Calculate city progress with all building states
-    const cityProgress = calculateCityProgress(userCityData);
-
-    // Default city state for component
-    const cityState: CityState = cityData[0]
-        ? {
-            userId: cityData[0].userId,
-            courseId: cityData[0].courseId,
-            cityLevel: cityProgress.level,
-            totalXp: cityData[0].totalXp ?? 0,
-            buildings:
-                typeof cityData[0].buildings === 'string'
-                    ? JSON.parse(cityData[0].buildings)
-                    : cityData[0].buildings || {},
-            weather: (cityData[0].weather as 'sunny' | 'cloudy' | 'rainy') || 'sunny',
-            lastUpdated: cityData[0].lastUpdated || new Date(),
-        }
-        : {
-            userId: userId,
-            courseId: userCourses[0]?.id || '',
-            cityLevel: 1,
-            totalXp: 0,
-            buildings: {},
-            weather: 'sunny',
-            lastUpdated: new Date(),
-        };
-
-    // Default streak data
-    const streakData: StreakData = userStreaksData
-        ? {
-            current: userStreaksData.currentStreak ?? 0,
-            longest: userStreaksData.longestStreak ?? 0,
-            freezeDaysAvailable: userStreaksData.freezeDaysAvailable ?? 2,
-            freezeDaysUsed: userStreaksData.freezeDaysUsed ?? 0,
-            totalStudyDays: userStreaksData.totalStudyDays ?? 0,
-        }
-        : {
-            current: 0,
-            longest: 0,
-            freezeDaysAvailable: 2,
-            freezeDaysUsed: 0,
-            totalStudyDays: 0,
-        };
-    // Determine time of day
-    const hour = now.getHours();
-    const timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night' =
-        hour < 5 ? 'night' :
-            hour < 12 ? 'morning' :
-                hour < 17 ? 'afternoon' :
-                    hour < 21 ? 'evening' : 'night';
-
-    // Generate daily recommendations
-    let recommendations: DailyRecommendation[] = [];
-    let studyTip: { tip: string; icon: string; category: string } | undefined;
-
-    // Build performance data for recommendations
-    const recentCorrect = last7dAttempts.filter((a) => a.isCorrect).length;
-    const recentAccuracy = last7dAttempts.length > 0 ? recentCorrect / last7dAttempts.length : 0;
-
-    const performanceData: UserPerformanceData = {
-        topics: masteryData.map((m): TopicData => ({
-            id: m.topicId,
-            title: `Topic ${m.topicId}`, // TODO: Join with topic names
-            masteryLevel: (m.masteryLevel ?? 0) as 0 | 1 | 2 | 3 | 4 | 5,
-            lastPracticedAt: m.lastPracticedAt,
-            nextReviewDate: m.nextReviewDate,
-            totalAttempts: m.totalAttempts ?? 0,
-            correctAttempts: m.correctAttempts ?? 0,
-            errorRate:
-                (m.totalAttempts ?? 0) > 0
-                    ? 1 - (m.correctAttempts ?? 0) / (m.totalAttempts ?? 0)
-                    : 0,
-            avgDifficulty: 3,
-            avgTimePerQuestion: 60, // 60 seconds default
-            prerequisites: [],
-            isPrerequisiteFor: [],
-            conceptTags: [],
-            recentMistakes: [],
-        })),
-        recentAccuracy,
-        totalQuestionsLast7Days: last7dAttempts.length,
-        totalQuestionsLast24h: last24hAttempts.length,
-        averageSessionLength: 20, // 20 minutes default
-        preferredDifficulty: 3,
-        learningVelocity: topicsMastered / 7, // Topics mastered per week
-        currentStreak: userStreaksData?.currentStreak || 0,
-        timeOfDay,
-        energyLevel: recentAccuracy > 0.8 ? 'high' : recentAccuracy > 0.6 ? 'medium' : 'low',
-    };
-
-    if (masteryData.length > 0) {
-        recommendations = await generateDailyFocus(userId, performanceData, {
-            maxRecommendations: 4,
-            sessionGoal: 'standard',
-            focusMode: 'balanced',
+    // Weekly activity data
+    const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const weeklyData = weekDays.map((day, idx) => {
+        const dayDate = new Date(sevenDaysAgo);
+        dayDate.setDate(sevenDaysAgo.getDate() + idx);
+        const dayAttempts = last7dAttempts.filter((a) => {
+            if (!a.timestamp) return false;
+            const attemptDate = new Date(a.timestamp);
+            return attemptDate.toDateString() === dayDate.toDateString();
         });
-    }
-
-    // Get personalized study tip
-    studyTip = getPersonalizedTip(performanceData, recommendations[0]?.type);
-
-    // Generate knowledge map topics with sample prerequisite structure
-    // TODO: Load actual prerequisite data from curriculum
-    const knowledgeMapTopics: TopicNode[] = masteryData.map((m, index) => {
-        const baseTitles = [
-            'Linear Equations', 'Quadratic Formulas', 'Derivatives', 'Integrals',
-            'Vectors', 'Matrices', 'Probability', 'Statistics', 'Trigonometry',
-            'Logarithms', 'Sequences', 'Series', 'Limits', 'Continuity',
-        ];
-        const titleIndex = index % baseTitles.length;
-
-        // Create logical prerequisites based on position
-        const prereqs: string[] = [];
-        if (index > 0 && index < masteryData.length) {
-            // Each topic after the first has at least one prerequisite
-            prereqs.push(masteryData[Math.floor(index / 2)]?.topicId || '');
-        }
-
         return {
-            id: m.topicId,
-            title: baseTitles[titleIndex] || `Topic ${m.topicId}`,
-            shortTitle: baseTitles[titleIndex]?.substring(0, 10) || `T${index + 1}`,
-            masteryLevel: (m.masteryLevel ?? 0) as 0 | 1 | 2 | 3 | 4 | 5,
-            isLocked: prereqs.length > 0 && ((masteryData.find(p => p.topicId === prereqs[0])?.masteryLevel ?? 0) < 3),
-            prerequisites: prereqs.filter(p => p !== ''),
-            totalAttempts: m.totalAttempts ?? 0,
-            correctAttempts: m.correctAttempts ?? 0,
-            lastPracticed: m.lastPracticedAt,
-            nextReview: m.nextReviewDate,
-            category: index % 3 === 0 ? 'Algebra' : index % 3 === 1 ? 'Calculus' : 'Statistics',
-            difficulty: Math.min(5, Math.floor(index / 3) + 1),
-            estimatedMinutes: 15 + (m.masteryLevel ?? 0) * 5,
+            day,
+            minutes: dayAttempts.length * 2, // Estimate 2 min per question
         };
     });
 
-    return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-            <QuickNav />
-            <div className="max-w-7xl mx-auto p-6 space-y-6">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-black mb-2">
-                        Welcome back, {user.name || 'Student'}! 👋
-                    </h1>
-                    <p className="text-zinc-500">
-                        {new Date().toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                        })}
-                    </p>
-                </div>
+    // Weekly streak visualization
+    const weekStreak = weekDays.map((_, idx) => {
+        const dayDate = new Date(sevenDaysAgo);
+        dayDate.setDate(sevenDaysAgo.getDate() + idx);
+        return last7dAttempts.some((a) => {
+            if (!a.timestamp) return false;
+            return new Date(a.timestamp).toDateString() === dayDate.toDateString();
+        });
+    });
 
-                {/* Top Row: City and Daily Focus */}
-                <div className="grid lg:grid-cols-3 gap-6">
-                    {/* Virtual City - Takes 2 columns */}
-                    <div className="lg:col-span-2">
-                        <VirtualCity
-                            cityState={cityState}
-                            courseName={userCourses[0]?.name || 'Your Course'}
-                            cityProgress={cityProgress}
+    // Course gradients
+    const courseGradients = [
+        'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)',
+        'linear-gradient(135deg, #F6D365 0%, #FDA085 100%)',
+        'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)',
+        'linear-gradient(135deg, #4361EE 0%, #7C5CFC 100%)',
+        'linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%)',
+        'linear-gradient(135deg, #00C6FB 0%, #005BEA 100%)',
+    ];
+
+    // Process mastery topics with topic names
+    const masteryTopics = masteryData
+        .map((m) => {
+            const topic = topicsData.find((t) => t.id === m.topicId);
+            const course = userCourses.find((c) => topic?.courseId === c.id);
+            return {
+                id: m.topicId,
+                name: topic?.title || 'Unknown Topic',
+                course: course?.code || 'Unknown',
+                mastery: (m.masteryLevel || 0) / 5,
+            };
+        })
+        .sort((a, b) => b.mastery - a.mastery)
+        .slice(0, 12);
+
+    // Find weakest topic for AI recommendation
+    const weakestTopic = masteryData
+        .map((m) => {
+            const topic = topicsData.find((t) => t.id === m.topicId);
+            const course = userCourses.find((c) => topic?.courseId === c.id);
+            return {
+                name: topic?.title || 'Unknown Topic',
+                course: course?.name || 'your course',
+                mastery: (m.masteryLevel || 0) / 5,
+            };
+        })
+        .sort((a, b) => a.mastery - b.mastery)[0];
+
+    // Get greeting based on time
+    const hour = now.getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
+    // Calculate review count (topics needing review)
+    const reviewCount = masteryData.filter((m) => (m.masteryLevel || 0) < 3).length;
+
+    return (
+        <div className="min-h-screen relative" style={{ background: C.bg }}>
+            {/* Animated background */}
+            <ConstellationBG />
+
+            {/* Centered Content Container */}
+            <div className="flex justify-center">
+                {/* Sidebar */}
+                <DashboardSidebar userName={user.name || 'Student'} userLevel={userLevel} />
+
+                {/* Main Content */}
+                <main className="flex-1 p-7 relative z-10 max-w-[1060px] min-w-0 mx-auto">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-7">
+                        <div>
+                            <h1 className="text-3xl font-normal" style={{ color: C.text }}>
+                                {greeting}, {user.name || 'Student'}
+                            </h1>
+                            <p className="text-sm mt-1" style={{ color: C.textMuted }}>
+                                You have <strong style={{ color: C.blue }}>{reviewCount} topics</strong> that need your attention
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* XP Progress Bar */}
+                    <div
+                        className="flex items-center gap-3.5 rounded-xl px-5 py-3 mb-7"
+                        style={{
+                            background: 'rgba(255,255,255,0.7)',
+                            backdropFilter: 'blur(12px)',
+                            border: '1px solid #EFF1F8',
+                        }}
+                    >
+                        <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-normal text-base"
+                            style={{
+                                background: `linear-gradient(135deg, #4361EE, #7C5CFC)`,
+                                boxShadow: '0 3px 10px rgba(67,97,238,0.3)',
+                            }}
+                        >
+                            {userLevel}
+                        </div>
+                        <div className="flex-1">
+                            <div className="h-2 rounded-full bg-[#EFF1F8] overflow-hidden">
+                                <div
+                                    className="h-full rounded-full transition-all duration-1000"
+                                    style={{
+                                        width: `${(totalXP % 500) / 5}%`,
+                                        background: 'linear-gradient(90deg, #4361EE, #7C5CFC)',
+                                    }}
+                                />
+                            </div>
+                        </div>
+                        <span className="text-xs font-semibold text-[#6B7194]">
+                            {totalXP % 500} / 500 XP
+                        </span>
+                        <span className="text-base">⚡</span>
+                    </div>
+
+                    {/* Row 1: Weekly Activity + Streak */}
+                    <div className="grid grid-cols-[1fr_320px] gap-4 mb-6">
+                        <WeeklyActivityChart
+                            data={weeklyData}
+                            totalQuestions={recentAttempts.length}
+                            accuracy={accuracy}
+                        />
+                        <StreakCard
+                            currentStreak={currentStreak}
+                            weekStreak={weekStreak}
+                            level={userLevel}
                         />
                     </div>
 
-                    {/* Daily Focus - Takes 1 column */}
-                    <div className="lg:col-span-1">
-                        <DailyFocus
-                            recommendations={recommendations}
-                            userName={user.name || 'there'}
-                            studyTip={studyTip}
-                        />
+                    {/* Row 2: Courses */}
+                    <div className="mb-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-normal" style={{ color: C.text }}>
+                                Active Courses
+                            </h2>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                            {userCourses.slice(0, 3).map((course, idx) => {
+                                const courseMastery = masteryData.filter((m) => {
+                                    const topic = topicsData.find((t) => t.id === m.topicId);
+                                    return topic?.courseId === course.id;
+                                });
+                                const avgMastery = courseMastery.length > 0
+                                    ? courseMastery.reduce((sum, m) => sum + (m.masteryLevel || 0), 0) / courseMastery.length / 5
+                                    : 0;
+                                const topicsCount = topicsData.filter((t) => t.courseId === course.id).length;
+                                const masteredCount = courseMastery.filter((m) => (m.masteryLevel || 0) >= 4).length;
+
+                                return (
+                                    <CourseCard
+                                        key={course.id}
+                                        code={course.code || `Course ${idx + 1}`}
+                                        name={course.name}
+                                        progress={Math.round(avgMastery * 100)}
+                                        topicsMastered={masteredCount}
+                                        topicsTotal={topicsCount || 1}
+                                        gradient={courseGradients[idx % courseGradients.length]}
+                                        reviewCount={courseMastery.filter((m) => (m.masteryLevel || 0) < 3).length}
+                                    />
+                                );
+                            })}
+                            {userCourses.length === 0 && (
+                                <div
+                                    className="col-span-3 rounded-2xl p-8 text-center"
+                                    style={{ background: 'white', border: '1px solid #EFF1F8' }}
+                                >
+                                    <p style={{ color: C.textMuted }}>No courses yet. Browse the course catalog to get started!</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                {/* Second Row: Streak Tracker & Pomodoro */}
-                <div className="grid lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                        <StreakTracker streakData={streakData} />
+                    {/* Row 3: Quick Actions + AI Recommendation */}
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <QuickActions reviewCount={reviewCount} />
+                        {weakestTopic ? (
+                            <AIRecommendationCard
+                                topicName={weakestTopic.name}
+                                mastery={weakestTopic.mastery}
+                                courseName={weakestTopic.course}
+                                daysUntilExam={30}
+                            />
+                        ) : (
+                            <AIRecommendationCard
+                                topicName="a new topic"
+                                mastery={0}
+                                courseName="your studies"
+                            />
+                        )}
                     </div>
-                    <div className="lg:col-span-1">
-                        <PomodoroTimer />
+
+                    {/* Row 4: Mastery Map */}
+                    <div
+                        className="rounded-2xl p-6"
+                        style={{
+                            background: 'white',
+                            border: '1px solid #EFF1F8',
+                            boxShadow: '0 2px 12px rgba(26,29,46,0.06)',
+                        }}
+                    >
+                        <div className="flex justify-between items-center mb-5">
+                            <div>
+                                <h3 className="text-xl font-bold" style={{ color: C.text }}>
+                                    Knowledge Map
+                                </h3>
+                                <p className="text-sm mt-1" style={{ color: C.textMuted }}>
+                                    Your mastery level across all topics
+                                </p>
+                            </div>
+
+                            {/* Legend */}
+                            <div className="flex gap-4">
+                                {[
+                                    { color: '#10B981', label: 'Mastered ≥90%' },
+                                    { color: '#3B82F6', label: 'Learning 60–89%' },
+                                    { color: '#F59E0B', label: 'Developing 30–59%' },
+                                    { color: '#EF4444', label: 'Needs focus <30%' },
+                                ].map((l, i) => (
+                                    <div key={i} className="flex items-center gap-1.5">
+                                        <div className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
+                                        <span className="text-xs" style={{ color: C.textMuted }}>
+                                            {l.label}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Topic grid */}
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(155px,1fr))] gap-2.5">
+                            {masteryTopics.map((topic) => (
+                                <MasteryTopicCard
+                                    key={topic.id}
+                                    name={topic.name}
+                                    course={topic.course}
+                                    mastery={topic.mastery}
+                                />
+                            ))}
+                            {masteryTopics.length === 0 && (
+                                <div className="col-span-full text-center py-8" style={{ color: C.textMuted }}>
+                                    Start practicing to see your knowledge map!
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-
-                {/* Third Row: Knowledge Map */}
-                <div className="grid grid-cols-1">
-                    <KnowledgeMap
-                        topics={knowledgeMapTopics}
-                    />
-                </div>
-
-                {/* Stats Row */}
-                <div className="grid lg:grid-cols-4 gap-4">
-                    <StatCard
-                        icon="📊"
-                        label="Questions Solved"
-                        value={recentAttempts.length.toString()}
-                        subtext="Total"
-                    />
-                    <StatCard
-                        icon="🎯"
-                        label="7-Day Accuracy"
-                        value={`${last7dAccuracy.toFixed(0)}%`}
-                        subtext={`${last7dAttempts.length} questions`}
-                    />
-                    <StatCard
-                        icon="⏱️"
-                        label="Study Time"
-                        value={`${Math.round(totalStudyMinutes / 60)}h`}
-                        subtext={`${Math.round(totalStudyMinutes)} minutes`}
-                    />
-                    <StatCard
-                        icon="🏆"
-                        label="Achievements"
-                        value={achievements.length.toString()}
-                        subtext="Unlocked"
-                    />
-                </div>
-
-                {/* Bottom Row: Charts */}
-                <div className="grid lg:grid-cols-2 gap-6">
-                    <StudyStats
-                        attempts={recentAttempts}
-                        totalMinutes={totalStudyMinutes}
-                    />
-                    <ErrorAnalysis attempts={recentAttempts} />
-                </div>
-
-            </div>
-        </div>
-    );
-}
-
-// Stat Card Component
-function StatCard({
-    icon,
-    label,
-    value,
-    subtext,
-}: {
-    icon: string;
-    label: string;
-    value: string;
-    subtext: string;
-}) {
-    return (
-        <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-3">
-                <div className="text-2xl">{icon}</div>
-                <div>
-                    <div className="text-xs text-zinc-500 uppercase tracking-wider">{label}</div>
-                    <div className="text-2xl font-bold">{value}</div>
-                    <div className="text-xs text-zinc-400">{subtext}</div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Loading state
-function DashboardSkeleton() {
-    return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
-                <div className="h-12 bg-zinc-200 dark:bg-zinc-800 rounded animate-pulse" />
-                <div className="grid lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 h-96 bg-zinc-200 dark:bg-zinc-800 rounded-2xl animate-pulse" />
-                    <div className="h-96 bg-zinc-200 dark:bg-zinc-800 rounded-2xl animate-pulse" />
-                </div>
+                </main>
             </div>
         </div>
     );

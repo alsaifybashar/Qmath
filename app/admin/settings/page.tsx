@@ -34,8 +34,6 @@ export default function AdminSettingsPage() {
     useEffect(() => {
         if (status === 'unauthenticated') {
             router.push('/login?callbackUrl=/admin/settings');
-        } else if (session?.user?.role !== 'admin') {
-            router.push('/');
         }
     }, [session, status, router]);
 
@@ -67,7 +65,7 @@ export default function AdminSettingsPage() {
         );
     }
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session) {
         return null;
     }
 
