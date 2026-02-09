@@ -1,6 +1,10 @@
 'use client';
 
-import { ArrowRight, Play, Brain, RefreshCw, FileText, Sparkles, Calendar } from 'lucide-react';
+import {
+    ArrowRight, Play, Brain, RefreshCw, FileText, Sparkles, Calendar,
+    BookOpen, GraduationCap, User, Settings, Library, HelpCircle,
+    Layers, CreditCard, School, Info, MessageSquare, Zap
+} from 'lucide-react';
 import Link from 'next/link';
 
 const C = {
@@ -471,6 +475,104 @@ export function AIRecommendationCard({ topicName, mastery, courseName, daysUntil
             >
                 <Play size={16} /> Start Session
             </Link>
+        </div>
+    );
+}
+
+// ========== Quick Navigation - All Subpages ==========
+const navigationItems = [
+    // Learning section
+    {
+        category: 'Learning',
+        items: [
+            { icon: <BookOpen size={18} />, label: 'Courses', href: '/courses', color: '#667EEA' },
+            { icon: <Brain size={18} />, label: 'Practice', href: '/practice', color: '#4361EE' },
+            { icon: <Zap size={18} />, label: 'Flashcards', href: '/flashcards', color: '#7C5CFC' },
+            { icon: <Library size={18} />, label: 'Exam Archive', href: '/exams', color: '#11998E' },
+        ],
+    },
+    // Resources section
+    {
+        category: 'Resources',
+        items: [
+            { icon: <School size={18} />, label: 'Universities', href: '/universities', color: '#F59E0B' },
+            { icon: <Layers size={18} />, label: 'Study Tools', href: '/study', color: '#10B981' },
+            { icon: <FileText size={18} />, label: 'Demo', href: '/demo', color: '#8B5CF6' },
+        ],
+    },
+    // Account section
+    {
+        category: 'Account',
+        items: [
+            { icon: <User size={18} />, label: 'Profile', href: '/profile', color: '#3B82F6' },
+            { icon: <Settings size={18} />, label: 'Settings', href: '/settings', color: '#6B7280' },
+            { icon: <CreditCard size={18} />, label: 'Pricing', href: '/pricing', color: '#EC4899' },
+        ],
+    },
+    // Info section
+    {
+        category: 'Information',
+        items: [
+            { icon: <Info size={18} />, label: 'About', href: '/about', color: '#0EA5E9' },
+            { icon: <GraduationCap size={18} />, label: 'Features', href: '/features', color: '#14B8A6' },
+            { icon: <HelpCircle size={18} />, label: 'Help', href: '/help', color: '#F97316' },
+            { icon: <MessageSquare size={18} />, label: 'Contact', href: '/contact', color: '#8B5CF6' },
+        ],
+    },
+];
+
+export function QuickNavigation() {
+    return (
+        <div
+            className="rounded-2xl p-6"
+            style={{
+                background: C.surface,
+                border: `1px solid ${C.borderLight}`,
+                boxShadow: C.cardShadow,
+            }}
+        >
+            <h3 className="text-xl font-bold mb-5" style={{ color: C.text }}>
+                Quick Navigation
+            </h3>
+
+            <div className="space-y-5">
+                {navigationItems.map((section) => (
+                    <div key={section.category}>
+                        <h4
+                            className="text-xs font-semibold uppercase tracking-wider mb-3"
+                            style={{ color: C.textMuted }}
+                        >
+                            {section.category}
+                        </h4>
+                        <div className="grid grid-cols-4 gap-2">
+                            {section.items.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-md group"
+                                    style={{ background: C.surfaceAlt }}
+                                >
+                                    <div
+                                        className="w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                                        style={{
+                                            background: `${item.color}15`,
+                                            color: item.color,
+                                        }}
+                                    >
+                                        {item.icon}
+                                    </div>
+                                    <span
+                                        className="text-xs font-medium text-center"
+                                        style={{ color: C.text }}
+                                    >
+                                        {item.label}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }

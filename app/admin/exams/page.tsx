@@ -14,7 +14,9 @@ import {
     Calendar,
     CheckCircle,
     Upload,
-    ExternalLink
+    ExternalLink,
+    AlertCircle,
+    X
 } from 'lucide-react';
 
 interface ExamData {
@@ -36,18 +38,28 @@ export default function AdminExamsPage() {
     const [exams, setExams] = useState<ExamData[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 5000);
+    };
 
     useEffect(() => {
         if (status === 'unauthenticated') {
             router.push('/login?callbackUrl=/admin/exams');
         } else if (status === 'authenticated') {
-            setLoading(false);
+            fetchExams();
         }
-    }, [session, status, router]);
+    }, [status, router]);
 
     const fetchExams = async () => {
         try {
-            
+            const response = await fetch('/api/admin/exams');
+            if (response.ok) {
+                const data = await response.json();
+                setExams(data.exams);
+            }
         } catch (error) {
             console.error('Failed to fetch exams:', error);
         } finally {
@@ -55,16 +67,34 @@ export default function AdminExamsPage() {
         }
     };
 
-    const handleDeleteExam = async (examId: string) => {
-        if (!confirm('Are you sure you want to delete this exam? This action cannot be undone.')) return;
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
+    const handleDeleteClick = (examId: string) => {
+        setDeleteConfirm(examId);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return;
+
+        setIsDeleting(true);
         try {
-            
+            const response = await fetch(`/api/admin/exams/${deleteConfirm}`, {
                 method: 'DELETE',
             });
 
+            if (response.ok) {
+                showToast('Exam deleted successfully');
+                fetchExams();
+            } else {
+                showToast('Failed to delete exam', 'error');
+            }
         } catch (error) {
             console.error('Failed to delete exam:', error);
+            showToast('An error occurred while deleting', 'error');
+        } finally {
+            setIsDeleting(false);
+            setDeleteConfirm(null);
         }
     };
 
@@ -88,35 +118,7 @@ export default function AdminExamsPage() {
         return null;
     }
 
-    // Mock data for now
-    const mockExams: ExamData[] = [
-        {
-            id: '1',
-            courseCode: 'SF1672',
-            courseName: 'Linear Algebra',
-            examDate: new Date('2024-01-15'),
-            examType: 'Final',
-            fileName: '2024-01-15-final.pdf',
-            fileSize: 245760,
-            hasSolution: true,
-            downloads: 234,
-            createdAt: new Date('2024-01-16'),
-        },
-        {
-            id: '2',
-            courseCode: 'TATA24',
-            courseName: 'Linjär algebra',
-            examDate: new Date('2024-01-17'),
-            examType: 'Final',
-            fileName: '2024-01-17-final.pdf',
-            fileSize: 312320,
-            hasSolution: true,
-            downloads: 189,
-            createdAt: new Date('2024-01-18'),
-        },
-    ];
-
-    const displayExams = exams.length > 0 ? exams : mockExams;
+    const displayExams = exams;
     const filteredExams = displayExams.filter(exam =>
         exam.courseCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
         exam.courseName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -127,7 +129,36 @@ export default function AdminExamsPage() {
 
     return (
         <AdminLayout>
-            <div className="p-8">
+            <div className="p-8 relative">
+                {/* Toast Notification */}
+                {toast && (
+                    <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-top-2 fade-in duration-300">
+                        {toast.type === 'success' ? (
+                            <div className="p-1 rounded-full bg-green-500/10">
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                            </div>
+                        ) : (
+                            <div className="p-1 rounded-full bg-red-500/10">
+                                <AlertCircle className="w-5 h-5 text-red-500" />
+                            </div>
+                        )}
+                        <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-zinc-900 dark:text-white">
+                                {toast.type === 'success' ? 'Success' : 'Error'}
+                            </span>
+                            <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                                {toast.message}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setToast(null)}
+                            className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors ml-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="mb-8 flex items-center justify-between">
                     <div>
@@ -257,20 +288,23 @@ export default function AdminExamsPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button
+                                                <Link
+                                                    href={`/archive/${exam.courseCode}/${exam.id}`}
+                                                    target="_blank"
                                                     className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                                    title="View Details"
+                                                    title="View Exam"
                                                 >
                                                     <ExternalLink className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                                </button>
-                                                <button
+                                                </Link>
+                                                <Link
+                                                    href={`/admin/exams/${exam.id}/edit`}
                                                     className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                                                     title="Edit Exam"
                                                 >
                                                     <Edit className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-                                                </button>
+                                                </Link>
                                                 <button
-                                                    onClick={() => handleDeleteExam(exam.id)}
+                                                    onClick={() => handleDeleteClick(exam.id)}
                                                     className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                                     title="Delete Exam"
                                                 >
@@ -298,6 +332,48 @@ export default function AdminExamsPage() {
                     )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl max-w-md w-full p-6 border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                                <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Delete Exam?</h3>
+                                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                    This action cannot be undone. The exam files will be permanently removed.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setDeleteConfirm(null)}
+                                disabled={isDeleting}
+                                className="px-4 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                disabled={isDeleting}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
+                            >
+                                {isDeleting ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    'Delete Exam'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 }

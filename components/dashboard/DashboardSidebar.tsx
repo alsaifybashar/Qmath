@@ -1,7 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, BookOpen, LineChart, Library, Settings } from 'lucide-react';
+import {
+    Home, BookOpen, LineChart, Library, Settings,
+    Brain, Zap, School, Layers, FileText, User,
+    CreditCard, Info, GraduationCap, HelpCircle, MessageSquare
+} from 'lucide-react';
 
 const C = {
     blue: '#4361EE',
@@ -19,18 +23,51 @@ interface SidebarProps {
     userLevel: number;
 }
 
-export default function DashboardSidebar({ userName, userLevel }: SidebarProps) {
-    const items = [
-        { icon: <Home size={20} />, label: 'Dashboard', id: 'home', href: '/dashboard' },
-        { icon: <BookOpen size={20} />, label: 'Courses', id: 'courses', href: '/courses' },
-        { icon: <LineChart size={20} />, label: 'Statistics', id: 'stats', href: '/stats' },
-        { icon: <Library size={20} />, label: 'Exam Archive', id: 'archive', href: '/exams' },
-    ];
+// Navigation sections with all subpages
+const navSections = [
+    {
+        title: 'Main',
+        items: [
+            { icon: <Home size={18} />, label: 'Dashboard', href: '/dashboard', active: true },
+            { icon: <BookOpen size={18} />, label: 'Courses', href: '/courses' },
+            { icon: <Brain size={18} />, label: 'Practice', href: '/practice' },
+            { icon: <Zap size={18} />, label: 'Flashcards', href: '/flashcards' },
+            { icon: <Library size={18} />, label: 'Exam Archive', href: '/exams' },
+        ],
+    },
+    {
+        title: 'Resources',
+        items: [
+            { icon: <School size={18} />, label: 'Universities', href: '/universities' },
+            { icon: <Layers size={18} />, label: 'Study Tools', href: '/study' },
+            { icon: <FileText size={18} />, label: 'Demo', href: '/demo' },
+        ],
+    },
+    {
+        title: 'Account',
+        items: [
+            { icon: <User size={18} />, label: 'Profile', href: '/profile' },
+            { icon: <Settings size={18} />, label: 'Settings', href: '/settings' },
+            { icon: <CreditCard size={18} />, label: 'Pricing', href: '/pricing' },
+        ],
+    },
+    {
+        title: 'Information',
+        items: [
+            { icon: <Info size={18} />, label: 'About', href: '/about' },
+            { icon: <GraduationCap size={18} />, label: 'Features', href: '/features' },
+            { icon: <HelpCircle size={18} />, label: 'Help', href: '/help' },
+            { icon: <MessageSquare size={18} />, label: 'Contact', href: '/contact' },
+        ],
+    },
+];
 
+export default function DashboardSidebar({ userName, userLevel }: SidebarProps) {
     return (
         <aside
+            className="overflow-y-auto"
             style={{
-                width: 220,
+                width: 240,
                 flexShrink: 0,
                 height: '100vh',
                 position: 'sticky',
@@ -40,12 +77,12 @@ export default function DashboardSidebar({ userName, userLevel }: SidebarProps) 
                 background: 'rgba(255,255,255,0.82)',
                 backdropFilter: 'blur(20px)',
                 borderRight: `1px solid ${C.borderLight}`,
-                padding: '24px 16px',
+                padding: '20px 14px',
                 zIndex: 10,
             }}
         >
             {/* Logo */}
-            <div className="flex items-center gap-2.5 px-2 mb-9">
+            <div className="flex items-center gap-2.5 px-2 mb-6">
                 <div
                     className="w-9 h-9 rounded-full flex items-center justify-center"
                     style={{
@@ -66,54 +103,55 @@ export default function DashboardSidebar({ userName, userLevel }: SidebarProps) 
                 </span>
             </div>
 
-            {/* Nav Items */}
-            <nav className="flex flex-col gap-1">
-                {items.map((item) => (
-                    <Link
-                        key={item.id}
-                        href={item.href}
-                        className="flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-200 hover:bg-[#F7F8FC]"
-                        style={{
-                            color: item.id === 'home' ? '#fff' : C.textSec,
-                            background: item.id === 'home' ? C.blue : 'transparent',
-                            fontWeight: item.id === 'home' ? 600 : 500,
-                            fontSize: 14,
-                        }}
-                    >
-                        {item.icon}
-                        {item.label}
-                    </Link>
-                ))}
-            </nav>
-
-            {/* Bottom section */}
-            <div className="mt-auto">
-                <Link
-                    href="/settings"
-                    className="flex items-center gap-3 px-3.5 py-3 rounded-xl transition-colors"
-                    style={{ color: C.textMuted, fontSize: 14, fontWeight: 500 }}
-                >
-                    <Settings size={18} /> Settings
-                </Link>
-
-                {/* User card */}
-                <div
-                    className="mt-3 p-3.5 rounded-xl flex items-center gap-2.5"
-                    style={{ background: C.surfaceAlt }}
-                >
-                    <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                        style={{ background: `linear-gradient(135deg, ${C.blue}, ${C.purple})` }}
-                    >
-                        {userName.charAt(0).toUpperCase()}
+            {/* Navigation Sections */}
+            <div className="flex-1 space-y-5 overflow-y-auto">
+                {navSections.map((section) => (
+                    <div key={section.title}>
+                        <h4
+                            className="text-[10px] font-semibold uppercase tracking-wider px-3 mb-2"
+                            style={{ color: C.textMuted }}
+                        >
+                            {section.title}
+                        </h4>
+                        <nav className="flex flex-col gap-0.5">
+                            {section.items.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-[#F7F8FC]"
+                                    style={{
+                                        color: item.active ? '#fff' : C.textSec,
+                                        background: item.active ? C.blue : 'transparent',
+                                        fontWeight: item.active ? 600 : 500,
+                                        fontSize: 13,
+                                    }}
+                                >
+                                    {item.icon}
+                                    {item.label}
+                                </Link>
+                            ))}
+                        </nav>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-[13px]" style={{ color: C.text }}>
-                            {userName}
-                        </div>
-                        <div className="text-[11px]" style={{ color: C.textMuted }}>
-                            Level {userLevel}
-                        </div>
+                ))}
+            </div>
+
+            {/* User card at bottom */}
+            <div
+                className="mt-4 p-3 rounded-xl flex items-center gap-2.5"
+                style={{ background: C.surfaceAlt }}
+            >
+                <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                    style={{ background: `linear-gradient(135deg, ${C.blue}, ${C.purple})` }}
+                >
+                    {userName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[13px]" style={{ color: C.text }}>
+                        {userName}
+                    </div>
+                    <div className="text-[11px]" style={{ color: C.textMuted }}>
+                        Level {userLevel}
                     </div>
                 </div>
             </div>

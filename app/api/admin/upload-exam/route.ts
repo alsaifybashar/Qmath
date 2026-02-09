@@ -6,7 +6,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 /**
- * Admin-only API endpoint for uploading exam PDFs
+ * Admin-only API endpoint for uploading exam PDFs with optional solutions
  * POST /api/admin/upload-exam
  */
 export async function POST(request: NextRequest) {
@@ -32,66 +32,110 @@ export async function POST(request: NextRequest) {
         // Parse multipart form data
         const formData = await request.formData();
 
-        const courseCode = formData.get('courseCode') as string;
+        const courseCode = (formData.get('courseCode') as string)?.toUpperCase();
         const courseName = formData.get('courseName') as string;
         const examDate = formData.get('examDate') as string;
         const examType = formData.get('examType') as string;
-        const hasSolution = formData.get('hasSolution') === 'true';
-        const file = formData.get('file') as File;
+        const examFile = formData.get('examFile') as File;
+        const solutionFile = formData.get('solutionFile') as File | null;
 
         // Validate required fields
-        if (!courseCode || !courseName || !examDate || !examType || !file) {
+        if (!courseCode || !courseName || !examDate || !examType || !examFile) {
             return NextResponse.json(
-                { error: 'Missing required fields' },
+                { error: 'Missing required fields (courseCode, courseName, examDate, examType, examFile)' },
                 { status: 400 }
             );
         }
 
-        // Validate file type
-        if (file.type !== 'application/pdf') {
+        // Validate exam file type
+        if (examFile.type !== 'application/pdf') {
             return NextResponse.json(
-                { error: 'Only PDF files are allowed' },
+                { error: 'Exam file must be a PDF' },
+                { status: 400 }
+            );
+        }
+
+        // Validate solution file type if provided
+        if (solutionFile && solutionFile.type !== 'application/pdf') {
+            return NextResponse.json(
+                { error: 'Solution file must be a PDF' },
                 { status: 400 }
             );
         }
 
         // Create directory structure: uploads/exams/{courseCode}/
-        const uploadDir = path.join(process.cwd(), 'uploads', 'exams', courseCode.toUpperCase());
+        const uploadDir = path.join(process.cwd(), 'uploads', 'exams', courseCode);
         await fs.mkdir(uploadDir, { recursive: true });
 
-        // Generate unique filename
-        const timestamp = new Date(examDate).toISOString().split('T')[0];
-        const fileName = `${timestamp}-${examType.toLowerCase()}.pdf`;
-        const filePath = path.join(uploadDir, fileName);
-        const relativePath = path.join('uploads', 'exams', courseCode.toUpperCase(), fileName);
+        // Generate filenames
+        const dateStr = new Date(examDate).toISOString().split('T')[0];
+        const examFileName = `${examType}_${dateStr}.pdf`;
+        const examFilePath = path.join(uploadDir, examFileName);
+        const examRelativePath = path.join('uploads', 'exams', courseCode, examFileName);
 
-        // Convert File to Buffer and save
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        await fs.writeFile(filePath, buffer);
+        // Save exam file
+        const examBuffer = Buffer.from(await examFile.arrayBuffer());
+        await fs.writeFile(examFilePath, examBuffer);
+
+        // Prepare solution data if provided
+        let solutionData: {
+            solutionFileName: string | null;
+            solutionFilePath: string | null;
+            solutionFileSize: number | null;
+            hasSolution: boolean;
+        } = {
+            solutionFileName: null,
+            solutionFilePath: null,
+            solutionFileSize: null,
+            hasSolution: false,
+        };
+
+        if (solutionFile && solutionFile.size > 0) {
+            const solutionFileName = `${examType}_${dateStr}_solution.pdf`;
+            const solutionFilePath = path.join(uploadDir, solutionFileName);
+            const solutionRelativePath = path.join('uploads', 'exams', courseCode, solutionFileName);
+
+            // Save solution file
+            const solutionBuffer = Buffer.from(await solutionFile.arrayBuffer());
+            await fs.writeFile(solutionFilePath, solutionBuffer);
+
+            solutionData = {
+                solutionFileName,
+                solutionFilePath: solutionRelativePath,
+                solutionFileSize: solutionBuffer.length,
+                hasSolution: true,
+            };
+        }
 
         // Insert exam metadata into database
         const [newExam] = await db.insert(exams).values({
-            courseCode: courseCode.toUpperCase(),
+            courseCode,
             courseName,
             examDate: new Date(examDate),
             examType,
-            fileName,
-            filePath: relativePath,
-            fileSize: buffer.length,
-            hasSolution,
+            fileName: examFileName,
+            filePath: examRelativePath,
+            fileSize: examBuffer.length,
+            ...solutionData,
             uploadedBy: session.user.id,
         }).returning();
 
         return NextResponse.json({
             success: true,
-            exam: newExam,
-            message: 'Exam uploaded successfully',
+            exam: {
+                id: newExam.id,
+                courseCode: newExam.courseCode,
+                courseName: newExam.courseName,
+                examDate: newExam.examDate,
+                examType: newExam.examType,
+                hasSolution: newExam.hasSolution,
+            },
+            message: `Exam uploaded successfully${solutionData.hasSolution ? ' with solution' : ''}`,
         });
     } catch (error) {
         console.error('Exam upload error:', error);
         return NextResponse.json(
-            { error: 'Failed to upload exam' },
+            { error: 'Failed to upload exam. Please try again.' },
             { status: 500 }
         );
     }

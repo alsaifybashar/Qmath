@@ -166,13 +166,20 @@ export const exams = sqliteTable('exams', {
     courseCode: text('course_code').notNull(),
     courseName: text('course_name').notNull(),
     examDate: integer('exam_date', { mode: 'timestamp' }).notNull(),
-    examType: text('exam_type').notNull(), // "Midterm", "Final", "Retake"
+    examType: text('exam_type').notNull(), // "TEN1", "TEN2", "KON", etc.
+    // Exam file
     fileName: text('file_name').notNull(),
     filePath: text('file_path').notNull(),
     fileSize: integer('file_size'), // bytes
+    // Solution file (optional)
     hasSolution: integer('has_solution', { mode: 'boolean' }).default(false),
+    solutionFileName: text('solution_file_name'),
+    solutionFilePath: text('solution_file_path'),
+    solutionFileSize: integer('solution_file_size'), // bytes
+    // Metadata
     uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 
 export const examsRelations = relations(exams, ({ one }) => ({
