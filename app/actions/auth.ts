@@ -4,7 +4,7 @@
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { db } from '@/db/drizzle';
-import { users, profiles } from '@/db/schema';
+import { users, profiles, universities } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { SignupFormSchema } from '@/app/lib/definitions';
@@ -39,6 +39,7 @@ export async function register(prevState: any, formData: FormData) {
         name: formData.get('name'),
         email: formData.get('email'),
         password: formData.get('password'),
+        university: formData.get('university'),
     });
 
     if (!validateFields.success) {
@@ -48,7 +49,7 @@ export async function register(prevState: any, formData: FormData) {
         };
     }
 
-    const { name, email, password } = validateFields.data;
+    const { name, email, password, university } = validateFields.data;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
@@ -69,9 +70,21 @@ export async function register(prevState: any, formData: FormData) {
             role: 'student',
         }).returning();
 
+        // Find university ID
+        let universityId = null;
+        if (university) {
+            const uni = await db.query.universities.findFirst({
+                where: eq(universities.name, university)
+            });
+            if (uni) {
+                universityId = uni.id;
+            }
+        }
+
         // Create profile
         await db.insert(profiles).values({
             id: newUser.id,
+            universityId: universityId,
         });
 
     } catch (error) {

@@ -47,6 +47,7 @@ export default function RegisterPage() {
             data.append('name', `${formData.firstName} ${formData.lastName}`);
             data.append('email', formData.email);
             data.append('password', formData.password);
+            data.append('university', formData.university);
 
             startTransition(async () => {
                 const result = await register(null, data);
@@ -225,11 +226,50 @@ export default function RegisterPage() {
                                             onChange={(e) => setFormData({ ...formData, university: e.target.value })}
                                         >
                                             <option value="">Select your university</option>
-                                            <option value="kth">KTH Royal Institute of Technology</option>
-                                            <option value="chalmers">Chalmers University of Technology</option>
-                                            <option value="lund">Lund University</option>
-                                            <option value="stockholm">Stockholm University</option>
-                                            <option value="other">Other</option>
+                                            {[
+                                                "Blekinge Institute of Technology",
+                                                "Chalmers University of Technology",
+                                                "Dalarna University",
+                                                "Halmstad University",
+                                                "Johannelund School of Theology",
+                                                "Jönköping University",
+                                                "Karlstad University",
+                                                "Karolinska Institutet",
+                                                "Konstfack, University of Arts, Crafts and Design",
+                                                "Kristianstad University",
+                                                "KTH Royal Institute of Technology",
+                                                "Linköping University",
+                                                "Linnaeus University",
+                                                "Luleå University of Technology",
+                                                "Lund University",
+                                                "Mälardalen University",
+                                                "Malmö University",
+                                                "Marie Cederschiöld University",
+                                                "Mid Sweden University",
+                                                "The Newman Institute",
+                                                "Örebro University",
+                                                "Royal College of Music",
+                                                "Royal Institute of Art",
+                                                "Södertörn University in Stockholm",
+                                                "Sophiahemmet University",
+                                                "Stockholm School of Economics",
+                                                "Stockholm University",
+                                                "Stockholm University of the Arts",
+                                                "Swedish Defence University",
+                                                "Swedish Red Cross University",
+                                                "The Swedish School of Sport and Health Sciences",
+                                                "Swedish University of Agricultural Sciences",
+                                                "Umeå University",
+                                                "University of Borås",
+                                                "University College Stockholm",
+                                                "University of Gävle",
+                                                "University of Gothenburg",
+                                                "University of Skövde",
+                                                "University West",
+                                                "Uppsala University"
+                                            ].map((uni) => (
+                                                <option key={uni} value={uni}>{uni}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
