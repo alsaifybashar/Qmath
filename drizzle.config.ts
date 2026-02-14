@@ -2,12 +2,13 @@
 import type { Config } from 'drizzle-kit';
 import dotenv from 'dotenv';
 import path from 'path';
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env.local', override: true });
 
 // For sqlite, use absolute path
 const dbUrl = process.env.DATABASE_URL || 'file:./qmath.db';
 const relativePath = dbUrl.replace('file:', '').replace('./', '');
 const url = path.resolve(process.cwd(), relativePath);
+console.log('Resolved DB URL:', url);
 
 export default {
     schema: ['./db/schema.ts', './db/dashboard-schema.ts', './db/content-schema.ts'],

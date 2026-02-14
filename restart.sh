@@ -5,6 +5,12 @@
 
 echo "🔄 Restarting Qmath Development Server..."
 
+# Ensure we're using Node 22
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+nvm use 22 || nvm install 22
+echo "✅ Using Node $(node -v)"
+
 # Kill any node/next processes
 echo "📦 Stopping existing processes..."
 pkill -f "next dev" 2>/dev/null || true

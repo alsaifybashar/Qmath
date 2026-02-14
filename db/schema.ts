@@ -31,6 +31,7 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
         references: [universities.id],
     }),
     topics: many(topics),
+    enrollments: many(enrollments),
 }));
 
 export const universitiesRelations = relations(universities, ({ many }) => ({
@@ -54,6 +55,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     profile: one(profiles),
     userMastery: many(userMastery),
     attemptLogs: many(attemptLogs),
+    enrollments: many(enrollments),
 }));
 
 // Profiles
@@ -61,6 +63,7 @@ export const profiles = sqliteTable('profiles', {
     id: text('id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
     universityId: text('university_id').references(() => universities.id, { onDelete: 'set null' }),
     enrollmentYear: integer('enrollment_year'),
+    studyYear: integer('study_year'),
     universityProgram: text('university_program'),
     targetGpa: real('target_gpa'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
@@ -74,6 +77,25 @@ export const profilesRelations = relations(profiles, ({ one }) => ({
     university: one(universities, {
         fields: [profiles.universityId],
         references: [universities.id],
+    }),
+}));
+
+// Enrollments (New table for user-course selection)
+export const enrollments = sqliteTable('enrollments', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    courseId: text('course_id').references(() => courses.id, { onDelete: 'cascade' }).notNull(),
+    enrolledAt: integer('enrolled_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
+    user: one(users, {
+        fields: [enrollments.userId],
+        references: [users.id],
+    }),
+    course: one(courses, {
+        fields: [enrollments.courseId],
+        references: [courses.id],
     }),
 }));
 

@@ -15,7 +15,8 @@
     "db:seed": "tsx db/seeds/seed.ts",
     "db:seed:admin": "tsx db/seeds/seed-admin.ts",
     "db:seed:exams": "tsx db/seeds/seed-exams.ts",
-    "db:reset": "tsx db/seeds/reset.ts"
+    "db:reset": "tsx db/seeds/reset.ts",
+    "test:ai": "tsx tests/integration/ai-feature.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
@@ -31,6 +32,7 @@
     "next": "^16.1.6",
     "next-auth": "^5.0.0-beta.30",
     "next-themes": "^0.4.6",
+    "pdf2json": "^3.1.4",
     "pg": "^8.18.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

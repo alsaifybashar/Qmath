@@ -12,6 +12,13 @@ Qmath is an AI-driven intelligent tutoring system designed for university-level 
 
 ---
 
+## 🆕 Recent Updates
+- **Enhanced User Profiles**: Registration now collects **Year of Study** and **Program Name** to enable better personalization.
+- **Improved Validation**: Strict input validation prevents invalid data entry during sign-up.
+- **Documentation**: Added [User Profile Data Flow](./docs/user-profile-data-flow.md) documentation.
+
+---
+
 ## ✨ Features
 
 ### For Students
@@ -21,6 +28,7 @@ Qmath is an AI-driven intelligent tutoring system designed for university-level 
 - **Exam Archive**: Search and download old exams from various courses (liutentor.se inspired)
 - **Spaced Repetition**: Optimized review scheduling for long-term retention
 - **Real-time Progress Tracking**: Visual analytics of mastery across topics
+- **AI Study Plan**: Personalized exam strategy using Claude 3.5 Sonnet analysis
 - **Minimal Design**: Clean, modern interface with centered search
 
 ### For Administrators

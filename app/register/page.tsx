@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Building2, Mail, User, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, Building2, Mail, User, Lock, ArrowRight, Loader2, GraduationCap, BookOpen } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import 'katex/dist/katex.min.css';
 import { useState, useTransition } from 'react';
@@ -22,6 +22,8 @@ export default function RegisterPage() {
         firstName: '',
         lastName: '',
         university: '',
+        yearOfStudy: '',
+        program: '',
         agreeTerms: false
     });
 
@@ -40,7 +42,19 @@ export default function RegisterPage() {
                 setError('Password must be at least 6 characters');
                 return;
             }
-            setStep(2);
+
+            // Check email availability
+            startTransition(async () => {
+                const { checkEmailAvailability } = await import('@/app/actions/auth');
+                const isAvailable = await checkEmailAvailability(formData.email);
+
+                if (!isAvailable) {
+                    setError('Email is already registered. Please log in.');
+                    // Don't advance step
+                } else {
+                    setStep(2);
+                }
+            });
         } else {
             // Submit to backend
             const data = new FormData();
@@ -48,6 +62,8 @@ export default function RegisterPage() {
             data.append('email', formData.email);
             data.append('password', formData.password);
             data.append('university', formData.university);
+            data.append('yearOfStudy', formData.yearOfStudy);
+            data.append('program', formData.program);
 
             startTransition(async () => {
                 const result = await register(null, data);
@@ -271,6 +287,84 @@ export default function RegisterPage() {
                                                 <option key={uni} value={uni}>{uni}</option>
                                             ))}
                                         </select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Year of Study</label>
+                                        <div className="relative">
+                                            <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+                                            <select
+                                                required
+                                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
+                                                value={formData.yearOfStudy}
+                                                onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
+                                            >
+                                                <option value="">Year</option>
+                                                {[1, 2, 3, 4, 5].map((year) => (
+                                                    <option key={year} value={year}>Year {year}</option>
+                                                ))}
+                                                <option value="6">5+ Years</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Program</label>
+                                        <div className="relative">
+                                            <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+                                            {formData.university === 'Linköping University' ? (
+                                                <select
+                                                    required
+                                                    className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
+                                                    value={formData.program}
+                                                    onChange={(e) => setFormData({ ...formData, program: e.target.value })}
+                                                >
+                                                    <option value="">Select your program</option>
+                                                    <optgroup label="Civilingenjörsprogram (5 år)">
+                                                        {[
+                                                            "Datateknik",
+                                                            "Design och produktutveckling",
+                                                            "Elektronik och systemdesign",
+                                                            "Energi – miljö – management",
+                                                            "Industriell ekonomi",
+                                                            "Informationsteknologi",
+                                                            "Kemisk biologi",
+                                                            "Maskinteknik",
+                                                            "Medicinsk teknik",
+                                                            "Medieteknik och AI",
+                                                            "Mjukvaruteknik",
+                                                            "Samhällsbyggnad och logistik",
+                                                            "Strategisk systemanalys",
+                                                            "Teknisk biologi",
+                                                            "Teknisk fysik och elektroteknik",
+                                                            "Teknisk matematik"
+                                                        ].map((prog) => (
+                                                            <option key={prog} value={prog}>{prog}</option>
+                                                        ))}
+                                                    </optgroup>
+                                                    <optgroup label="Högskoleingenjörsprogram (3 år)">
+                                                        {[
+                                                            "Byggnadsteknik",
+                                                            "Högskoleingenjör i Datateknik",
+                                                            "Elektronik",
+                                                            "Kemisk analysteknik",
+                                                            "Högskoleingenjör i Maskinteknik"
+                                                        ].map((prog) => (
+                                                            <option key={prog} value={prog}>{prog}</option>
+                                                        ))}
+                                                    </optgroup>
+                                                </select>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    placeholder="Program"
+                                                    required
+                                                    className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                                    value={formData.program}
+                                                    onChange={(e) => setFormData({ ...formData, program: e.target.value })}
+                                                />
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <label className="flex items-start gap-3 p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl">

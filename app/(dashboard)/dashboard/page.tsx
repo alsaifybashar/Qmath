@@ -9,7 +9,7 @@ import {
     userAchievements,
     studySessions,
 } from '@/db/dashboard-schema';
-import { courses, topics } from '@/db/schema';
+import { courses, topics, enrollments } from '@/db/schema';
 
 import { checkAndMaintainStreak } from '@/lib/dashboard/streak-system';
 
@@ -79,7 +79,15 @@ export default async function DashboardPage() {
             })
             .from(userTopicMastery)
             .where(eq(userTopicMastery.userId, userId)),
-        db.select().from(courses).limit(6),
+        db.select({
+            id: courses.id,
+            code: courses.code,
+            name: courses.name,
+            universityId: courses.universityId
+        })
+            .from(courses)
+            .innerJoin(enrollments, eq(enrollments.courseId, courses.id))
+            .where(eq(enrollments.userId, userId)),
         db
             .select({
                 id: questionAttempts.id,
@@ -115,6 +123,11 @@ export default async function DashboardPage() {
             .where(eq(studySessions.userId, userId)),
         db.select().from(topics).limit(20),
     ]);
+
+    // Redirect to onboarding if no courses selected
+    if (userCourses.length === 0) {
+        redirect('/onboarding/courses');
+    }
 
     // Calculate metrics
     const totalStudyMinutes = studySessionsData.reduce((acc, session) => {

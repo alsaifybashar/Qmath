@@ -40,6 +40,8 @@ export async function register(prevState: any, formData: FormData) {
         email: formData.get('email'),
         password: formData.get('password'),
         university: formData.get('university'),
+        yearOfStudy: formData.get('yearOfStudy'),
+        program: formData.get('program'),
     });
 
     if (!validateFields.success) {
@@ -49,7 +51,7 @@ export async function register(prevState: any, formData: FormData) {
         };
     }
 
-    const { name, email, password, university } = validateFields.data;
+    const { name, email, password, university, yearOfStudy, program } = validateFields.data;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
@@ -70,14 +72,23 @@ export async function register(prevState: any, formData: FormData) {
             role: 'student',
         }).returning();
 
-        // Find university ID
+        // Find or create university
         let universityId = null;
         if (university) {
             const uni = await db.query.universities.findFirst({
                 where: eq(universities.name, university)
             });
+
             if (uni) {
                 universityId = uni.id;
+            } else {
+                // If university doesn't exist (e.g. database not seeded), create it
+                // Default country to Sweden as the frontend list is Swedish universities
+                const [newUni] = await db.insert(universities).values({
+                    name: university,
+                    country: 'Sweden'
+                }).returning();
+                universityId = newUni.id;
             }
         }
 
@@ -85,6 +96,8 @@ export async function register(prevState: any, formData: FormData) {
         await db.insert(profiles).values({
             id: newUser.id,
             universityId: universityId,
+            studyYear: yearOfStudy,
+            universityProgram: program,
         });
 
     } catch (error) {
@@ -93,7 +106,12 @@ export async function register(prevState: any, formData: FormData) {
         };
     }
 
-    redirect('/login');
+    // Auto-login and redirect to course selection
+    await signIn('credentials', {
+        email,
+        password,
+        redirectTo: '/onboarding/courses',
+    });
 }
 
 export async function forgotPassword(prevState: any, formData: FormData) {
@@ -112,4 +130,19 @@ export async function forgotPassword(prevState: any, formData: FormData) {
     console.log(`[STUB] Sending password reset email to: ${email}`);
 
     return { message: 'If an account exists with this email, a reset link has been sent.' };
+}
+
+export async function checkEmailAvailability(email: string) {
+    if (!email) return false;
+
+    try {
+        const existingUser = await db.query.users.findFirst({
+            where: eq(users.email, email)
+        });
+
+        return !existingUser;
+    } catch (error) {
+        console.error('Failed to check email availability:', error);
+        return false; // Fail safe, assume unavailable or error
+    }
 }
