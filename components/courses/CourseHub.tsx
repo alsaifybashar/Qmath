@@ -8,7 +8,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import CourseAnalysisView from './CourseAnalysisView';
+import CourseOverview from './CourseOverview';
 import type { ExamAnalysisData } from '@/app/actions/exam-analysis';
+import type { CourseOverviewData } from '@/app/actions/course-overview';
 
 interface CourseHubProps {
     course: {
@@ -19,10 +21,11 @@ interface CourseHubProps {
         description?: string;
     };
     analysisData: ExamAnalysisData | { error: string };
+    overviewData: CourseOverviewData | { error: string };
 }
 
-export default function CourseHub({ course, analysisData }: CourseHubProps) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'study'>('analysis');
+export default function CourseHub({ course, analysisData, overviewData }: CourseHubProps) {
+    const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'study'>('overview');
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: BookOpen },
@@ -70,8 +73,8 @@ export default function CourseHub({ course, analysisData }: CourseHubProps) {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`relative flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${isActive
-                                        ? 'text-white shadow-lg shadow-blue-500/25'
-                                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                                    ? 'text-white shadow-lg shadow-blue-500/25'
+                                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                                     }`}
                                 style={{
                                     background: isActive ? 'linear-gradient(135deg, #3B82F6, #2563EB)' : undefined
@@ -101,51 +104,18 @@ export default function CourseHub({ course, analysisData }: CourseHubProps) {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="grid grid-cols-1 md:grid-cols-3 gap-6"
                             >
-                                {/* Quick Stats */}
-                                <div className="md:col-span-2 space-y-6">
-                                    <div className="bg-white dark:bg-zinc-900/50 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
-                                        <h2 className="text-lg font-bold mb-4">Course Progress</h2>
-                                        {/* Placeholder progress */}
-                                        <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-2">
-                                            <div className="h-full w-[0%] bg-blue-500 rounded-full"></div>
+                                {'error' in overviewData ? (
+                                    <div className="p-10 text-center bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-800">
+                                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/40 mb-4">
+                                            <BookOpen className="w-8 h-8 text-amber-600 dark:text-amber-400" />
                                         </div>
-                                        <p className="text-sm text-zinc-500">0% completed</p>
+                                        <h3 className="text-lg font-bold text-amber-800 dark:text-amber-300 mb-2">Översikt ej tillgänglig</h3>
+                                        <p className="text-amber-600 dark:text-amber-400 max-w-md mx-auto">{overviewData.error}</p>
                                     </div>
-
-                                    <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-8 text-white relative overflow-hidden">
-                                        <div className="relative z-10">
-                                            <h2 className="text-2xl font-bold mb-2">Start Learning</h2>
-                                            <p className="text-blue-100 mb-6 max-w-md">
-                                                Continue where you left off or start a new topic.
-                                            </p>
-                                            <Link href="/study" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg">
-                                                <Play className="w-5 h-5 fill-current" /> Continue
-                                            </Link>
-                                        </div>
-                                        <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
-                                            <Layers className="w-64 h-64" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Analysis Teaser */}
-                                <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col items-center text-center justify-center">
-                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center mb-4 text-white shadow-lg">
-                                        <BarChart3 className="w-8 h-8" />
-                                    </div>
-                                    <h3 className="text-xl font-bold mb-2">Exam Analysis</h3>
-                                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
-                                        Unlock insights from past exams. See what topics matter most.
-                                    </p>
-                                    <button
-                                        onClick={() => setActiveTab('analysis')}
-                                        className="w-full py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 font-medium hover:bg-white dark:hover:bg-zinc-800 transition"
-                                    >
-                                        View Analysis
-                                    </button>
-                                </div>
+                                ) : (
+                                    <CourseOverview data={overviewData} />
+                                )}
                             </motion.div>
                         )}
 

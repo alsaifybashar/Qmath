@@ -1,5 +1,6 @@
 import { getCourseById, getCourseByCode } from '@/app/actions/courses';
 import { getExamAnalysis } from '@/app/actions/exam-analysis';
+import { getCourseOverview } from '@/app/actions/course-overview';
 import CourseHub from '@/components/courses/CourseHub';
 import { notFound } from 'next/navigation';
 
@@ -22,8 +23,11 @@ export default async function CoursePage({ params }: { params: Promise<{ code: s
 
     const course = courseResult.data;
 
-    // Fetch analysis data
-    const analysisData = await getExamAnalysis(course.id);
+    // Fetch analysis + overview data in parallel (overview reuses cached analysis)
+    const [analysisData, overviewData] = await Promise.all([
+        getExamAnalysis(course.id),
+        getCourseOverview(course.id),
+    ]);
 
     return (
         <CourseHub
@@ -35,6 +39,7 @@ export default async function CoursePage({ params }: { params: Promise<{ code: s
                 description: course.description || undefined
             }}
             analysisData={analysisData}
+            overviewData={overviewData}
         />
     );
 }

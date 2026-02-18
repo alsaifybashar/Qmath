@@ -20,7 +20,7 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
     const counts = [15, 25, 40];
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-6">
+        <div className="flex flex-col items-center justify-center p-6 min-h-[calc(100vh-4rem)]">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -62,8 +62,8 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                                     key={d}
                                     onClick={() => setDuration(d)}
                                     className={`py-2.5 rounded-xl text-sm font-medium transition-all ${duration === d
-                                            ? 'bg-blue-500 text-white shadow-md'
-                                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                                        ? 'bg-blue-500 text-white shadow-md'
+                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                                         }`}
                                 >
                                     {d} min
@@ -83,8 +83,8 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                                     key={c}
                                     onClick={() => setQuestionCount(c)}
                                     className={`py-2.5 rounded-xl text-sm font-medium transition-all ${questionCount === c
-                                            ? 'bg-blue-500 text-white shadow-md'
-                                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                                        ? 'bg-blue-500 text-white shadow-md'
+                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                                         }`}
                                 >
                                     {c}
@@ -104,8 +104,8 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                                     key={d}
                                     onClick={() => setDifficulty(d)}
                                     className={`py-2.5 rounded-xl text-sm font-medium capitalize transition-all ${difficulty === d
-                                            ? 'bg-blue-500 text-white shadow-md'
-                                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                                        ? 'bg-blue-500 text-white shadow-md'
+                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                                         }`}
                                 >
                                     {d}
@@ -230,7 +230,7 @@ function ExamScreen({
     const isUrgent = timeRemaining < 300;
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
+        <div className="flex flex-col h-[calc(100vh-2rem)] bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 overflow-hidden">
             {/* Top bar */}
             <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-6 py-3 flex items-center justify-between sticky top-0 z-20">
                 <div className="flex items-center gap-4">
@@ -264,10 +264,10 @@ function ExamScreen({
                         key={sq.id}
                         onClick={() => goTo(i)}
                         className={`w-8 h-8 rounded-lg text-xs font-medium flex-shrink-0 transition-all ${i === currentIndex
-                                ? 'bg-blue-500 text-white shadow-md'
-                                : answers.has(sq.id)
-                                    ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
-                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                            ? 'bg-blue-500 text-white shadow-md'
+                            : answers.has(sq.id)
+                                ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
+                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
                             } ${flagged.has(sq.id) ? 'ring-2 ring-amber-400' : ''}`}
                     >
                         {i + 1}
@@ -296,8 +296,8 @@ function ExamScreen({
                             <button
                                 onClick={toggleFlag}
                                 className={`p-2 rounded-lg transition ${flagged.has(q.id)
-                                        ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600'
-                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 hover:text-amber-500'
+                                    ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600'
+                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 hover:text-amber-500'
                                     }`}
                             >
                                 <Flag className="w-4 h-4" />
@@ -369,7 +369,7 @@ function ResultsScreen({ result }: { result: ExamResult }) {
     const gradeColor = gradeColors[result.estimatedGrade] || '#6B7280';
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6">
+        <div className="p-6">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <motion.div
@@ -545,7 +545,7 @@ export default function ExamSimPage() {
 
     if (phase === 'loading') {
         return (
-            <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+            <div className="flex items-center justify-center min-h-[60vh]">
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -564,7 +564,7 @@ export default function ExamSimPage() {
 
     if (phase === 'grading') {
         return (
-            <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+            <div className="flex items-center justify-center min-h-[60vh]">
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

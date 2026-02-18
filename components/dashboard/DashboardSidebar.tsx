@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
-    Home, BookOpen, LineChart, Library, Settings,
-    Brain, Zap, School, Layers, FileText, User, BarChart3,
-    CreditCard, Info, GraduationCap, HelpCircle, MessageSquare
+    Home, BookOpen, Brain, Zap, Library, Settings,
+    User, FileUp, FlaskConical, MessageSquare, Bell
 } from 'lucide-react';
 
 const C = {
@@ -23,46 +23,49 @@ interface SidebarProps {
     userLevel: number;
 }
 
-// Navigation sections with all subpages
-const navSections = [
+interface NavItem {
+    icon: React.ReactNode;
+    label: string;
+    href: string;
+}
+
+const navSections: { title: string; items: NavItem[] }[] = [
     {
         title: 'Main',
         items: [
-            { icon: <Home size={18} />, label: 'Dashboard', href: '/dashboard', active: true },
+            { icon: <Home size={18} />, label: 'Dashboard', href: '/dashboard' },
             { icon: <BookOpen size={18} />, label: 'Courses', href: '/courses' },
             { icon: <Brain size={18} />, label: 'Practice', href: '/practice' },
             { icon: <Zap size={18} />, label: 'Flashcards', href: '/flashcards' },
-            { icon: <Library size={18} />, label: 'Exam Archive', href: '/exams' },
+            { icon: <Library size={18} />, label: 'Exams', href: '/exams' },
         ],
     },
     {
-        title: 'Resources',
+        title: 'Tools',
         items: [
-            { icon: <School size={18} />, label: 'Universities', href: '/universities' },
-            { icon: <Layers size={18} />, label: 'Study Tools', href: '/study' },
-            { icon: <FileText size={18} />, label: 'Demo', href: '/demo' },
+            { icon: <MessageSquare size={18} />, label: 'AI Tutor', href: '/ai' },
+            { icon: <FlaskConical size={18} />, label: 'Exam Simulator', href: '/exam-sim' },
+            { icon: <FileUp size={18} />, label: 'Upload Exam', href: '/upload-exam' },
         ],
     },
     {
         title: 'Account',
         items: [
             { icon: <User size={18} />, label: 'Profile', href: '/profile' },
+            { icon: <Bell size={18} />, label: 'Notifications', href: '/notifications' },
             { icon: <Settings size={18} />, label: 'Settings', href: '/settings' },
-            { icon: <CreditCard size={18} />, label: 'Pricing', href: '/pricing' },
-        ],
-    },
-    {
-        title: 'Information',
-        items: [
-            { icon: <Info size={18} />, label: 'About', href: '/about' },
-            { icon: <GraduationCap size={18} />, label: 'Features', href: '/features' },
-            { icon: <HelpCircle size={18} />, label: 'Help', href: '/help' },
-            { icon: <MessageSquare size={18} />, label: 'Contact', href: '/contact' },
         ],
     },
 ];
 
+function isActive(pathname: string, href: string): boolean {
+    if (href === '/dashboard') return pathname === '/dashboard';
+    return pathname === href || pathname.startsWith(href + '/');
+}
+
 export default function DashboardSidebar({ userName, userLevel }: SidebarProps) {
+    const pathname = usePathname();
+
     return (
         <aside
             className="overflow-y-auto"
@@ -82,7 +85,7 @@ export default function DashboardSidebar({ userName, userLevel }: SidebarProps) 
             }}
         >
             {/* Logo */}
-            <div className="flex items-center gap-2.5 px-2 mb-6">
+            <Link href="/dashboard" className="flex items-center gap-2.5 px-2 mb-6 no-underline">
                 <div
                     className="w-9 h-9 rounded-full flex items-center justify-center"
                     style={{
@@ -101,7 +104,7 @@ export default function DashboardSidebar({ userName, userLevel }: SidebarProps) 
                 >
                     Beta
                 </span>
-            </div>
+            </Link>
 
             {/* Navigation Sections */}
             <div className="flex-1 space-y-5 overflow-y-auto">
@@ -114,30 +117,34 @@ export default function DashboardSidebar({ userName, userLevel }: SidebarProps) 
                             {section.title}
                         </h4>
                         <nav className="flex flex-col gap-0.5">
-                            {section.items.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-[#F7F8FC]"
-                                    style={{
-                                        color: item.active ? '#fff' : C.textSec,
-                                        background: item.active ? C.blue : 'transparent',
-                                        fontWeight: item.active ? 600 : 500,
-                                        fontSize: 13,
-                                    }}
-                                >
-                                    {item.icon}
-                                    {item.label}
-                                </Link>
-                            ))}
+                            {section.items.map((item) => {
+                                const active = isActive(pathname, item.href);
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-[#F7F8FC]"
+                                        style={{
+                                            color: active ? '#fff' : C.textSec,
+                                            background: active ? C.blue : 'transparent',
+                                            fontWeight: active ? 600 : 500,
+                                            fontSize: 13,
+                                        }}
+                                    >
+                                        {item.icon}
+                                        {item.label}
+                                    </Link>
+                                );
+                            })}
                         </nav>
                     </div>
                 ))}
             </div>
 
             {/* User card at bottom */}
-            <div
-                className="mt-4 p-3 rounded-xl flex items-center gap-2.5"
+            <Link
+                href="/profile"
+                className="mt-4 p-3 rounded-xl flex items-center gap-2.5 no-underline hover:ring-2 hover:ring-blue-200 transition-all"
                 style={{ background: C.surfaceAlt }}
             >
                 <div
@@ -154,7 +161,7 @@ export default function DashboardSidebar({ userName, userLevel }: SidebarProps) 
                         Level {userLevel}
                     </div>
                 </div>
-            </div>
+            </Link>
         </aside>
     );
 }

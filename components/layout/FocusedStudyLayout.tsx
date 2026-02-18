@@ -45,7 +45,7 @@ export function FocusedStudyLayout({
                 <div className="h-full px-4 flex items-center justify-between">
                     {/* Left: Back button */}
                     <Link
-                        href="/"
+                        href="/dashboard"
                         className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
                     >
                         <ChevronLeft className="w-5 h-5" />
@@ -71,8 +71,8 @@ export function FocusedStudyLayout({
                     <button
                         onClick={handleHelpToggle}
                         className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isHelpOpen
-                                ? 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300'
-                                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                            ? 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300'
+                            : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
                             }`}
                     >
                         <Lightbulb className="w-4 h-4" />

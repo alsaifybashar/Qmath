@@ -13,9 +13,6 @@ import { courses, topics, enrollments } from '@/db/schema';
 
 import { checkAndMaintainStreak } from '@/lib/dashboard/streak-system';
 import { getExamReadiness, getDashboardInsights, getStudyPatterns } from '@/app/actions/dashboard-insights';
-
-import ConstellationBG from '@/components/dashboard/ConstellationBG';
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import {
     StatCard,
     WeeklyActivityChart,
@@ -44,7 +41,7 @@ const C = {
 
 export default async function DashboardPage() {
     const session = await auth();
-
+    // Auth redirect handled by layout, but we still need the session for data
     if (!session?.user?.id) {
         redirect('/login');
     }
@@ -128,10 +125,7 @@ export default async function DashboardPage() {
         db.select().from(topics).limit(20),
     ]);
 
-    // Redirect to onboarding if no courses selected
-    if (userCourses.length === 0) {
-        redirect('/onboarding/courses');
-    }
+    // Onboarding redirect handled by layout
 
     // Fetch Phase 3 data in parallel (zero AI cost — pure DB queries)
     const [examReadiness, dashboardInsights, studyPatterns] = await Promise.all([
@@ -237,233 +231,221 @@ export default async function DashboardPage() {
     const reviewCount = masteryData.filter((m) => (m.masteryLevel || 0) < 3).length;
 
     return (
-        <div className="min-h-screen relative" style={{ background: C.bg }}>
-            {/* Animated background */}
-            <ConstellationBG />
+        <div className="p-7 max-w-[1060px] min-w-0 mx-auto">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-7">
+                <div>
+                    <h1 className="text-3xl font-normal" style={{ color: C.text }}>
+                        {greeting}, {user.name || 'Student'}
+                    </h1>
+                    <p className="text-sm mt-1" style={{ color: C.textMuted }}>
+                        You have <strong style={{ color: C.blue }}>{reviewCount} topics</strong> that need your attention
+                    </p>
+                </div>
+            </div>
 
-            {/* Centered Content Container */}
-            <div className="flex justify-center">
-                {/* Sidebar */}
-                <DashboardSidebar userName={user.name || 'Student'} userLevel={userLevel} />
-
-                {/* Main Content */}
-                <main className="flex-1 p-7 relative z-10 max-w-[1060px] min-w-0 mx-auto">
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-7">
-                        <div>
-                            <h1 className="text-3xl font-normal" style={{ color: C.text }}>
-                                {greeting}, {user.name || 'Student'}
-                            </h1>
-                            <p className="text-sm mt-1" style={{ color: C.textMuted }}>
-                                You have <strong style={{ color: C.blue }}>{reviewCount} topics</strong> that need your attention
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* XP Progress Bar */}
-                    <div
-                        className="flex items-center gap-3.5 rounded-xl px-5 py-3 mb-7"
-                        style={{
-                            background: 'rgba(255,255,255,0.7)',
-                            backdropFilter: 'blur(12px)',
-                            border: '1px solid #EFF1F8',
-                        }}
-                    >
+            {/* XP Progress Bar */}
+            <div
+                className="flex items-center gap-3.5 rounded-xl px-5 py-3 mb-7"
+                style={{
+                    background: 'rgba(255,255,255,0.7)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid #EFF1F8',
+                }}
+            >
+                <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-normal text-base"
+                    style={{
+                        background: `linear-gradient(135deg, #4361EE, #7C5CFC)`,
+                        boxShadow: '0 3px 10px rgba(67,97,238,0.3)',
+                    }}
+                >
+                    {userLevel}
+                </div>
+                <div className="flex-1">
+                    <div className="h-2 rounded-full bg-[#EFF1F8] overflow-hidden">
                         <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-normal text-base"
+                            className="h-full rounded-full transition-all duration-1000"
                             style={{
-                                background: `linear-gradient(135deg, #4361EE, #7C5CFC)`,
-                                boxShadow: '0 3px 10px rgba(67,97,238,0.3)',
+                                width: `${(totalXP % 500) / 5}%`,
+                                background: 'linear-gradient(90deg, #4361EE, #7C5CFC)',
                             }}
+                        />
+                    </div>
+                </div>
+                <span className="text-xs font-semibold text-[#6B7194]">
+                    {totalXP % 500} / 500 XP
+                </span>
+                <span className="text-base">⚡</span>
+            </div>
+
+            {/* Row 1: Weekly Activity + Streak */}
+            <div className="grid grid-cols-[1fr_320px] gap-4 mb-6">
+                <WeeklyActivityChart
+                    data={weeklyData}
+                    totalQuestions={recentAttempts.length}
+                    accuracy={accuracy}
+                />
+                <StreakCard
+                    currentStreak={currentStreak}
+                    weekStreak={weekStreak}
+                    level={userLevel}
+                />
+            </div>
+
+            {/* Row 2: Smart Insights + Study Patterns (Phase 3) */}
+            {(dashboardInsights.length > 0 || studyPatterns) && (
+                <div className="grid grid-cols-[1fr_320px] gap-4 mb-6">
+                    <InsightCards insights={dashboardInsights} />
+                    <StudyPatternCard pattern={studyPatterns} />
+                </div>
+            )}
+
+            {/* Row 3: Exam Readiness (Phase 3) */}
+            {examReadiness.length > 0 && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-normal mb-4" style={{ color: C.text }}>
+                        Exam Readiness
+                    </h2>
+                    <div className="space-y-4">
+                        {examReadiness.map(er => (
+                            <ExamReadinessBar
+                                key={er.courseId}
+                                courseName={er.courseName}
+                                courseCode={er.courseCode}
+                                overallReadiness={er.overallReadiness}
+                                estimatedGrade={er.estimatedGrade}
+                                weakestTopics={er.weakestTopics}
+                                strongestTopics={er.strongestTopics}
+                                topicBreakdown={er.topicBreakdown}
+                                studyTimeThisWeek={er.studyTimeThisWeek}
+                                questionsThisWeek={er.questionsThisWeek}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Row 4: Courses */}
+            <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-normal" style={{ color: C.text }}>
+                        Active Courses
+                    </h2>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                    {userCourses.slice(0, 3).map((course, idx) => {
+                        const courseMastery = masteryData.filter((m) => {
+                            const topic = topicsData.find((t) => t.id === m.topicId);
+                            return topic?.courseId === course.id;
+                        });
+                        const avgMastery = courseMastery.length > 0
+                            ? courseMastery.reduce((sum, m) => sum + (m.masteryLevel || 0), 0) / courseMastery.length / 5
+                            : 0;
+                        const topicsCount = topicsData.filter((t) => t.courseId === course.id).length;
+                        const masteredCount = courseMastery.filter((m) => (m.masteryLevel || 0) >= 4).length;
+
+                        return (
+                            <CourseCard
+                                key={course.id}
+                                code={course.code || `Course ${idx + 1}`}
+                                name={course.name}
+                                progress={Math.round(avgMastery * 100)}
+                                topicsMastered={masteredCount}
+                                topicsTotal={topicsCount || 1}
+                                gradient={courseGradients[idx % courseGradients.length]}
+                                reviewCount={courseMastery.filter((m) => (m.masteryLevel || 0) < 3).length}
+                            />
+                        );
+                    })}
+                    {userCourses.length === 0 && (
+                        <div
+                            className="col-span-3 rounded-2xl p-8 text-center"
+                            style={{ background: 'white', border: '1px solid #EFF1F8' }}
                         >
-                            {userLevel}
-                        </div>
-                        <div className="flex-1">
-                            <div className="h-2 rounded-full bg-[#EFF1F8] overflow-hidden">
-                                <div
-                                    className="h-full rounded-full transition-all duration-1000"
-                                    style={{
-                                        width: `${(totalXP % 500) / 5}%`,
-                                        background: 'linear-gradient(90deg, #4361EE, #7C5CFC)',
-                                    }}
-                                />
-                            </div>
-                        </div>
-                        <span className="text-xs font-semibold text-[#6B7194]">
-                            {totalXP % 500} / 500 XP
-                        </span>
-                        <span className="text-base">⚡</span>
-                    </div>
-
-                    {/* Row 1: Weekly Activity + Streak */}
-                    <div className="grid grid-cols-[1fr_320px] gap-4 mb-6">
-                        <WeeklyActivityChart
-                            data={weeklyData}
-                            totalQuestions={recentAttempts.length}
-                            accuracy={accuracy}
-                        />
-                        <StreakCard
-                            currentStreak={currentStreak}
-                            weekStreak={weekStreak}
-                            level={userLevel}
-                        />
-                    </div>
-
-                    {/* Row 2: Smart Insights + Study Patterns (Phase 3) */}
-                    {(dashboardInsights.length > 0 || studyPatterns) && (
-                        <div className="grid grid-cols-[1fr_320px] gap-4 mb-6">
-                            <InsightCards insights={dashboardInsights} />
-                            <StudyPatternCard pattern={studyPatterns} />
+                            <p style={{ color: C.textMuted }}>No courses yet. Browse the course catalog to get started!</p>
                         </div>
                     )}
+                </div>
+            </div>
 
-                    {/* Row 3: Exam Readiness (Phase 3) */}
-                    {examReadiness.length > 0 && (
-                        <div className="mb-6">
-                            <h2 className="text-xl font-normal mb-4" style={{ color: C.text }}>
-                                Exam Readiness
-                            </h2>
-                            <div className="space-y-4">
-                                {examReadiness.map(er => (
-                                    <ExamReadinessBar
-                                        key={er.courseId}
-                                        courseName={er.courseName}
-                                        courseCode={er.courseCode}
-                                        overallReadiness={er.overallReadiness}
-                                        estimatedGrade={er.estimatedGrade}
-                                        weakestTopics={er.weakestTopics}
-                                        strongestTopics={er.strongestTopics}
-                                        topicBreakdown={er.topicBreakdown}
-                                        studyTimeThisWeek={er.studyTimeThisWeek}
-                                        questionsThisWeek={er.questionsThisWeek}
-                                    />
-                                ))}
+            {/* Row 5: Quick Actions + AI Recommendation + Reviews */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+                <QuickActions reviewCount={reviewCount} />
+                {weakestTopic ? (
+                    <AIRecommendationCard
+                        topicName={weakestTopic.name}
+                        mastery={weakestTopic.mastery}
+                        courseName={weakestTopic.course}
+                        daysUntilExam={30}
+                    />
+                ) : (
+                    <AIRecommendationCard
+                        topicName="a new topic"
+                        mastery={0}
+                        courseName="your studies"
+                    />
+                )}
+                <ReviewWidget
+                    notifications={reviewSummary.notifications}
+                    overdue={reviewSummary.overdue}
+                    dueToday={reviewSummary.dueToday}
+                />
+            </div>
+
+            {/* Row 4: Mastery Map */}
+            <div
+                className="rounded-2xl p-6"
+                style={{
+                    background: 'white',
+                    border: '1px solid #EFF1F8',
+                    boxShadow: '0 2px 12px rgba(26,29,46,0.06)',
+                }}
+            >
+                <div className="flex justify-between items-center mb-5">
+                    <div>
+                        <h3 className="text-xl font-bold" style={{ color: C.text }}>
+                            Knowledge Map
+                        </h3>
+                        <p className="text-sm mt-1" style={{ color: C.textMuted }}>
+                            Your mastery level across all topics
+                        </p>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="flex gap-4">
+                        {[
+                            { color: '#10B981', label: 'Mastered ≥90%' },
+                            { color: '#3B82F6', label: 'Learning 60–89%' },
+                            { color: '#F59E0B', label: 'Developing 30–59%' },
+                            { color: '#EF4444', label: 'Needs focus <30%' },
+                        ].map((l, i) => (
+                            <div key={i} className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
+                                <span className="text-xs" style={{ color: C.textMuted }}>
+                                    {l.label}
+                                </span>
                             </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Topic grid */}
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(155px,1fr))] gap-2.5">
+                    {masteryTopics.map((topic) => (
+                        <MasteryTopicCard
+                            key={topic.id}
+                            name={topic.name}
+                            course={topic.course}
+                            mastery={topic.mastery}
+                        />
+                    ))}
+                    {masteryTopics.length === 0 && (
+                        <div className="col-span-full text-center py-8" style={{ color: C.textMuted }}>
+                            Start practicing to see your knowledge map!
                         </div>
                     )}
-
-                    {/* Row 4: Courses */}
-                    <div className="mb-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-normal" style={{ color: C.text }}>
-                                Active Courses
-                            </h2>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                            {userCourses.slice(0, 3).map((course, idx) => {
-                                const courseMastery = masteryData.filter((m) => {
-                                    const topic = topicsData.find((t) => t.id === m.topicId);
-                                    return topic?.courseId === course.id;
-                                });
-                                const avgMastery = courseMastery.length > 0
-                                    ? courseMastery.reduce((sum, m) => sum + (m.masteryLevel || 0), 0) / courseMastery.length / 5
-                                    : 0;
-                                const topicsCount = topicsData.filter((t) => t.courseId === course.id).length;
-                                const masteredCount = courseMastery.filter((m) => (m.masteryLevel || 0) >= 4).length;
-
-                                return (
-                                    <CourseCard
-                                        key={course.id}
-                                        code={course.code || `Course ${idx + 1}`}
-                                        name={course.name}
-                                        progress={Math.round(avgMastery * 100)}
-                                        topicsMastered={masteredCount}
-                                        topicsTotal={topicsCount || 1}
-                                        gradient={courseGradients[idx % courseGradients.length]}
-                                        reviewCount={courseMastery.filter((m) => (m.masteryLevel || 0) < 3).length}
-                                    />
-                                );
-                            })}
-                            {userCourses.length === 0 && (
-                                <div
-                                    className="col-span-3 rounded-2xl p-8 text-center"
-                                    style={{ background: 'white', border: '1px solid #EFF1F8' }}
-                                >
-                                    <p style={{ color: C.textMuted }}>No courses yet. Browse the course catalog to get started!</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Row 5: Quick Actions + AI Recommendation + Reviews */}
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                        <QuickActions reviewCount={reviewCount} />
-                        {weakestTopic ? (
-                            <AIRecommendationCard
-                                topicName={weakestTopic.name}
-                                mastery={weakestTopic.mastery}
-                                courseName={weakestTopic.course}
-                                daysUntilExam={30}
-                            />
-                        ) : (
-                            <AIRecommendationCard
-                                topicName="a new topic"
-                                mastery={0}
-                                courseName="your studies"
-                            />
-                        )}
-                        <ReviewWidget
-                            notifications={reviewSummary.notifications}
-                            overdue={reviewSummary.overdue}
-                            dueToday={reviewSummary.dueToday}
-                        />
-                    </div>
-
-                    {/* Row 4: Mastery Map */}
-                    <div
-                        className="rounded-2xl p-6"
-                        style={{
-                            background: 'white',
-                            border: '1px solid #EFF1F8',
-                            boxShadow: '0 2px 12px rgba(26,29,46,0.06)',
-                        }}
-                    >
-                        <div className="flex justify-between items-center mb-5">
-                            <div>
-                                <h3 className="text-xl font-bold" style={{ color: C.text }}>
-                                    Knowledge Map
-                                </h3>
-                                <p className="text-sm mt-1" style={{ color: C.textMuted }}>
-                                    Your mastery level across all topics
-                                </p>
-                            </div>
-
-                            {/* Legend */}
-                            <div className="flex gap-4">
-                                {[
-                                    { color: '#10B981', label: 'Mastered ≥90%' },
-                                    { color: '#3B82F6', label: 'Learning 60–89%' },
-                                    { color: '#F59E0B', label: 'Developing 30–59%' },
-                                    { color: '#EF4444', label: 'Needs focus <30%' },
-                                ].map((l, i) => (
-                                    <div key={i} className="flex items-center gap-1.5">
-                                        <div className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
-                                        <span className="text-xs" style={{ color: C.textMuted }}>
-                                            {l.label}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Topic grid */}
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(155px,1fr))] gap-2.5">
-                            {masteryTopics.map((topic) => (
-                                <MasteryTopicCard
-                                    key={topic.id}
-                                    name={topic.name}
-                                    course={topic.course}
-                                    mastery={topic.mastery}
-                                />
-                            ))}
-                            {masteryTopics.length === 0 && (
-                                <div className="col-span-full text-center py-8" style={{ color: C.textMuted }}>
-                                    Start practicing to see your knowledge map!
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </main>
+                </div>
             </div>
         </div>
     );

@@ -199,9 +199,21 @@ Qmath/
 │   │   └── admin/
 │   │       └── upload-exam/    # Admin exam upload
 │   ├── (auth)/                 # Auth pages (login, register)
-│   ├── dashboard/              # Student dashboard
+│   ├── (dashboard)/            # Authenticated Dashboard Group
+│   │   ├── layout.tsx          # Shared Dashboard Shell
+│   │   ├── dashboard/          # Student dashboard home
+│   │   ├── courses/            # Course hub
+│   │   ├── practice/           # Adaptive practice
+│   │   ├── exams/              # Exam archive
+│   │   ├── flashcards/         # Flashcard decks
+│   │   ├── profile/            # User profile
+│   │   ├── settings/           # User settings
+│   │   ├── ai/                 # AI Tutor chat
+│   │   ├── study/              # Active study session
+│   │   ├── exam-sim/           # Exam simulation
+│   │   └── upload-exam/        # Student exam upload
 │   ├── features/               # Features showcase (NEW)
-│   ├── archive/                # Exam archive (liutentor.se style)
+│   ├── archive/                # Public exam archive
 │   ├── admin/                  # Admin panel
 │   │   ├── page.tsx            # Dashboard with stats
 │   │   ├── users/              # User management
@@ -209,7 +221,6 @@ Qmath/
 │   │   ├── upload-exam/        # Exam upload form
 │   │   ├── logs/               # Activity logs
 │   │   └── settings/           # System settings
-│   └── study/                  # Practice interface
 ├── components/                 # React components
 │   ├── Header.tsx              # Main navigation
 │   ├── AdminLayout.tsx         # Admin sidebar layout
