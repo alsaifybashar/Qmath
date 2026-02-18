@@ -24,5 +24,8 @@ echo "🧹 Clearing cache..."
 rm -rf .next
 
 # Start the development server
+echo "🔨 Ensuring better-sqlite3 is built for $(node -v)..."
+npm rebuild better-sqlite3
+
 echo "🚀 Starting development server on port 3000..."
 npm run dev

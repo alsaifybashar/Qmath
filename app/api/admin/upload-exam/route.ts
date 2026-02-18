@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/db/drizzle';
-import { exams } from '@/db/schema';
+import { exams, courses } from '@/db/schema';
 import { invalidateExamAnalysisCache } from '@/app/actions/ai';
 import fs from 'fs/promises';
 import path from 'path';
@@ -120,6 +120,22 @@ export async function POST(request: NextRequest) {
             ...solutionData,
             uploadedBy: session.user.id,
         }).returning();
+
+        // Ensure course exists in the courses table
+        await db.transaction(async (tx) => {
+            const existingCourse = await tx.query.courses.findFirst({
+                where: (courses, { eq }) => eq(courses.code, courseCode)
+            });
+
+            if (!existingCourse) {
+                await tx.insert(courses).values({
+                    code: courseCode,
+                    name: courseName,
+                    // University ID is left null as we don't know it yet
+                });
+                console.log(`[UploadExam] Created new course entry for ${courseCode}`);
+            }
+        });
 
         // Invalidate the AI exam analysis cache for this course so the next
         // analysis request triggers a fresh Claude API call with the new exam included.

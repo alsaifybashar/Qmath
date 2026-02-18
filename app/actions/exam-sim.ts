@@ -111,7 +111,10 @@ export async function generateExamSimulation(config: ExamSimConfig): Promise<Exa
     const topicIds = courseTopics.map(t => t.id);
 
     const courseQuestions = await db.select().from(questions)
-        .where(inArray(questions.topicId, topicIds));
+        .where(and(
+            inArray(questions.topicId, topicIds),
+            eq(questions.isPublished, true)
+        ));
 
     if (courseQuestions.length < 5) return { error: 'Not enough questions available for a simulation' };
 

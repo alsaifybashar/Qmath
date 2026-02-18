@@ -1,61 +1,144 @@
 import { getUserCoursesForAnalysis } from '@/app/actions/exam-analysis';
+import { getEnrolledCourseIds } from '@/app/actions/courses';
+import CoursesDiscover from '@/components/courses/CoursesDiscover';
 import Link from 'next/link';
-import { BookOpen, ChevronRight, GraduationCap } from 'lucide-react';
+import { BookOpen, ChevronRight, GraduationCap, Plus } from 'lucide-react';
+
+const C = {
+    text: '#1A1D2E',
+    textMuted: '#A0A5C0',
+    textSec: '#6B7194',
+    blue: '#4361EE',
+    blueLight: '#EEF1FF',
+    surface: 'white',
+    surfaceAlt: '#F7F8FC',
+    border: '#EFF1F8',
+};
+
+const courseGradients = [
+    'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)',
+    'linear-gradient(135deg, #F6D365 0%, #FDA085 100%)',
+    'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)',
+    'linear-gradient(135deg, #4361EE 0%, #7C5CFC 100%)',
+    'linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%)',
+    'linear-gradient(135deg, #00C6FB 0%, #005BEA 100%)',
+];
+
+export const metadata = {
+    title: 'Courses | Qmath',
+};
 
 export default async function CoursesPage() {
-    const courses = await getUserCoursesForAnalysis();
+    const [courses, enrolledIds] = await Promise.all([
+        getUserCoursesForAnalysis(),
+        getEnrolledCourseIds(),
+    ]);
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-            {/* Header */}
-            <div className="mb-10">
-                <h1 className="text-4xl font-bold mb-2">My Courses</h1>
-                <p className="text-zinc-500 dark:text-zinc-400">Manage your courses and view performance analysis</p>
+        <div className="p-7 max-w-[1060px] min-w-0 mx-auto">
+
+            {/* ── Header ── */}
+            <div className="mb-6">
+                <h1 className="text-2xl font-semibold" style={{ color: C.text }}>
+                    Courses
+                </h1>
+                <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>
+                    Your enrolled courses and study tools
+                </p>
             </div>
 
-            {/* Courses Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {courses.map((course) => (
-                    <Link
-                        key={course.id}
-                        href={`/courses/${course.code}`}
-                        className="group block bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-lg transition-all"
-                    >
-                        <div className="flex items-start justify-between mb-4">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-xs font-mono font-bold text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
+            {/* ── Enrolled courses ── */}
+            <div className="mb-8">
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-base font-semibold" style={{ color: C.text }}>
+                        My courses
+                    </h2>
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                        style={{ background: C.blueLight, color: C.blue }}>
+                        {courses.length} enrolled
+                    </span>
+                </div>
+
+                {courses.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {courses.map((course, idx) => (
+                            <Link
+                                key={course.id}
+                                href={`/courses/${course.code}`}
+                                className="group block rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                style={{
+                                    boxShadow: '0 2px 12px rgba(26,29,46,0.06)',
+                                }}
+                            >
+                                {/* Gradient header */}
+                                <div
+                                    className="px-5 py-4 relative"
+                                    style={{ background: courseGradients[idx % courseGradients.length] }}
+                                >
+                                    <div className="text-white/60 text-xs font-mono font-bold mb-0.5">
                                         {course.code}
                                     </div>
+                                    <div className="text-white font-semibold text-base leading-snug">
+                                        {course.name}
+                                    </div>
                                 </div>
-                                <h3 className="text-xl font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                    {course.name}
-                                </h3>
-                            </div>
-                            <div className="p-2 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/50 transition-colors">
-                                <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-blue-500" />
-                            </div>
-                        </div>
 
-                        <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                            <GraduationCap className="w-4 h-4" />
-                            <span>Get Analysis & Plan</span>
+                                {/* Footer */}
+                                <div
+                                    className="px-5 py-3 flex items-center justify-between"
+                                    style={{ background: C.surface, borderTop: `1px solid ${C.border}` }}
+                                >
+                                    <div className="flex items-center gap-1.5 text-xs" style={{ color: C.textSec }}>
+                                        <GraduationCap size={13} />
+                                        <span>Analysis & study plan</span>
+                                    </div>
+                                    <ChevronRight size={14} style={{ color: C.textMuted }} className="group-hover:text-blue-500 transition-colors" />
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                ) : (
+                    <div
+                        className="rounded-2xl p-10 text-center"
+                        style={{ background: C.surfaceAlt, border: `2px dashed ${C.border}` }}
+                    >
+                        <div
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                            style={{ background: C.blueLight }}
+                        >
+                            <BookOpen size={24} style={{ color: C.blue }} />
                         </div>
-                    </Link>
-                ))}
-
-                {courses.length === 0 && (
-                    <div className="col-span-full border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-12 text-center">
-                        <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <BookOpen className="w-8 h-8 text-zinc-400" />
-                        </div>
-                        <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">No active courses</h3>
-                        <p className="text-zinc-500 mb-6">Enrolled courses will appear here.</p>
-                        <Link href="/onboarding" className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition">
-                            Browse Courses
-                        </Link>
+                        <p className="font-semibold mb-1" style={{ color: C.text }}>No courses yet</p>
+                        <p className="text-sm mb-5" style={{ color: C.textMuted }}>
+                            Search below to find courses and add them to your list.
+                        </p>
                     </div>
                 )}
+            </div>
+
+            {/* ── Divider ── */}
+            <div
+                className="flex items-center gap-3 mb-6"
+                style={{ borderTop: `1px solid ${C.border}` }}
+            >
+                <div
+                    className="mt-[-1px] flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full"
+                    style={{ background: C.blueLight, color: C.blue }}
+                >
+                    <Plus size={12} /> Add a course
+                </div>
+            </div>
+
+            {/* ── Discover section (client component) ── */}
+            <div
+                className="rounded-2xl p-6"
+                style={{
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
+                    boxShadow: '0 2px 12px rgba(26,29,46,0.06)',
+                }}
+            >
+                <CoursesDiscover enrolledIds={enrolledIds} />
             </div>
         </div>
     );

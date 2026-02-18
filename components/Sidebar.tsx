@@ -3,22 +3,24 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-    LayoutDashboard, BookOpen, Brain, Target, Layers, BarChart3,
-    Settings, HelpCircle, ChevronLeft, ChevronRight,
-    GraduationCap, Sparkles, User, Home
+    LayoutDashboard, BookOpen, Brain, Target, Layers,
+    Settings, HelpCircle, ChevronLeft,
+    GraduationCap, Sparkles, User, Home, FlaskConical, Archive
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const mainNavItems = [
+const studyItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'blue' },
     { href: '/courses', label: 'Courses', icon: BookOpen, color: 'emerald' },
     { href: '/practice', label: 'Practice', icon: Target, color: 'orange' },
-    { href: '/study', label: 'Study Session', icon: Brain, color: 'purple' },
     { href: '/flashcards', label: 'Flashcards', icon: Layers, color: 'pink' },
-    { href: '/exams', label: 'Exams', icon: GraduationCap, color: 'cyan' },
-    { href: '/ai', label: 'AI Tools', icon: Sparkles, color: 'yellow' },
-    { href: '/progress', label: 'Progress', icon: BarChart3, color: 'indigo' },
+];
+
+const examPrepItems = [
+    { href: '/exams', label: 'Past Exams', icon: Archive, color: 'cyan' },
+    { href: '/exam-sim', label: 'Exam Simulator', icon: FlaskConical, color: 'purple' },
+    { href: '/ai', label: 'AI Tutor', icon: Sparkles, color: 'yellow' },
 ];
 
 const secondaryNavItems = [
@@ -91,77 +93,160 @@ export function Sidebar() {
             </div>
 
             {/* Main Nav */}
-            <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto scrollbar-thin">
-                {mainNavItems.map((item, index) => {
-                    const active = isActive(item.href);
-                    const colors = colorMap[item.color] || colorMap.blue;
-                    const isHovered = hoveredItem === item.href;
-
-                    return (
-                        <div key={item.href} className="relative">
-                            <Link
-                                href={item.href}
-                                onMouseEnter={() => setHoveredItem(item.href)}
-                                onMouseLeave={() => setHoveredItem(null)}
-                                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${active
-                                        ? `${colors.bg} ${colors.text} shadow-lg ${colors.glow}`
-                                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                                    }`}
+            <nav className="flex-1 py-4 px-3 overflow-y-auto scrollbar-thin space-y-4">
+                {/* Study group */}
+                <div>
+                    <AnimatePresence mode="wait">
+                        {!collapsed && (
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1"
                             >
-                                {/* Active indicator bar */}
-                                {active && (
-                                    <motion.div
-                                        layoutId="activeIndicator"
-                                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-blue-400 to-purple-500 rounded-full"
-                                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                    />
-                                )}
-
-                                {/* Icon with micro-animation */}
-                                <motion.div
-                                    whileHover={{ scale: 1.15, rotate: 5 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                                    className="relative"
-                                >
-                                    <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-200 ${active ? colors.text : 'group-hover:text-white'
-                                        }`} />
-                                </motion.div>
-
-                                {/* Label */}
-                                <AnimatePresence mode="wait">
-                                    {!collapsed && (
-                                        <motion.span
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -10 }}
-                                            transition={{ duration: 0.2, delay: index * 0.02 }}
-                                            className="font-medium whitespace-nowrap overflow-hidden"
-                                        >
-                                            {item.label}
-                                        </motion.span>
-                                    )}
-                                </AnimatePresence>
-                            </Link>
-
-                            {/* Tooltip for collapsed state */}
-                            <AnimatePresence>
-                                {collapsed && isHovered && (
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -5, scale: 0.95 }}
-                                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                                        exit={{ opacity: 0, x: -5, scale: 0.95 }}
-                                        transition={{ duration: 0.15 }}
-                                        className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 bg-zinc-800 text-white text-sm font-medium rounded-lg shadow-xl whitespace-nowrap z-50 border border-zinc-700"
+                                Study
+                            </motion.p>
+                        )}
+                    </AnimatePresence>
+                    <div className="space-y-0.5">
+                        {studyItems.map((item, index) => {
+                            const active = isActive(item.href);
+                            const colors = colorMap[item.color] || colorMap.blue;
+                            const isHovered = hoveredItem === item.href;
+                            return (
+                                <div key={item.href} className="relative">
+                                    <Link
+                                        href={item.href}
+                                        onMouseEnter={() => setHoveredItem(item.href)}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${active
+                                            ? `${colors.bg} ${colors.text} shadow-lg ${colors.glow}`
+                                            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                                        }`}
                                     >
-                                        {item.label}
-                                        {/* Tooltip arrow */}
-                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-zinc-800 rotate-45 border-l border-b border-zinc-700" />
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    );
-                })}
+                                        {active && (
+                                            <motion.div
+                                                layoutId="activeIndicator"
+                                                className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-blue-400 to-purple-500 rounded-full"
+                                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                            />
+                                        )}
+                                        <motion.div
+                                            whileHover={{ scale: 1.15, rotate: 5 }}
+                                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                                        >
+                                            <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-200 ${active ? colors.text : 'group-hover:text-white'}`} />
+                                        </motion.div>
+                                        <AnimatePresence mode="wait">
+                                            {!collapsed && (
+                                                <motion.span
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, x: -10 }}
+                                                    transition={{ duration: 0.2, delay: index * 0.02 }}
+                                                    className="font-medium whitespace-nowrap overflow-hidden"
+                                                >
+                                                    {item.label}
+                                                </motion.span>
+                                            )}
+                                        </AnimatePresence>
+                                    </Link>
+                                    <AnimatePresence>
+                                        {collapsed && isHovered && (
+                                            <motion.div
+                                                initial={{ opacity: 0, x: -5, scale: 0.95 }}
+                                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                                exit={{ opacity: 0, x: -5, scale: 0.95 }}
+                                                transition={{ duration: 0.15 }}
+                                                className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 bg-zinc-800 text-white text-sm font-medium rounded-lg shadow-xl whitespace-nowrap z-50 border border-zinc-700"
+                                            >
+                                                {item.label}
+                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-zinc-800 rotate-45 border-l border-b border-zinc-700" />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Exam Prep group */}
+                <div>
+                    <AnimatePresence mode="wait">
+                        {!collapsed && (
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1"
+                            >
+                                Exam Prep
+                            </motion.p>
+                        )}
+                    </AnimatePresence>
+                    <div className="space-y-0.5">
+                        {examPrepItems.map((item, index) => {
+                            const active = isActive(item.href);
+                            const colors = colorMap[item.color] || colorMap.blue;
+                            const isHovered = hoveredItem === item.href;
+                            return (
+                                <div key={item.href} className="relative">
+                                    <Link
+                                        href={item.href}
+                                        onMouseEnter={() => setHoveredItem(item.href)}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${active
+                                            ? `${colors.bg} ${colors.text} shadow-lg ${colors.glow}`
+                                            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                                        }`}
+                                    >
+                                        {active && (
+                                            <motion.div
+                                                layoutId="activeIndicator"
+                                                className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-blue-400 to-purple-500 rounded-full"
+                                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                            />
+                                        )}
+                                        <motion.div
+                                            whileHover={{ scale: 1.15, rotate: 5 }}
+                                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                                        >
+                                            <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-200 ${active ? colors.text : 'group-hover:text-white'}`} />
+                                        </motion.div>
+                                        <AnimatePresence mode="wait">
+                                            {!collapsed && (
+                                                <motion.span
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, x: -10 }}
+                                                    transition={{ duration: 0.2, delay: index * 0.02 }}
+                                                    className="font-medium whitespace-nowrap overflow-hidden"
+                                                >
+                                                    {item.label}
+                                                </motion.span>
+                                            )}
+                                        </AnimatePresence>
+                                    </Link>
+                                    <AnimatePresence>
+                                        {collapsed && isHovered && (
+                                            <motion.div
+                                                initial={{ opacity: 0, x: -5, scale: 0.95 }}
+                                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                                exit={{ opacity: 0, x: -5, scale: 0.95 }}
+                                                transition={{ duration: 0.15 }}
+                                                className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 bg-zinc-800 text-white text-sm font-medium rounded-lg shadow-xl whitespace-nowrap z-50 border border-zinc-700"
+                                            >
+                                                {item.label}
+                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-zinc-800 rotate-45 border-l border-b border-zinc-700" />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             </nav>
 
             {/* Secondary Nav */}

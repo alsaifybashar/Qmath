@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import { courses, topics, universities, users, enrollments, exams } from '@/db/schema';
-import { eq, inArray, desc } from 'drizzle-orm';
+import { courses, topics, universities, users, enrollments, exams, questions } from '@/db/schema';
+import { eq, inArray, desc, and } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -40,8 +40,22 @@ export async function getUniversityById(id: string) {
 
 export async function getCourses(universityId?: string) {
     try {
+        // Get codes of courses that have exams
+        const coursesWithExams = await db
+            .selectDistinct({ code: exams.courseCode })
+            .from(exams);
+
+        const validCodes = coursesWithExams.map(c => c.code);
+
+        if (validCodes.length === 0) {
+            return { data: [] };
+        }
+
         const result = await db.query.courses.findMany({
-            where: universityId ? eq(courses.universityId, universityId) : undefined,
+            where: (courses, { and, eq, inArray }) => and(
+                universityId ? eq(courses.universityId, universityId) : undefined,
+                inArray(courses.code, validCodes)
+            ),
             with: {
                 university: true,
             },
@@ -120,6 +134,8 @@ export async function getTopics(courseId?: string) {
     }
 }
 
+
+
 export async function getTopicBySlug(slug: string) {
     try {
         const result = await db.query.topics.findFirst({
@@ -130,7 +146,9 @@ export async function getTopicBySlug(slug: string) {
                         university: true,
                     },
                 },
-                questions: true,
+                questions: {
+                    where: (questions, { eq }) => eq(questions.isPublished, true),
+                },
             },
         });
         return { data: result };
@@ -162,6 +180,14 @@ export async function getSuggestedCourses() {
             return { data: [] };
         }
 
+        // Get codes of courses that have exams (global availability filter)
+        const coursesWithExams = await db
+            .selectDistinct({ code: exams.courseCode })
+            .from(exams);
+        const validCodes = coursesWithExams.map(c => c.code);
+
+        if (validCodes.length === 0) return { data: [], universityName: user.profile.university.name };
+
         const { university, universityProgram } = user.profile;
         let coursesData = [];
 
@@ -177,15 +203,19 @@ export async function getSuggestedCourses() {
             coursesData = await db.query.courses.findMany({
                 where: (courses, { inArray, and, eq }) => and(
                     eq(courses.universityId, university.id),
+                    inArray(courses.code, validCodes),
                     inArray(courses.code, specificCodes)
                 )
             });
 
             // If some courses are missing (not seeded yet), we just return what we find.
         } else {
-            // Default: Return up to 10 courses for that university
+            // Default: Return up to 10 courses for that university that have exams
             coursesData = await db.query.courses.findMany({
-                where: eq(courses.universityId, university.id),
+                where: (courses, { and, eq, inArray }) => and(
+                    eq(courses.universityId, university.id),
+                    inArray(courses.code, validCodes)
+                ),
                 limit: 10,
             });
         }
@@ -234,4 +264,110 @@ export async function saveUserCourses(courseIds: string[]) {
     }
 
     redirect('/dashboard');
+}
+
+// ============ ADD / REMOVE SINGLE ENROLLMENT ============
+
+/**
+ * Add a single course to the user's enrollments without touching existing ones.
+ * Used from the Courses page "Discover" section.
+ */
+export async function addCourseEnrollment(courseId: string) {
+    const session = await auth();
+    if (!session?.user?.id) return { error: 'Not authenticated' };
+
+    try {
+        // Check if already enrolled
+        const existing = await db.query.enrollments.findFirst({
+            where: and(
+                eq(enrollments.userId, session.user.id),
+                eq(enrollments.courseId, courseId)
+            ),
+        });
+
+        if (existing) return { error: 'Already enrolled in this course' };
+
+        await db.insert(enrollments).values({
+            userId: session.user.id,
+            courseId,
+        });
+
+        revalidatePath('/courses');
+        revalidatePath('/dashboard');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to add enrollment:', error);
+        return { error: 'Failed to add course' };
+    }
+}
+
+/**
+ * Search for courses that have old exams in the archive.
+ * Returns courses (from the courses table) whose code matches the query,
+ * plus a count of available archive exams, so students can discover and add them.
+ */
+export async function searchCoursesWithExams(query: string) {
+    if (!query || query.trim().length < 2) return { data: [] };
+
+    const q = query.trim().toUpperCase();
+
+    try {
+        // Get all exams matching the query
+        const matchingExams = await db
+            .select({
+                courseCode: exams.courseCode,
+                courseName: exams.courseName,
+            })
+            .from(exams)
+            .where(eq(exams.courseCode, q));
+
+        if (matchingExams.length === 0) return { data: [] };
+
+        // Deduplicate by courseCode
+        const uniqueCodes = [...new Set(matchingExams.map((e) => e.courseCode))];
+
+        // Look up matching courses in the courses table
+        const matchedCourses = await db.query.courses.findMany({
+            where: inArray(courses.code, uniqueCodes),
+        });
+
+        // Count exams per code
+        const examCounts = matchingExams.reduce<Record<string, number>>((acc, e) => {
+            acc[e.courseCode] = (acc[e.courseCode] || 0) + 1;
+            return acc;
+        }, {});
+
+        // Build result: matched courses first, then phantom entries for codes not yet in courses table
+        const result = uniqueCodes.map((code) => {
+            const course = matchedCourses.find((c) => c.code === code);
+            const nameFromExam = matchingExams.find((e) => e.courseCode === code)?.courseName ?? code;
+            return {
+                id: course?.id ?? null,           // null = not in courses table yet
+                code,
+                name: course?.name ?? nameFromExam,
+                examCount: examCounts[code] ?? 0,
+                canEnroll: !!course,               // only enroll if course record exists
+            };
+        });
+
+        return { data: result };
+    } catch (error) {
+        console.error('Failed to search courses with exams:', error);
+        return { data: [], error: 'Search failed' };
+    }
+}
+
+/**
+ * Get the current user's enrolled course IDs (lightweight — just the IDs).
+ */
+export async function getEnrolledCourseIds(): Promise<string[]> {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    const rows = await db
+        .select({ courseId: enrollments.courseId })
+        .from(enrollments)
+        .where(eq(enrollments.userId, session.user.id));
+
+    return rows.map((r) => r.courseId);
 }

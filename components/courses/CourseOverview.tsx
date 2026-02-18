@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-    ArrowRight, Layers, Target, Brain, Sparkles, TrendingUp,
+    ArrowRight, Layers, Target, Brain, Sparkles, TrendingUp, HelpCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { CourseOverviewData, LearningModule, OverviewTopic } from '@/app/actions/course-overview';
@@ -39,6 +39,16 @@ const PHASE_CONFIG = {
         bg: 'bg-violet-50 dark:bg-violet-500/8',
         border: 'border-violet-200/80 dark:border-violet-800/40',
         badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+    },
+    // Manual topics (admin-added Topics → Questions)
+    practice: {
+        label: 'Övningsämnen',
+        icon: HelpCircle,
+        accentColor: '#0EA5E9',
+        iconBg: 'bg-gradient-to-br from-sky-400 to-cyan-500',
+        bg: 'bg-sky-50 dark:bg-sky-500/8',
+        border: 'border-sky-200/80 dark:border-sky-800/40',
+        badge: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
     },
 } as const;
 
@@ -93,7 +103,7 @@ function TopicRow({
                         {stepNumber}
                     </div>
 
-                    {/* Name + difficulty dot */}
+                    {/* Name + difficulty dot + optional question count */}
                     <div className="flex-1 min-w-0 flex items-center gap-2">
                         <span className="font-semibold text-sm text-zinc-800 dark:text-zinc-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {topic.name}
@@ -102,6 +112,11 @@ function TopicRow({
                             className={`flex-shrink-0 w-2 h-2 rounded-full ${DIFFICULTY_DOT[topic.difficulty]}`}
                             title={topic.difficulty}
                         />
+                        {topic.source === 'manual' && topic.questionCount != null && topic.questionCount > 0 && (
+                            <span className="flex-shrink-0 text-[10px] font-medium text-zinc-400 dark:text-zinc-500" title={`${topic.questionCount} frågor`}>
+                                {topic.questionCount} frågor
+                            </span>
+                        )}
                     </div>
 
                     {/* Arrow */}
@@ -125,7 +140,7 @@ function ModuleSection({
     globalStartStep: number;
     courseCode: string;
 }) {
-    const config = PHASE_CONFIG[module.phase];
+    const config = getModuleConfig(module);
     const PhaseIcon = config.icon;
 
     return (
@@ -168,6 +183,12 @@ function ModuleSection({
 // LEARNING PATH BAR — compact
 // ============================================================================
 
+function getModuleConfig(mod: LearningModule) {
+    return mod.id === 'module-practice'
+        ? PHASE_CONFIG.practice
+        : PHASE_CONFIG[mod.phase as keyof typeof PHASE_CONFIG];
+}
+
 function LearningPathBar({ data }: { data: CourseOverviewData }) {
     const totalTopics = data.totalTopics;
 
@@ -175,7 +196,7 @@ function LearningPathBar({ data }: { data: CourseOverviewData }) {
         <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
             {data.modules.map((mod) => {
                 const fraction = mod.topics.length / totalTopics;
-                const config = PHASE_CONFIG[mod.phase];
+                const config = getModuleConfig(mod);
                 return (
                     <motion.div
                         key={mod.id}
@@ -240,12 +261,15 @@ export default function CourseOverview({ data }: { data: CourseOverviewData }) {
                         <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Studieväg</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        {data.modules.map((mod) => (
-                            <div key={mod.id} className="flex items-center gap-1">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PHASE_CONFIG[mod.phase].accentColor }} />
-                                <span className="text-[10px] text-zinc-400">{PHASE_CONFIG[mod.phase].label}</span>
-                            </div>
-                        ))}
+                        {data.modules.map((mod) => {
+                            const config = getModuleConfig(mod);
+                            return (
+                                <div key={mod.id} className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.accentColor }} />
+                                    <span className="text-[10px] text-zinc-400">{config.label}</span>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
                 <LearningPathBar data={data} />

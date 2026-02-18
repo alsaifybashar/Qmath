@@ -13,12 +13,15 @@ Qmath is an AI-driven intelligent tutoring system designed for university-level 
 ---
 
 ## 🆕 Recent Updates
+- **Course-Linked Question Bank**: Admins can now add practice questions with step-by-step LaTeX solutions to any course that has uploaded exams. New **Courses** and **Questions** admin pages. Students see all available courses on the archive browse page. [Docs →](./docs/features/courses-questions.md)
+- **Question Publishing Workflow**: Admins can now draft questions and publish them when ready. Students only see published questions in practice and exam simulations.
 - **Exam Analysis Feature**: Added deep exam pattern analysis with topic frequency heatmaps, gap analysis, and phased study strategies at `/exam-analysis`. [Docs →](./docs/features/exam-analysis.md)
 - **Phase 5: Spaced Repetition Notifications** — SM-2 inspired review scheduling with overdue/today/upcoming urgency, dashboard notification widget with bell badge, full review page at `/notifications`. [Docs →](./docs/features/phases-3-5-smart-dashboard-exam-sim-spaced-repetition.md)
 - **Phase 4: Exam Simulation** — Timed exam simulations with intelligent question selection, adaptive difficulty, and detailed post-exam breakdown with improvement suggestions at `/exam-sim`. [Docs →](./docs/features/phases-3-5-smart-dashboard-exam-sim-spaced-repetition.md)
 - **Phase 3: Smart Dashboard** — Zero-AI-cost exam readiness bars, smart insights (declining topics, error patterns, milestones), and study pattern analytics on `/dashboard`. [Docs →](./docs/features/phases-3-5-smart-dashboard-exam-sim-spaced-repetition.md)
 - **Enhanced User Profiles**: Registration now collects **Year of Study** and **Program Name** to enable better personalization.
 - **Improved Validation**: Strict input validation prevents invalid data entry during sign-up.
+- **Course Availability**: Only courses with uploaded exams are now visible to students and admins. New courses are automatically created upon exam upload.
 - **Documentation**: Added [User Profile Data Flow](./docs/user-profile-data-flow.md) documentation.
 
 ---
@@ -39,7 +42,9 @@ Qmath is an AI-driven intelligent tutoring system designed for university-level 
 - **Comprehensive Admin Panel**: Full-featured dashboard with sidebar navigation
 - **Dashboard**: Real-time stats, activity feeds, top courses, system status
 - **User Management**: Promote/demote admins, view user activity, delete accounts
+- **Course Overview**: Browse all courses that have exams; deep-link to add questions
 - **Exam Management**: Upload, edit, delete exams with download statistics
+- **Question Bank**: Add practice questions with step-by-step LaTeX solutions per course
 - **Exam Upload API**: Upload exam PDFs for AI-powered question extraction
 - **Activity Logs**: Monitor all system events with filtering and search
 - **Settings**: Configure site settings, file uploads, and system preferences
@@ -96,7 +101,9 @@ After running the seed scripts, use these credentials to log in:
 #### Admin Panel Routes:
 - `/admin` - Dashboard with stats and activity
 - `/admin/users` - User management
-- `/admin/exams` - Exam management  
+- `/admin/courses` - Course overview (courses with exams)
+- `/admin/exams` - Exam management
+- `/admin/questions` - Question bank with LaTeX solution editor
 - `/admin/upload-exam` - Upload new exams
 - `/admin/logs` - Activity logs
 - `/admin/settings` - System settings
@@ -196,7 +203,9 @@ Qmath/
 │   │   │   ├── generate/       # Generate AI content
 │   │   │   ├── validate/       # Validate math answers
 │   │   │   └── upload-exam/    # Upload exam for processing
+│   │   ├── courses/            # Public course list (NEW)
 │   │   └── admin/
+│   │       ├── courses/        # Admin course list (NEW)
 │   │       └── upload-exam/    # Admin exam upload
 │   ├── (auth)/                 # Auth pages (login, register)
 │   ├── (dashboard)/            # Authenticated Dashboard Group
@@ -217,7 +226,9 @@ Qmath/
 │   ├── admin/                  # Admin panel
 │   │   ├── page.tsx            # Dashboard with stats
 │   │   ├── users/              # User management
+│   │   ├── courses/            # Course overview (NEW)
 │   │   ├── exams/              # Exam management
+│   │   ├── questions/          # Question bank with LaTeX editor (enhanced)
 │   │   ├── upload-exam/        # Exam upload form
 │   │   ├── logs/               # Activity logs
 │   │   └── settings/           # System settings
@@ -275,7 +286,9 @@ Qmath/
 **All student permissions PLUS:**
 - ✅ **Dashboard** (`/admin`) - View stats, activity feed, top courses, system status
 - ✅ **User Management** (`/admin/users`) - Promote/demote admins, delete users, search
+- ✅ **Course Overview** (`/admin/courses`) - Browse all courses with exams; deep-link to questions
 - ✅ **Exam Management** (`/admin/exams`) - View all exams, download stats, delete
+- ✅ **Question Bank** (`/admin/questions`) - Add questions with step-by-step LaTeX solutions
 - ✅ **Upload Exams** (`/admin/upload-exam`) - Add new exam PDFs to archive
 - ✅ **Activity Logs** (`/admin/logs`) - Monitor system events, filter by type
 - ✅ **Settings** (`/admin/settings`) - Configure site, users, file uploads
@@ -346,7 +359,16 @@ The admin panel provides comprehensive control over the Qmath platform with a cl
 - **Storage Info**: Current storage usage visualization
 - **Alerts**: System notifications and warnings
 
-#### 2. **User Management** (`/admin/users`)
+#### 2. **Course Overview** (`/admin/courses`)
+- **Course Cards**: All courses that have at least one uploaded exam
+- **Per-Course Stats**: Exam count, solution count, latest exam date
+- **Actions**:
+  - ➕ Add Questions — opens the question editor pre-filtered to this course
+  - 📂 Archive — opens the public student exam archive for the course
+  - 📋 Exams — links to admin exam list filtered by course code
+- **Info Banner**: Explains that courses are auto-created on first exam upload
+
+#### 3. **User Management** (`/admin/users`)
 - **User Statistics**: Total users, admins, students breakdown
 - **Search Functionality**: Filter users by email or name
 - **User Table**: Display all users with avatar, name, email, role, join date
@@ -356,7 +378,19 @@ The admin panel provides comprehensive control over the Qmath platform with a cl
   - 🗑️ Delete user account (with confirmation)
 - **Protection**: Cannot delete your own account
 
-#### 3. **Exam Management** (`/admin/exams`)
+#### 4. **Question Bank** (`/admin/questions`)
+- **3-Step Workflow**: Select course → select/create topic → add question
+- **Course Selector**: Card grid — only courses that have uploaded exams
+- **Topic Manager**: Chip-based selector with inline topic creation form
+- **Question Form**:
+  - Problem content (LaTeX with live KaTeX preview)
+  - Question type: multiple choice, numeric, proof, free-form
+  - Difficulty tier (1–5)
+  - Correct answer and options (JSON array for MCQ)
+  - Step-by-step solution editor (unlimited steps, each with label + LaTeX content + live preview)
+- **Deep-link**: URL parameter `?course=<id>` pre-selects a course (used by `/admin/courses`)
+
+#### 5. **Exam Management** (`/admin/exams`)
 - **Exam Statistics**: Total exams, with solutions, downloads, unique courses
 - **Search & Filter**: Find exams by course code or name
 - **Exam Table**: Course, date, type, solution status, size, downloads
@@ -366,7 +400,7 @@ The admin panel provides comprehensive control over the Qmath platform with a cl
   - 🗑️ Delete exam (removes file and database entry)
 - **Quick Upload**: Direct link to upload page
 
-#### 4. **Upload Exam** (`/admin/upload-exam`)
+#### 6. **Upload Exam** (`/admin/upload-exam`)
 - **Form Fields**:
   - Course Code (e.g., SF1672)
   - Course Name (e.g., Linear Algebra)
@@ -378,7 +412,7 @@ The admin panel provides comprehensive control over the Qmath platform with a cl
 - **Auto-organization**: Files stored in `/uploads/exams/{courseCode}/`
 - **Instant availability**: Exams appear in search immediately
 
-#### 5. **Activity Logs** (`/admin/logs`)
+#### 7. **Activity Logs** (`/admin/logs`)
 - **Event Tracking**: All system activities logged with timestamps
 - **Filter Options**: All, User Register, Exam Upload, Exam Download, Role Change, Error
 - **Log Details**:
@@ -389,7 +423,7 @@ The admin panel provides comprehensive control over the Qmath platform with a cl
   - Relative and absolute timestamps
 - **Statistics**: Event counts by category
 
-#### 6. **Settings** (`/admin/settings`)
+#### 8. **Settings** (`/admin/settings`)
 - **General Settings**:
   - Site Name configuration
   - Site URL
@@ -408,13 +442,15 @@ The admin panel provides comprehensive control over the Qmath platform with a cl
 
 ### Admin Panel Features
 
-✅ **Sidebar Navigation**: Persistent navigation across all admin pages  
-✅ **Responsive Design**: Works on desktop and tablet  
-✅ **Real-time Stats**: Live updates of key metrics  
-✅ **Role-Based Access**: Automatic redirect for non-admin users  
-✅ **Dark Mode**: Full theme support  
-✅ **Search & Filter**: Quick find functionality on all pages  
-✅ **Confirmation Dialogs**: Prevent accidental destructive actions  
+✅ **Sidebar Navigation**: Persistent navigation across all admin pages
+✅ **Responsive Design**: Works on desktop and tablet
+✅ **Real-time Stats**: Live updates of key metrics
+✅ **Role-Based Access**: Automatic redirect for non-admin users
+✅ **Dark Mode**: Full theme support
+✅ **Search & Filter**: Quick find functionality on all pages
+✅ **Confirmation Dialogs**: Prevent accidental destructive actions
+✅ **LaTeX Question Editor**: Live KaTeX preview while writing step-by-step solutions
+✅ **Course-Exam Linkage**: Courses auto-appear when first exam is uploaded; auto-disappear when all exams are removed
 
 ---
 

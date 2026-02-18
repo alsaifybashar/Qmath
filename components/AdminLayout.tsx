@@ -10,7 +10,9 @@ import {
     Activity,
     Settings,
     Upload,
-    LogOut
+    LogOut,
+    BookOpen,
+    HelpCircle,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -24,7 +26,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     const navigation = [
         { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
         { name: 'Users', href: '/admin/users', icon: Users },
+        { name: 'Courses', href: '/admin/courses', icon: BookOpen },
         { name: 'Exams', href: '/admin/exams', icon: FileText },
+        { name: 'Questions', href: '/admin/questions', icon: HelpCircle },
         { name: 'Upload Exam', href: '/admin/upload-exam', icon: Upload },
         { name: 'Activity Logs', href: '/admin/logs', icon: Activity },
         { name: 'Settings', href: '/admin/settings', icon: Settings },
@@ -65,8 +69,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                 key={item.name}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${active
-                                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                                     }`}
                             >
                                 <Icon className="w-5 h-5" />

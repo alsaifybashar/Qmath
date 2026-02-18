@@ -1,11 +1,17 @@
 'use server';
 
+import { db } from '@/db/drizzle';
+import { topics, questions, courses } from '@/db/schema';
+import { eq, and, inArray, sql, asc } from 'drizzle-orm';
 import { getExamAnalysis } from './exam-analysis';
 import type { ExamAnalysisData, ExamTopicNode } from './exam-analysis';
 
 // ============================================================================
 // TYPES — Course Overview data structures
 // ============================================================================
+
+/** Source of the topic: AI (from exam analysis) or manually added in admin */
+export type OverviewTopicSource = 'ai' | 'manual';
 
 /** A single topic within a learning module */
 export interface OverviewTopic {
@@ -21,6 +27,10 @@ export interface OverviewTopic {
     estimatedHours: number;      // rough study time estimate
     prerequisites: string[];     // IDs of prerequisite topics
     priority: 'critical' | 'high' | 'medium' | 'low';
+    /** When set, topic was added manually in admin (Topics → Questions) */
+    source?: OverviewTopicSource;
+    /** Number of published practice questions (for manual topics) */
+    questionCount?: number;
 }
 
 /** A learning module — groups related topics in order */
@@ -176,6 +186,81 @@ function nodeToOverviewTopic(
         estimatedHours: estimateStudyHours(node.aiDifficulty, node.aiImportance),
         prerequisites: buildPrerequisites(node, allNodes),
         priority: node.priority,
+        source: 'ai',
+    };
+}
+
+// ============================================================================
+// MANUAL TOPICS (admin-added Topics → Questions)
+// ============================================================================
+
+const MANUAL_MODULE_CONFIG = {
+    id: 'module-practice',
+    title: 'Övningsämnen',
+    description: 'Ämnen med manuellt tillagda frågor och svar. Öva här för att förstärka din förståelse.',
+    phase: 'core' as const,
+    color: '#0EA5E9',
+    icon: 'practice',
+};
+
+/**
+ * Fetches manually added topics for a course with published question count.
+ * Used by course overview (no admin check — students see these).
+ */
+async function getManualTopicsWithQuestionCount(courseId: string): Promise<{ slug: string; title: string; description: string | null; questionCount: number }[]> {
+    const courseTopics = await db
+        .select({
+            id: topics.id,
+            slug: topics.slug,
+            title: topics.title,
+            description: topics.description,
+        })
+        .from(topics)
+        .where(eq(topics.courseId, courseId))
+        .orderBy(asc(topics.title));
+
+    if (courseTopics.length === 0) return [];
+
+    const topicIds = courseTopics.map((t) => t.id);
+
+    const counts = await db
+        .select({
+            topicId: questions.topicId,
+            count: sql<number>`count(*)`.mapWith(Number),
+        })
+        .from(questions)
+        .where(and(inArray(questions.topicId, topicIds), eq(questions.isPublished, true)))
+        .groupBy(questions.topicId);
+
+    const countMap = new Map(counts.map((c) => [c.topicId, c.count]));
+
+    return courseTopics.map((t) => ({
+        slug: t.slug,
+        title: t.title,
+        description: t.description,
+        questionCount: countMap.get(t.id) ?? 0,
+    }));
+}
+
+/** Map a DB manual topic to OverviewTopic (id = slug for URL routing). */
+function manualTopicToOverviewTopic(
+    t: { slug: string; title: string; description: string | null; questionCount: number },
+): OverviewTopic {
+    return {
+        id: t.slug,
+        name: t.title,
+        description: t.description ?? '',
+        difficulty: 'medium',
+        importance: 5,
+        examFrequency: '',
+        examSections: [],
+        studyTips: [],
+        commonMistakes: [],
+        estimatedHours: 1,
+        prerequisites: [],
+        priority: 'medium',
+        source: 'manual',
+        questionCount: t.questionCount,
     };
 }
 
@@ -184,8 +269,9 @@ function nodeToOverviewTopic(
 // ============================================================================
 
 /**
- * Generates a structured course overview from the exam analysis data.
- * Reuses the existing AI exam analysis (cached), avoiding duplicate AI calls.
+ * Generates a structured course overview from the exam analysis data and
+ * manually added topics (admin: Topics → Questions). Reuses the existing
+ * AI exam analysis (cached). Manual topics appear in an "Övningsämnen" module.
  */
 export async function getCourseOverview(
     courseId: string,
@@ -200,16 +286,47 @@ export async function getCourseOverview(
 
     const analysis: ExamAnalysisData = analysisResult;
 
+    // 2. Fetch manually added topics (with question count) for this course
+    const manualTopicsRaw = await getManualTopicsWithQuestionCount(courseId);
+    const manualOverviewTopics = manualTopicsRaw.map(manualTopicToOverviewTopic);
+
+    // 3. If no AI topics, try overview from manual topics only
     if (analysis.examTopicMap.length === 0) {
+        if (manualOverviewTopics.length === 0) {
+            return {
+                error: 'Inga ämnen hittades. Ladda upp tentamensfiler eller lägg till ämnen och frågor under Admin → Frågor.',
+            };
+        }
+        const practiceModule: LearningModule = {
+            id: MANUAL_MODULE_CONFIG.id,
+            title: MANUAL_MODULE_CONFIG.title,
+            description: MANUAL_MODULE_CONFIG.description,
+            phase: MANUAL_MODULE_CONFIG.phase,
+            orderIndex: 1,
+            topics: manualOverviewTopics,
+            totalEstimatedHours: manualOverviewTopics.length,
+            moduleImportance: 5,
+            color: MANUAL_MODULE_CONFIG.color,
+            icon: MANUAL_MODULE_CONFIG.icon,
+        };
+        const modules = [practiceModule];
+        const learningPath = manualOverviewTopics.map((t) => t.id);
         return {
-            error: 'Inga ämnen hittades. Ladda upp tentamensfiler för att generera en kursöversikt.',
+            courseId: analysis.courseId,
+            courseCode: analysis.courseCode,
+            courseName: analysis.courseName,
+            totalModules: 1,
+            totalTopics: manualOverviewTopics.length,
+            totalEstimatedHours: practiceModule.totalEstimatedHours,
+            examsAnalyzed: analysis.totalExamsAnalyzed,
+            modules,
+            learningPath,
+            generatedAt: new Date().toISOString(),
         };
     }
 
-    // 2. Group topics by phase
+    // 4. Group AI topics by phase and build learning modules
     const phaseGroups = groupByPhase(analysis.examTopicMap);
-
-    // 3. Build learning modules
     const modules: LearningModule[] = [];
     let globalOrderIndex = 0;
     const orderedPhases: ('foundation' | 'core' | 'advanced')[] = ['foundation', 'core', 'advanced'];
@@ -242,7 +359,24 @@ export async function getCourseOverview(
         });
     }
 
-    // 4. Build the full learning path (ordered topic IDs)
+    // 5. Append "Övningsämnen" module with manual topics (if any)
+    if (manualOverviewTopics.length > 0) {
+        globalOrderIndex++;
+        modules.push({
+            id: MANUAL_MODULE_CONFIG.id,
+            title: MANUAL_MODULE_CONFIG.title,
+            description: MANUAL_MODULE_CONFIG.description,
+            phase: MANUAL_MODULE_CONFIG.phase,
+            orderIndex: globalOrderIndex,
+            topics: manualOverviewTopics,
+            totalEstimatedHours: manualOverviewTopics.length,
+            moduleImportance: 5,
+            color: MANUAL_MODULE_CONFIG.color,
+            icon: MANUAL_MODULE_CONFIG.icon,
+        });
+    }
+
+    // 6. Build the full learning path (ordered topic IDs)
     const learningPath: string[] = [];
     for (const mod of modules) {
         for (const topic of mod.topics) {
@@ -250,7 +384,7 @@ export async function getCourseOverview(
         }
     }
 
-    // 5. Calculate totals
+    // 7. Calculate totals
     const totalTopics = modules.reduce((sum, m) => sum + m.topics.length, 0);
     const totalEstimatedHours = modules.reduce((sum, m) => sum + m.totalEstimatedHours, 0);
 

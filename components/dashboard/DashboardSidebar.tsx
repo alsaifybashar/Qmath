@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-    Home, BookOpen, Brain, Zap, Library, Settings,
-    User, FileUp, FlaskConical, MessageSquare, Bell
+    Home, BookOpen, Brain, Zap, GraduationCap, Settings,
+    User, FlaskConical, MessageSquare, Archive
 } from 'lucide-react';
 
 const C = {
@@ -31,28 +31,26 @@ interface NavItem {
 
 const navSections: { title: string; items: NavItem[] }[] = [
     {
-        title: 'Main',
+        title: 'Study',
         items: [
             { icon: <Home size={18} />, label: 'Dashboard', href: '/dashboard' },
             { icon: <BookOpen size={18} />, label: 'Courses', href: '/courses' },
             { icon: <Brain size={18} />, label: 'Practice', href: '/practice' },
             { icon: <Zap size={18} />, label: 'Flashcards', href: '/flashcards' },
-            { icon: <Library size={18} />, label: 'Exams', href: '/exams' },
         ],
     },
     {
-        title: 'Tools',
+        title: 'Exam Prep',
         items: [
-            { icon: <MessageSquare size={18} />, label: 'AI Tutor', href: '/ai' },
+            { icon: <Archive size={18} />, label: 'Past Exams', href: '/archive' },
             { icon: <FlaskConical size={18} />, label: 'Exam Simulator', href: '/exam-sim' },
-            { icon: <FileUp size={18} />, label: 'Upload Exam', href: '/upload-exam' },
+            { icon: <MessageSquare size={18} />, label: 'AI Tutor', href: '/ai' },
         ],
     },
     {
         title: 'Account',
         items: [
             { icon: <User size={18} />, label: 'Profile', href: '/profile' },
-            { icon: <Bell size={18} />, label: 'Notifications', href: '/notifications' },
             { icon: <Settings size={18} />, label: 'Settings', href: '/settings' },
         ],
     },

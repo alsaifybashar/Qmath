@@ -130,6 +130,7 @@ export const questions = sqliteTable('questions', {
     options: text('options', { mode: 'json' }),
     explanationMarkdown: text('explanation_markdown'),
     difficultyTier: integer('difficulty_tier').default(1),
+    isPublished: integer('is_published', { mode: 'boolean' }).default(false),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
