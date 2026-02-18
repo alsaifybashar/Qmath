@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {
     Home, BookOpen, LineChart, Library, Settings,
-    Brain, Zap, School, Layers, FileText, User,
+    Brain, Zap, School, Layers, FileText, User, BarChart3,
     CreditCard, Info, GraduationCap, HelpCircle, MessageSquare
 } from 'lucide-react';
 

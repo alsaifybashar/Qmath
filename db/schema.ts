@@ -210,3 +210,21 @@ export const examsRelations = relations(exams, ({ one }) => ({
         references: [users.id],
     }),
 }));
+
+// ── Persistent AI Exam Analysis Cache ────────────────────────────────────────
+// Survives server restarts. Keyed by (courseCode, examFingerprint).
+// Invalidated when a new exam is uploaded for that courseCode.
+export const courseExamAnalysisCache = sqliteTable('course_exam_analysis_cache', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    // Course identifier (e.g. "TATA24")
+    courseCode: text('course_code').notNull(),
+    // MD5 fingerprint of sorted filePaths+years — changes when exams change
+    examFingerprint: text('exam_fingerprint').notNull(),
+    // Full AIExamAnalysisResult serialized as JSON
+    analysisJson: text('analysis_json').notNull(),
+    // How many PDFs were analyzed (mirrors AIExamAnalysisResult.examsAnalyzed)
+    examsAnalyzed: integer('exams_analyzed').notNull().default(0),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    // Updated whenever we write a fresh Claude result
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});

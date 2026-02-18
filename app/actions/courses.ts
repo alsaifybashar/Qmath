@@ -87,7 +87,7 @@ export async function getCourseByCode(code: string) {
     }
 }
 
-export async function getCourseExams(courseCode: string, limit = 7) {
+export async function getCourseExams(courseCode: string, limit = 10) {
     try {
         const safeLimit = Math.min(limit, 50); // Security cap
         const result = await db.query.exams.findMany({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/db/drizzle';
 import { exams } from '@/db/schema';
+import { invalidateExamAnalysisCache } from '@/app/actions/ai';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -119,6 +120,11 @@ export async function POST(request: NextRequest) {
             ...solutionData,
             uploadedBy: session.user.id,
         }).returning();
+
+        // Invalidate the AI exam analysis cache for this course so the next
+        // analysis request triggers a fresh Claude API call with the new exam included.
+        await invalidateExamAnalysisCache(courseCode);
+        console.log(`[UploadExam] Cache invalidated for ${courseCode} after new exam upload`);
 
         return NextResponse.json({
             success: true,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, ChevronLeft, ChevronRight, CheckCircle, XCircle, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
@@ -21,9 +21,19 @@ import { SolutionBuilderInput } from '@/components/study/SolutionBuilderInput';
 
 // Help Components
 import { MinimalHelpPanel } from '@/components/study/MinimalHelpPanel';
+import { HintBubble } from '@/components/study/HintBubble';
+
+// AI Hint Engine
+import { generateHint } from '@/app/actions/hint-engine';
+import type { HintResult } from '@/app/actions/hint-engine';
 
 // Hooks
 import { useStudySession } from '@/lib/hooks/useStudySession';
+
+// Progressive hint timing (milliseconds)
+const HINT_LEVEL_1_DELAY_MS = 45_000; // 45 seconds idle → nudge
+const HINT_LEVEL_2_DELAY_MS = 90_000; // 90 seconds idle → formula
+const WRONG_ATTEMPTS_FOR_LEVEL_3 = 3;  // 3 wrong attempts → walkthrough
 
 // Dynamic KaTeX import
 const BlockMath = dynamic(
@@ -93,6 +103,7 @@ export default function StudyHubPage() {
         questionIndex,
         totalQuestions,
         feedbackState,
+        currentAttempt,
         isSessionComplete,
         submitAnswer,
         revealHint,
@@ -105,6 +116,112 @@ export default function StudyHubPage() {
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     // Key to reset input components on retry
     const [attemptKey, setAttemptKey] = useState(0);
+
+    // ====== PROGRESSIVE HINT SYSTEM (Phase 1) ======
+    const [activeHint, setActiveHint] = useState<HintResult | null>(null);
+    const [hintVisible, setHintVisible] = useState(false);
+    const [highestHintLevel, setHighestHintLevel] = useState(0);
+    const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const hintLevel2TimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isLoadingHintRef = useRef(false);
+
+    // Reset idle timer on any user interaction
+    const resetIdleTimer = useCallback(() => {
+        if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+        if (hintLevel2TimerRef.current) clearTimeout(hintLevel2TimerRef.current);
+
+        // Don't set timers if feedback is showing or no question
+        if (feedbackState.isShowing || !currentQuestion) return;
+
+        // Level 1 hint after 45s of idle
+        if (highestHintLevel < 1) {
+            idleTimerRef.current = setTimeout(() => {
+                triggerHint(1);
+            }, HINT_LEVEL_1_DELAY_MS);
+        }
+
+        // Level 2 hint after 90s of idle
+        if (highestHintLevel < 2) {
+            hintLevel2TimerRef.current = setTimeout(() => {
+                triggerHint(2);
+            }, HINT_LEVEL_2_DELAY_MS);
+        }
+    }, [feedbackState.isShowing, currentQuestion, highestHintLevel]);
+
+    // Trigger a hint at the specified level
+    const triggerHint = useCallback(async (level: 1 | 2 | 3) => {
+        if (!currentQuestion || isLoadingHintRef.current) return;
+        if (level <= highestHintLevel) return; // Don't downgrade
+
+        isLoadingHintRef.current = true;
+
+        try {
+            // Use pre-authored hints first, then AI
+            const existingHints: string[] = [];
+            if (currentQuestion.helps?.nudgeHint) existingHints.push(currentQuestion.helps.nudgeHint);
+            if (currentQuestion.helps?.guidedHint) existingHints.push(currentQuestion.helps.guidedHint);
+
+            const result = await generateHint({
+                questionText: currentQuestion.content?.question?.text || '',
+                questionMath: currentQuestion.content?.question?.math,
+                correctAnswer: String(currentQuestion.correctAnswer || ''),
+                topicId: currentQuestion.topicId,
+                studentAnswer: undefined,
+                attemptCount: currentAttempt.attempts,
+                hintLevel: level,
+                existingHints,
+                relatedFormulas: currentQuestion.helps?.relatedFormulas,
+                conceptsTested: currentQuestion.aiContext?.conceptsTested,
+            });
+
+            setActiveHint(result);
+            setHintVisible(true);
+            setHighestHintLevel(level);
+            revealHint(level); // Track in session state
+
+            console.log(`[Hint] ✅ Level ${level} shown (source: ${result.source})`);
+        } catch (err) {
+            console.error('[Hint] Failed to generate:', err);
+        } finally {
+            isLoadingHintRef.current = false;
+        }
+    }, [currentQuestion, highestHintLevel, currentAttempt.attempts, revealHint]);
+
+    // After 3 wrong attempts, show level 3 walkthrough hint
+    useEffect(() => {
+        if (
+            currentAttempt.attempts >= WRONG_ATTEMPTS_FOR_LEVEL_3 &&
+            highestHintLevel < 3 &&
+            feedbackState.isShowing &&
+            !feedbackState.isCorrect
+        ) {
+            triggerHint(3);
+        }
+    }, [currentAttempt.attempts, highestHintLevel, feedbackState.isShowing, feedbackState.isCorrect, triggerHint]);
+
+    // Listen for user activity to reset idle timer
+    useEffect(() => {
+        const events = ['keydown', 'mousedown', 'touchstart', 'scroll'];
+        const handler = () => resetIdleTimer();
+
+        events.forEach(evt => window.addEventListener(evt, handler, { passive: true }));
+        resetIdleTimer(); // Start the timer
+
+        return () => {
+            events.forEach(evt => window.removeEventListener(evt, handler));
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+            if (hintLevel2TimerRef.current) clearTimeout(hintLevel2TimerRef.current);
+        };
+    }, [resetIdleTimer]);
+
+    // Reset hints when question changes
+    useEffect(() => {
+        setActiveHint(null);
+        setHintVisible(false);
+        setHighestHintLevel(0);
+        isLoadingHintRef.current = false;
+    }, [questionIndex]);
+    // ====== END PROGRESSIVE HINT SYSTEM ======
 
     // Auto-dismiss incorrect feedback after 10 seconds
     useEffect(() => {
@@ -250,12 +367,35 @@ export default function StudyHubPage() {
                                 <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                             )}
                             <div className="flex-1">
-                                <p className={`font-medium ${feedbackState.isCorrect
-                                    ? 'text-green-700 dark:text-green-300'
-                                    : 'text-red-700 dark:text-red-300'
-                                    }`}>
-                                    {feedbackState.isCorrect ? 'Correct!' : 'Not quite'}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                    <p className={`font-medium ${feedbackState.isCorrect
+                                        ? 'text-green-700 dark:text-green-300'
+                                        : 'text-red-700 dark:text-red-300'
+                                        }`}>
+                                        {feedbackState.isCorrect ? 'Correct!' : (() => {
+                                            const labels: Record<string, string> = {
+                                                conceptual: 'Concept Check',
+                                                computational: 'Calculation Error',
+                                                notation: 'Notation Issue',
+                                                interpretation: 'Re-read the Question',
+                                                incomplete: 'Almost There',
+                                                time_pressure: 'Take Your Time',
+                                            };
+                                            return (feedbackState as any).errorType
+                                                ? labels[(feedbackState as any).errorType] || 'Not quite'
+                                                : 'Not quite';
+                                        })()}
+                                    </p>
+                                    {!feedbackState.isCorrect && (feedbackState as any).errorType && (
+                                        <motion.span
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            className="text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400"
+                                        >
+                                            {(feedbackState as any).errorType}
+                                        </motion.span>
+                                    )}
+                                </div>
                                 <p className={`text-sm mt-1 ${feedbackState.isCorrect
                                     ? 'text-green-600 dark:text-green-400'
                                     : 'text-red-600 dark:text-red-400'
@@ -267,8 +407,19 @@ export default function StudyHubPage() {
                     )}
                 </AnimatePresence>
 
-                {/* Help hint - Subtle prompt */}
-                {!feedbackState.isShowing && !isHelpOpen && (
+                {/* Progressive AI Hint (auto-appears on idle) */}
+                {activeHint && !feedbackState.isShowing && (
+                    <HintBubble
+                        hint={activeHint.hint}
+                        hintLevel={activeHint.hintLevel}
+                        mathExpression={activeHint.mathExpression}
+                        isVisible={hintVisible}
+                        onDismiss={() => setHintVisible(false)}
+                    />
+                )}
+
+                {/* Help hint - Subtle prompt (only if no auto-hint is showing) */}
+                {!feedbackState.isShowing && !isHelpOpen && !hintVisible && (
                     <motion.button
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}

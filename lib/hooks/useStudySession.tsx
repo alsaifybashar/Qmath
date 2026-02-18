@@ -1,6 +1,8 @@
 'use client';
 
 import { useReducer, useEffect, useCallback, useState } from 'react';
+import { classifyError } from '@/app/actions/error-classifier';
+import type { ErrorType } from '@/app/actions/error-classifier';
 
 // Types
 // Common wrong answer structure for diagnostic feedback
@@ -118,6 +120,7 @@ interface StudySessionState {
         message: string;
         misconception?: string; // Detected misconception from common wrong answers
         shouldProbePrerequisite?: boolean; // Flag to trigger prerequisite check
+        errorType?: ErrorType; // AI-classified error type
     };
 
     // Session state
@@ -132,7 +135,8 @@ type StudySessionAction =
     | { type: 'SKIP_QUESTION' }
     | { type: 'SET_ANSWER'; payload: string }
     | { type: 'SET_CONFIDENCE'; payload: number }
-    | { type: 'SUBMIT_ANSWER'; payload: { isCorrect: boolean; feedback: string; misconception?: string; shouldProbePrerequisite?: boolean } }
+    | { type: 'SUBMIT_ANSWER'; payload: { isCorrect: boolean; feedback: string; misconception?: string; shouldProbePrerequisite?: boolean; errorType?: ErrorType } }
+    | { type: 'UPDATE_FEEDBACK'; payload: { message: string; errorType?: ErrorType } }
     | { type: 'CLEAR_FEEDBACK' }
     | { type: 'REVEAL_HINT'; payload: number }
     | { type: 'OPEN_AI' }
@@ -317,6 +321,17 @@ function studySessionReducer(state: StudySessionState, action: StudySessionActio
                     message: action.payload.feedback,
                     misconception: action.payload.misconception,
                     shouldProbePrerequisite: action.payload.shouldProbePrerequisite,
+                    errorType: action.payload.errorType,
+                },
+            };
+
+        case 'UPDATE_FEEDBACK':
+            return {
+                ...state,
+                feedbackState: {
+                    ...state.feedbackState,
+                    message: action.payload.message,
+                    errorType: action.payload.errorType || state.feedbackState.errorType,
                 },
             };
 
@@ -465,6 +480,30 @@ export function useStudySession(topicId?: string) {
         }
 
         dispatch({ type: 'SUBMIT_ANSWER', payload: { isCorrect, feedback, misconception, shouldProbePrerequisite } });
+
+        // If wrong and no specific match from commonWrongAnswers, use AI classification
+        if (!isCorrect && !misconception && question) {
+            classifyError({
+                questionText: question.content?.question?.text || '',
+                questionMath: question.content?.question?.math,
+                correctAnswer: String(correctAnswer),
+                studentAnswer: answer,
+                topicId: question.topicId,
+                conceptsTested: question.aiContext?.conceptsTested,
+            }).then((classification) => {
+                // Update feedback with AI classification
+                dispatch({
+                    type: 'UPDATE_FEEDBACK',
+                    payload: {
+                        message: classification.feedback,
+                        errorType: classification.errorType,
+                    },
+                });
+                console.log(`[Study] Error classified: ${classification.errorType} (${classification.confidence})`);
+            }).catch((err) => {
+                console.error('[Study] Error classification failed:', err);
+            });
+        }
 
         // If correct, auto-advance after delay
         if (isCorrect) {

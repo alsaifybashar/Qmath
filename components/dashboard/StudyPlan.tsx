@@ -1,162 +1,177 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip, ResponsiveContainer } from 'recharts';
 import { generateStudyPlan } from '@/app/actions/ai';
-import { Sparkles, CheckCircle, Target, Trophy, Clock, Brain } from 'lucide-react';
+import type { StudyPlanResult } from '@/app/actions/ai';
+import { Sparkles, CheckCircle, Target, Trophy, Clock, Brain, Zap, AlertTriangle } from 'lucide-react';
+
+// ============ TYPES ============
 
 interface StudyPlanProps {
     courseName: string;
     courseCode: string;
     topics: string[];
-    exams: Array<{ filePath: string; year: string; type: string }>;
+    exams: Array<{ filePath: string; solutionFilePath?: string | null; year: string; type: string }>;
 }
 
-interface AIResponse {
-    areas: Array<{
-        name: string;
-        importance: number;
-        reasoning: string;
-        recommended_focus: string;
-        estimated_frequency?: string;
-    }>;
-    study_schedule: Array<{
-        week: number;
-        focus: string;
-        activity: string;
-    }>;
-    strategy: string;
-}
+// ============ COMPONENT ============
 
 export default function StudyPlan({ courseName, courseCode, topics, exams }: StudyPlanProps) {
     const [loading, setLoading] = useState(true);
-    const [analyzingStep, setAnalyzingStep] = useState(0);
-    const [plan, setPlan] = useState<AIResponse | null>(null);
+    const [stepIndex, setStepIndex] = useState(0);
+    const [plan, setPlan] = useState<StudyPlanResult | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    // Memoize exam data to prevent infinite re-render loops
+    const stableExams = useMemo(() => exams, [JSON.stringify(exams)]);
+    const stableTopics = useMemo(() => topics, [JSON.stringify(topics)]);
+
+    const steps = [
+        'Connecting to AI engine...',
+        `Loading ${stableExams.length} exam PDF${stableExams.length !== 1 ? 's' : ''}...`,
+        'Analyzing question patterns...',
+        'Mapping topic frequency...',
+        'Building study roadmap...',
+    ];
 
     useEffect(() => {
-        // Simulate analysis steps before fetching AI
-        const steps = [
-            "Connecting to neural network...",
-            `Reading ${exams.length} recent ${courseCode} exams...`,
-            "Analyzing question patterns...",
-            "Identifying critical topics...",
-            "Generating optimal strategy..."
-        ];
+        let intervalId: ReturnType<typeof setInterval>;
+        let cancelled = false;
 
-        let stepIndex = 0;
-        const interval = setInterval(() => {
-            if (stepIndex < steps.length - 1) {
-                stepIndex++;
-                setAnalyzingStep(stepIndex);
-            }
-        }, 800);
+        // Animate loading steps
+        intervalId = setInterval(() => {
+            setStepIndex(prev => (prev < steps.length - 1 ? prev + 1 : prev));
+        }, 1200);
 
-        // Fetch AI Plan with real exam data
-        generateStudyPlan(courseName, courseCode, topics, exams).then((res) => {
-            // Add a small delay for "wow" effect (faked processing time if AI is too fast)
-            setTimeout(() => {
-                setPlan(res as AIResponse);
+        // Call AI
+        generateStudyPlan(courseName, courseCode, stableTopics, stableExams)
+            .then((res) => {
+                if (cancelled) return;
+                // Minimum 2s display for the loading animation
+                setTimeout(() => {
+                    setPlan(res);
+                    setLoading(false);
+                    clearInterval(intervalId);
+                }, 2000);
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                setError(err?.message || 'Unknown error');
                 setLoading(false);
-                clearInterval(interval);
-            }, 2000);
-        });
+                clearInterval(intervalId);
+            });
 
-        return () => clearInterval(interval);
-    }, [courseName, courseCode, topics, exams]);
+        return () => {
+            cancelled = true;
+            clearInterval(intervalId);
+        };
+    }, [courseName, courseCode, stableTopics, stableExams]);
 
+    // ======== LOADING STATE ========
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
                 <div className="relative w-24 h-24 mb-6">
                     <motion.div
                         className="absolute inset-0 border-4 border-blue-500/30 rounded-full"
-                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                        animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
                         transition={{ duration: 2, repeat: Infinity }}
                     />
                     <motion.div
                         className="absolute inset-0 border-4 border-t-blue-600 rounded-full"
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                         <Sparkles className="w-8 h-8 text-blue-500" />
                     </div>
                 </div>
-                <motion.div
-                    key={analyzingStep}
-                    initial={{ opacity: 0, y: 10 }}
+                <motion.p
+                    key={stepIndex}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="text-lg font-medium text-gray-600 dark:text-gray-300"
+                    className="text-lg font-medium text-gray-600"
                 >
-                    {["Connecting...", `Scanning ${courseCode} exams...`, "Analyzing patterns...", "Identifying topics...", "Finalizing strategy..."][analyzingStep]}
-                </motion.div>
-                <div className="mt-2 text-sm text-gray-400">Powered by Claude 3.5 Sonnet</div>
+                    {steps[stepIndex]}
+                </motion.p>
+                <p className="mt-2 text-sm text-gray-400">Powered by Claude AI</p>
             </div>
         );
     }
 
-    if (!plan) return <div className="text-red-500">Failed to generate study plan.</div>;
+    // ======== ERROR STATE ========
+    if (error || !plan) {
+        return (
+            <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
+                <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+                <p className="text-red-600 font-medium">Failed to generate study plan</p>
+                <p className="text-red-400 text-sm mt-1">{error || 'No response from AI.'}</p>
+            </div>
+        );
+    }
 
-    // Prepare data for charts
-    const chartData = plan.areas.map(area => ({
-        subject: area.name,
-        A: area.importance,
-        fullMark: 10,
-    }));
+    // ======== SORT AREAS ========
+    const sortedAreas = [...plan.areas].sort((a, b) => b.importance - a.importance);
+    const radarData = sortedAreas.map(a => ({ subject: a.name, value: a.importance, fullMark: 10 }));
 
-    // Check if chartData is valid, otherwise use default
-    const validChartData = chartData.length > 0 ? chartData : [
-        { subject: 'Topic A', A: 8, fullMark: 10 },
-        { subject: 'Topic B', A: 5, fullMark: 10 },
-        { subject: 'Topic C', A: 10, fullMark: 10 },
-    ];
-
+    // ======== RESULT UI ========
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="space-y-8"
+            className="space-y-6"
         >
-            {/* Strategy Header */}
+            {/* Status badges */}
+            <div className="flex flex-wrap gap-2">
+                {plan.cached && (
+                    <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-full px-3 py-1.5">
+                        <Zap size={12} />
+                        Cached — generated {new Date(plan.generatedAt).toLocaleDateString()}
+                    </div>
+                )}
+                {plan.examsAnalyzed > 0 && (
+                    <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-full px-3 py-1.5">
+                        <Sparkles size={12} />
+                        {plan.examsAnalyzed} exam PDF{plan.examsAnalyzed > 1 ? 's' : ''} analyzed by AI
+                    </div>
+                )}
+            </div>
+
+            {/* Strategy Banner */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
-                        <Trophy className="w-8 h-8 text-yellow-300" />
-                        <h2 className="text-2xl font-bold">Recommended Winning Strategy</h2>
+                        <Trophy className="w-7 h-7 text-yellow-300" />
+                        <h2 className="text-2xl font-bold">Your Study Strategy</h2>
                     </div>
-                    <p className="text-lg text-blue-100 leading-relaxed max-w-3xl">
+                    <p className="text-lg text-blue-100 leading-relaxed max-w-4xl">
                         {plan.strategy}
                     </p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Visual Importance Chart */}
-                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-2 mb-6">
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Radar Chart */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-2 mb-5">
                         <Target className="w-5 h-5 text-blue-500" />
-                        <h3 className="text-lg font-bold">Topic Importance Radar</h3>
+                        <h3 className="text-lg font-bold text-gray-800">Topic Importance Map</h3>
                     </div>
-                    <div className="h-[300px] w-full">
+                    <div className="h-[320px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={validChartData}>
+                            <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
                                 <PolarGrid stroke="#e5e7eb" />
-                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 12 }} />
+                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 11 }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
-                                <Radar
-                                    name="Importance"
-                                    dataKey="A"
-                                    stroke="#4f46e5"
-                                    strokeWidth={3}
-                                    fill="#6366f1"
-                                    fillOpacity={0.5}
-                                />
+                                <Radar name="Importance" dataKey="value" stroke="#4f46e5" strokeWidth={2.5} fill="#6366f1" fillOpacity={0.4} />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '12px', borderColor: '#e5e7eb' }}
+                                    contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: 13 }}
                                     formatter={(value: number | undefined) => [`${value ?? 0}/10`, 'Importance']}
                                 />
                             </RadarChart>
@@ -164,27 +179,36 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
                     </div>
                 </div>
 
-                {/* Priority Topics List */}
-                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-2 mb-6">
+                {/* Priority List */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-2 mb-5">
                         <Brain className="w-5 h-5 text-purple-500" />
-                        <h3 className="text-lg font-bold">Priority Areas Breakdown</h3>
+                        <h3 className="text-lg font-bold text-gray-800">Priority Breakdown</h3>
                     </div>
-                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                        {plan.areas.sort((a, b) => b.importance - a.importance).map((area, idx) => (
-                            <div key={idx} className="group p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 hover:bg-white border border-transparent hover:border-zinc-200 transition-all">
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">{area.name}</span>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${area.importance >= 8 ? 'bg-red-100 text-red-600' :
-                                        area.importance >= 5 ? 'bg-yellow-100 text-yellow-600' :
+                    <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+                        {sortedAreas.map((area, idx) => (
+                            <div key={idx} className="p-4 rounded-xl bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 transition-all">
+                                <div className="flex justify-between items-center mb-1.5">
+                                    <span className="font-semibold text-gray-800 text-sm">{area.name}</span>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${area.importance >= 8 ? 'bg-red-100 text-red-600' :
+                                        area.importance >= 5 ? 'bg-amber-100 text-amber-600' :
                                             'bg-green-100 text-green-600'
                                         }`}>
                                         {area.importance}/10
                                     </span>
                                 </div>
-                                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-2">{area.reasoning}</p>
-                                <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                                    Focus: {area.recommended_focus}
+                                <p className="text-xs text-gray-500 leading-relaxed">{area.reasoning}</p>
+                                {/* Importance bar */}
+                                <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                    <motion.div
+                                        className={`h-full rounded-full ${area.importance >= 8 ? 'bg-red-400' :
+                                            area.importance >= 5 ? 'bg-amber-400' :
+                                                'bg-green-400'
+                                            }`}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${area.importance * 10}%` }}
+                                        transition={{ duration: 0.8, delay: idx * 0.1 }}
+                                    />
                                 </div>
                             </div>
                         ))}
@@ -193,21 +217,29 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
             </div>
 
             {/* Study Schedule */}
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
-                <div className="flex items-center gap-2 mb-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div className="flex items-center gap-2 mb-5">
                     <Clock className="w-5 h-5 text-green-500" />
-                    <h3 className="text-lg font-bold">Suggested Study Timeline</h3>
+                    <h3 className="text-lg font-bold text-gray-800">Recommended Study Timeline</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {plan.study_schedule.map((slot, idx) => (
-                        <div key={idx} className="relative p-5 rounded-xl border border-zinc-100 bg-white shadow-sm hover:shadow-md transition-shadow">
-                            <div className="absolute top-4 right-4 text-xs font-bold text-zinc-300">WEEK {slot.week}</div>
-                            <h4 className="font-bold text-lg mb-2 text-zinc-800">{slot.focus}</h4>
-                            <div className="flex items-start gap-2 text-sm text-zinc-600">
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.08 }}
+                            className="relative p-5 rounded-xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 hover:shadow-md transition-shadow"
+                        >
+                            <div className="absolute top-4 right-4 text-[11px] font-bold text-gray-300 uppercase tracking-wider">
+                                Week {slot.week}
+                            </div>
+                            <h4 className="font-bold text-base mb-2 text-gray-800 pr-12">{slot.focus}</h4>
+                            <div className="flex items-start gap-2 text-sm text-gray-500">
                                 <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                                 <span>{slot.activity}</span>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             </div>

@@ -12,6 +12,7 @@ import {
 import { courses, topics, enrollments } from '@/db/schema';
 
 import { checkAndMaintainStreak } from '@/lib/dashboard/streak-system';
+import { getExamReadiness, getDashboardInsights, getStudyPatterns } from '@/app/actions/dashboard-insights';
 
 import ConstellationBG from '@/components/dashboard/ConstellationBG';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
@@ -24,6 +25,9 @@ import {
     QuickActions,
     AIRecommendationCard,
 } from '@/components/dashboard/DashboardCards';
+import { ExamReadinessBar } from '@/components/dashboard/ExamReadinessBar';
+import { InsightCards, StudyPatternCard } from '@/components/dashboard/InsightCards';
+import { ReviewWidget } from '@/components/dashboard/ReviewNotifications';
 
 export const metadata = {
     title: 'Dashboard | Qmath',
@@ -128,6 +132,17 @@ export default async function DashboardPage() {
     if (userCourses.length === 0) {
         redirect('/onboarding/courses');
     }
+
+    // Fetch Phase 3 data in parallel (zero AI cost — pure DB queries)
+    const [examReadiness, dashboardInsights, studyPatterns] = await Promise.all([
+        getExamReadiness(),
+        getDashboardInsights(),
+        getStudyPatterns(),
+    ]);
+
+    // Fetch Phase 5 review notifications
+    const { getReviewNotifications } = await import('@/app/actions/notification-engine');
+    const reviewSummary = await getReviewNotifications();
 
     // Calculate metrics
     const totalStudyMinutes = studySessionsData.reduce((acc, session) => {
@@ -294,7 +309,40 @@ export default async function DashboardPage() {
                         />
                     </div>
 
-                    {/* Row 2: Courses */}
+                    {/* Row 2: Smart Insights + Study Patterns (Phase 3) */}
+                    {(dashboardInsights.length > 0 || studyPatterns) && (
+                        <div className="grid grid-cols-[1fr_320px] gap-4 mb-6">
+                            <InsightCards insights={dashboardInsights} />
+                            <StudyPatternCard pattern={studyPatterns} />
+                        </div>
+                    )}
+
+                    {/* Row 3: Exam Readiness (Phase 3) */}
+                    {examReadiness.length > 0 && (
+                        <div className="mb-6">
+                            <h2 className="text-xl font-normal mb-4" style={{ color: C.text }}>
+                                Exam Readiness
+                            </h2>
+                            <div className="space-y-4">
+                                {examReadiness.map(er => (
+                                    <ExamReadinessBar
+                                        key={er.courseId}
+                                        courseName={er.courseName}
+                                        courseCode={er.courseCode}
+                                        overallReadiness={er.overallReadiness}
+                                        estimatedGrade={er.estimatedGrade}
+                                        weakestTopics={er.weakestTopics}
+                                        strongestTopics={er.strongestTopics}
+                                        topicBreakdown={er.topicBreakdown}
+                                        studyTimeThisWeek={er.studyTimeThisWeek}
+                                        questionsThisWeek={er.questionsThisWeek}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Row 4: Courses */}
                     <div className="mb-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-normal" style={{ color: C.text }}>
@@ -337,8 +385,8 @@ export default async function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Row 3: Quick Actions + AI Recommendation */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    {/* Row 5: Quick Actions + AI Recommendation + Reviews */}
+                    <div className="grid grid-cols-3 gap-4 mb-6">
                         <QuickActions reviewCount={reviewCount} />
                         {weakestTopic ? (
                             <AIRecommendationCard
@@ -354,6 +402,11 @@ export default async function DashboardPage() {
                                 courseName="your studies"
                             />
                         )}
+                        <ReviewWidget
+                            notifications={reviewSummary.notifications}
+                            overdue={reviewSummary.overdue}
+                            dueToday={reviewSummary.dueToday}
+                        />
                     </div>
 
                     {/* Row 4: Mastery Map */}

@@ -6,7 +6,7 @@ import { db } from '@/db/drizzle';
 import { attemptLogs, userMastery } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 
-export async function submitAnswer(questionId: string, isCorrect: boolean, timeTakenMs: number) {
+export async function submitAnswer(questionId: string, isCorrect: boolean, timeTakenMs: number, hintsUsed: number = 0) {
     const session = await auth();
     if (!session?.user?.id) {
         return { error: 'Not authenticated' };
@@ -44,12 +44,17 @@ export async function submitAnswer(questionId: string, isCorrect: boolean, timeT
                 )
             });
 
-            let newProbability = currentMasteryRecord ? parseFloat(currentMasteryRecord.masteryProbability as string) : 0.1;
+            let newProbability = currentMasteryRecord?.masteryProbability ?? 0.1;
 
-            // Simple update rule (Upgrade if correct, Downgrade if wrong)
-            // Real BKT is more complex (P(L|Obs) ...)
+            // BKT-inspired update with hint penalty
+            // Base gain: +0.10 for correct, -0.05 for wrong
+            // Hint penalty: each hint used reduces gain by 0.02
+            // (per ADAPTIVE_ENGINE_LOGIC.md: "Hint Penalty: Using hints reduces the mastery gain")
             if (isCorrect) {
-                newProbability = Math.min(0.99, newProbability + 0.1);
+                const hintPenalty = Math.min(hintsUsed * 0.02, 0.08); // Cap penalty at 0.08
+                const gain = Math.max(0.02, 0.10 - hintPenalty); // Min gain of 0.02
+                newProbability = Math.min(0.99, newProbability + gain);
+                console.log(`[Engine] Correct: +${gain.toFixed(3)} mastery (${hintsUsed} hints used, penalty: -${hintPenalty.toFixed(3)})`);
             } else {
                 newProbability = Math.max(0.01, newProbability - 0.05);
             }
@@ -57,7 +62,7 @@ export async function submitAnswer(questionId: string, isCorrect: boolean, timeT
             if (currentMasteryRecord) {
                 await db.update(userMastery)
                     .set({
-                        masteryProbability: newProbability.toString(),
+                        masteryProbability: newProbability,
                         lastPracticedAt: new Date()
                     })
                     .where(eq(userMastery.id, currentMasteryRecord.id));
@@ -65,10 +70,17 @@ export async function submitAnswer(questionId: string, isCorrect: boolean, timeT
                 await db.insert(userMastery).values({
                     userId: session.user.id,
                     topicId: topicId,
-                    masteryProbability: newProbability.toString(),
+                    masteryProbability: newProbability,
                     lastPracticedAt: new Date(),
                 });
             }
+        }
+
+        // Phase 5: Update spaced repetition schedule (async, non-blocking)
+        if (question?.topicId) {
+            import('@/app/actions/notification-engine')
+                .then(({ updateReviewSchedule }) => updateReviewSchedule(question.topicId, isCorrect))
+                .catch(err => console.warn('[Engine] Spaced repetition update failed:', err));
         }
 
         return { success: true };

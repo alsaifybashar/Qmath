@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(xargs cat:*)",
+      "Bash(head:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(python3:*)",
+      "Bash(node --version:*)",
+      "Bash(node -e \"\nconst fs = require\\(''fs''\\);\nconst path = require\\(''path''\\);\n\n// Read docx as zip\nconst AdmZip = require\\(''./node_modules/adm-zip''\\) ;\n\")",
+      "Bash(wsl:*)",
+      "Bash(npx --version:*)",
+      "Bash(pdftotext:*)",
+      "Bash(npx tsc:*)",
+      "Bash(cd:*)",
+      "Bash(cmd /c \"npx tsc --noEmit 2>&1\")",
+      "Bash(Select-String \"CourseAnalysisView|exam-analysis\")",
+      "Bash(npx drizzle-kit:*)"
+    ]
+  }
+}

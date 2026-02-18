@@ -13,6 +13,10 @@ Qmath is an AI-driven intelligent tutoring system designed for university-level 
 ---
 
 ## 🆕 Recent Updates
+- **Exam Analysis Feature**: Added deep exam pattern analysis with topic frequency heatmaps, gap analysis, and phased study strategies at `/exam-analysis`. [Docs →](./docs/features/exam-analysis.md)
+- **Phase 5: Spaced Repetition Notifications** — SM-2 inspired review scheduling with overdue/today/upcoming urgency, dashboard notification widget with bell badge, full review page at `/notifications`. [Docs →](./docs/features/phases-3-5-smart-dashboard-exam-sim-spaced-repetition.md)
+- **Phase 4: Exam Simulation** — Timed exam simulations with intelligent question selection, adaptive difficulty, and detailed post-exam breakdown with improvement suggestions at `/exam-sim`. [Docs →](./docs/features/phases-3-5-smart-dashboard-exam-sim-spaced-repetition.md)
+- **Phase 3: Smart Dashboard** — Zero-AI-cost exam readiness bars, smart insights (declining topics, error patterns, milestones), and study pattern analytics on `/dashboard`. [Docs →](./docs/features/phases-3-5-smart-dashboard-exam-sim-spaced-repetition.md)
 - **Enhanced User Profiles**: Registration now collects **Year of Study** and **Program Name** to enable better personalization.
 - **Improved Validation**: Strict input validation prevents invalid data entry during sign-up.
 - **Documentation**: Added [User Profile Data Flow](./docs/user-profile-data-flow.md) documentation.

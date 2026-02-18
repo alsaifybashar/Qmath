@@ -13,7 +13,9 @@ export default function AdminUploadExamPage() {
     const [formData, setFormData] = useState({
         courseCode: '',
         courseName: '',
-        examDate: '',
+        examYear: new Date().getFullYear().toString(),
+        examMonth: (new Date().getMonth() + 1).toString(),
+        examDay: new Date().getDate().toString(),
         examType: 'TEN1',
     });
     const [examFile, setExamFile] = useState<File | null>(null);
@@ -72,7 +74,11 @@ export default function AdminUploadExamPage() {
             const formPayload = new FormData();
             formPayload.append('courseCode', formData.courseCode.toUpperCase());
             formPayload.append('courseName', formData.courseName);
-            formPayload.append('examDate', formData.examDate);
+
+            // Format date as YYYY-MM-DD
+            const formattedDate = `${formData.examYear}-${formData.examMonth.padStart(2, '0')}-${formData.examDay.padStart(2, '0')}`;
+            formPayload.append('examDate', formattedDate);
+
             formPayload.append('examType', formData.examType);
             formPayload.append('examFile', examFile);
 
@@ -93,7 +99,9 @@ export default function AdminUploadExamPage() {
                 setFormData({
                     courseCode: '',
                     courseName: '',
-                    examDate: '',
+                    examYear: new Date().getFullYear().toString(),
+                    examMonth: (new Date().getMonth() + 1).toString(),
+                    examDay: new Date().getDate().toString(),
                     examType: 'TEN1',
                 });
                 setExamFile(null);
@@ -181,15 +189,42 @@ export default function AdminUploadExamPage() {
                             <div>
                                 <label className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                                     <Calendar size={14} />
-                                    Exam Date *
+                                    Exam Date (Year / Month / Day) *
                                 </label>
-                                <input
-                                    type="date"
-                                    required
-                                    value={formData.examDate}
-                                    onChange={(e) => setFormData({ ...formData, examDate: e.target.value })}
-                                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none text-zinc-900 dark:text-white"
-                                />
+                                <div className="grid grid-cols-3 gap-2">
+                                    <input
+                                        type="number"
+                                        placeholder="YYYY"
+                                        required
+                                        min="1990"
+                                        max="2100"
+                                        value={formData.examYear}
+                                        onChange={(e) => setFormData({ ...formData, examYear: e.target.value })}
+                                        className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none text-zinc-900 dark:text-white"
+                                    />
+                                    <select
+                                        required
+                                        value={formData.examMonth}
+                                        onChange={(e) => setFormData({ ...formData, examMonth: e.target.value })}
+                                        className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none text-zinc-900 dark:text-white"
+                                    >
+                                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                                            <option key={m} value={m}>
+                                                {new Date(0, m - 1).toLocaleString('default', { month: 'short' })}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <input
+                                        type="number"
+                                        placeholder="DD"
+                                        required
+                                        min="1"
+                                        max="31"
+                                        value={formData.examDay}
+                                        onChange={(e) => setFormData({ ...formData, examDay: e.target.value })}
+                                        className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none text-zinc-900 dark:text-white"
+                                    />
+                                </div>
                             </div>
 
                             {/* Exam Type */}
@@ -272,8 +307,8 @@ export default function AdminUploadExamPage() {
                     {/* Message */}
                     {message && (
                         <div className={`p-4 rounded-xl flex items-center gap-3 ${message.type === 'success'
-                                ? 'bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400'
-                                : 'bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400'
+                            ? 'bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400'
+                            : 'bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400'
                             }`}>
                             {message.type === 'success' ? (
                                 <CheckCircle size={20} />
