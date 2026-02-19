@@ -115,7 +115,7 @@ export default function ArchivePage() {
                             </h1>
                         </Link>
                         <p className="text-slate-600 dark:text-zinc-400 mt-2 text-lg">
-                            Search and browse old exams from your university
+                            Sök och bläddra bland gamla tentor från ditt universitet
                         </p>
                     </div>
 
@@ -128,7 +128,7 @@ export default function ArchivePage() {
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
-                                    placeholder="Search by course code (e.g., TATA24)"
+                                    placeholder="Sök på kurskod (t.ex. TATA24)"
                                     className="flex-1 bg-transparent border-0 outline-none text-lg text-slate-900 dark:text-white placeholder:text-slate-400 font-mono"
                                     autoFocus
                                 />
@@ -140,17 +140,17 @@ export default function ArchivePage() {
                                     {isLoading ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin" />
-                                            Searching...
+                                            Söker...
                                         </>
                                     ) : (
-                                        'Search'
+                                        'Sök'
                                     )}
                                 </button>
                             </div>
                         </form>
 
                         <p className="text-center text-sm text-slate-500 dark:text-zinc-500 mt-3">
-                            Tip: Enter the exact course code to go directly to the course page
+                            Tips: Ange den exakta kurskoden för att gå direkt till kurssidan
                         </p>
                     </div>
 
@@ -160,7 +160,7 @@ export default function ArchivePage() {
                         className="mt-5 flex items-center gap-2 text-sm text-slate-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                     >
                         <Upload className="w-4 h-4" />
-                        Upload exam or solution
+                        Ladda upp tenta eller lösning
                     </Link>
                 </div>
 
@@ -170,7 +170,7 @@ export default function ArchivePage() {
                         {results.length > 1 && (
                             <>
                                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
-                                    Found {results.length} courses
+                                    Hittade {results.length} kurser
                                 </h2>
                                 <div className="grid gap-3">
                                     {results.map(course => (
@@ -186,10 +186,10 @@ export default function ArchivePage() {
                                     <Search className="w-8 h-8 text-slate-400" />
                                 </div>
                                 <p className="text-xl text-slate-600 dark:text-zinc-400">
-                                    No exams found for &quot;{searchQuery}&quot;
+                                    Inga tentor hittades för &quot;{searchQuery}&quot;
                                 </p>
                                 <p className="text-sm text-slate-500 dark:text-zinc-500 mt-2">
-                                    Try a different course code or browse all available courses below
+                                    Prova en annan kurskod eller bläddra bland alla tillgängliga kurser nedan
                                 </p>
                             </div>
                         )}
@@ -201,10 +201,10 @@ export default function ArchivePage() {
                     <div className="py-10">
                         <div className="flex items-center justify-between mb-5">
                             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                                All Available Courses
+                                Alla tillgängliga kurser
                             </h2>
                             <span className="text-sm text-slate-500 dark:text-zinc-400">
-                                {allCourses.length} course{allCourses.length !== 1 ? 's' : ''}
+                                {allCourses.length} kurs{allCourses.length !== 1 ? 'er' : ''}
                             </span>
                         </div>
 
@@ -250,20 +250,20 @@ function CourseCard({ course }: { course: CourseResult }) {
             <div className="flex items-center gap-6 text-right">
                 <div className="hidden sm:flex items-center gap-1.5 text-sm text-slate-500 dark:text-zinc-400">
                     <FileText className="w-4 h-4" />
-                    <span>{course.examCount} exam{course.examCount !== 1 ? 's' : ''}</span>
+                    <span>{course.examCount} tentor</span>
                 </div>
                 {course.withSolutions > 0 && (
                     <div className="hidden sm:flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
                         <CheckCircle className="w-4 h-4" />
-                        <span>{course.withSolutions} with solutions</span>
+                        <span>{course.withSolutions} med lösningar</span>
                     </div>
                 )}
                 <div className="sm:hidden text-right text-sm">
                     <div className="font-medium text-slate-900 dark:text-white">
-                        {course.examCount} exams
+                        {course.examCount} tentor
                     </div>
                     <div className="text-slate-500 dark:text-zinc-500">
-                        {course.withSolutions} with solutions
+                        {course.withSolutions} med lösningar
                     </div>
                 </div>
             </div>

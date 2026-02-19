@@ -25,7 +25,7 @@ interface HintBubbleProps {
 const levelConfig = {
     1: {
         icon: Lightbulb,
-        label: 'Nudge',
+        label: 'Ledtråd',
         gradient: 'from-amber-500/10 to-orange-500/10',
         border: 'border-amber-200/60 dark:border-amber-500/20',
         iconColor: 'text-amber-500',
@@ -34,7 +34,7 @@ const levelConfig = {
     },
     2: {
         icon: BookOpen,
-        label: 'Formula',
+        label: 'Formel',
         gradient: 'from-blue-500/10 to-indigo-500/10',
         border: 'border-blue-200/60 dark:border-blue-500/20',
         iconColor: 'text-blue-500',
@@ -43,7 +43,7 @@ const levelConfig = {
     },
     3: {
         icon: Sparkles,
-        label: 'First Step',
+        label: 'Första steget',
         gradient: 'from-violet-500/10 to-purple-500/10',
         border: 'border-violet-200/60 dark:border-violet-500/20',
         iconColor: 'text-violet-500',
@@ -72,8 +72,8 @@ export function HintBubble({ hint, hintLevel, mathExpression, isVisible, onDismi
                             <div
                                 key={dot}
                                 className={`w-1.5 h-1.5 rounded-full transition-colors ${dot <= config.dots
-                                        ? config.iconColor.replace('text-', 'bg-')
-                                        : 'bg-zinc-300 dark:bg-zinc-600'
+                                    ? config.iconColor.replace('text-', 'bg-')
+                                    : 'bg-zinc-300 dark:bg-zinc-600'
                                     }`}
                             />
                         ))}

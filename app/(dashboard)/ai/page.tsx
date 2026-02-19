@@ -10,19 +10,19 @@ import {
 const aiFeatures = [
     {
         id: 'chat',
-        title: 'AI Tutor',
-        description: 'Get instant help with any math problem. Ask questions, get step-by-step explanations.',
+        title: 'AI-handledare',
+        description: 'Få omedelbar hjälp med alla matteproblem. Ställ frågor, få steg-för-steg-förklaringar.',
         icon: MessageCircle,
         href: '/ai/chat',
         color: 'from-purple-500 to-pink-500',
         bgColor: 'bg-purple-100 dark:bg-purple-500/10',
         textColor: 'text-purple-600 dark:text-purple-400',
-        badge: 'Popular'
+        badge: 'Populär'
     },
     {
         id: 'explain',
-        title: 'Explain This',
-        description: 'Paste any problem and get a detailed breakdown with multiple solution methods.',
+        title: 'Förklara detta',
+        description: 'Klistra in vilket problem som helst och få en detaljerad genomgång med flera lösningsmetoder.',
         icon: Lightbulb,
         href: '/ai/chat',
         color: 'from-yellow-500 to-orange-500',
@@ -32,19 +32,19 @@ const aiFeatures = [
     },
     {
         id: 'generate',
-        title: 'Problem Generator',
-        description: 'Generate practice problems tailored to your weak areas and difficulty level.',
+        title: 'Problemgenerator',
+        description: 'Generera övningsproblem skräddarsydda för dina svaga områden och svårighetsnivå.',
         icon: Wand2,
         href: '/ai/chat',
         color: 'from-blue-500 to-cyan-500',
         bgColor: 'bg-blue-100 dark:bg-blue-500/10',
         textColor: 'text-blue-600 dark:text-blue-400',
-        badge: 'New'
+        badge: 'Ny'
     },
     {
         id: 'study-plan',
-        title: 'Study Plan',
-        description: 'Get an AI-generated study plan based on your goals and available time.',
+        title: 'Studieplan',
+        description: 'Få en AI-genererad studieplan baserad på dina mål och tillgänglig tid.',
         icon: Target,
         href: '/ai/chat',
         color: 'from-green-500 to-emerald-500',
@@ -55,10 +55,10 @@ const aiFeatures = [
 ];
 
 const quickActions = [
-    { label: 'Solve an equation', icon: '📝' },
-    { label: 'Explain a concept', icon: '💡' },
-    { label: 'Check my work', icon: '✅' },
-    { label: 'Generate practice', icon: '🎯' }
+    { label: 'Lös en ekvation', icon: '📝' },
+    { label: 'Förklara ett koncept', icon: '💡' },
+    { label: 'Kontrollera mitt arbete', icon: '✅' },
+    { label: 'Generera övning', icon: '🎯' }
 ];
 
 export default function AIPage() {
@@ -75,13 +75,13 @@ export default function AIPage() {
                     <Brain className="w-10 h-10 text-white" />
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                    AI-Powered{' '}
+                    AI-drivet{' '}
                     <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                        Learning
+                        lärande
                     </span>
                 </h1>
                 <p className="text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto">
-                    Your personal AI tutor, available 24/7 to help you understand concepts and solve problems.
+                    Din personliga AI-handledare, tillgänglig dygnet runt för att hjälpa dig förstå koncept och lösa problem.
                 </p>
             </motion.div>
 
@@ -136,7 +136,7 @@ export default function AIPage() {
                             <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4">{feature.description}</p>
 
                             <div className="flex items-center text-purple-600 dark:text-purple-400 text-sm font-medium">
-                                <span>Try it now</span>
+                                <span>Prova nu</span>
                                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                             </div>
                         </Link>
@@ -155,22 +155,22 @@ export default function AIPage() {
                     <div>
                         <Sparkles className="w-6 h-6 text-purple-500 mx-auto mb-2" />
                         <div className="text-2xl font-bold">150+</div>
-                        <div className="text-sm text-zinc-500">Questions answered</div>
+                        <div className="text-sm text-zinc-500">Frågor besvarade</div>
                     </div>
                     <div>
                         <BookOpen className="w-6 h-6 text-blue-500 mx-auto mb-2" />
                         <div className="text-2xl font-bold">45</div>
-                        <div className="text-sm text-zinc-500">Concepts explained</div>
+                        <div className="text-sm text-zinc-500">Koncept förklarade</div>
                     </div>
                     <div>
                         <Zap className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
                         <div className="text-2xl font-bold">2.3s</div>
-                        <div className="text-sm text-zinc-500">Avg response time</div>
+                        <div className="text-sm text-zinc-500">Genomsnittlig svarstid</div>
                     </div>
                     <div>
                         <Target className="w-6 h-6 text-green-500 mx-auto mb-2" />
                         <div className="text-2xl font-bold">94%</div>
-                        <div className="text-sm text-zinc-500">Helpful rating</div>
+                        <div className="text-sm text-zinc-500">Hjälpsamhetsbetyg</div>
                     </div>
                 </div>
             </motion.div>
@@ -186,7 +186,7 @@ export default function AIPage() {
                     href="/ai/chat"
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-medium transition-all"
                 >
-                    Start Chatting
+                    Börja chatta
                     <ArrowRight className="w-4 h-4" />
                 </Link>
             </motion.div>
@@ -198,7 +198,7 @@ export default function AIPage() {
                 transition={{ delay: 0.6 }}
                 className="text-center text-zinc-500 text-sm mt-8"
             >
-                AI responses are generated and may occasionally contain errors. Always verify important calculations.
+                AI-svar genereras och kan ibland innehålla fel. Verifiera alltid viktiga beräkningar.
             </motion.p>
         </div>
     );

@@ -20,7 +20,7 @@ interface ExamResultsTableProps {
 
 export default function ExamResultsTable({ results, onDownloadClick }: ExamResultsTableProps) {
     const formatDate = (date: Date) => {
-        return new Date(date).toLocaleDateString('en-US', {
+        return new Date(date).toLocaleDateString('sv-SE', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
@@ -41,19 +41,19 @@ export default function ExamResultsTable({ results, onDownloadClick }: ExamResul
                     <thead className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
                         <tr>
                             <th className="text-left px-6 py-4 text-sm font-semibold text-zinc-900 dark:text-white">
-                                Exam
+                                Tenta
                             </th>
                             <th className="text-left px-6 py-4 text-sm font-semibold text-zinc-900 dark:text-white">
-                                Date
+                                Datum
                             </th>
                             <th className="text-left px-6 py-4 text-sm font-semibold text-zinc-900 dark:text-white">
-                                Type
+                                Typ
                             </th>
                             <th className="text-center px-6 py-4 text-sm font-semibold text-zinc-900 dark:text-white">
-                                Solution
+                                Lösning
                             </th>
                             <th className="text-center px-6 py-4 text-sm font-semibold text-zinc-900 dark:text-white">
-                                Download
+                                Ladda ner
                             </th>
                         </tr>
                     </thead>
@@ -94,7 +94,7 @@ export default function ExamResultsTable({ results, onDownloadClick }: ExamResul
                                         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
                                     >
                                         <Download className="w-4 h-4" />
-                                        Download
+                                        Ladda ner
                                     </button>
                                 </td>
                             </tr>
@@ -134,7 +134,7 @@ export default function ExamResultsTable({ results, onDownloadClick }: ExamResul
                             className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
                         >
                             <Download className="w-4 h-4" />
-                            Download PDF
+                            Ladda ner PDF
                         </button>
                     </div>
                 ))}

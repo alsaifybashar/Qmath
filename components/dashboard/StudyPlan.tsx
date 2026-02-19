@@ -29,11 +29,11 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
     const stableTopics = useMemo(() => topics, [JSON.stringify(topics)]);
 
     const steps = [
-        'Connecting to AI engine...',
-        `Loading ${stableExams.length} exam PDF${stableExams.length !== 1 ? 's' : ''}...`,
-        'Analyzing question patterns...',
-        'Mapping topic frequency...',
-        'Building study roadmap...',
+        'Ansluter till AI-motorn...',
+        `Laddar ${stableExams.length} tentamens-PDF${stableExams.length !== 1 ? 'er' : ''}...`,
+        'Analyserar frågemönster...',
+        'Kartlägger ämnesfrekvens...',
+        'Bygger studieplan...',
     ];
 
     useEffect(() => {
@@ -106,8 +106,8 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
         return (
             <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
                 <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" />
-                <p className="text-red-600 font-medium">Failed to generate study plan</p>
-                <p className="text-red-400 text-sm mt-1">{error || 'No response from AI.'}</p>
+                <p className="text-red-600 font-medium">Misslyckades att generera studieplan</p>
+                <p className="text-red-400 text-sm mt-1">{error || 'Inget svar från AI.'}</p>
             </div>
         );
     }
@@ -129,13 +129,13 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
                 {plan.cached && (
                     <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-full px-3 py-1.5">
                         <Zap size={12} />
-                        Cached — generated {new Date(plan.generatedAt).toLocaleDateString()}
+                        Cachad — genererad {new Date(plan.generatedAt).toLocaleDateString()}
                     </div>
                 )}
                 {plan.examsAnalyzed > 0 && (
                     <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-full px-3 py-1.5">
                         <Sparkles size={12} />
-                        {plan.examsAnalyzed} exam PDF{plan.examsAnalyzed > 1 ? 's' : ''} analyzed by AI
+                        {plan.examsAnalyzed} tentamens-PDF{plan.examsAnalyzed > 1 ? 'er' : ''} analyserade av AI
                     </div>
                 )}
             </div>
@@ -146,7 +146,7 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
                         <Trophy className="w-7 h-7 text-yellow-300" />
-                        <h2 className="text-2xl font-bold">Your Study Strategy</h2>
+                        <h2 className="text-2xl font-bold">Din studiestrategi</h2>
                     </div>
                     <p className="text-lg text-blue-100 leading-relaxed max-w-4xl">
                         {plan.strategy}
@@ -161,7 +161,7 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <div className="flex items-center gap-2 mb-5">
                         <Target className="w-5 h-5 text-blue-500" />
-                        <h3 className="text-lg font-bold text-gray-800">Topic Importance Map</h3>
+                        <h3 className="text-lg font-bold text-gray-800">Ämnesviktkarta</h3>
                     </div>
                     <div className="h-[320px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -169,10 +169,10 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
                                 <PolarGrid stroke="#e5e7eb" />
                                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 11 }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
-                                <Radar name="Importance" dataKey="value" stroke="#4f46e5" strokeWidth={2.5} fill="#6366f1" fillOpacity={0.4} />
+                                <Radar name="Vikt" dataKey="value" stroke="#4f46e5" strokeWidth={2.5} fill="#6366f1" fillOpacity={0.4} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: 13 }}
-                                    formatter={(value: number | undefined) => [`${value ?? 0}/10`, 'Importance']}
+                                    formatter={(value: number | undefined) => [`${value ?? 0}/10`, 'Vikt']}
                                 />
                             </RadarChart>
                         </ResponsiveContainer>
@@ -183,7 +183,7 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <div className="flex items-center gap-2 mb-5">
                         <Brain className="w-5 h-5 text-purple-500" />
-                        <h3 className="text-lg font-bold text-gray-800">Priority Breakdown</h3>
+                        <h3 className="text-lg font-bold text-gray-800">Prioritetsfördelning</h3>
                     </div>
                     <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
                         {sortedAreas.map((area, idx) => (
@@ -220,7 +220,7 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center gap-2 mb-5">
                     <Clock className="w-5 h-5 text-green-500" />
-                    <h3 className="text-lg font-bold text-gray-800">Recommended Study Timeline</h3>
+                    <h3 className="text-lg font-bold text-gray-800">Rekommenderad tidslinje</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {plan.study_schedule.map((slot, idx) => (
@@ -232,7 +232,7 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
                             className="relative p-5 rounded-xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 hover:shadow-md transition-shadow"
                         >
                             <div className="absolute top-4 right-4 text-[11px] font-bold text-gray-300 uppercase tracking-wider">
-                                Week {slot.week}
+                                Vecka {slot.week}
                             </div>
                             <h4 className="font-bold text-base mb-2 text-gray-800 pr-12">{slot.focus}</h4>
                             <div className="flex items-start gap-2 text-sm text-gray-500">

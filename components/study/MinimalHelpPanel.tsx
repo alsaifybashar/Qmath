@@ -60,8 +60,8 @@ export function MinimalHelpPanel({
                                         <Lightbulb className="w-4 h-4 text-amber-500" />
                                     </div>
                                     <div>
-                                        <div className="font-medium text-zinc-900 dark:text-white">Get a Hint</div>
-                                        <div className="text-xs text-zinc-500">A gentle nudge in the right direction</div>
+                                        <div className="font-medium text-zinc-900 dark:text-white">Få en ledtråd</div>
+                                        <div className="text-xs text-zinc-500">En liten knuff i rätt riktning</div>
                                     </div>
                                 </div>
                                 <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-amber-500 transition-colors" />
@@ -77,7 +77,7 @@ export function MinimalHelpPanel({
                                 <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5" />
                                 <div>
                                     <div className="text-xs font-medium text-amber-700 dark:text-amber-300 uppercase tracking-wide mb-1">
-                                        Hint
+                                        Ledtråd
                                     </div>
                                     <p className="text-sm text-amber-800 dark:text-amber-200">
                                         {nudgeHint}
@@ -103,8 +103,8 @@ export function MinimalHelpPanel({
                                         <Lightbulb className="w-4 h-4 text-orange-500" />
                                     </div>
                                     <div>
-                                        <div className="font-medium text-zinc-900 dark:text-white">More Help</div>
-                                        <div className="text-xs text-zinc-500">Detailed guidance</div>
+                                        <div className="font-medium text-zinc-900 dark:text-white">Mer Hjälp</div>
+                                        <div className="text-xs text-zinc-500">Detaljerad vägledning</div>
                                     </div>
                                 </div>
                                 <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-orange-500 transition-colors" />
@@ -120,7 +120,7 @@ export function MinimalHelpPanel({
                                 <Lightbulb className="w-4 h-4 text-orange-500 mt-0.5" />
                                 <div>
                                     <div className="text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wide mb-1">
-                                        Detailed Guidance
+                                        Detaljerad vägledning
                                     </div>
                                     <p className="text-sm text-orange-800 dark:text-orange-200">
                                         {guidedHint}
@@ -146,8 +146,8 @@ export function MinimalHelpPanel({
                                         <BookOpen className="w-4 h-4 text-blue-500" />
                                     </div>
                                     <div>
-                                        <div className="font-medium text-zinc-900 dark:text-white">Related Formulas</div>
-                                        <div className="text-xs text-zinc-500">{relatedFormulas.length} formula{relatedFormulas.length > 1 ? 's' : ''} available</div>
+                                        <div className="font-medium text-zinc-900 dark:text-white">Relaterade formler</div>
+                                        <div className="text-xs text-zinc-500">{relatedFormulas.length} formel{relatedFormulas.length > 1 ? 'r' : ''} tillgängliga</div>
                                     </div>
                                 </div>
                                 <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-blue-500 transition-colors" />
@@ -162,7 +162,7 @@ export function MinimalHelpPanel({
                             <div className="flex items-center gap-2">
                                 <BookOpen className="w-4 h-4 text-blue-500" />
                                 <div className="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wide">
-                                    Related Formulas
+                                    Relaterade formler
                                 </div>
                             </div>
                             {relatedFormulas.map((formula, idx) => (
@@ -193,7 +193,7 @@ export function MinimalHelpPanel({
                 >
                     <div className="flex items-center justify-center gap-2">
                         <Bot className="w-5 h-5" />
-                        <span className="font-medium">Ask AI Tutor</span>
+                        <span className="font-medium">Fråga AI-handledare</span>
                     </div>
                 </button>
             )}
@@ -202,7 +202,7 @@ export function MinimalHelpPanel({
             {!nudgeHint && !guidedHint && relatedFormulas.length === 0 && !onRequestAI && (
                 <div className="text-center py-8 text-zinc-400">
                     <Lightbulb className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No help available for this question</p>
+                    <p className="text-sm">Ingen hjälp tillgänglig för denna fråga</p>
                 </div>
             )}
         </div>

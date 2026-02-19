@@ -9,7 +9,7 @@ interface ConfidenceRatingProps {
     disabled?: boolean;
 }
 
-const labels = ['Guessing', 'Unsure', 'Somewhat', 'Confident', 'Certain'];
+const labels = ['Gissar', 'Osäker', 'Ganska', 'Säker', 'Helt säker'];
 
 export function ConfidenceRating({ value, onChange, disabled }: ConfidenceRatingProps) {
     const [hovered, setHovered] = useState<number | null>(null);
@@ -19,7 +19,7 @@ export function ConfidenceRating({ value, onChange, disabled }: ConfidenceRating
     return (
         <div className="flex flex-col items-center gap-2">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                How confident are you?
+                Hur säker är du?
             </span>
             <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((level) => (
@@ -49,11 +49,10 @@ export function ConfidenceRating({ value, onChange, disabled }: ConfidenceRating
                 key={displayValue}
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`text-sm font-medium ${
-                    displayValue <= 2 ? 'text-amber-600 dark:text-amber-400' :
+                className={`text-sm font-medium ${displayValue <= 2 ? 'text-amber-600 dark:text-amber-400' :
                     displayValue <= 3 ? 'text-blue-600 dark:text-blue-400' :
-                    'text-green-600 dark:text-green-400'
-                }`}
+                        'text-green-600 dark:text-green-400'
+                    }`}
             >
                 {labels[displayValue - 1] || 'Select'}
             </motion.span>

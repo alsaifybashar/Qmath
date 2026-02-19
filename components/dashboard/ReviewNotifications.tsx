@@ -21,21 +21,21 @@ interface ReviewNotification {
 
 const urgencyConfig = {
     overdue: {
-        label: 'Overdue',
+        label: 'Försenad',
         color: '#EF4444',
         bgColor: '#FEE2E2',
         darkBg: 'rgba(239,68,68,0.15)',
         icon: AlertTriangle,
     },
     due_today: {
-        label: 'Due Today',
+        label: 'Idag',
         color: '#F59E0B',
         bgColor: '#FEF3C7',
         darkBg: 'rgba(245,158,11,0.15)',
         icon: Clock,
     },
     upcoming: {
-        label: 'Coming Up',
+        label: 'Kommande',
         color: '#3B82F6',
         bgColor: '#DBEAFE',
         darkBg: 'rgba(59,130,246,0.15)',
@@ -105,8 +105,8 @@ function NotificationCard({
                 </p>
                 <p className="text-xs text-zinc-500 mt-0.5">
                     {notification.daysSinceReview > 0
-                        ? `Last reviewed ${notification.daysSinceReview} day${notification.daysSinceReview !== 1 ? 's' : ''} ago`
-                        : 'New topic'}
+                        ? `Senast repeterad för ${notification.daysSinceReview} dag${notification.daysSinceReview !== 1 ? 'ar' : ''} sedan`
+                        : 'Nytt ämne'}
                     {' • '}{notification.suggestedAction}
                 </p>
             </div>
@@ -116,14 +116,14 @@ function NotificationCard({
                 <button
                     onClick={() => onSnooze(notification.id)}
                     className="p-1.5 rounded-lg text-zinc-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition"
-                    title="Snooze 1 day"
+                    title="Skjut upp 1 dag"
                 >
                     <AlarmClockOff className="w-4 h-4" />
                 </button>
                 <Link
                     href={`/study?topic=${notification.topicId}`}
                     className="p-1.5 rounded-lg text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition"
-                    title="Start review"
+                    title="Starta repetition"
                 >
                     <BookOpen className="w-4 h-4" />
                 </Link>
@@ -169,14 +169,14 @@ export function ReviewWidget({
                         )}
                     </div>
                     <h3 className="text-base font-semibold" style={{ color: '#1A1D2E' }}>
-                        Reviews Due
+                        Dags att repetera
                     </h3>
                 </div>
                 <Link
                     href="/notifications"
                     className="text-xs font-medium text-blue-500 hover:text-blue-600 flex items-center gap-1"
                 >
-                    View All <ChevronRight className="w-3 h-3" />
+                    Visa alla <ChevronRight className="w-3 h-3" />
                 </Link>
             </div>
 
@@ -184,12 +184,12 @@ export function ReviewWidget({
             <div className="flex gap-2 mb-4">
                 {overdue > 0 && (
                     <span className="text-xs font-medium px-2 py-1 rounded-full bg-red-50 dark:bg-red-500/10 text-red-600">
-                        {overdue} overdue
+                        {overdue} försenade
                     </span>
                 )}
                 {dueToday > 0 && (
                     <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600">
-                        {dueToday} today
+                        {dueToday} idag
                     </span>
                 )}
             </div>
@@ -248,26 +248,26 @@ export function NotificationsPage({ summary }: { summary: { overdue: number; due
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-                            Review Schedule
+                            Repetitions-schema
                         </h1>
                         <p className="text-sm text-zinc-500 mt-1">
-                            {summary.total} topic{summary.total !== 1 ? 's' : ''} need your attention
+                            {summary.total} ämne{summary.total !== 1 ? 'n' : ''} behöver din uppmärksamhet
                         </p>
                     </div>
                     <Link
                         href="/dashboard"
                         className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                     >
-                        ← Back to Dashboard
+                        ← Tillbaka till översikten
                     </Link>
                 </div>
 
                 {/* Summary cards */}
                 <div className="grid grid-cols-3 gap-3 mb-8">
                     {[
-                        { label: 'Overdue', count: summary.overdue, color: '#EF4444', bg: '#FEE2E2' },
-                        { label: 'Due Today', count: summary.dueToday, color: '#F59E0B', bg: '#FEF3C7' },
-                        { label: 'Coming Up', count: summary.upcoming, color: '#3B82F6', bg: '#DBEAFE' },
+                        { label: 'Försenade', count: summary.overdue, color: '#EF4444', bg: '#FEE2E2' },
+                        { label: 'Idag', count: summary.dueToday, color: '#F59E0B', bg: '#FEF3C7' },
+                        { label: 'Kommande', count: summary.upcoming, color: '#3B82F6', bg: '#DBEAFE' },
                     ].map(s => (
                         <div
                             key={s.label}
@@ -285,7 +285,7 @@ export function NotificationsPage({ summary }: { summary: { overdue: number; due
                     {overdueItems.length > 0 && (
                         <div className="mb-6">
                             <h2 className="text-sm font-semibold text-red-600 mb-3 flex items-center gap-2">
-                                <AlertTriangle className="w-4 h-4" /> Overdue Reviews
+                                <AlertTriangle className="w-4 h-4" /> Försenade repetitioner
                             </h2>
                             <div className="space-y-2">
                                 {overdueItems.map(n => (
@@ -298,7 +298,7 @@ export function NotificationsPage({ summary }: { summary: { overdue: number; due
                     {todayItems.length > 0 && (
                         <div className="mb-6">
                             <h2 className="text-sm font-semibold text-amber-600 mb-3 flex items-center gap-2">
-                                <Clock className="w-4 h-4" /> Due Today
+                                <Clock className="w-4 h-4" /> Att göra idag
                             </h2>
                             <div className="space-y-2">
                                 {todayItems.map(n => (
@@ -311,7 +311,7 @@ export function NotificationsPage({ summary }: { summary: { overdue: number; due
                     {upcomingItems.length > 0 && (
                         <div className="mb-6">
                             <h2 className="text-sm font-semibold text-blue-600 mb-3 flex items-center gap-2">
-                                <Calendar className="w-4 h-4" /> Coming Up
+                                <Calendar className="w-4 h-4" /> Kommande
                             </h2>
                             <div className="space-y-2">
                                 {upcomingItems.map(n => (
@@ -332,10 +332,10 @@ export function NotificationsPage({ summary }: { summary: { overdue: number; due
                             <Bell className="w-8 h-8 text-green-500" />
                         </div>
                         <h2 className="text-lg font-semibold text-zinc-900 dark:text-white mb-2">
-                            All caught up!
+                            Du är ikapp!
                         </h2>
                         <p className="text-sm text-zinc-500">
-                            No reviews due right now. Keep studying to build your schedule.
+                            Inga repetitioner just nu. Fortsätt studera för att bygga ditt schema.
                         </p>
                     </motion.div>
                 )}

@@ -129,7 +129,7 @@ export default function Home() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                         </span>
-                        v1.0 Public Beta — Now Live
+                                v1.0 Offentlig Beta — Nu Live
                     </motion.div>
 
                     {/* Main heading with text reveal */}
@@ -139,9 +139,9 @@ export default function Home() {
                         transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                         className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight"
                     >
-                        <span className="block text-zinc-900 dark:text-white">The Operating System for</span>
+                        <span className="block text-zinc-900 dark:text-white">Operativsystemet för</span>
                         <span className="block mt-2 bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-                            Engineering Math
+                            Ingenjörsmatematik
                         </span>
                     </motion.h1>
 
@@ -152,8 +152,8 @@ export default function Home() {
                         transition={{ duration: 0.8, delay: 0.5 }}
                         className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed"
                     >
-                        More than a question bank. An adaptive intelligence that continuously models
-                        your understanding to <span className="text-zinc-900 dark:text-white font-medium">guarantee mastery</span>.
+                        Mer än en uppgiftsbank. En adaptiv intelligens som kontinuerligt modellerar
+                        din förståelse för att <span className="text-zinc-900 dark:text-white font-medium">garantera mästerskap</span>.
                     </motion.p>
 
                     {/* CTA Buttons */}
@@ -168,7 +168,7 @@ export default function Home() {
                                 href="/study"
                                 className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-full font-semibold transition-all flex items-center gap-2 shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 text-lg"
                             >
-                                Start Studying Free
+                                Starta gratis
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </motion.div>
@@ -178,7 +178,7 @@ export default function Home() {
                                 className="group px-8 py-4 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-full font-semibold transition-all flex items-center gap-2 shadow-lg"
                             >
                                 <Play className="w-4 h-4" />
-                                Watch Demo
+                                Se demo
                             </Link>
                         </motion.div>
                     </motion.div>
@@ -192,15 +192,15 @@ export default function Home() {
                     >
                         <div className="flex items-center gap-2">
                             <Shield className="w-4 h-4 text-green-500" />
-                            <span>No credit card required</span>
+                            <span>Inget kreditkort krävs</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Zap className="w-4 h-4 text-yellow-500" />
-                            <span>10,000+ problems</span>
+                            <span>10 000+ uppgifter</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 text-blue-500" />
-                            <span>Used by top universities</span>
+                            <span>Används av toppuniversitet</span>
                         </div>
                     </motion.div>
                 </motion.div>
@@ -233,13 +233,13 @@ export default function Home() {
                         className="text-center mb-20 space-y-4"
                     >
                         <motion.span variants={fadeInUp} className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                            Why Qmath
+                            Varför Qmath
                         </motion.span>
                         <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white">
-                            Built for Engineering Students
+                            Byggt för civilingenjörsstudenter
                         </motion.h2>
                         <motion.p variants={fadeInUp} className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-                            We replaced generic textbooks with a data-driven feedback loop that adapts to how you learn.
+                            Vi ersatte generiska kursböcker med en datadriven feedback-loop som anpassar sig efter hur du lär dig.
                         </motion.p>
                     </motion.div>
 
@@ -253,42 +253,42 @@ export default function Home() {
                         <FeatureCard
                             icon={<BrainCircuit className="w-6 h-6" />}
                             iconColor="purple"
-                            title="Adaptive Engine"
-                            desc="Our BKT algorithms analyze your solving patterns to serve the perfect question at the perfect time."
+                            title="Adaptiv Motor"
+                            desc="Våra BKT-algoritmer analyserar dina lösningsmönster för att servera den perfekta uppgiften vid rätt tillfälle."
                             link="/study"
                         />
                         <FeatureCard
                             icon={<BarChart3 className="w-6 h-6" />}
                             iconColor="blue"
-                            title="Velocity Tracking"
-                            desc="Visualize your learning curve. We track not just correctness, but how fast you're mastering concepts."
+                            title="Hastighetsspårning"
+                            desc="Visualisera din inlärningskurva. Vi spårar inte bara korrekthet, utan hur snabbt du bemästrar koncept."
                             link="/dashboard"
                         />
                         <FeatureCard
                             icon={<Terminal className="w-6 h-6" />}
                             iconColor="emerald"
-                            title="Exam Simulation"
-                            desc="Train under pressure. Our exam mode mirrors university constraints to eliminate test anxiety."
+                            title="Tentamenssimulering"
+                            desc="Träna under press. Vårt tentamensläge speglar universitetets begränsningar för att eliminera tentamensångest."
                             link="/exam"
                         />
                         <FeatureCard
                             icon={<BookOpen className="w-6 h-6" />}
                             iconColor="orange"
-                            title="Dynamic Scaffolding"
-                            desc="Got it wrong? We automatically break problems into simpler steps to rebuild your intuition."
+                            title="Dynamisk Stöttning"
+                            desc="Fick du fel? Vi bryter automatiskt ner problem i enklare steg för att bygga upp din intuition."
                             link="/study"
                         />
                         <FeatureCard
                             icon={<LayoutDashboard className="w-6 h-6" />}
                             iconColor="pink"
-                            title="Huge Database"
-                            desc="Thousands of verified problems from Calculus I-III, Linear Algebra, and Mechanics."
+                            title="Enorm Databas"
+                            desc="Tusentals verifierade uppgifter från Envariabelanalys, Flervariabelanalys, Linjär algebra och Mekanik."
                         />
                         <FeatureCard
                             icon={<GraduationCap className="w-6 h-6" />}
                             iconColor="cyan"
-                            title="University Aligned"
-                            desc="Curriculum structure aligned with top technical universities across Europe."
+                            title="Universitetsanpassad"
+                            desc="Kursplansstruktur anpassad efter ledande tekniska universitet i Europa."
                         />
                     </motion.div>
                 </div>
@@ -304,7 +304,7 @@ export default function Home() {
                     className="max-w-7xl mx-auto text-center"
                 >
                     <p className="text-sm font-medium text-zinc-400 uppercase tracking-widest mb-12">
-                        Trusted by researchers from
+                        Betrodd av forskare från
                     </p>
                     <div className="flex flex-wrap justify-center gap-x-16 gap-y-8">
                         {[
@@ -340,15 +340,15 @@ export default function Home() {
                         className="grid md:grid-cols-2 gap-16 items-center"
                     >
                         <div className="space-y-8">
-                            <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Our Story</span>
+                            <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Vår Historia</span>
                             <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white">
-                                The Minds Behind Qmath
+                                Hjärnorna Bakom Qmath
                             </h2>
                             <p className="text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                                Qmath was born from frustration. As engineering students, we saw brilliant minds struggle—not from lack of intelligence, but from lacking the right feedback loop.
+                                Qmath föddes ur frustration. Som civilingenjörsstudenter såg vi briljanta sinnen kämpa – inte på grund av bristande intelligens, utan på grund av avsaknaden av rätt feedback-loop.
                             </p>
                             <p className="text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                                We combined cognitive science with software architecture to build a scalable, personal tutor.
+                                Vi kombinerade kognitionsvetenskap med mjukvaruarkitektur för att bygga en skalbar, personlig handledare.
                             </p>
                             <motion.div
                                 whileHover={{ scale: 1.02 }}
@@ -358,8 +358,8 @@ export default function Home() {
                                     <Users className="w-7 h-7 text-white" />
                                 </div>
                                 <div>
-                                    <div className="text-lg font-semibold text-zinc-900 dark:text-white">The Founding Team</div>
-                                    <div className="text-zinc-500">Ex-DeepMind, KTH Alumni & EdTech Veterans</div>
+                                    <div className="text-lg font-semibold text-zinc-900 dark:text-white">Grundarteamet</div>
+                                    <div className="text-zinc-500">Tidigare DeepMind, KTH-alumner & EdTech-veteraner</div>
                                 </div>
                             </motion.div>
                         </div>
@@ -400,7 +400,7 @@ export default function Home() {
 
             <QuoteSeparator
                 imageSrc="/images/fractal_growth.png"
-                quote="Education is not the learning of facts, but the training of the mind to think."
+                quote="Utbildning är inte inlärning av fakta, utan träning av sinnet att tänka."
                 author="Albert Einstein"
             />
 
@@ -413,14 +413,14 @@ export default function Home() {
                     className="max-w-4xl mx-auto text-center space-y-10"
                 >
                     <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                        Join Us
+                        Gå med oss
                     </span>
                     <h2 className="text-5xl md:text-6xl font-bold text-zinc-900 dark:text-white tracking-tight">
-                        Build the Future of Education
+                        Bygg Framtidens Utbildning
                     </h2>
                     <p className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-                        We're rapidly expanding our partner network. Whether you're a university dean,
-                        an investor, or a brilliant engineer—we want to hear from you.
+                        Vi expanderar snabbt vårt partnernätverk. Oavsett om du är universitetsdekan,
+                        investerare eller en briljant ingenjör – vill vi höra från dig.
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -431,7 +431,7 @@ export default function Home() {
                             className="px-8 py-4 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 rounded-2xl font-semibold transition-all flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl"
                         >
                             <Mail className="w-5 h-5" />
-                            Contact for Partnerships
+                            Kontakta för samarbeten
                         </motion.a>
                         <motion.a
                             href="mailto:investors@qmath.com"
@@ -439,7 +439,7 @@ export default function Home() {
                             whileTap={{ scale: 0.98 }}
                             className="px-8 py-4 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-2xl font-medium transition-all flex items-center justify-center gap-2 shadow-lg"
                         >
-                            Request Investment Deck
+                            Beställ investeringsunderlag
                         </motion.a>
                     </div>
                 </motion.div>
@@ -454,11 +454,11 @@ export default function Home() {
                             <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">Beta</span>
                         </div>
                         <div className="flex flex-wrap justify-center gap-6 text-sm text-zinc-500">
-                            <Link href="/features" className="hover:text-zinc-900 dark:hover:text-white transition-colors">Features</Link>
-                            <Link href="/pricing" className="hover:text-zinc-900 dark:hover:text-white transition-colors">Pricing</Link>
-                            <Link href="/about" className="hover:text-zinc-900 dark:hover:text-white transition-colors">About</Link>
-                            <Link href="/privacy" className="hover:text-zinc-900 dark:hover:text-white transition-colors">Privacy</Link>
-                            <Link href="/terms" className="hover:text-zinc-900 dark:hover:text-white transition-colors">Terms</Link>
+                            <Link href="/features" className="hover:text-zinc-900 dark:hover:text-white transition-colors">Funktioner</Link>
+                            <Link href="/pricing" className="hover:text-zinc-900 dark:hover:text-white transition-colors">Priser</Link>
+                            <Link href="/about" className="hover:text-zinc-900 dark:hover:text-white transition-colors">Om oss</Link>
+                            <Link href="/privacy" className="hover:text-zinc-900 dark:hover:text-white transition-colors">Integritet</Link>
+                            <Link href="/terms" className="hover:text-zinc-900 dark:hover:text-white transition-colors">Villkor</Link>
                         </div>
                         <p className="text-sm text-zinc-500">
                             &copy; 2026 Qmath EdTech AB

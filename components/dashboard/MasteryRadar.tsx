@@ -83,9 +83,9 @@ export default function MasteryRadar({ topics, maxTopicsToShow = 8 }: MasteryRad
                             <span className="text-xl">📊</span>
                         </motion.div>
                         <div>
-                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Topic Mastery</h2>
+                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Ämnesbemästring</h2>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                {topics.length} topics tracked
+                                {topics.length} ämnen spårade
                             </p>
                         </div>
                     </div>
@@ -95,17 +95,17 @@ export default function MasteryRadar({ topics, maxTopicsToShow = 8 }: MasteryRad
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === 'grid'
-                                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
-                                    : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                                 }`}
                         >
-                            Grid
+                            Rutnät
                         </button>
                         <button
                             onClick={() => setViewMode('radar')}
                             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === 'radar'
-                                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
-                                    : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                                 }`}
                         >
                             Radar
@@ -118,15 +118,15 @@ export default function MasteryRadar({ topics, maxTopicsToShow = 8 }: MasteryRad
                     <div className="grid grid-cols-3 gap-3">
                         <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200/50 dark:border-green-700/30">
                             <div className="text-2xl font-bold text-green-600 dark:text-green-400">{insights.mastered}</div>
-                            <div className="text-xs text-green-700 dark:text-green-300">Mastered</div>
+                            <div className="text-xs text-green-700 dark:text-green-300">Bemästrade</div>
                         </div>
                         <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200/50 dark:border-amber-700/30">
                             <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{insights.learning}</div>
-                            <div className="text-xs text-amber-700 dark:text-amber-300">Learning</div>
+                            <div className="text-xs text-amber-700 dark:text-amber-300">Lärande</div>
                         </div>
                         <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200/50 dark:border-red-700/30">
                             <div className="text-2xl font-bold text-red-600 dark:text-red-400">{insights.needsWork}</div>
-                            <div className="text-xs text-red-700 dark:text-red-300">Needs Work</div>
+                            <div className="text-xs text-red-700 dark:text-red-300">Behöver arbete</div>
                         </div>
                     </div>
                 )}
@@ -157,9 +157,9 @@ export default function MasteryRadar({ topics, maxTopicsToShow = 8 }: MasteryRad
                         <div className="flex items-start gap-3">
                             <span className="text-lg">💡</span>
                             <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                                <strong>{insights.strongest.name}</strong> is your strongest topic.
+                                <strong>{insights.strongest.name}</strong> är ditt starkaste ämne.
                                 {insights.needsWork > 0 && (
-                                    <> Focus on <strong>{insights.weakest.name}</strong> to balance your skills.</>
+                                    <> Fokusera på <strong>{insights.weakest.name}</strong> för att balansera dina färdigheter.</>
                                 )}
                             </p>
                         </div>
@@ -194,8 +194,8 @@ function SkillGrid({
                     whileHover={{ scale: 1.05, y: -2 }}
                     onClick={() => onSelectTopic(selectedTopic === topic.id ? null : topic.id)}
                     className={`relative cursor-pointer p-4 rounded-xl border transition-all ${selectedTopic === topic.id
-                            ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-lg'
-                            : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-600'
+                        ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-lg'
+                        : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-600'
                         }`}
                 >
                     {/* Mastery ring */}
@@ -211,8 +211,8 @@ function SkillGrid({
                     {/* Accuracy */}
                     <div className="text-xs text-center text-zinc-500 dark:text-zinc-400">
                         {topic.totalAttempts > 0
-                            ? `${Math.round((topic.correctAttempts / topic.totalAttempts) * 100)}% accuracy`
-                            : 'No attempts yet'
+                            ? `${Math.round((topic.correctAttempts / topic.totalAttempts) * 100)}% träffsäkerhet`
+                            : 'Inga försök än'
                         }
                     </div>
 
@@ -228,7 +228,7 @@ function SkillGrid({
                                 className="block w-full text-center text-xs font-medium px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                Practice →
+                                Öva →
                             </Link>
                         </motion.div>
                     )}
@@ -305,7 +305,7 @@ function RadarChart({ topics }: { topics: MasteryTopic[] }) {
     if (topics.length < 3) {
         return (
             <div className="text-center py-8 text-zinc-500">
-                Need at least 3 topics for radar view
+                Behöver minst 3 ämnen för radarvy
             </div>
         );
     }
@@ -431,16 +431,16 @@ function EmptyState() {
         >
             <div className="text-5xl mb-4">📈</div>
             <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">
-                No mastery data yet
+                Ingen data än
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
-                Start practicing to see your skills visualized here!
+                Börja öva för att se dina färdigheter visualiserade här!
             </p>
             <Link
                 href="/practice"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
             >
-                Start Learning
+                Börja lär
                 <span>→</span>
             </Link>
         </motion.div>

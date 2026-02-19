@@ -76,7 +76,7 @@ function SimpleNumericInput({
                     onChange={(e) => setValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     disabled={isSubmitted}
-                    placeholder="Type your answer..."
+                    placeholder="Skriv ditt svar..."
                     className={`flex-1 px-4 py-3 text-lg font-mono rounded-xl border-2 transition-all focus:outline-none ${isSubmitted
                         ? isCorrect
                             ? 'border-green-500 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300'
@@ -89,7 +89,7 @@ function SimpleNumericInput({
                     disabled={!value.trim() || isSubmitted}
                     className="px-6 py-3 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 disabled:bg-zinc-200 dark:disabled:bg-zinc-700 text-white dark:text-zinc-900 font-medium rounded-xl transition-colors disabled:cursor-not-allowed"
                 >
-                    Check
+                    Kontrollera
                 </button>
             </div>
         </div>
@@ -283,10 +283,10 @@ export default function StudyHubPage() {
                     </motion.div>
 
                     <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-2">
-                        Session Complete
+                        Session avslutad
                     </h1>
                     <p className="text-zinc-500 dark:text-zinc-400 mb-8">
-                        Great work! Take a break or continue practicing.
+                        Bra jobbat! Ta en paus eller fortsätt öva.
                     </p>
 
                     <div className="space-y-3">
@@ -294,13 +294,13 @@ export default function StudyHubPage() {
                             href="/study"
                             className="block w-full py-3 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-medium transition-colors"
                         >
-                            Continue Studying
+                            Fortsätt studera
                         </Link>
                         <Link
                             href="/"
                             className="block w-full py-3 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-medium transition-colors"
                         >
-                            Back to Home
+                            Tillbaka till hem
                         </Link>
                     </div>
                 </motion.div>
@@ -372,18 +372,18 @@ export default function StudyHubPage() {
                                         ? 'text-green-700 dark:text-green-300'
                                         : 'text-red-700 dark:text-red-300'
                                         }`}>
-                                        {feedbackState.isCorrect ? 'Correct!' : (() => {
+                                        {feedbackState.isCorrect ? 'Rätt!' : (() => {
                                             const labels: Record<string, string> = {
-                                                conceptual: 'Concept Check',
-                                                computational: 'Calculation Error',
-                                                notation: 'Notation Issue',
-                                                interpretation: 'Re-read the Question',
-                                                incomplete: 'Almost There',
-                                                time_pressure: 'Take Your Time',
+                                                conceptual: 'Konceptkoll',
+                                                computational: 'Beräkningsfel',
+                                                notation: 'Notationsproblem',
+                                                interpretation: 'Läs frågan igen',
+                                                incomplete: 'Nästan där',
+                                                time_pressure: 'Ta din tid',
                                             };
                                             return (feedbackState as any).errorType
-                                                ? labels[(feedbackState as any).errorType] || 'Not quite'
-                                                : 'Not quite';
+                                                ? labels[(feedbackState as any).errorType] || 'Inte riktigt'
+                                                : 'Inte riktigt';
                                         })()}
                                     </p>
                                     {!feedbackState.isCorrect && (feedbackState as any).errorType && (
@@ -428,7 +428,7 @@ export default function StudyHubPage() {
                         className="w-full py-3 text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors flex items-center justify-center gap-2"
                     >
                         <Lightbulb className="w-4 h-4" />
-                        Need help? Click here or press H
+                        Behöver du hjälp? Klicka här eller tryck på H
                     </motion.button>
                 )}
 
@@ -444,7 +444,7 @@ export default function StudyHubPage() {
                                 onClick={handleTryAgain}
                                 className="flex-1 py-4 border-2 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-xl font-medium transition-colors"
                             >
-                                Try Again
+                                Försök igen
                             </button>
                         )}
                         <button
@@ -452,7 +452,7 @@ export default function StudyHubPage() {
                             className={`py-4 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${feedbackState.isCorrect ? 'flex-1' : 'px-8'
                                 }`}
                         >
-                            {feedbackState.isCorrect ? 'Continue' : 'Skip'}
+                            {feedbackState.isCorrect ? 'Fortsätt' : 'Hoppa över'}
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </motion.div>
@@ -575,7 +575,7 @@ function QuestionRenderer({
         default:
             return (
                 <div className="text-center py-8 text-zinc-400">
-                    Unknown question type: {question.type}
+                    Okänd frågetyp: {question.type}
                 </div>
             );
     }

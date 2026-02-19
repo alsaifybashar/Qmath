@@ -190,7 +190,7 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
                         }
                     `}
                 >
-                    <span>Submit Answer</span>
+                    <span>Skicka svar</span>
                     <ArrowRight className="w-5 h-5" />
                 </button>
             </div>

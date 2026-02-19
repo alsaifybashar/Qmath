@@ -18,15 +18,15 @@ const USER_DATA = {
     university: "KTH Royal Institute of Technology",
     program: "Master in Engineering Physics",
     studentId: "STU-2024-78542",
-    studyYear: "Year 2",
+    studyYear: "Årskurs 2",
     joinDate: "September 2024",
-    timezone: "Europe/Stockholm",
-    language: "English",
+    timezone: "Europa/Stockholm",
+    language: "Svenska",
     verified: true,
     subscription: {
         plan: "Student Pro",
-        status: "Active",
-        renewDate: "Feb 1, 2026"
+        status: "Aktiv",
+        renewDate: "1 Feb, 2026"
     },
     stats: {
         coursesEnrolled: 4,
@@ -81,7 +81,7 @@ export default function ProfilePage() {
                     {/* Edit Button */}
                     <button className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
                         <Edit3 className="w-4 h-4" />
-                        Edit Profile
+                        Redigera profil
                     </button>
                 </div>
 
@@ -89,19 +89,19 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800">
                     <div className="text-center">
                         <div className="text-2xl font-bold text-blue-600">{USER_DATA.stats.coursesEnrolled}</div>
-                        <div className="text-sm text-zinc-500">Courses</div>
+                        <div className="text-sm text-zinc-500">Kurser</div>
                     </div>
                     <div className="text-center">
                         <div className="text-2xl font-bold text-green-600">{USER_DATA.stats.hoursStudied}h</div>
-                        <div className="text-sm text-zinc-500">Studied</div>
+                        <div className="text-sm text-zinc-500">Studerat</div>
                     </div>
                     <div className="text-center">
                         <div className="text-2xl font-bold text-purple-600">{USER_DATA.stats.questionsAnswered}</div>
-                        <div className="text-sm text-zinc-500">Questions</div>
+                        <div className="text-sm text-zinc-500">Frågor</div>
                     </div>
                     <div className="text-center">
                         <div className="text-2xl font-bold text-orange-600">{USER_DATA.stats.achievementsUnlocked}</div>
-                        <div className="text-sm text-zinc-500">Achievements</div>
+                        <div className="text-sm text-zinc-500">Utmärkelser</div>
                     </div>
                 </div>
             </motion.div>
@@ -120,7 +120,7 @@ export default function ProfilePage() {
                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                 >
-                    Personal Info
+                    Personlig info
                 </button>
                 <button
                     onClick={() => setActiveTab('academic')}
@@ -129,7 +129,7 @@ export default function ProfilePage() {
                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                 >
-                    Academic
+                    Akademisk
                 </button>
                 <button
                     onClick={() => setActiveTab('security')}
@@ -138,7 +138,7 @@ export default function ProfilePage() {
                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                 >
-                    Security
+                    Säkerhet
                 </button>
             </motion.div>
 
@@ -151,25 +151,25 @@ export default function ProfilePage() {
                     className="space-y-4"
                 >
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
-                        <h2 className="font-bold mb-4">Personal Information</h2>
+                        <h2 className="font-bold mb-4">Personlig information</h2>
                         <div className="space-y-4">
-                            <InfoRow icon={<User className="w-5 h-5" />} label="Full Name" value={USER_DATA.name} />
-                            <InfoRow icon={<Mail className="w-5 h-5" />} label="Email" value={USER_DATA.email} verified />
-                            <InfoRow icon={<Phone className="w-5 h-5" />} label="Phone" value={USER_DATA.phone} />
-                            <InfoRow icon={<Globe className="w-5 h-5" />} label="Language" value={USER_DATA.language} />
-                            <InfoRow icon={<Clock className="w-5 h-5" />} label="Timezone" value={USER_DATA.timezone} />
+                            <InfoRow icon={<User className="w-5 h-5" />} label="Fullständigt namn" value={USER_DATA.name} />
+                            <InfoRow icon={<Mail className="w-5 h-5" />} label="E-post" value={USER_DATA.email} verified />
+                            <InfoRow icon={<Phone className="w-5 h-5" />} label="Telefon" value={USER_DATA.phone} />
+                            <InfoRow icon={<Globe className="w-5 h-5" />} label="Språk" value={USER_DATA.language} />
+                            <InfoRow icon={<Clock className="w-5 h-5" />} label="Tidszon" value={USER_DATA.timezone} />
                         </div>
                     </div>
 
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
-                        <h2 className="font-bold mb-4">Subscription</h2>
+                        <h2 className="font-bold mb-4">Prenumeration</h2>
                         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl border border-purple-200 dark:border-purple-800/30">
                             <div>
                                 <div className="font-bold text-purple-700 dark:text-purple-300">{USER_DATA.subscription.plan}</div>
-                                <div className="text-sm text-zinc-500">Renews {USER_DATA.subscription.renewDate}</div>
+                                <div className="text-sm text-zinc-500">Förnyas {USER_DATA.subscription.renewDate}</div>
                             </div>
                             <Link href="/pricing" className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-medium transition-all">
-                                Manage Plan
+                                Hantera plan
                             </Link>
                         </div>
                     </div>
@@ -184,20 +184,20 @@ export default function ProfilePage() {
                     className="space-y-4"
                 >
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
-                        <h2 className="font-bold mb-4">Academic Information</h2>
+                        <h2 className="font-bold mb-4">Akademisk information</h2>
                         <div className="space-y-4">
-                            <InfoRow icon={<Building2 className="w-5 h-5" />} label="University" value={USER_DATA.university} />
+                            <InfoRow icon={<Building2 className="w-5 h-5" />} label="Universitet" value={USER_DATA.university} />
                             <InfoRow icon={<GraduationCap className="w-5 h-5" />} label="Program" value={USER_DATA.program} />
-                            <InfoRow icon={<User className="w-5 h-5" />} label="Student ID" value={USER_DATA.studentId} />
-                            <InfoRow icon={<Calendar className="w-5 h-5" />} label="Study Year" value={USER_DATA.studyYear} />
-                            <InfoRow icon={<Calendar className="w-5 h-5" />} label="Member Since" value={USER_DATA.joinDate} />
+                            <InfoRow icon={<User className="w-5 h-5" />} label="Student-ID" value={USER_DATA.studentId} />
+                            <InfoRow icon={<Calendar className="w-5 h-5" />} label="Studieår" value={USER_DATA.studyYear} />
+                            <InfoRow icon={<Calendar className="w-5 h-5" />} label="Medlem sedan" value={USER_DATA.joinDate} />
                         </div>
                     </div>
 
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-bold">Enrolled Courses</h2>
-                            <Link href="/courses" className="text-sm text-blue-600 hover:underline">View All</Link>
+                            <h2 className="font-bold">Registrerade kurser</h2>
+                            <Link href="/courses" className="text-sm text-blue-600 hover:underline">Visa alla</Link>
                         </div>
                         <div className="space-y-3">
                             {['Calculus I (SF1625)', 'Linear Algebra (SF1624)', 'Mechanics (SG1113)', 'Calculus II (SF1626)'].map((course, i) => (
@@ -219,31 +219,31 @@ export default function ProfilePage() {
                     className="space-y-4"
                 >
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
-                        <h2 className="font-bold mb-4">Security Settings</h2>
+                        <h2 className="font-bold mb-4">Säkerhetsinställningar</h2>
                         <div className="space-y-4">
                             <SecurityRow
                                 icon={<Key className="w-5 h-5" />}
-                                title="Password"
-                                description="Last changed 3 months ago"
-                                action="Change"
+                                title="Lösenord"
+                                description="Senast ändrat för 3 månader sedan"
+                                action="Ändra"
                             />
                             <SecurityRow
                                 icon={<Shield className="w-5 h-5" />}
-                                title="Two-Factor Authentication"
-                                description="Not enabled"
-                                action="Enable"
+                                title="Tvåfaktorsautentisering"
+                                description="Ej aktiverad"
+                                action="Aktivera"
                             />
                             <SecurityRow
                                 icon={<Bell className="w-5 h-5" />}
-                                title="Login Notifications"
-                                description="Email alerts for new logins"
-                                action="Manage"
+                                title="Inloggningsnotiser"
+                                description="Mejlnotiser vid nya inloggningar"
+                                action="Hantera"
                             />
                         </div>
                     </div>
 
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
-                        <h2 className="font-bold mb-4">Connected Accounts</h2>
+                        <h2 className="font-bold mb-4">Kopplade konton</h2>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                                 <div className="flex items-center gap-3">
@@ -252,7 +252,7 @@ export default function ProfilePage() {
                                     </div>
                                     <span>Google</span>
                                 </div>
-                                <span className="text-sm text-green-600">Connected</span>
+                                <span className="text-sm text-green-600">Ansluten</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                                 <div className="flex items-center gap-3">
@@ -261,16 +261,16 @@ export default function ProfilePage() {
                                     </div>
                                     <span>GitHub</span>
                                 </div>
-                                <button className="text-sm text-blue-600 hover:underline">Connect</button>
+                                <button className="text-sm text-blue-600 hover:underline">Anslut</button>
                             </div>
                         </div>
                     </div>
 
                     <div className="p-6 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-2xl">
-                        <h3 className="font-bold text-red-600 mb-2">Danger Zone</h3>
-                        <p className="text-sm text-zinc-500 mb-4">Permanently delete your account and all associated data.</p>
+                        <h3 className="font-bold text-red-600 mb-2">Riskzon</h3>
+                        <p className="text-sm text-zinc-500 mb-4">Radera ditt konto och all tillhörande data permanent.</p>
                         <button className="px-4 py-2 bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/30 text-red-600 border border-red-200 dark:border-red-800 rounded-lg text-sm font-medium transition-all">
-                            Delete Account
+                            Radera konto
                         </button>
                     </div>
                 </motion.div>

@@ -76,9 +76,9 @@ export default function InsightCard({
                             <span className="text-xl">💡</span>
                         </motion.div>
                         <div>
-                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Learning Insight</h2>
+                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Lärandeinsikt</h2>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                AI-detected pattern
+                                AI-upptäckt mönster
                             </p>
                         </div>
                     </div>
@@ -87,7 +87,7 @@ export default function InsightCard({
                     <div className="flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 rounded-full border border-emerald-200/50 dark:border-emerald-700/30">
                         <span className="text-xs">✓</span>
                         <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                            {Math.round(currentInsight.confidence * 100)}% confident
+                            {Math.round(currentInsight.confidence * 100)}% säkerhet
                         </span>
                     </div>
                 </div>
@@ -119,7 +119,7 @@ export default function InsightCard({
                                         {currentInsight.description}
                                     </p>
                                     <div className="mt-3 text-xs text-zinc-400">
-                                        Based on {currentInsight.dataPoints} practice sessions
+                                        Baserat på {currentInsight.dataPoints} övningssessioner
                                     </div>
                                 </div>
                             </div>
@@ -143,8 +143,8 @@ export default function InsightCard({
                                     key={idx}
                                     onClick={() => setCurrentIndex(idx)}
                                     className={`w-2 h-2 rounded-full transition-all ${idx === currentIndex
-                                            ? 'w-6 bg-indigo-500'
-                                            : 'bg-zinc-300 dark:bg-zinc-600 hover:bg-zinc-400'
+                                        ? 'w-6 bg-indigo-500'
+                                        : 'bg-zinc-300 dark:bg-zinc-600 hover:bg-zinc-400'
                                         }`}
                                     aria-label={`Go to insight ${idx + 1}`}
                                 />
@@ -180,13 +180,13 @@ function EmptyInsightState() {
                     <span className="text-xl">💡</span>
                 </div>
                 <div>
-                    <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Learning Insights</h2>
-                    <p className="text-xs text-zinc-500">Patterns detected from your study sessions</p>
+                    <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Lärandeinsikter</h2>
+                    <p className="text-xs text-zinc-500">Mönster upptäckta från dina studiesessioner</p>
                 </div>
             </div>
             <div className="p-5 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-600 text-center">
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    Keep studying! We'll detect patterns in your learning behavior soon.
+                    Fortsätt studera! Vi kommer snart att upptäcka mönster i ditt lärandebeteende.
                 </p>
             </div>
         </motion.div>
@@ -206,8 +206,8 @@ export function generateSampleInsights(sessionCount: number): LearningInsight[] 
     insights.push({
         id: 'time-insight',
         type: 'time_of_day',
-        title: 'Peak Performance Hours',
-        description: "You solve problems 40% faster during evening hours (6-9 PM). Consider scheduling your hardest topics for this time.",
+        title: 'Topprestationstimmar',
+        description: "Du löser problem 40% snabbare under kvällstimmarna (18-21). Överväg att schemalägga dina svåraste ämnen till denna tid.",
         icon: '🌙',
         confidence: 0.85,
         dataPoints: sessionCount,
@@ -217,8 +217,8 @@ export function generateSampleInsights(sessionCount: number): LearningInsight[] 
     insights.push({
         id: 'error-insight',
         type: 'error_pattern',
-        title: 'Common Mistake Pattern',
-        description: "60% of your errors involve sign changes in equations. Pay extra attention when working with negative numbers.",
+        title: 'Vanligt felmönster',
+        description: "60% av dina fel involverar teckenändringar i ekvationer. Var extra försiktig när du arbetar med negativa tal.",
         icon: '⚠️',
         confidence: 0.78,
         dataPoints: Math.floor(sessionCount * 0.8),
@@ -228,8 +228,8 @@ export function generateSampleInsights(sessionCount: number): LearningInsight[] 
     insights.push({
         id: 'streak-insight',
         type: 'streak_impact',
-        title: 'Streak Power',
-        description: "Your accuracy is 15% higher on 5+ day streaks! Consistency really pays off for you.",
+        title: 'Svitkraft',
+        description: "Din noggrannhet är 15% högre vid 5+ dagars sviter! Konsekvens lönar sig verkligen för dig.",
         icon: '🔥',
         confidence: 0.92,
         dataPoints: sessionCount,
@@ -239,8 +239,8 @@ export function generateSampleInsights(sessionCount: number): LearningInsight[] 
     insights.push({
         id: 'difficulty-insight',
         type: 'difficulty_preference',
-        title: 'Challenge Seeker',
-        description: "You excel at hard problems but sometimes rush through easy ones. Slow down on basics to avoid careless errors.",
+        title: 'Utmaningssökare',
+        description: "Du briljerar på svåra problem men rusar ibland igenom lätta. Sakta ner på grunderna för att undvika slarvfel.",
         icon: '💪',
         confidence: 0.72,
         dataPoints: Math.floor(sessionCount * 0.6),

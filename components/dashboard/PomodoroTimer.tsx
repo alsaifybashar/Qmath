@@ -7,9 +7,9 @@ import { Play, Pause, RotateCcw, Coffee, Brain, Zap } from 'lucide-react';
 type TimerMode = 'focus' | 'shortBreak' | 'longBreak';
 
 const MODES: Record<TimerMode, { label: string; minutes: number; color: string; icon: React.ElementType }> = {
-    focus: { label: 'Focus', minutes: 25, color: '#ef4444', icon: Brain },
-    shortBreak: { label: 'Short Break', minutes: 5, color: '#22c55e', icon: Coffee },
-    longBreak: { label: 'Long Break', minutes: 15, color: '#3b82f6', icon: Zap },
+    focus: { label: 'Fokus', minutes: 25, color: '#ef4444', icon: Brain },
+    shortBreak: { label: 'Kort paus', minutes: 5, color: '#22c55e', icon: Coffee },
+    longBreak: { label: 'Lång paus', minutes: 15, color: '#3b82f6', icon: Zap },
 };
 
 export default function PomodoroTimer() {
@@ -89,7 +89,7 @@ export default function PomodoroTimer() {
             <div className="w-full flex justify-between items-center mb-6 z-10">
                 <h3 className="font-bold flex items-center gap-2">
                     <span className="text-xl">⏱️</span>
-                    Focus Timer
+                    Fokustimer
                 </h3>
                 <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 gap-1">
                     {(Object.keys(MODES) as TimerMode[]).map((m) => (
@@ -97,8 +97,8 @@ export default function PomodoroTimer() {
                             key={m}
                             onClick={() => setMode(m)}
                             className={`p-2 rounded-md transition-all ${mode === m
-                                    ? 'bg-white dark:bg-zinc-700 shadow-sm'
-                                    : 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500'
+                                ? 'bg-white dark:bg-zinc-700 shadow-sm'
+                                : 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500'
                                 }`}
                             title={MODES[m].label}
                         >
@@ -142,7 +142,7 @@ export default function PomodoroTimer() {
                     </div>
                     <div className="text-sm font-medium text-zinc-500 mt-2 flex items-center gap-1">
                         <CurrentIcon size={14} />
-                        {isActive ? 'Running' : 'Paused'}
+                        {isActive ? 'Körs' : 'Pausad'}
                     </div>
                 </div>
             </div>
@@ -155,7 +155,7 @@ export default function PomodoroTimer() {
                     style={{ backgroundColor: MODES[mode].color, boxShadow: `0 8px 20px -6px ${MODES[mode].color}55` }}
                 >
                     {isActive ? <Pause size={20} /> : <Play size={20} />}
-                    {isActive ? 'Pause' : 'Start'}
+                    {isActive ? 'Pausa' : 'Starta'}
                 </button>
                 <button
                     onClick={resetTimer}
@@ -167,7 +167,7 @@ export default function PomodoroTimer() {
 
             {/* Session Stats */}
             <div className="mt-6 flex items-center gap-2 text-xs text-zinc-400">
-                <span>Completed today:</span>
+                <span>Avklarade idag:</span>
                 <div className="flex gap-1">
                     {[...Array(Math.min(4, sessionCount))].map((_, i) => (
                         <motion.div

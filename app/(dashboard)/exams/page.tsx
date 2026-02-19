@@ -11,17 +11,17 @@ import {
 const upcomingExams = [
     {
         id: 'calc1-final',
-        name: 'Calculus I Final',
+        name: 'Envariabelanalys 1 Tenta',
         course: 'SF1625',
-        date: 'Jan 15, 2026',
+        date: '15 jan, 2026',
         daysLeft: 8,
         readiness: 72
     },
     {
         id: 'linalg-mid',
-        name: 'Linear Algebra Midterm',
+        name: 'Linjär algebra Dugga',
         course: 'SF1624',
-        date: 'Jan 22, 2026',
+        date: '22 jan, 2026',
         daysLeft: 15,
         readiness: 58
     }
@@ -30,27 +30,27 @@ const upcomingExams = [
 const pastExams = [
     {
         id: 'physics-mid',
-        name: 'Mechanics Midterm',
+        name: 'Mekanik Dugga',
         course: 'SG1113',
-        date: 'Dec 10, 2025',
+        date: '10 dec, 2025',
         score: 78,
         maxScore: 100
     },
     {
         id: 'calc1-mid',
-        name: 'Calculus I Midterm',
+        name: 'Envariabelanalys 1 Dugga',
         course: 'SF1625',
-        date: 'Nov 15, 2025',
+        date: '15 nov, 2025',
         score: 85,
         maxScore: 100
     }
 ];
 
 const availableExams = [
-    { id: 'calc1', name: 'Calculus I', questions: 45, duration: '3 hours' },
-    { id: 'linalg', name: 'Linear Algebra', questions: 40, duration: '2.5 hours' },
-    { id: 'physics1', name: 'Mechanics', questions: 35, duration: '3 hours' },
-    { id: 'diffeq', name: 'Differential Equations', questions: 38, duration: '3 hours' }
+    { id: 'calc1', name: 'Envariabelanalys 1', questions: 45, duration: '3 timmar' },
+    { id: 'linalg', name: 'Linjär algebra', questions: 40, duration: '2.5 timmar' },
+    { id: 'physics1', name: 'Mekanik', questions: 35, duration: '3 timmar' },
+    { id: 'diffeq', name: 'Differentialekvationer', questions: 38, duration: '3 timmar' }
 ];
 
 export default function ExamsPage() {
@@ -63,8 +63,8 @@ export default function ExamsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-8"
             >
-                <h1 className="text-4xl font-bold mb-2">Exam Preparation</h1>
-                <p className="text-zinc-500 dark:text-zinc-400">Practice with realistic exam simulations</p>
+                <h1 className="text-4xl font-bold mb-2">Tentamensförberedelse</h1>
+                <p className="text-zinc-500 dark:text-zinc-400">Öva med realistiska tentamenssimuleringar</p>
             </motion.div>
 
             {/* Upcoming Exams */}
@@ -77,7 +77,7 @@ export default function ExamsPage() {
                 >
                     <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-orange-400" />
-                        Upcoming Exams
+                        Kommande tentor
                     </h2>
                     <div className="grid md:grid-cols-2 gap-4">
                         {upcomingExams.map((exam) => (
@@ -98,13 +98,13 @@ export default function ExamsPage() {
                                         ? 'bg-red-500/10 text-red-400'
                                         : 'bg-orange-500/10 text-orange-400'
                                         }`}>
-                                        {exam.daysLeft} days left
+                                        {exam.daysLeft} dagar kvar
                                     </div>
                                 </div>
 
                                 <div className="mb-4">
                                     <div className="flex items-center justify-between text-sm mb-2">
-                                        <span className="text-zinc-500">Exam Readiness</span>
+                                        <span className="text-zinc-500">Tentamensredo</span>
                                         <span className={`font-medium ${exam.readiness >= 70 ? 'text-green-400' : exam.readiness >= 50 ? 'text-yellow-400' : 'text-red-400'
                                             }`}>{exam.readiness}%</span>
                                     </div>
@@ -119,7 +119,7 @@ export default function ExamsPage() {
 
                                 <div className="flex items-center text-sm text-orange-400 font-medium">
                                     <Play className="w-4 h-4 mr-2" />
-                                    Start Preparation
+                                    Starta förberedelse
                                 </div>
                             </Link>
                         ))}
@@ -136,7 +136,7 @@ export default function ExamsPage() {
             >
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                     <FileText className="w-5 h-5 text-blue-400" />
-                    Exam Simulations
+                    Tentamenssimuleringar
                 </h2>
                 <div className="grid md:grid-cols-2 gap-4">
                     {availableExams.map((exam) => (
@@ -154,7 +154,7 @@ export default function ExamsPage() {
                                         {exam.name}
                                     </h3>
                                     <div className="text-sm text-zinc-500">
-                                        {exam.questions} questions • {exam.duration}
+                                        {exam.questions} frågor • {exam.duration}
                                     </div>
                                 </div>
                             </div>
@@ -173,10 +173,10 @@ export default function ExamsPage() {
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-green-400" />
-                        Past Results
+                        Tidigare resultat
                     </h2>
                     <Link href="/exams/history" className="text-sm text-blue-400 hover:underline">
-                        View all history
+                        Se all historik
                     </Link>
                 </div>
                 <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden">
@@ -224,10 +224,10 @@ export default function ExamsPage() {
                 <div className="flex items-start gap-4">
                     <AlertTriangle className="w-6 h-6 text-orange-400 flex-shrink-0 mt-1" />
                     <div>
-                        <h3 className="font-bold mb-2">Exam Tips</h3>
+                        <h3 className="font-bold mb-2">Tentamenstips</h3>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                            For best results, simulate exam conditions: no distractions, timed sessions, and no external resources.
-                            Review your mistakes after each simulation to identify weak areas.
+                            För bästa resultat, simulera tentamensvillkor: inga distraktioner, tidsbestämda sessioner och inga externa hjälpmedel.
+                            Gå igenom dina misstag efter varje simulering för att identifiera svaga områden.
                         </p>
                     </div>
                 </div>

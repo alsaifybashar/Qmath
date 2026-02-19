@@ -222,20 +222,20 @@ export default function KnowledgeMap({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <span className="text-2xl">📊</span>
-                        <h2 className="text-lg font-bold">Knowledge Map</h2>
+                        <h2 className="text-lg font-bold">Kunskapskarta</h2>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-1.5">
                             <div className="w-3 h-3 rounded-full bg-purple-500" />
-                            <span className="text-zinc-500">{summaryStats.mastered} Mastered</span>
+                            <span className="text-zinc-500">{summaryStats.mastered} Bemästrade</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-3 h-3 rounded-full bg-green-500" />
-                            <span className="text-zinc-500">{summaryStats.inProgress} In Progress</span>
+                            <span className="text-zinc-500">{summaryStats.inProgress} Pågående</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-3 h-3 rounded-full bg-zinc-400" />
-                            <span className="text-zinc-500">{summaryStats.locked} Locked</span>
+                            <span className="text-zinc-500">{summaryStats.locked} Låsta</span>
                         </div>
                     </div>
                 </div>
@@ -272,10 +272,10 @@ export default function KnowledgeMap({
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
                             <div className="text-6xl mb-4">🗺️</div>
-                            <h3 className="text-lg font-bold mb-2">Your Knowledge Map</h3>
+                            <h3 className="text-lg font-bold mb-2">Din kunskapskarta</h3>
                             <p className="text-sm text-zinc-500 max-w-sm">
-                                Start practicing topics to build your knowledge map.
-                                Each hexagon represents a topic and shows your mastery level.
+                                Börja öva på ämnen för att bygga din kunskapskarta.
+                                Varje hexagon representerar ett ämne och visar din bemästringsnivå.
                             </p>
                         </div>
                     </div>
@@ -539,7 +539,7 @@ function HexagonNode({
                     opacity={0.7}
                     style={{ pointerEvents: 'none' }}
                 >
-                    Lv.{node.masteryLevel}
+                    Nivå {node.masteryLevel}
                 </text>
             )}
         </g>
@@ -575,7 +575,7 @@ function HexTooltip({ node }: HexTooltipProps) {
                 <div className="flex-1">
                     <h4 className="font-bold text-sm">{node.title}</h4>
                     <p className="text-xs text-zinc-500">
-                        {node.isLocked ? 'Complete prerequisites to unlock' : MASTERY_COLORS[node.masteryLevel].label}
+                        {node.isLocked ? 'Slutför förkunskaper för att låsa upp' : MASTERY_COLORS[node.masteryLevel].label}
                     </p>
                 </div>
             </div>
@@ -583,11 +583,11 @@ function HexTooltip({ node }: HexTooltipProps) {
             {!node.isLocked && (
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                     <div>
-                        <span className="text-zinc-500">Accuracy</span>
+                        <span className="text-zinc-500">Träffsäkerhet</span>
                         <div className="font-bold">{node.stats.accuracy.toFixed(0)}%</div>
                     </div>
                     <div>
-                        <span className="text-zinc-500">Attempts</span>
+                        <span className="text-zinc-500">Försök</span>
                         <div className="font-bold">{node.stats.totalAttempts}</div>
                     </div>
                 </div>
@@ -595,7 +595,7 @@ function HexTooltip({ node }: HexTooltipProps) {
 
             {node.prerequisites.length > 0 && node.isLocked && (
                 <div className="mt-3 text-xs text-zinc-500">
-                    <span className="font-medium">Prerequisites:</span>
+                    <span className="font-medium">Förkunskaper:</span>
                     <div className="mt-1 flex flex-wrap gap-1">
                         {node.prerequisites.map(prereq => (
                             <span key={prereq} className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-700 rounded">
@@ -648,7 +648,7 @@ function DetailPanel({ node, allNodes, onClose, onPractice }: DetailPanelProps) 
                         <div>
                             <h3 className="font-bold" style={{ color: colors.text }}>{node.title}</h3>
                             <p className="text-sm opacity-70" style={{ color: colors.text }}>
-                                {node.isLocked ? 'Locked' : MASTERY_COLORS[node.masteryLevel].label}
+                                {node.isLocked ? 'Låst' : MASTERY_COLORS[node.masteryLevel].label}
                             </p>
                         </div>
                     </div>
@@ -667,14 +667,14 @@ function DetailPanel({ node, allNodes, onClose, onPractice }: DetailPanelProps) 
                 {/* Stats grid */}
                 {!node.isLocked && (
                     <div className="grid grid-cols-2 gap-3">
-                        <StatBox label="Mastery" value={`Level ${node.masteryLevel}`} icon="📊" />
-                        <StatBox label="Accuracy" value={`${node.stats.accuracy.toFixed(0)}%`} icon="🎯" />
-                        <StatBox label="Attempts" value={node.stats.totalAttempts.toString()} icon="📝" />
+                        <StatBox label="Bemästring" value={`Nivå ${node.masteryLevel}`} icon="📊" />
+                        <StatBox label="Träffsäkerhet" value={`${node.stats.accuracy.toFixed(0)}%`} icon="🎯" />
+                        <StatBox label="Försök" value={node.stats.totalAttempts.toString()} icon="📝" />
                         <StatBox
-                            label="Last Practiced"
+                            label="Senast övat"
                             value={node.stats.lastPracticed
                                 ? formatRelativeTime(node.stats.lastPracticed)
-                                : 'Never'}
+                                : 'Aldrig'}
                             icon="⏰"
                         />
                     </div>
@@ -684,7 +684,7 @@ function DetailPanel({ node, allNodes, onClose, onPractice }: DetailPanelProps) 
                 {!node.isLocked && node.masteryLevel < 5 && (
                     <div>
                         <div className="flex items-center justify-between text-sm mb-2">
-                            <span className="font-medium">Mastery Progress</span>
+                            <span className="font-medium">Bemästringsframsteg</span>
                             <span className="text-zinc-500">{node.masteryLevel}/5</span>
                         </div>
                         <div className="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
@@ -701,7 +701,7 @@ function DetailPanel({ node, allNodes, onClose, onPractice }: DetailPanelProps) 
                 {/* Prerequisites */}
                 {prerequisiteNodes.length > 0 && (
                     <div>
-                        <h4 className="font-medium text-sm mb-2">Prerequisites</h4>
+                        <h4 className="font-medium text-sm mb-2">Förkunskaper</h4>
                         <div className="space-y-2">
                             {prerequisiteNodes.map(prereq => (
                                 <div
@@ -730,7 +730,7 @@ function DetailPanel({ node, allNodes, onClose, onPractice }: DetailPanelProps) 
                 {/* Unlocks */}
                 {dependentNodes.length > 0 && (
                     <div>
-                        <h4 className="font-medium text-sm mb-2">Unlocks</h4>
+                        <h4 className="font-medium text-sm mb-2">Låser upp</h4>
                         <div className="flex flex-wrap gap-1">
                             {dependentNodes.map(dep => (
                                 <span
@@ -748,9 +748,9 @@ function DetailPanel({ node, allNodes, onClose, onPractice }: DetailPanelProps) 
                 {node.isLocked && (
                     <div className="text-center py-4">
                         <div className="text-4xl mb-2">🔒</div>
-                        <h4 className="font-bold mb-1">Topic Locked</h4>
+                        <h4 className="font-bold mb-1">Ämne låst</h4>
                         <p className="text-sm text-zinc-500">
-                            Complete the prerequisites above to unlock this topic.
+                            Slutför förkunskaperna ovan för att låsa upp detta ämne.
                         </p>
                     </div>
                 )}
@@ -764,7 +764,7 @@ function DetailPanel({ node, allNodes, onClose, onPractice }: DetailPanelProps) 
                         className="w-full py-3 rounded-xl font-bold text-white transition-colors"
                         style={{ backgroundColor: colors.stroke }}
                     >
-                        {node.masteryLevel === 0 ? 'Start Learning' : 'Practice Now'}
+                        {node.masteryLevel === 0 ? 'Börja lär' : 'Öva nu'}
                     </button>
                 </div>
             )}
@@ -793,9 +793,9 @@ function formatRelativeTime(date: Date): string {
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return `${Math.floor(diffDays / 30)} months ago`;
+    if (diffDays === 0) return 'Idag';
+    if (diffDays === 1) return 'Igår';
+    if (diffDays < 7) return `${diffDays} dagar sedan`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} veckor sedan`;
+    return `${Math.floor(diffDays / 30)} månader sedan`;
 }

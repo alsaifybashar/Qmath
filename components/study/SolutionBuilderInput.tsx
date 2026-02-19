@@ -75,7 +75,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
         const isCorrect = operationMatches && valueMatches;
 
         if (isCorrect) {
-            setStepFeedback({ isCorrect: true, message: 'Correct step!' });
+            setStepFeedback({ isCorrect: true, message: 'Rätt steg!' });
             setCompletedSteps(prev => [...prev, {
                 operation: selectedOp?.label || selectedOperation,
                 result: expectedStep.resultEquation,
@@ -101,8 +101,8 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
             setStepFeedback({
                 isCorrect: false,
                 message: !operationMatches
-                    ? 'That\'s not the right operation for this step. Try again!'
-                    : 'The value isn\'t quite right. Check your calculation.'
+                    ? 'Det är inte rätt operation för detta steg. Försök igen!'
+                    : 'Värdet är inte riktigt rätt. Kontrollera din beräkning.'
             });
             setCompletedSteps(prev => [...prev, {
                 operation: selectedOp?.label || selectedOperation,
@@ -132,10 +132,10 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
             >
                 <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
                 <h3 className="text-2xl font-bold text-green-700 dark:text-green-300 mb-2">
-                    Solution Complete!
+                    Lösning slutförd!
                 </h3>
                 <p className="text-green-600 dark:text-green-400 mb-4">
-                    You successfully solved the equation step by step.
+                    Du löste ekvationen steg för steg.
                 </p>
                 <div className="p-4 bg-white dark:bg-zinc-900 rounded-xl mb-4">
                     <MathRenderer text={currentEquation} block />
@@ -161,7 +161,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
             {/* Progress */}
             <div className="flex items-center gap-2 mb-6">
                 <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                    Step {currentStepIndex + 1} of {steps.length}
+                    Steg {currentStepIndex + 1} av {steps.length}
                 </span>
                 <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                     <motion.div
@@ -175,7 +175,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
             {/* Current Equation State */}
             <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-500/10 dark:to-purple-500/10 rounded-2xl border border-violet-200 dark:border-violet-500/30 mb-6">
                 <div className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2">
-                    Current State
+                    Nuvarande tillstånd
                 </div>
                 <div className="text-2xl text-center">
                     <MathRenderer text={currentEquation} block />
@@ -186,7 +186,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
             {completedSteps.length > 0 && (
                 <div className="mb-6 space-y-2">
                     <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
-                        Your Steps
+                        Dina steg
                     </div>
                     {completedSteps.map((step, idx) => (
                         <div
@@ -218,7 +218,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
             {/* Operation Selection */}
             <div className="mb-4">
                 <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">
-                    Choose Your Next Operation
+                    Välj nästa operation
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                     {operations.map((op) => (
@@ -254,7 +254,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
                             type="text"
                             value={operationValue}
                             onChange={(e) => setOperationValue(e.target.value)}
-                            placeholder={operations.find(op => op.id === selectedOperation)?.valuePlaceholder || 'Enter value...'}
+                            placeholder={operations.find(op => op.id === selectedOperation)?.valuePlaceholder || 'Ange värde...'}
                             className="w-full px-4 py-3 text-lg font-mono rounded-xl border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
                         />
                     </motion.div>
@@ -294,7 +294,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
                             className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1"
                         >
                             <Lightbulb className="w-4 h-4" />
-                            Need a hint?
+                            Behöver du en ledtråd?
                         </button>
                     ) : (
                         <motion.div
@@ -315,14 +315,14 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
                     className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 flex items-center gap-2 transition-colors"
                 >
                     <RotateCcw className="w-4 h-4" />
-                    Reset
+                    Återställ
                 </button>
                 <button
                     onClick={handleSubmitStep}
                     disabled={!selectedOperation}
                     className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 text-white font-semibold rounded-xl transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                    Apply Step
+                    Tillämpa steg
                     <ArrowRight className="w-5 h-5" />
                 </button>
             </div>

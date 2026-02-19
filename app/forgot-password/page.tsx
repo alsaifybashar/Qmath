@@ -40,25 +40,25 @@ export default function ForgotPasswordPage() {
                     <div className="inline-flex p-4 bg-green-100 dark:bg-green-500/10 rounded-full mb-6">
                         <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
                     </div>
-                    <h1 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-white">Check your email</h1>
+                    <h1 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-white">Kolla din e-post</h1>
                     <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-                        We've sent password reset instructions to <strong>{email}</strong>
+                        Vi har skickat instruktioner för återställning av lösenord till <strong>{email}</strong>
                     </p>
                     <p className="text-sm text-zinc-500 mb-8">
-                        Didn't receive the email? Check your spam folder or try again.
+                        Fick du inte mailet? Kolla din skräppost eller försök igen.
                     </p>
                     <div className="space-y-3">
                         <button
                             onClick={() => setSubmitted(false)}
                             className="w-full py-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl font-medium transition-all text-zinc-900 dark:text-white"
                         >
-                            Try again
+                            Försök igen
                         </button>
                         <Link
                             href="/login"
                             className="block w-full py-3 text-blue-600 hover:underline font-medium"
                         >
-                            Back to login
+                            Tillbaka till inloggning
                         </Link>
                     </div>
                 </motion.div>
@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
                     className="inline-flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white mb-8 transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to login
+                    Tillbaka till inloggning
                 </Link>
 
                 <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-8">
@@ -87,9 +87,9 @@ export default function ForgotPasswordPage() {
                         <div className="inline-flex p-4 bg-blue-100 dark:bg-blue-500/10 rounded-full mb-4">
                             <Mail className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Forgot password?</h1>
+                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Glömt lösenord?</h1>
                         <p className="text-zinc-600 dark:text-zinc-400">
-                            No worries, we'll send you reset instructions.
+                            Inga problem, vi skickar instruktioner för återställning.
                         </p>
                     </div>
 
@@ -103,12 +103,12 @@ export default function ForgotPasswordPage() {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                                Email address
+                                E-postadress
                             </label>
                             <input
                                 type="email"
                                 required
-                                placeholder="name@university.edu"
+                                placeholder="namn@universitet.se"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
@@ -123,19 +123,19 @@ export default function ForgotPasswordPage() {
                             {isPending ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Sending...
+                                    Skickar...
                                 </>
                             ) : (
-                                'Reset password'
+                                'Återställ lösenord'
                             )}
                         </button>
                     </form>
                 </div>
 
                 <p className="text-center text-zinc-500 text-sm mt-6">
-                    Remember your password?{' '}
+                    Kommer du ihåg ditt lösenord?{' '}
                     <Link href="/login" className="text-blue-600 hover:underline font-medium">
-                        Log in
+                        Logga in
                     </Link>
                 </p>
             </motion.div>

@@ -25,7 +25,7 @@ export default function StudyStats({ attempts, totalMinutes }: StudyStatsProps) 
 
     // Process data for Weekly Activity (Last 7 days)
     const weeklyData = useMemo(() => {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const days = ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'];
         const data = Array(7).fill(0).map((_, i) => ({ day: days[i], count: 0, fullDate: '' }));
 
         // Populate with mock data relative to today if attempts is empty
@@ -83,7 +83,7 @@ export default function StudyStats({ attempts, totalMinutes }: StudyStatsProps) 
     const optimalTime = useMemo(() => {
         const sorted = [...hourlyData].sort((a, b) => b.count - a.count);
         const bestHour = sorted[0].hour;
-        const period = bestHour < 12 ? 'Morning' : bestHour < 17 ? 'Afternoon' : 'Evening';
+        const period = bestHour < 12 ? 'morgonen' : bestHour < 17 ? 'eftermiddagen' : 'kvällen';
         return { hour: bestHour, period, count: sorted[0].count };
     }, [hourlyData]);
 
@@ -93,30 +93,30 @@ export default function StudyStats({ attempts, totalMinutes }: StudyStatsProps) 
                 <div>
                     <h3 className="font-bold text-lg flex items-center gap-2">
                         <span className="text-xl">📈</span>
-                        Study Rhythm
+                        Studie-rytm
                     </h3>
                     <p className="text-xs text-zinc-500">
-                        {activeTab === 'weekly' ? 'Activity over last 7 days' : 'Your peak productivity hours'}
+                        {activeTab === 'weekly' ? 'Aktivitet senaste 7 dagarna' : 'Dina mest produktiva timmar'}
                     </p>
                 </div>
                 <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
                     <button
                         onClick={() => setActiveTab('weekly')}
                         className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'weekly'
-                                ? 'bg-white dark:bg-zinc-700 shadow-sm'
-                                : 'text-zinc-500 hover:text-zinc-700'
+                            ? 'bg-white dark:bg-zinc-700 shadow-sm'
+                            : 'text-zinc-500 hover:text-zinc-700'
                             }`}
                     >
-                        Weekly
+                        Veckovis
                     </button>
                     <button
                         onClick={() => setActiveTab('hourly')}
                         className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'hourly'
-                                ? 'bg-white dark:bg-zinc-700 shadow-sm'
-                                : 'text-zinc-500 hover:text-zinc-700'
+                            ? 'bg-white dark:bg-zinc-700 shadow-sm'
+                            : 'text-zinc-500 hover:text-zinc-700'
                             }`}
                     >
-                        Hourly
+                        Timvis
                     </button>
                 </div>
             </div>
@@ -141,10 +141,11 @@ export default function StudyStats({ attempts, totalMinutes }: StudyStatsProps) 
                             <Tooltip
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 cursor={{ fill: '#f4f4f5', opacity: 0.5 }}
+                                formatter={(value: number | undefined) => [`${value} Övningar`, 'Antal']}
                             />
                             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                                 {weeklyData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.day === 'Sun' || entry.day === 'Sat' ? '#8b5cf6' : '#3b82f6'} />
+                                    <Cell key={`cell-${index}`} fill={entry.day === 'Sön' || entry.day === 'Lör' ? '#8b5cf6' : '#3b82f6'} />
                                 ))}
                             </Bar>
                         </BarChart>
@@ -173,6 +174,7 @@ export default function StudyStats({ attempts, totalMinutes }: StudyStatsProps) 
                             />
                             <Tooltip
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                formatter={(value: number | undefined) => [`${value} Övningar`, 'Antal']}
                             />
                             <Area
                                 type="monotone"
@@ -193,11 +195,11 @@ export default function StudyStats({ attempts, totalMinutes }: StudyStatsProps) 
                     💡
                 </div>
                 <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">AI Insight</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">AI-insikt</h4>
                     <p className="text-sm font-medium">
                         {activeTab === 'weekly'
-                            ? "You're consistent on weekdays! Try a light review on weekends to maintain momentum."
-                            : `Your peak productivity is in the ${optimalTime.period} around ${optimalTime.hour}:00. Schedule hard topics then!`}
+                            ? "Du är konsekvent på vardagar! Prova en lätt repetition på helgen för att behålla momentum."
+                            : `Din högsta produktivitet är på ${optimalTime.period} runt ${optimalTime.hour}:00. Schemalägg svåra ämnen då!`}
                     </p>
                 </div>
             </div>

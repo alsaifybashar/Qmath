@@ -8,8 +8,8 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Qmath | Adaptive Learning Platform',
-  description: 'Master university mathematics with AI-driven adaptivity.',
+  title: 'Qmath | Adaptiv lärplattform för universitetsmatte',
+  description: 'Bemästra universitetsmatte med AI-driven adaptivitet och personlig studieväg.',
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="sv" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
           <ThemeProvider

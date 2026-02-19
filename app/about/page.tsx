@@ -11,26 +11,26 @@ import {
 const team = [
     {
         name: 'Alexander Bergström',
-        role: 'CEO & Co-founder',
-        bio: 'Former ML Engineer at DeepMind. PhD in Cognitive Science from KTH.',
+        role: 'VD & Medgrundare',
+        bio: 'Tidigare ML-ingenjör på DeepMind. Doktor i kognitionsvetenskap från KTH.',
         avatar: '👨‍💻'
     },
     {
         name: 'Sofia Lindqvist',
-        role: 'CTO & Co-founder',
-        bio: 'Ex-Spotify Staff Engineer. 10+ years in distributed systems.',
+        role: 'CTO & Medgrundare',
+        bio: 'Tidigare Staff Engineer på Spotify. 10+ år inom distribuerade system.',
         avatar: '👩‍💻'
     },
     {
         name: 'Johan Andersson',
-        role: 'Head of Education',
-        bio: 'Former Mathematics Professor at Chalmers. EdTech veteran.',
+        role: 'Utbildningschef',
+        bio: 'Tidigare matematikprofessor på Chalmers. EdTech-veteran.',
         avatar: '👨‍🏫'
     },
     {
         name: 'Emma Nilsson',
-        role: 'Head of Product',
-        bio: 'Previously led product at Duolingo. UX/Learning expert.',
+        role: 'Produktchef',
+        bio: 'Tidigare produktledare på Duolingo. Expert på UX/lärande.',
         avatar: '👩‍🎨'
     }
 ];
@@ -38,32 +38,32 @@ const team = [
 const values = [
     {
         icon: Target,
-        title: 'Student-First',
-        description: 'Every decision is guided by what\'s best for learners.'
+        title: 'Studenten först',
+        description: 'Varje beslut styrs av vad som är bäst för de studerande.'
     },
     {
         icon: Lightbulb,
-        title: 'Evidence-Based',
-        description: 'We build on proven cognitive science and learning research.'
+        title: 'Evidensbaserad',
+        description: 'Vi bygger på beprövad kognitionsvetenskap och lärandeforskning.'
     },
     {
         icon: Heart,
-        title: 'Accessibility',
-        description: 'Quality education should be available to everyone.'
+        title: 'Tillgänglighet',
+        description: 'Kvalitetsutbildning ska vara tillgänglig för alla.'
     },
     {
         icon: Rocket,
         title: 'Innovation',
-        description: 'We push boundaries in educational technology.'
+        description: 'Vi flyttar gränserna inom utbildningsteknologi.'
     }
 ];
 
 const timeline = [
-    { year: '2022', event: 'Qmath founded in Stockholm' },
-    { year: '2023', event: 'First university partnership with KTH' },
-    { year: '2024', event: 'Adaptive engine v2 launched' },
-    { year: '2025', event: '10,000+ students milestone' },
-    { year: '2026', event: 'AI Tutor public beta' }
+    { year: '2022', event: 'Qmath grundas i Stockholm' },
+    { year: '2023', event: 'Första universitetspartnerskapet med KTH' },
+    { year: '2024', event: 'Adaptiv motor v2 lanserad' },
+    { year: '2025', event: 'Milstolpe: 10 000+ studenter' },
+    { year: '2026', event: 'AI-handledare offentlig beta' }
 ];
 
 export default function AboutPage() {
@@ -81,9 +81,9 @@ export default function AboutPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-5xl md:text-7xl font-bold tracking-tight mb-6"
                     >
-                        Building the future of{' '}
+                        Bygger framtiden för{' '}
                         <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            math education
+                            matematikutbildning
                         </span>
                     </motion.h1>
 
@@ -93,7 +93,7 @@ export default function AboutPage() {
                         transition={{ delay: 0.1 }}
                         className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto"
                     >
-                        We believe every engineering student deserves access to personalized, intelligent tutoring. That's why we built Qmath.
+                        Vi anser att varje civilingenjörsstudent förtjänar tillgång till personlig, intelligent handledning. Det är därför vi byggde Qmath.
                     </motion.p>
                 </div>
             </section>
@@ -107,12 +107,12 @@ export default function AboutPage() {
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
                         >
-                            <h2 className="text-4xl font-bold mb-6">Our Mission</h2>
+                            <h2 className="text-4xl font-bold mb-6">Vårt uppdrag</h2>
                             <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-6">
-                                Engineering mathematics is hard. Traditional textbooks and one-size-fits-all courses leave too many talented students behind. We saw brilliant peers struggling not because they lacked ability, but because they didn't have the right support.
+                                Ingenjörsmatematik är svårt. Traditionella läroböcker och standardkurser lämnar för många begåvade studenter bakom sig. Vi såg briljanta kamrater kämpa inte för att de saknade förmåga, utan för att de inte hade rätt stöd.
                             </p>
                             <p className="text-lg text-zinc-600 dark:text-zinc-400">
-                                Qmath combines cutting-edge AI with proven learning science to create a personal tutor that adapts to each student's unique needs, available 24/7.
+                                Qmath kombinerar banbrytande AI med beprövad lärandevetenskap för att skapa en personlig handledare som anpassar sig till varje students unika behov, tillgänglig dygnet runt.
                             </p>
                         </motion.div>
 
@@ -141,9 +141,9 @@ export default function AboutPage() {
             <section className="py-24 px-4">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold mb-4">Meet the Team</h2>
+                        <h2 className="text-4xl font-bold mb-4">Möt teamet</h2>
                         <p className="text-xl text-zinc-600 dark:text-zinc-400">
-                            Engineers, educators, and researchers united by a shared mission
+                            Ingenjörer, pedagoger och forskare förenade av ett gemensamt uppdrag
                         </p>
                     </div>
 
@@ -170,7 +170,7 @@ export default function AboutPage() {
             {/* Timeline */}
             <section className="py-24 px-4 bg-zinc-50 dark:bg-zinc-950">
                 <div className="max-w-3xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center mb-16">Our Journey</h2>
+                    <h2 className="text-3xl font-bold text-center mb-16">Vår resa</h2>
                     <div className="space-y-8">
                         {timeline.map((item, i) => (
                             <motion.div
@@ -201,10 +201,10 @@ export default function AboutPage() {
                 <div className="max-w-4xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                         {[
-                            { value: '10K+', label: 'Students' },
-                            { value: '25+', label: 'Universities' },
-                            { value: '50K+', label: 'Questions' },
-                            { value: '95%', label: 'Pass Rate' }
+                            { value: '10K+', label: 'Studenter' },
+                            { value: '25+', label: 'Universitet' },
+                            { value: '50K+', label: 'Frågor' },
+                            { value: '95%', label: 'Godkännandegrad' }
                         ].map((stat, i) => (
                             <motion.div
                                 key={i}
@@ -226,30 +226,30 @@ export default function AboutPage() {
             {/* CTA */}
             <section className="py-24 px-4 bg-gradient-to-r from-blue-600 to-purple-600">
                 <div className="max-w-4xl mx-auto text-center text-white">
-                    <h2 className="text-4xl font-bold mb-6">Join Us on This Journey</h2>
+                    <h2 className="text-4xl font-bold mb-6">Följ med oss på resan</h2>
                     <p className="text-xl text-white/80 mb-8">
-                        We're always looking for talented people who share our passion for education.
+                        Vi letar alltid efter talangfulla människor som delar vår passion för utbildning.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
                             href="/careers"
                             className="px-8 py-4 bg-white text-blue-600 rounded-full font-semibold hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
                         >
-                            View Open Positions
+                            Se lediga tjänster
                             <ArrowRight className="w-5 h-5" />
                         </Link>
                         <Link
                             href="/contact"
                             className="px-8 py-4 bg-white/10 text-white rounded-full font-semibold hover:bg-white/20 transition-all border border-white/20"
                         >
-                            Get in Touch
+                            Kontakta oss
                         </Link>
                     </div>
                 </div>
             </section>
 
             <footer className="py-12 border-t border-zinc-200 dark:border-zinc-900 text-center text-zinc-500 text-sm">
-                <p>© 2026 Qmath EdTech AB. All rights reserved.</p>
+                <p>© 2026 Qmath EdTech AB. Alla rättigheter förbehållna.</p>
             </footer>
         </main>
     );

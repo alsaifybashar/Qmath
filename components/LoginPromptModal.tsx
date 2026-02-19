@@ -36,11 +36,11 @@ export default function LoginPromptModal({ onClose }: LoginPromptModalProps) {
                     </div>
 
                     <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
-                        Login Required
+                        Inloggning krävs
                     </h2>
 
                     <p className="text-zinc-600 dark:text-zinc-400 mb-8">
-                        You need to be logged in to download exam files. Please log in or create a free account to continue.
+                        Du måste vara inloggad för att ladda ner tentamensfiler. Vänligen logga in eller skapa ett gratiskonto för att fortsätta.
                     </p>
 
                     {/* Action Buttons */}
@@ -50,7 +50,7 @@ export default function LoginPromptModal({ onClose }: LoginPromptModalProps) {
                             className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors"
                         >
                             <LogIn className="w-5 h-5" />
-                            Log in to download
+                            Logga in för att ladda ner
                         </Link>
 
                         <Link
@@ -58,7 +58,7 @@ export default function LoginPromptModal({ onClose }: LoginPromptModalProps) {
                             className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-xl transition-colors"
                         >
                             <UserPlus className="w-5 h-5" />
-                            Create free account
+                            Skapa gratiskonto
                         </Link>
                     </div>
 
@@ -66,7 +66,7 @@ export default function LoginPromptModal({ onClose }: LoginPromptModalProps) {
                         onClick={onClose}
                         className="mt-6 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
                     >
-                        Maybe later
+                        Kanske senare
                     </button>
                 </div>
             </div>

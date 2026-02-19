@@ -41,10 +41,10 @@ export default function LoginPage() {
                 {/* Content */}
                 <div className="relative z-10">
                     <Link href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-8">
-                        <ArrowLeft className="w-4 h-4" /> Back to Qmath
+                        <ArrowLeft className="w-4 h-4" /> Tillbaka till Qmath
                     </Link>
-                    <h1 className="text-4xl font-bold tracking-tight mb-2">Master Engineering Math.</h1>
-                    <p className="text-blue-100 text-lg">Join thousands of students from top technical universities.</p>
+                    <h1 className="text-4xl font-bold tracking-tight mb-2">Bemästra ingenjörsmatten.</h1>
+                    <p className="text-blue-100 text-lg">Tusentals studenter från ledande tekniska universitet.</p>
                 </div>
 
                 <div className="relative z-10 space-y-6">
@@ -68,8 +68,8 @@ export default function LoginPage() {
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-zinc-50 dark:bg-black">
                 <div className="max-w-md w-full space-y-8">
                     <div className="text-center lg:text-left">
-                        <h2 className="text-3xl font-bold text-zinc-900 dark:text-white">Sign in to your account</h2>
-                        <p className="text-zinc-500 mt-2">Enter your credentials to access your dashboard.</p>
+                        <h2 className="text-3xl font-bold text-zinc-900 dark:text-white">Logga in på ditt konto</h2>
+                        <p className="text-zinc-500 mt-2">Ange dina uppgifter för att komma åt din dashboard.</p>
                     </div>
 
                     <div className="space-y-4">
@@ -85,13 +85,13 @@ export default function LoginPage() {
 
                         <div className="relative py-2">
                             <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-zinc-200 dark:border-zinc-800" /></div>
-                            <div className="relative flex justify-center text-xs uppercase"><span className="bg-zinc-50 dark:bg-black px-2 text-zinc-500">Or continue with email</span></div>
+                            <div className="relative flex justify-center text-xs uppercase"><span className="bg-zinc-50 dark:bg-black px-2 text-zinc-500">Eller fortsätt med e-post</span></div>
                         </div>
 
                         {/* Email Form - Now using NextAuth */}
                         <form action={formAction} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Email address</label>
+                                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">E-postadress</label>
                                 <input
                                     type="email"
                                     name="email"
@@ -101,7 +101,7 @@ export default function LoginPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Password</label>
+                                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Lösenord</label>
                                 <input
                                     type="password"
                                     name="password"
@@ -115,9 +115,9 @@ export default function LoginPage() {
                             <div className="flex items-center justify-between text-sm">
                                 <label className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
                                     <input type="checkbox" className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500" />
-                                    Remember me
+                                    Kom ihåg mig
                                 </label>
-                                <Link href="/forgot-password" className="text-blue-600 hover:underline font-medium">Forgot password?</Link>
+                                <Link href="/forgot-password" className="text-blue-600 hover:underline font-medium">Glömt lösenord?</Link>
                             </div>
 
                             {/* Error Message */}
@@ -132,16 +132,16 @@ export default function LoginPage() {
                                 disabled={isPending}
                                 className="w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold rounded-xl shadow-lg hover:opacity-90 transition-all disabled:opacity-50"
                             >
-                                {isPending ? 'Signing in...' : 'Log in'}
+                                {isPending ? 'Loggar in...' : 'Logga in'}
                             </button>
                         </form>
 
                         {/* Registration CTA */}
                         <div className="pt-4 text-center">
                             <p className="text-zinc-600 dark:text-zinc-400">
-                                Don't have an account?{' '}
+                                Har du inget konto?{' '}
                                 <Link href="/register" className="text-blue-600 font-bold hover:underline">
-                                    Create an account
+                                    Skapa ett konto
                                 </Link>
                             </p>
                         </div>

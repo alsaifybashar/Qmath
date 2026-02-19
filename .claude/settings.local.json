@@ -18,7 +18,11 @@
       "Bash(cd:*)",
       "Bash(cmd /c \"npx tsc --noEmit 2>&1\")",
       "Bash(Select-String \"CourseAnalysisView|exam-analysis\")",
-      "Bash(npx drizzle-kit:*)"
+      "Bash(npx drizzle-kit:*)",
+      "Bash(npm run db:push:*)",
+      "Bash(echo:*)",
+      "Bash(npx tsx:*)",
+      "Bash(node:*)"
     ]
   }
 }

@@ -16,27 +16,27 @@ const BlockMath = dynamic(() => import('react-katex').then((mod) => mod.BlockMat
 const demoQuestions = [
     {
         id: 1,
-        question: 'What is the derivative of $f(x) = x^3$?',
+        question: 'Vad är derivatan av $f(x) = x^3$?',
         math: 'f(x) = x^3',
         options: ['$3x^2$', '$x^2$', '$3x^3$', '$2x^3$'],
         correct: 0,
-        explanation: 'Using the power rule: $\\frac{d}{dx}x^n = nx^{n-1}$, we get $\\frac{d}{dx}x^3 = 3x^2$'
+        explanation: 'Med potensregeln: $\\frac{d}{dx}x^n = nx^{n-1}$, får vi $\\frac{d}{dx}x^3 = 3x^2$'
     },
     {
         id: 2,
-        question: 'Evaluate the integral:',
+        question: 'Beräkna integralen:',
         math: '\\int 2x \\, dx',
         options: ['$x^2 + C$', '$2x^2 + C$', '$x + C$', '$\\frac{x^2}{2} + C$'],
         correct: 0,
-        explanation: 'Using the power rule for integration: $\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$'
+        explanation: 'Med potensregeln för integration: $\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$'
     },
     {
         id: 3,
-        question: 'Find the eigenvalues of the matrix:',
+        question: 'Hitta egenvärdena till matrisen:',
         math: 'A = \\begin{pmatrix} 2 & 0 \\\\ 0 & 3 \\end{pmatrix}',
         options: ['$\\lambda = 2, 3$', '$\\lambda = 0, 5$', '$\\lambda = 2, 2$', '$\\lambda = 3, 3$'],
         correct: 0,
-        explanation: 'For a diagonal matrix, the eigenvalues are the diagonal elements: $\\lambda_1 = 2, \\lambda_2 = 3$'
+        explanation: 'För en diagonalmatris är egenvärdena diagonalelementen: $\\lambda_1 = 2, \\lambda_2 = 3$'
     }
 ];
 
@@ -93,23 +93,23 @@ export default function DemoPage() {
                             <Play className="w-8 h-8 text-white" />
                         </div>
 
-                        <h1 className="text-5xl font-bold mb-6">Try Qmath Now</h1>
+                        <h1 className="text-5xl font-bold mb-6">Prova Qmath nu</h1>
                         <p className="text-xl text-zinc-600 dark:text-zinc-400 mb-8">
-                            Experience adaptive learning in action. Answer a few questions and see how our AI adapts to your level.
+                            Upplev adaptivt lärande i handling. Svara på några frågor och se hur vår AI anpassar sig till din nivå.
                         </p>
 
                         <div className="grid grid-cols-3 gap-4 mb-12 max-w-md mx-auto">
                             <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
                                 <Brain className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-                                <div className="text-xs text-zinc-500">Adaptive</div>
+                                <div className="text-xs text-zinc-500">Adaptivt</div>
                             </div>
                             <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
                                 <Target className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                                <div className="text-xs text-zinc-500">Personalized</div>
+                                <div className="text-xs text-zinc-500">Personligt</div>
                             </div>
                             <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
                                 <Zap className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
-                                <div className="text-xs text-zinc-500">Instant Feedback</div>
+                                <div className="text-xs text-zinc-500">Direkt feedback</div>
                             </div>
                         </div>
 
@@ -117,12 +117,12 @@ export default function DemoPage() {
                             onClick={() => setStarted(true)}
                             className="px-10 py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg transition-all flex items-center gap-3 mx-auto shadow-xl shadow-blue-500/20"
                         >
-                            Start Demo
+                            Starta demo
                             <ArrowRight className="w-5 h-5" />
                         </button>
 
                         <p className="text-sm text-zinc-500 mt-6">
-                            No signup required • 3 sample questions
+                            Inget konto krävs • 3 exempelfrågor
                         </p>
                     </motion.div>
                 </section>
@@ -138,7 +138,7 @@ export default function DemoPage() {
                 {/* Progress */}
                 <div className="flex items-center justify-between mb-8">
                     <div className="text-sm text-zinc-500">
-                        Question {currentQuestion + 1} of {demoQuestions.length}
+                        Fråga {currentQuestion + 1} av {demoQuestions.length}
                     </div>
                     <div className="flex gap-2">
                         {demoQuestions.map((_, i) => (
@@ -163,7 +163,7 @@ export default function DemoPage() {
                         >
                             <div className="flex items-center gap-2 mb-6">
                                 <Sparkles className="w-5 h-5 text-purple-400" />
-                                <span className="text-sm text-purple-400">Demo Question</span>
+                                <span className="text-sm text-purple-400">Demofråga</span>
                             </div>
 
                             <h2 className="text-xl mb-6">{question.question}</h2>
@@ -211,7 +211,7 @@ export default function DemoPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl mb-6"
                                 >
-                                    <div className="font-medium text-blue-400 mb-2">Explanation:</div>
+                                    <div className="font-medium text-blue-400 mb-2">Förklaring:</div>
                                     <BlockMath math={question.explanation.replace(/\$/g, '')} />
                                 </motion.div>
                             )}
@@ -221,7 +221,7 @@ export default function DemoPage() {
                                     onClick={nextQuestion}
                                     className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                                 >
-                                    Next Question
+                                    Nästa fråga
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
                             )}
@@ -233,14 +233,14 @@ export default function DemoPage() {
                             className="bg-zinc-900/90 backdrop-blur-xl border border-zinc-800 rounded-3xl p-12 text-center"
                         >
                             <div className="text-6xl mb-6">🎉</div>
-                            <h2 className="text-3xl font-bold mb-4">Demo Complete!</h2>
+                            <h2 className="text-3xl font-bold mb-4">Demo slutförd!</h2>
                             <p className="text-xl text-zinc-400 mb-8">
-                                You scored {score}/{demoQuestions.length}
+                                Du fick {score}/{demoQuestions.length} rätt
                             </p>
 
                             <div className="p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20 mb-8">
                                 <p className="text-zinc-300">
-                                    This was just a taste! The full Qmath experience includes adaptive difficulty, personalized learning paths, and AI-powered explanations.
+                                    Detta var bara ett smakprov! Hela Qmath-upplevelsen inkluderar adaptiv svårighetsgrad, personliga lärvägar och AI-drivna förklaringar.
                                 </p>
                             </div>
 
@@ -249,7 +249,7 @@ export default function DemoPage() {
                                     href="/register"
                                     className="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                                 >
-                                    Sign Up Free
+                                    Registrera dig gratis
                                     <ArrowRight className="w-5 h-5" />
                                 </Link>
                                 <button
@@ -257,7 +257,7 @@ export default function DemoPage() {
                                     className="px-8 py-4 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                                 >
                                     <RefreshCw className="w-5 h-5" />
-                                    Try Again
+                                    Försök igen
                                 </button>
                             </div>
                         </motion.div>
@@ -267,7 +267,7 @@ export default function DemoPage() {
                 {/* Back to Home */}
                 <div className="text-center mt-8">
                     <Link href="/" className="text-zinc-500 hover:text-white transition-colors text-sm">
-                        ← Back to Home
+                        ← Tillbaka till startsidan
                     </Link>
                 </div>
             </div>

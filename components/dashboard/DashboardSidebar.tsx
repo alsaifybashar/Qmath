@@ -31,27 +31,27 @@ interface NavItem {
 
 const navSections: { title: string; items: NavItem[] }[] = [
     {
-        title: 'Study',
+        title: 'Studier',
         items: [
-            { icon: <Home size={18} />, label: 'Dashboard', href: '/dashboard' },
-            { icon: <BookOpen size={18} />, label: 'Courses', href: '/courses' },
-            { icon: <Brain size={18} />, label: 'Practice', href: '/practice' },
+            { icon: <Home size={18} />, label: 'Översikt', href: '/dashboard' },
+            { icon: <BookOpen size={18} />, label: 'Kurser', href: '/courses' },
+            { icon: <Brain size={18} />, label: 'Öva', href: '/practice' },
             { icon: <Zap size={18} />, label: 'Flashcards', href: '/flashcards' },
         ],
     },
     {
-        title: 'Exam Prep',
+        title: 'Tentaplugg',
         items: [
-            { icon: <Archive size={18} />, label: 'Past Exams', href: '/archive' },
-            { icon: <FlaskConical size={18} />, label: 'Exam Simulator', href: '/exam-sim' },
-            { icon: <MessageSquare size={18} />, label: 'AI Tutor', href: '/ai' },
+            { icon: <Archive size={18} />, label: 'Gamla tentor', href: '/archive' },
+            { icon: <FlaskConical size={18} />, label: 'Tentamen', href: '/exam-sim' },
+            { icon: <MessageSquare size={18} />, label: 'AI-handledare', href: '/ai' },
         ],
     },
     {
-        title: 'Account',
+        title: 'Konto',
         items: [
-            { icon: <User size={18} />, label: 'Profile', href: '/profile' },
-            { icon: <Settings size={18} />, label: 'Settings', href: '/settings' },
+            { icon: <User size={18} />, label: 'Profil', href: '/profile' },
+            { icon: <Settings size={18} />, label: 'Inställningar', href: '/settings' },
         ],
     },
 ];
@@ -156,7 +156,7 @@ export default function DashboardSidebar({ userName, userLevel }: SidebarProps) 
                         {userName}
                     </div>
                     <div className="text-[11px]" style={{ color: C.textMuted }}>
-                        Level {userLevel}
+                        Nivå {userLevel}
                     </div>
                 </div>
             </Link>

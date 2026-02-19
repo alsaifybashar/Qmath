@@ -263,7 +263,7 @@ export async function saveUserCourses(courseIds: string[]) {
         return { error: 'Failed to save courses' };
     }
 
-    redirect('/dashboard');
+    redirect('/onboarding/diagnostic');
 }
 
 // ============ ADD / REMOVE SINGLE ENROLLMENT ============

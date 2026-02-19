@@ -20,6 +20,7 @@ export const courses = sqliteTable('courses', {
     universityId: text('university_id').references(() => universities.id, { onDelete: 'set null' }),
     code: text('code').notNull(),
     name: text('name').notNull(),
+    nameSv: text('name_sv'), // Swedish name
     description: text('description'),
     semester: text('semester'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
@@ -66,6 +67,10 @@ export const profiles = sqliteTable('profiles', {
     studyYear: integer('study_year'),
     universityProgram: text('university_program'),
     targetGpa: real('target_gpa'),
+    // Math anxiety & self-efficacy (Phase 5)
+    mathAnxietyLevel: integer('math_anxiety_level'), // 1-5 scale from screening
+    selfEfficacyScore: integer('self_efficacy_score'), // 1-5 scale from screening
+    studySkillsCompleted: integer('study_skills_completed', { mode: 'boolean' }).default(false),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
@@ -105,9 +110,12 @@ export const topics = sqliteTable('topics', {
     courseId: text('course_id').references(() => courses.id, { onDelete: 'set null' }),
     slug: text('slug').unique().notNull(),
     title: text('title').notNull(),
+    titleSv: text('title_sv'), // Swedish title
     description: text('description'),
-    prerequisites: text('prerequisites', { mode: 'json' }), // Stored as JSON string
+    prerequisites: text('prerequisites', { mode: 'json' }), // Legacy JSON — prefer prerequisiteEdges table
     baseDifficulty: integer('base_difficulty'),
+    engineeringContext: text('engineering_context'), // Why this topic matters in engineering
+    curriculumStandardId: text('curriculum_standard_id').references(() => curriculumStandards.id, { onDelete: 'set null' }),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
@@ -116,8 +124,14 @@ export const topicsRelations = relations(topics, ({ one, many }) => ({
         fields: [topics.courseId],
         references: [courses.id],
     }),
+    curriculumStandard: one(curriculumStandards, {
+        fields: [topics.curriculumStandardId],
+        references: [curriculumStandards.id],
+    }),
     questions: many(questions),
     userMastery: many(userMastery),
+    prerequisitesFrom: many(prerequisiteEdges, { relationName: 'prerequisiteFrom' }),
+    prerequisitesTo: many(prerequisiteEdges, { relationName: 'prerequisiteTo' }),
 }));
 
 // Questions
@@ -130,6 +144,7 @@ export const questions = sqliteTable('questions', {
     options: text('options', { mode: 'json' }),
     explanationMarkdown: text('explanation_markdown'),
     difficultyTier: integer('difficulty_tier').default(1),
+    strategyTag: text('strategy_tag'), // e.g. "chain_rule", "integration_by_parts" — for interleaved practice
     isPublished: integer('is_published', { mode: 'boolean' }).default(false),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
@@ -208,6 +223,140 @@ export const exams = sqliteTable('exams', {
 export const examsRelations = relations(exams, ({ one }) => ({
     uploader: one(users, {
         fields: [exams.uploadedBy],
+        references: [users.id],
+    }),
+}));
+
+// ── Curriculum Standards (Swedish Gymnasium Matematik 1c–5) ───────────────────
+// Maps the prerequisite knowledge from secondary school that university courses build on.
+export const curriculumStandards = sqliteTable('curriculum_standards', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    code: text('code').unique().notNull(), // e.g. "gy3_trig_identities", "gy4_complex_numbers"
+    level: text('level').notNull(), // gy_1c, gy_2c, gy_3c, gy_4, gy_5
+    title: text('title').notNull(),
+    titleSv: text('title_sv'),
+    description: text('description'),
+    category: text('category'), // algebra, geometry, trigonometry, calculus, statistics, proof
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const curriculumStandardsRelations = relations(curriculumStandards, ({ many }) => ({
+    topics: many(topics),
+}));
+
+// ── Prerequisite Edges (Directed Graph) ──────────────────────────────────────
+// Replaces the JSON-blob prerequisites field with a proper traversable graph.
+// fromTopicId requires toTopicId — "to learn X, you must first know Y".
+export const prerequisiteEdges = sqliteTable('prerequisite_edges', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    fromTopicId: text('from_topic_id').references(() => topics.id, { onDelete: 'cascade' }).notNull(),
+    toTopicId: text('to_topic_id').references(() => topics.id, { onDelete: 'cascade' }).notNull(),
+    strength: real('strength').default(1.0), // 0-1: how critical this prerequisite is
+    edgeType: text('edge_type').default('required'), // required | recommended
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const prerequisiteEdgesRelations = relations(prerequisiteEdges, ({ one }) => ({
+    fromTopic: one(topics, {
+        fields: [prerequisiteEdges.fromTopicId],
+        references: [topics.id],
+        relationName: 'prerequisiteFrom',
+    }),
+    toTopic: one(topics, {
+        fields: [prerequisiteEdges.toTopicId],
+        references: [topics.id],
+        relationName: 'prerequisiteTo',
+    }),
+}));
+
+// ── Misconception Catalog ────────────────────────────────────────────────────
+// Known student misconceptions with error patterns, enabling the error classifier
+// to match answers to specific conceptual gaps and provide targeted remediation.
+export const misconceptions = sqliteTable('misconceptions', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    code: text('code').unique().notNull(), // e.g. "sqrt_sum_distributive", "sign_error_negation"
+    description: text('description').notNull(), // Human-readable description
+    descriptionSv: text('description_sv'), // Swedish description
+    affectedTopicIds: text('affected_topic_ids', { mode: 'json' }), // JSON array of topic IDs
+    commonWrongPatterns: text('common_wrong_patterns', { mode: 'json' }), // JSON array of regex/string patterns
+    feedbackEn: text('feedback_en'), // Specific feedback when this misconception is detected
+    feedbackSv: text('feedback_sv'), // Swedish feedback
+    remediationTopicId: text('remediation_topic_id').references(() => topics.id, { onDelete: 'set null' }),
+    severity: text('severity').default('medium'), // low | medium | high
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const misconceptionsRelations = relations(misconceptions, ({ one }) => ({
+    remediationTopic: one(topics, {
+        fields: [misconceptions.remediationTopicId],
+        references: [topics.id],
+    }),
+}));
+
+// ── Diagnostic Results (Progressive Assessment) ──────────────────────────────
+// Stores the results of onboarding screening and progressive diagnostic deepening.
+export const diagnosticResults = sqliteTable('diagnostic_results', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    courseId: text('course_id').references(() => courses.id, { onDelete: 'set null' }),
+    diagnosticType: text('diagnostic_type').notNull(), // screening | deepening
+    completedAt: integer('completed_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    screeningScore: real('screening_score'), // 0-1 overall score
+    detailedResults: text('detailed_results', { mode: 'json' }), // Per-topic breakdown
+    gapsIdentified: text('gaps_identified', { mode: 'json' }), // Topic IDs with gaps
+    learningPathGenerated: integer('learning_path_generated', { mode: 'boolean' }).default(false),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const diagnosticResultsRelations = relations(diagnosticResults, ({ one, many }) => ({
+    user: one(users, {
+        fields: [diagnosticResults.userId],
+        references: [users.id],
+    }),
+    course: one(courses, {
+        fields: [diagnosticResults.courseId],
+        references: [courses.id],
+    }),
+    itemResponses: many(diagnosticItemResponses),
+}));
+
+// Individual responses within a diagnostic assessment
+export const diagnosticItemResponses = sqliteTable('diagnostic_item_responses', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    diagnosticResultId: text('diagnostic_result_id').references(() => diagnosticResults.id, { onDelete: 'cascade' }).notNull(),
+    questionId: text('question_id'),
+    topicId: text('topic_id'),
+    curriculumStandardId: text('curriculum_standard_id'),
+    isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
+    timeTakenMs: integer('time_taken_ms'),
+    confidence: integer('confidence'), // 1-5
+    studentAnswer: text('student_answer'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const diagnosticItemResponsesRelations = relations(diagnosticItemResponses, ({ one }) => ({
+    diagnosticResult: one(diagnosticResults, {
+        fields: [diagnosticItemResponses.diagnosticResultId],
+        references: [diagnosticResults.id],
+    }),
+}));
+
+// ── Calibration Logs (Predict-then-Compare) ──────────────────────────────────
+// Tracks students' prediction accuracy to combat overconfidence and improve metacognition.
+export const calibrationLogs = sqliteTable('calibration_logs', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    sessionId: text('session_id'),
+    topicId: text('topic_id'),
+    predictedScore: integer('predicted_score').notNull(), // How many correct the student predicted
+    actualScore: integer('actual_score'), // Filled after session
+    totalQuestions: integer('total_questions').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const calibrationLogsRelations = relations(calibrationLogs, ({ one }) => ({
+    user: one(users, {
+        fields: [calibrationLogs.userId],
         references: [users.id],
     }),
 }));

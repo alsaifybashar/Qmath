@@ -58,7 +58,7 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
     if (!questionData) {
         return (
             <div className="w-full max-w-2xl mx-auto p-4 text-center text-zinc-500">
-                Loading question...
+                Laddar fråga...
             </div>
         );
     }

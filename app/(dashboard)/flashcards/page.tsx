@@ -10,33 +10,33 @@ import {
 const decks = [
     {
         id: 'calculus',
-        name: 'Calculus I',
+        name: 'Envariabelanalys 1',
         cardsDue: 24,
         totalCards: 156,
         mastery: 68,
         streak: 5,
         color: 'from-blue-500 to-cyan-500',
-        lastReviewed: '2 hours ago'
+        lastReviewed: 'för 2 timmar sedan'
     },
     {
         id: 'linear-algebra',
-        name: 'Linear Algebra',
+        name: 'Linjär algebra',
         cardsDue: 12,
         totalCards: 98,
         mastery: 72,
         streak: 3,
         color: 'from-purple-500 to-pink-500',
-        lastReviewed: '1 day ago'
+        lastReviewed: 'för 1 dag sedan'
     },
     {
         id: 'physics',
-        name: 'Mechanics',
+        name: 'Mekanik',
         cardsDue: 8,
         totalCards: 124,
         mastery: 54,
         streak: 0,
         color: 'from-orange-500 to-red-500',
-        lastReviewed: '3 days ago'
+        lastReviewed: 'för 3 dagar sedan'
     }
 ];
 
@@ -61,7 +61,7 @@ export default function FlashcardsPage() {
             >
                 <div>
                     <h1 className="text-4xl font-bold mb-2">Flashcards</h1>
-                    <p className="text-zinc-500 dark:text-zinc-400">Spaced repetition for long-term retention</p>
+                    <p className="text-zinc-500 dark:text-zinc-400">Upprepad repetition för långsiktigt minne</p>
                 </div>
                 <div className="flex gap-3 mt-4 md:mt-0">
                     <Link
@@ -69,7 +69,7 @@ export default function FlashcardsPage() {
                         className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 rounded-xl transition-all"
                     >
                         <Plus className="w-4 h-4" />
-                        Create Card
+                        Skapa kort
                     </Link>
                     {totalDue > 0 && (
                         <Link
@@ -77,7 +77,7 @@ export default function FlashcardsPage() {
                             className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/20"
                         >
                             <Play className="w-4 h-4" />
-                            Review ({totalDue} due)
+                            Repetera ({totalDue} att göra)
                         </Link>
                     )}
                 </div>
@@ -93,22 +93,22 @@ export default function FlashcardsPage() {
                 <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
                     <Layers className="w-6 h-6 text-blue-500 mb-3" />
                     <div className="text-2xl font-bold">{stats.totalCards}</div>
-                    <div className="text-sm text-zinc-500">Total Cards</div>
+                    <div className="text-sm text-zinc-500">Totalt antal kort</div>
                 </div>
                 <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
                     <Calendar className="w-6 h-6 text-green-500 mb-3" />
                     <div className="text-2xl font-bold">{stats.cardsReviewedToday}</div>
-                    <div className="text-sm text-zinc-500">Reviewed Today</div>
+                    <div className="text-sm text-zinc-500">Repeterade idag</div>
                 </div>
                 <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
                     <Zap className="w-6 h-6 text-orange-500 mb-3" />
                     <div className="text-2xl font-bold">{stats.currentStreak}</div>
-                    <div className="text-sm text-zinc-500">Day Streak</div>
+                    <div className="text-sm text-zinc-500">Dagar i rad</div>
                 </div>
                 <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
                     <TrendingUp className="w-6 h-6 text-purple-500 mb-3" />
                     <div className="text-2xl font-bold">{stats.averageAccuracy}%</div>
-                    <div className="text-sm text-zinc-500">Accuracy</div>
+                    <div className="text-sm text-zinc-500">Noggrannhet</div>
                 </div>
             </motion.div>
 
@@ -130,9 +130,9 @@ export default function FlashcardsPage() {
                                     <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold">Cards Due for Review</h3>
+                                    <h3 className="text-xl font-bold">Kort att repetera</h3>
                                     <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-                                        {totalDue} cards are ready to review across {decks.filter(d => d.cardsDue > 0).length} decks
+                                        {totalDue} kort är redo att repeteras i {decks.filter(d => d.cardsDue > 0).length} kortlekar
                                     </p>
                                 </div>
                             </div>
@@ -150,9 +150,9 @@ export default function FlashcardsPage() {
                 className="mb-8"
             >
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold">My Decks</h2>
+                    <h2 className="text-xl font-bold">Mina kortlekar</h2>
                     <Link href="/flashcards/review" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                        Create Deck
+                        Skapa kortlek
                     </Link>
                 </div>
 
@@ -174,18 +174,18 @@ export default function FlashcardsPage() {
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{deck.name}</h3>
-                                        <p className="text-xs text-zinc-500">{deck.totalCards} cards</p>
+                                        <p className="text-xs text-zinc-500">{deck.totalCards} kort</p>
                                     </div>
                                     {deck.cardsDue > 0 && (
                                         <div className="px-2 py-1 bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded text-xs font-medium">
-                                            {deck.cardsDue} due
+                                            {deck.cardsDue} att göra
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="mb-4">
                                     <div className="flex items-center justify-between text-xs mb-1">
-                                        <span className="text-zinc-500">Mastery</span>
+                                        <span className="text-zinc-500">Bemästring</span>
                                         <span className="text-zinc-600 dark:text-zinc-400">{deck.mastery}%</span>
                                     </div>
                                     <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
@@ -197,10 +197,10 @@ export default function FlashcardsPage() {
                                 </div>
 
                                 <div className="flex items-center justify-between text-xs text-zinc-500">
-                                    <span>Last reviewed {deck.lastReviewed}</span>
+                                    <span>Senast repeterad {deck.lastReviewed}</span>
                                     {deck.streak > 0 && (
                                         <span className="flex items-center gap-1 text-orange-500">
-                                            <Zap className="w-3 h-3" /> {deck.streak} day streak
+                                            <Zap className="w-3 h-3" /> {deck.streak} dagar i rad
                                         </span>
                                     )}
                                 </div>
@@ -223,7 +223,7 @@ export default function FlashcardsPage() {
                 >
                     <div className="flex items-center gap-3">
                         <Layers className="w-5 h-5 text-blue-500" />
-                        <span>Browse All Cards</span>
+                        <span>Bläddra bland alla kort</span>
                     </div>
                     <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                 </Link>
@@ -233,7 +233,7 @@ export default function FlashcardsPage() {
                 >
                     <div className="flex items-center gap-3">
                         <BarChart3 className="w-5 h-5 text-purple-500" />
-                        <span>View Statistics</span>
+                        <span>Se statistik</span>
                     </div>
                     <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all" />
                 </Link>

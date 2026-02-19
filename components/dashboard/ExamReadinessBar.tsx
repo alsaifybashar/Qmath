@@ -47,10 +47,10 @@ function getReadinessGradient(readiness: number): string {
 }
 
 function getReadinessLabel(readiness: number): string {
-    if (readiness >= 80) return 'Ready';
-    if (readiness >= 60) return 'On Track';
-    if (readiness >= 40) return 'Needs Work';
-    return 'At Risk';
+    if (readiness >= 80) return 'Redo';
+    if (readiness >= 60) return 'På spåret';
+    if (readiness >= 40) return 'Behöver arbete';
+    return 'I riskzonen';
 }
 
 function TrendIcon({ trend }: { trend: 'improving' | 'stable' | 'declining' }) {
@@ -121,7 +121,7 @@ export function ExamReadinessBar({
                             </div>
                         </div>
                         <p className="text-xs mt-0.5" style={{ color: C.textMuted }}>
-                            Est. Grade: <strong style={{ color: C.text }}>{estimatedGrade}</strong>
+                            Beräknat betyg: <strong style={{ color: C.text }}>{estimatedGrade}</strong>
                         </p>
                     </div>
                 </div>
@@ -141,16 +141,16 @@ export function ExamReadinessBar({
                 <div className="flex items-center gap-6 mt-3">
                     <div className="flex items-center gap-1.5 text-xs" style={{ color: C.textMuted }}>
                         <Clock className="w-3.5 h-3.5" />
-                        {studyTimeThisWeek}min this week
+                        {studyTimeThisWeek} min denna vecka
                     </div>
                     <div className="flex items-center gap-1.5 text-xs" style={{ color: C.textMuted }}>
                         <CheckCircle className="w-3.5 h-3.5" />
-                        {questionsThisWeek} questions
+                        {questionsThisWeek} frågor
                     </div>
                     {reviewTopics.length > 0 && (
                         <div className="flex items-center gap-1.5 text-xs text-amber-600">
                             <AlertTriangle className="w-3.5 h-3.5" />
-                            {reviewTopics.length} need review
+                            {reviewTopics.length} behöver repeteras
                         </div>
                     )}
                 </div>
@@ -162,7 +162,7 @@ export function ExamReadinessBar({
                     style={{ color: '#4361EE' }}
                 >
                     {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                    {expanded ? 'Hide' : 'Show'} topic breakdown
+                    {expanded ? 'Dölj detaljer' : 'Visa detaljer'}
                 </button>
             </div>
 
@@ -180,7 +180,7 @@ export function ExamReadinessBar({
                             {/* Weakest / strongest summary */}
                             <div className="grid grid-cols-2 gap-4 py-4">
                                 <div>
-                                    <p className="text-xs font-semibold mb-2 text-red-500">Weakest Topics</p>
+                                    <p className="text-xs font-semibold mb-2 text-red-500">Svagaste områden</p>
                                     {weakestTopics.map((t, i) => (
                                         <p key={i} className="text-xs py-0.5" style={{ color: C.text }}>
                                             • {t}
@@ -188,7 +188,7 @@ export function ExamReadinessBar({
                                     ))}
                                 </div>
                                 <div>
-                                    <p className="text-xs font-semibold mb-2 text-green-500">Strongest Topics</p>
+                                    <p className="text-xs font-semibold mb-2 text-green-500">Starkaste områden</p>
                                     {strongestTopics.map((t, i) => (
                                         <p key={i} className="text-xs py-0.5" style={{ color: C.text }}>
                                             • {t}

@@ -101,7 +101,7 @@ export default function DailyFocus({
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                             <span className="text-2xl">📋</span>
-                            <h2 className="text-xl font-bold">Daily Focus</h2>
+                            <h2 className="text-xl font-bold">Dagens fokus</h2>
                         </div>
                         <div className="text-sm opacity-80">
                             {getGreeting()}, {userName}!
@@ -133,8 +133,8 @@ export default function DailyFocus({
                         key={mode}
                         onClick={() => setFocusMode(mode)}
                         className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${focusMode === mode
-                                ? 'text-indigo-600 dark:text-indigo-400'
-                                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                            ? 'text-indigo-600 dark:text-indigo-400'
+                            : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                             }`}
                     >
                         {getModeLabel(mode)}
@@ -158,10 +158,10 @@ export default function DailyFocus({
                             className="text-center py-12"
                         >
                             <div className="text-6xl mb-4">🎉</div>
-                            <h3 className="text-lg font-bold mb-2">You're all caught up!</h3>
+                            <h3 className="text-lg font-bold mb-2">Du är i fas!</h3>
                             <p className="text-sm text-zinc-500">
-                                No {focusMode !== 'all' ? `${focusMode} ` : ''}recommendations right now.
-                                Feel free to explore any topic you'd like.
+                                Inga rekommendationer för {focusMode !== 'all' ? `${getModeLabel(focusMode).toLowerCase()} ` : ''}just nu.
+                                Känn dig fri att utforska vilket område som helst.
                             </p>
                         </motion.div>
                     ) : (
@@ -193,7 +193,7 @@ export default function DailyFocus({
                         animate={{ opacity: 1 }}
                         className="text-center py-4 text-sm text-green-600 dark:text-green-400"
                     >
-                        ✓ {completedTasks.size} task{completedTasks.size > 1 ? 's' : ''} completed
+                        ✓ {completedTasks.size} uppgift{completedTasks.size > 1 ? 'er' : ''} avklarade
                     </motion.div>
                 )}
             </div>
@@ -210,7 +210,7 @@ export default function DailyFocus({
                         <span className="text-xl">{studyTip.icon || '💡'}</span>
                         <div>
                             <h4 className="font-bold text-sm mb-1 text-amber-900 dark:text-amber-100">
-                                Study Tip
+                                Studietips
                             </h4>
                             <p className="text-sm text-amber-700 dark:text-amber-300">
                                 {studyTip.tip}
@@ -231,9 +231,9 @@ export default function DailyFocus({
                     <div className="flex items-start gap-3">
                         <span className="text-xl">💡</span>
                         <div>
-                            <h4 className="font-bold text-sm mb-1">Study Tip</h4>
+                            <h4 className="font-bold text-sm mb-1">Studietips</h4>
                             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                                Focus on one recommendation at a time. Deep understanding beats rushing through all of them!
+                                Fokusera på en rekommendation i taget. Djup förståelse är bättre än att stressa igenom allt!
                             </p>
                         </div>
                     </div>
@@ -279,8 +279,8 @@ function RecommendationCard({
             onHoverStart={() => setIsHovered(true)}
             onHoverEnd={() => setIsHovered(false)}
             className={`relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${isSelected
-                    ? `${colors.borderSelected} ${colors.bgSelected}`
-                    : `${colors.border} ${colors.bg} hover:${colors.borderHover}`
+                ? `${colors.borderSelected} ${colors.bgSelected}`
+                : `${colors.border} ${colors.bg} hover:${colors.borderHover}`
                 }`}
             onClick={onSelect}
         >
@@ -296,7 +296,7 @@ function RecommendationCard({
                         transition={{ delay: 0.3, type: 'spring' }}
                         className="bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg"
                     >
-                        Top Priority
+                        Högsta prioritet
                     </motion.div>
                 </div>
             )}
@@ -343,17 +343,17 @@ function RecommendationCard({
                         <div className="flex flex-wrap gap-1.5 mb-3">
                             {rec.metadata.daysSince && (
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${colors.tag}`}>
-                                    {rec.metadata.daysSince}d ago
+                                    {rec.metadata.daysSince}d sedan
                                 </span>
                             )}
                             {rec.metadata.errorRate && (
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${colors.tag}`}>
-                                    {Math.round((1 - rec.metadata.errorRate) * 100)}% accuracy
+                                    {Math.round((1 - rec.metadata.errorRate) * 100)}% träffsäkerhet
                                 </span>
                             )}
                             {rec.questionCount && (
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${colors.tag}`}>
-                                    {rec.questionCount} questions
+                                    {rec.questionCount} frågor
                                 </span>
                             )}
                             <span className={`text-xs px-2 py-0.5 rounded-full ${colors.tag}`}>
@@ -376,7 +376,7 @@ function RecommendationCard({
                                         {rec.metadata.weakPatterns && rec.metadata.weakPatterns.length > 0 && (
                                             <div className="mb-3">
                                                 <div className="text-xs font-medium text-zinc-500 mb-1">
-                                                    Focus areas:
+                                                    Fokusområden:
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
                                                     {rec.metadata.weakPatterns.map((pattern, i) => (
@@ -395,7 +395,7 @@ function RecommendationCard({
                                         {rec.metadata.prerequisitesCleared && rec.metadata.prerequisitesCleared.length > 0 && (
                                             <div className="mb-3">
                                                 <div className="text-xs font-medium text-zinc-500 mb-1">
-                                                    Prerequisites completed:
+                                                    Förkunskaper klara:
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
                                                     {rec.metadata.prerequisitesCleared.map((prereq, i) => (
@@ -413,7 +413,7 @@ function RecommendationCard({
                                         {/* Mastery gain indicator */}
                                         {rec.metadata.masteryGain && (
                                             <div className="flex items-center gap-2 mb-3">
-                                                <span className="text-xs text-zinc-500">Potential mastery gain:</span>
+                                                <span className="text-xs text-zinc-500">Potentiell kunskapsökning:</span>
                                                 <div className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                                                     <motion.div
                                                         initial={{ width: 0 }}
@@ -443,7 +443,7 @@ function RecommendationCard({
                                                 }}
                                                 className="px-4 py-2.5 rounded-lg font-medium text-sm border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                                             >
-                                                Skip
+                                                Hoppa över
                                             </button>
                                         </div>
                                     </div>
@@ -468,7 +468,7 @@ function RecommendationCard({
                                     }}
                                     className="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
                                 >
-                                    Skip
+                                    Hoppa över
                                 </button>
                             </div>
                         )}
@@ -485,54 +485,54 @@ function RecommendationCard({
 
 function getGreeting(): string {
     const hour = new Date().getHours();
-    if (hour < 5) return 'Good night';
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    if (hour < 21) return 'Good evening';
-    return 'Good night';
+    if (hour < 5) return 'God natt';
+    if (hour < 12) return 'God morgon';
+    if (hour < 17) return 'God eftermiddag';
+    if (hour < 21) return 'God kväll';
+    return 'God natt';
 }
 
 function getModeLabel(mode: 'all' | 'review' | 'learn' | 'challenge'): string {
     const labels: Record<string, string> = {
-        all: 'All',
-        review: 'Review',
-        learn: 'Learn',
-        challenge: 'Challenge',
+        all: 'Alla',
+        review: 'Repetera',
+        learn: 'Lär nytt',
+        challenge: 'Utmaning',
     };
     return labels[mode] || mode;
 }
 
 function getTypeLabel(type: RecommendationType): string {
     const labels: Record<RecommendationType, string> = {
-        review: 'Review',
-        strengthen: 'Strengthen',
-        new_content: 'New Topic',
-        challenge: 'Challenge',
-        warm_up: 'Warm Up',
-        deep_dive: 'Deep Dive',
+        review: 'Repetera',
+        strengthen: 'Förstärk',
+        new_content: 'Nytt område',
+        challenge: 'Utmaning',
+        warm_up: 'Uppvärmning',
+        deep_dive: 'Fördjupning',
     };
-    return labels[type] || 'Practice';
+    return labels[type] || 'Öva';
 }
 
 function getActionButtonText(type: RecommendationType): string {
     const texts: Record<RecommendationType, string> = {
-        review: 'Start Review →',
-        strengthen: 'Practice Now →',
-        new_content: 'Start Learning →',
-        challenge: 'Take Challenge →',
-        warm_up: 'Quick Warm-up →',
-        deep_dive: 'Deep Dive →',
+        review: 'Börja repetera →',
+        strengthen: 'Öva nu →',
+        new_content: 'Börja lär →',
+        challenge: 'Anta utmaning →',
+        warm_up: 'Snabb uppvärmning →',
+        deep_dive: 'Fördjupa dig →',
     };
-    return texts[type] || 'Start →';
+    return texts[type] || 'Starta →';
 }
 
 function getUrgencyBadge(urgency: 'low' | 'medium' | 'high' | 'critical'): { text: string; class: string } | null {
     if (urgency === 'low') return null;
 
     const badges: Record<string, { text: string; class: string }> = {
-        medium: { text: 'Recommended', class: 'bg-blue-100 text-blue-700' },
-        high: { text: 'Important', class: 'bg-orange-100 text-orange-700' },
-        critical: { text: 'Urgent', class: 'bg-red-100 text-red-700' },
+        medium: { text: 'Rekommenderat', class: 'bg-blue-100 text-blue-700' },
+        high: { text: 'Viktigt', class: 'bg-orange-100 text-orange-700' },
+        critical: { text: 'Brådskande', class: 'bg-red-100 text-red-700' },
     };
     return badges[urgency] || null;
 }

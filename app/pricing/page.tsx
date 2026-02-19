@@ -8,57 +8,57 @@ import { useState } from 'react';
 
 const plans = [
     {
-        name: 'Free',
-        description: 'Perfect for trying out Qmath',
+        name: 'Gratis',
+        description: 'Perfekt för att prova på Qmath',
         price: { monthly: 0, yearly: 0 },
         features: [
-            { text: '10 practice questions/day', included: true },
-            { text: 'Basic analytics dashboard', included: true },
-            { text: '1 course access', included: true },
-            { text: 'Community support', included: true },
-            { text: 'Adaptive learning engine', included: false },
-            { text: 'Exam simulations', included: false },
-            { text: 'AI Tutor', included: false },
-            { text: 'Spaced repetition', included: false },
+            { text: '10 övningsfrågor/dag', included: true },
+            { text: 'Grundläggande analyspanel', included: true },
+            { text: 'Tillgång till 1 kurs', included: true },
+            { text: 'Community-support', included: true },
+            { text: 'Adaptiv inlärningsmotor', included: false },
+            { text: 'Tentamenssimuleringar', included: false },
+            { text: 'AI-handledare', included: false },
+            { text: 'Upprepad repetition', included: false },
         ],
-        cta: 'Get Started',
+        cta: 'Kom igång',
         href: '/register',
         popular: false
     },
     {
         name: 'Student',
-        description: 'Best for active learners',
+        description: 'Bäst för aktiva studenter',
         price: { monthly: 99, yearly: 79 },
         currency: 'SEK',
         features: [
-            { text: 'Unlimited practice questions', included: true },
-            { text: 'Full analytics dashboard', included: true },
-            { text: 'All courses access', included: true },
-            { text: 'Priority support', included: true },
-            { text: 'Adaptive learning engine', included: true },
-            { text: 'Unlimited exam simulations', included: true },
-            { text: 'AI Tutor assistance', included: true },
-            { text: 'Spaced repetition flashcards', included: true },
+            { text: 'Obegränsat antal övningsfrågor', included: true },
+            { text: 'Fullständig analyspanel', included: true },
+            { text: 'Tillgång till alla kurser', included: true },
+            { text: 'Prioriterad support', included: true },
+            { text: 'Adaptiv inlärningsmotor', included: true },
+            { text: 'Obegränsade tentamenssimuleringar', included: true },
+            { text: 'AI-handledarhjälp', included: true },
+            { text: 'Flashcards med upprepad repetition', included: true },
         ],
-        cta: 'Start Free Trial',
+        cta: 'Starta gratis provperiod',
         href: '/register?plan=student',
         popular: true
     },
     {
-        name: 'University',
-        description: 'For institutions & teams',
-        price: { monthly: 'Custom', yearly: 'Custom' },
+        name: 'Universitet',
+        description: 'För institutioner & team',
+        price: { monthly: 'Anpassat', yearly: 'Anpassat' },
         features: [
-            { text: 'Everything in Student', included: true },
-            { text: 'Admin dashboard', included: true },
-            { text: 'Student progress tracking', included: true },
-            { text: 'Custom content integration', included: true },
-            { text: 'SSO authentication', included: true },
-            { text: 'API access', included: true },
-            { text: 'Dedicated success manager', included: true },
-            { text: 'Custom analytics & reports', included: true },
+            { text: 'Allt i Student', included: true },
+            { text: 'Adminpanel', included: true },
+            { text: 'Spårning av studentframsteg', included: true },
+            { text: 'Integrering av anpassat innehåll', included: true },
+            { text: 'SSO-autentisering', included: true },
+            { text: 'API-tillgång', included: true },
+            { text: 'Dedikerad success manager', included: true },
+            { text: 'Anpassad analys & rapporter', included: true },
         ],
-        cta: 'Contact Sales',
+        cta: 'Kontakta sälj',
         href: '/contact',
         popular: false
     }
@@ -66,20 +66,20 @@ const plans = [
 
 const faqs = [
     {
-        question: 'Can I switch plans at any time?',
-        answer: 'Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately and we\'ll prorate any payments.'
+        question: 'Kan jag byta plan när som helst?',
+        answer: 'Ja! Du kan uppgradera eller nedgradera din plan när som helst. Ändringar träder i kraft omedelbart och vi justerar betalningen.'
     },
     {
-        question: 'Is there a free trial for the Student plan?',
-        answer: 'Absolutely! Every new user gets a 14-day free trial of the full Student plan with no credit card required.'
+        question: 'Finns det en gratis provperiod för Student-planen?',
+        answer: 'Absolut! Varje ny användare får en 14-dagars gratis provperiod av hela Student-planen utan krav på kreditkort.'
     },
     {
-        question: 'What payment methods do you accept?',
-        answer: 'We accept all major credit cards (Visa, Mastercard, Amex), as well as Swish for Swedish users and bank transfers for universities.'
+        question: 'Vilka betalningsmetoder accepterar ni?',
+        answer: 'Vi accepterar alla större kreditkort (Visa, Mastercard, Amex), samt Swish för svenska användare och banköverföring för universitet.'
     },
     {
-        question: 'Can I get a refund?',
-        answer: 'Yes, we offer a 30-day money-back guarantee. If you\'re not satisfied, contact us and we\'ll process your refund.'
+        question: 'Kan jag få pengarna tillbaka?',
+        answer: 'Ja, vi erbjuder 30 dagars pengarna-tillbaka-garanti. Om du inte är nöjd, kontakta oss så behandlar vi din återbetalning.'
     }
 ];
 
@@ -100,9 +100,9 @@ export default function PricingPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-5xl md:text-7xl font-bold tracking-tight mb-6"
                     >
-                        Simple, transparent{' '}
+                        Enkel, transparent{' '}
                         <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            pricing
+                            prissättning
                         </span>
                     </motion.h1>
 
@@ -112,7 +112,7 @@ export default function PricingPage() {
                         transition={{ delay: 0.1 }}
                         className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto mb-12"
                     >
-                        Choose the plan that fits your learning journey. No hidden fees, cancel anytime.
+                        Välj den plan som passar din läranderesa. Inga dolda avgifter, avsluta när som helst.
                     </motion.p>
 
                     {/* Billing Toggle */}
@@ -129,7 +129,7 @@ export default function PricingPage() {
                                 : 'text-zinc-600 dark:text-zinc-400'
                                 }`}
                         >
-                            Monthly
+                            Månadsvis
                         </button>
                         <button
                             onClick={() => setIsYearly(true)}
@@ -138,9 +138,9 @@ export default function PricingPage() {
                                 : 'text-zinc-600 dark:text-zinc-400'
                                 }`}
                         >
-                            Yearly
+                            Årsvis
                             <span className="px-2 py-0.5 bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 text-xs rounded-full">
-                                Save 20%
+                                Spara 20%
                             </span>
                         </button>
                     </motion.div>
@@ -165,7 +165,7 @@ export default function PricingPage() {
                                 {plan.popular && (
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-full flex items-center gap-1">
                                         <Sparkles className="w-3 h-3" />
-                                        Most Popular
+                                        Mest populär
                                     </div>
                                 )}
 
@@ -183,7 +183,7 @@ export default function PricingPage() {
                                             {typeof plan.price.monthly === 'number' && plan.price.monthly > 0 && (
                                                 <>
                                                     <span className="text-xl text-zinc-500">{plan.currency}</span>
-                                                    <span className="text-zinc-500">/month</span>
+                                                    <span className="text-zinc-500">/månad</span>
                                                 </>
                                             )}
                                         </div>
@@ -192,7 +192,7 @@ export default function PricingPage() {
                                     )}
                                     {isYearly && typeof plan.price.monthly === 'number' && plan.price.monthly > 0 && typeof plan.price.yearly === 'number' && (
                                         <p className="text-sm text-zinc-500 mt-1">
-                                            Billed yearly ({plan.price.yearly * 12} SEK/year)
+                                            Faktureras årsvis ({plan.price.yearly * 12} SEK/år)
                                         </p>
                                     )}
                                 </div>
@@ -233,18 +233,18 @@ export default function PricingPage() {
                     <div className="text-white text-center md:text-left">
                         <div className="flex items-center gap-2 mb-2">
                             <Building2 className="w-6 h-6" />
-                            <span className="font-medium">For Universities</span>
+                            <span className="font-medium">För universitet</span>
                         </div>
-                        <h2 className="text-3xl font-bold mb-2">Need a custom solution?</h2>
+                        <h2 className="text-3xl font-bold mb-2">Behöver ni en anpassad lösning?</h2>
                         <p className="text-white/80">
-                            Get volume pricing, SSO integration, and dedicated support for your institution.
+                            Få volymprissättning, SSO-integrering och dedikerad support för er institution.
                         </p>
                     </div>
                     <Link
                         href="/universities"
                         className="px-8 py-4 bg-white text-blue-600 rounded-full font-bold hover:bg-blue-50 transition-all flex items-center gap-2 whitespace-nowrap"
                     >
-                        Learn More
+                        Läs mer
                         <ArrowRight className="w-5 h-5" />
                     </Link>
                 </div>
@@ -254,10 +254,10 @@ export default function PricingPage() {
             <section className="py-24 px-4">
                 <div className="max-w-3xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
+                        <h2 className="text-3xl font-bold mb-4">Vanliga frågor</h2>
                         <p className="text-zinc-600 dark:text-zinc-400">
-                            Can't find what you're looking for?{' '}
-                            <Link href="/contact" className="text-blue-600 hover:underline">Contact us</Link>
+                            Hittar du inte vad du söker?{' '}
+                            <Link href="/contact" className="text-blue-600 hover:underline">Kontakta oss</Link>
                         </p>
                     </div>
 
@@ -286,7 +286,7 @@ export default function PricingPage() {
 
             {/* Footer */}
             <footer className="py-12 border-t border-zinc-200 dark:border-zinc-900 text-center text-zinc-500 text-sm">
-                <p>© 2026 Qmath EdTech AB. All rights reserved.</p>
+                <p>© 2026 Qmath EdTech AB. Alla rättigheter förbehållna.</p>
             </footer>
         </main>
     );

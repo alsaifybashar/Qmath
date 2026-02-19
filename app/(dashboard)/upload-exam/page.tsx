@@ -98,7 +98,7 @@ export default function UploadExamPage() {
                 if (type === 'exam') setExamFile(file);
                 else setSolutionFile(file);
             } else {
-                alert('Please upload a PDF file.');
+                alert('Vänligen ladda upp en PDF-fil.');
             }
         }
     };
@@ -110,7 +110,7 @@ export default function UploadExamPage() {
                 if (type === 'exam') setExamFile(file);
                 else setSolutionFile(file);
             } else {
-                alert('Please upload a PDF file.');
+                alert('Vänligen ladda upp en PDF-fil.');
             }
         }
     };
@@ -128,7 +128,7 @@ export default function UploadExamPage() {
     const handleSubmit = () => {
         console.log('Submitting:', { examFile, solutionFile });
         // Handle upload logic here
-        alert('Upload functionality would be implemented here.');
+        alert('Uppladdningsfunktionen skulle implementeras här.');
     };
 
     return (
@@ -138,9 +138,9 @@ export default function UploadExamPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-10 text-center"
             >
-                <h1 className="text-4xl font-bold mb-3">Upload Exam</h1>
+                <h1 className="text-4xl font-bold mb-3">Ladda upp tenta</h1>
                 <p className="text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto">
-                    Upload your exam questions and solutions to generate interactive study material.
+                    Ladda upp dina tentafrågor och lösningar för att generera interaktivt studiematerial.
                 </p>
             </motion.div>
 
@@ -188,7 +188,7 @@ export default function UploadExamPage() {
                                     className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium transition-colors"
                                 >
                                     <X className="w-4 h-4" />
-                                    Remove File
+                                    Ta bort fil
                                 </button>
                             </div>
                         ) : (
@@ -199,11 +199,11 @@ export default function UploadExamPage() {
                                 </div>
                                 <h3 className={`font-bold text-lg mb-2 transition-colors ${(isDraggingExam || isGlobalDrag) ? 'text-blue-100' : 'text-zinc-700 dark:text-zinc-200 group-hover:text-blue-500'
                                     }`}>
-                                    {isDraggingExam || isGlobalDrag ? 'Drop Exam PDF' : 'Upload Exam PDF'}
+                                    {isDraggingExam || isGlobalDrag ? 'Släpp tenta-PDF' : 'Ladda upp tenta-PDF'}
                                 </h3>
                                 <p className={`text-sm max-w-[200px] transition-colors ${(isDraggingExam || isGlobalDrag) ? 'text-blue-300' : 'text-zinc-500 dark:text-zinc-400'
                                     }`}>
-                                    {(isDraggingExam || isGlobalDrag) ? 'Release to upload' : 'Drag and drop your exam questions file here, or click to browse'}
+                                    {(isDraggingExam || isGlobalDrag) ? 'Släpp för att ladda upp' : 'Dra och släpp dina tentafrågor här, eller klicka för att bläddra'}
                                 </p>
                             </>
                         )}
@@ -252,7 +252,7 @@ export default function UploadExamPage() {
                                     className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium transition-colors"
                                 >
                                     <X className="w-4 h-4" />
-                                    Remove File
+                                    Ta bort fil
                                 </button>
                             </div>
                         ) : (
@@ -263,11 +263,11 @@ export default function UploadExamPage() {
                                 </div>
                                 <h3 className={`font-bold text-lg mb-2 transition-colors ${(isDraggingSolution || isGlobalDrag) ? 'text-blue-100' : 'text-zinc-700 dark:text-zinc-200 group-hover:text-blue-500'
                                     }`}>
-                                    {isDraggingSolution || isGlobalDrag ? 'Drop Solution PDF' : 'Upload Solution PDF'}
+                                    {isDraggingSolution || isGlobalDrag ? 'Släpp lösnings-PDF' : 'Ladda upp lösnings-PDF'}
                                 </h3>
                                 <p className={`text-sm max-w-[200px] transition-colors ${(isDraggingSolution || isGlobalDrag) ? 'text-blue-300' : 'text-zinc-500 dark:text-zinc-400'
                                     }`}>
-                                    {(isDraggingSolution || isGlobalDrag) ? 'Release to upload' : 'Drag and drop your answer key or solution file here (optional)'}
+                                    {(isDraggingSolution || isGlobalDrag) ? 'Släpp för att ladda upp' : 'Dra och släpp ditt facit eller lösningsfil här (valfritt)'}
                                 </p>
                             </>
                         )}
@@ -293,7 +293,7 @@ export default function UploadExamPage() {
                         }
                         `}
                 >
-                    <span>Process Exam</span>
+                    <span>Bearbeta tenta</span>
                     <ArrowLeft className="w-5 h-5 rotate-180" />
                 </button>
             </motion.div>

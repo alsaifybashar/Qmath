@@ -15,12 +15,12 @@ interface ReflectionModalProps {
 }
 
 const ERROR_TYPES = [
-    { id: 'conceptual', label: 'Conceptual', icon: Brain, color: '#f59e0b', desc: 'I didn\'t understand the concept' },
-    { id: 'procedural', label: 'Procedural', icon: FileQuestion, color: '#3b82f6', desc: 'I used the wrong method' },
-    { id: 'computational', label: 'Calculation', icon: Calculator, color: '#ef4444', desc: 'I made a math error' },
-    { id: 'interpretation', label: 'Misread', icon: Eye, color: '#8b5cf6', desc: 'I misread the question' },
-    { id: 'time_pressure', label: 'Time', icon: Clock, color: '#6366f1', desc: 'I ran out of time' },
-    { id: 'other', label: 'Other', icon: HelpCircle, color: '#9ca3af', desc: 'Something else' },
+    { id: 'conceptual', label: 'Konceptuellt', icon: Brain, color: '#f59e0b', desc: 'Jag förstod inte konceptet' },
+    { id: 'procedural', label: 'Procedurellt', icon: FileQuestion, color: '#3b82f6', desc: 'Jag använde fel metod' },
+    { id: 'computational', label: 'Beräkning', icon: Calculator, color: '#ef4444', desc: 'Jag gjorde ett räknefel' },
+    { id: 'interpretation', label: 'Misläsning', icon: Eye, color: '#8b5cf6', desc: 'Jag läste fel på frågan' },
+    { id: 'time_pressure', label: 'Tid', icon: Clock, color: '#6366f1', desc: 'Jag fick slut på tid' },
+    { id: 'other', label: 'Annat', icon: HelpCircle, color: '#9ca3af', desc: 'Något annat' },
 ];
 
 export default function ReflectionModal({ isOpen, onClose, attempt }: ReflectionModalProps) {
@@ -60,7 +60,7 @@ export default function ReflectionModal({ isOpen, onClose, attempt }: Reflection
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                        <h3 className="font-bold text-lg">Analyze Your Mistake</h3>
+                        <h3 className="font-bold text-lg">Analysera ditt misstag</h3>
                         <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
                             <X size={20} />
                         </button>
@@ -68,7 +68,7 @@ export default function ReflectionModal({ isOpen, onClose, attempt }: Reflection
 
                     <div className="p-6 max-h-[70vh] overflow-y-auto">
                         <p className="text-zinc-500 mb-4 text-sm">
-                            Mistakes are opportunities to learn. What went wrong on this question?
+                            Misstag är möjligheter att lära. Vad gick fel på den här frågan?
                         </p>
 
                         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -77,8 +77,8 @@ export default function ReflectionModal({ isOpen, onClose, attempt }: Reflection
                                     key={type.id}
                                     onClick={() => setSelectedType(type.id)}
                                     className={`p-3 rounded-xl border text-left transition-all ${selectedType === type.id
-                                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 ring-1 ring-blue-500'
-                                            : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
+                                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 ring-1 ring-blue-500'
+                                        : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
                                         }`}
                                 >
                                     <div className="flex items-center gap-2 mb-1" style={{ color: type.color }}>
@@ -91,11 +91,11 @@ export default function ReflectionModal({ isOpen, onClose, attempt }: Reflection
                         </div>
 
                         <div className="mb-6">
-                            <label className="block text-sm font-medium mb-2">Reflection (Optional)</label>
+                            <label className="block text-sm font-medium mb-2">Reflektion (Valfritt)</label>
                             <textarea
                                 value={reflection}
                                 onChange={(e) => setReflection(e.target.value)}
-                                placeholder="What will you do differently next time?"
+                                placeholder="Vad ska du göra annorlunda nästa gång?"
                                 className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-24"
                             />
                         </div>
@@ -105,10 +105,10 @@ export default function ReflectionModal({ isOpen, onClose, attempt }: Reflection
                             disabled={!selectedType || isSubmitting}
                             className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold transition-all flex items-center justify-center gap-2"
                         >
-                            {isSubmitting ? 'Saving...' : (
+                            {isSubmitting ? 'Sparar...' : (
                                 <>
                                     <Check size={18} />
-                                    Save Analysis
+                                    Spara Analys
                                 </>
                             )}
                         </button>

@@ -12,20 +12,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const studyItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'blue' },
-    { href: '/courses', label: 'Courses', icon: BookOpen, color: 'emerald' },
-    { href: '/practice', label: 'Practice', icon: Target, color: 'orange' },
+    { href: '/courses', label: 'Kurser', icon: BookOpen, color: 'emerald' },
+    { href: '/practice', label: 'Öva', icon: Target, color: 'orange' },
     { href: '/flashcards', label: 'Flashcards', icon: Layers, color: 'pink' },
 ];
 
 const examPrepItems = [
-    { href: '/exams', label: 'Past Exams', icon: Archive, color: 'cyan' },
-    { href: '/exam-sim', label: 'Exam Simulator', icon: FlaskConical, color: 'purple' },
-    { href: '/ai', label: 'AI Tutor', icon: Sparkles, color: 'yellow' },
+    { href: '/exams', label: 'Gamla tentor', icon: Archive, color: 'cyan' },
+    { href: '/exam-sim', label: 'Tentasimulator', icon: FlaskConical, color: 'purple' },
+    { href: '/ai', label: 'AI-handledare', icon: Sparkles, color: 'yellow' },
 ];
 
 const secondaryNavItems = [
-    { href: '/settings', label: 'Settings', icon: Settings },
-    { href: '/help', label: 'Help', icon: HelpCircle },
+    { href: '/settings', label: 'Inställningar', icon: Settings },
+    { href: '/help', label: 'Hjälp', icon: HelpCircle },
 ];
 
 // Color mapping for active states
@@ -104,7 +104,7 @@ export function Sidebar() {
                                 exit={{ opacity: 0 }}
                                 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1"
                             >
-                                Study
+                                Studera
                             </motion.p>
                         )}
                     </AnimatePresence>
@@ -181,7 +181,7 @@ export function Sidebar() {
                                 exit={{ opacity: 0 }}
                                 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1"
                             >
-                                Exam Prep
+                                Tentaförberedelse
                             </motion.p>
                         )}
                     </AnimatePresence>

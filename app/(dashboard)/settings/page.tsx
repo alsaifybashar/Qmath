@@ -10,56 +10,56 @@ import {
 const settingsCategories = [
     {
         id: 'account',
-        name: 'Account',
-        description: 'Email, password, and account security',
+        name: 'Konto',
+        description: 'E-post, lösenord och kontosäkerhet',
         icon: User,
         href: '/profile',
         color: 'text-blue-500'
     },
     {
         id: 'profile',
-        name: 'Profile',
-        description: 'Personal information and avatar',
+        name: 'Profil',
+        description: 'Personlig information och avatar',
         icon: User,
         href: '/profile',
         color: 'text-green-500'
     },
     {
         id: 'notifications',
-        name: 'Notifications',
-        description: 'Email and push notification preferences',
+        name: 'Notiser',
+        description: 'E-post- och pushnotisinställningar',
         icon: Bell,
         href: '/profile',
         color: 'text-yellow-500'
     },
     {
         id: 'privacy',
-        name: 'Privacy',
-        description: 'Data sharing and visibility settings',
+        name: 'Integritet',
+        description: 'Datadelning och inställningar för synlighet',
         icon: Lock,
         href: '/privacy',
         color: 'text-red-500'
     },
     {
         id: 'preferences',
-        name: 'Study Preferences',
-        description: 'Learning style and study settings',
+        name: 'Studiepreferenser',
+        description: 'Inlärningsstil och studieinställningar',
         icon: BookOpen,
         href: '/profile',
         color: 'text-purple-500'
     },
     {
         id: 'subscription',
-        name: 'Subscription',
-        description: 'Manage your plan and billing',
+        name: 'Prenumeration',
+        description: 'Hantera din plan och fakturering',
         icon: CreditCard,
         href: '/pricing',
         color: 'text-cyan-500'
     },
     {
         id: 'connections',
-        name: 'Connected Accounts',
-        description: 'Linked services and integrations',
+        name: 'Kopplade konton',
+        description: 'Kopplade tjänster och integrationer',
         icon: Link2,
         href: '/profile',
         color: 'text-orange-500'
@@ -78,9 +78,9 @@ export default function SettingsPage() {
             >
                 <div className="flex items-center gap-3 mb-2">
                     <Settings2 className="w-8 h-8 text-zinc-500" />
-                    <h1 className="text-4xl font-bold">Settings</h1>
+                    <h1 className="text-4xl font-bold">Inställningar</h1>
                 </div>
-                <p className="text-zinc-500 dark:text-zinc-400">Manage your account and preferences</p>
+                <p className="text-zinc-500 dark:text-zinc-400">Hantera ditt konto och preferenser</p>
             </motion.div>
 
             {/* Settings Grid */}
@@ -125,13 +125,13 @@ export default function SettingsPage() {
                 transition={{ delay: 0.4 }}
                 className="mt-8 bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6"
             >
-                <h3 className="font-bold mb-6">Quick Settings</h3>
+                <h3 className="font-bold mb-6">Snabbinställningar</h3>
 
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Globe className="w-5 h-5 text-zinc-500" />
-                            <span>Language</span>
+                            <span>Språk</span>
                         </div>
                         <select className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm">
                             <option>English</option>
@@ -142,11 +142,11 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Palette className="w-5 h-5 text-zinc-500" />
-                            <span>Theme</span>
+                            <span>Tema</span>
                         </div>
                         <select className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm">
-                            <option>Dark</option>
-                            <option>Light</option>
+                            <option>Mörkt</option>
+                            <option>Ljust</option>
                             <option>System</option>
                         </select>
                     </div>
@@ -160,14 +160,14 @@ export default function SettingsPage() {
                 transition={{ delay: 0.5 }}
                 className="mt-8 p-6 bg-red-50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/20 rounded-2xl"
             >
-                <h3 className="font-bold text-red-600 dark:text-red-400 mb-4">Danger Zone</h3>
+                <h3 className="font-bold text-red-600 dark:text-red-400 mb-4">Riskzon</h3>
                 <div className="flex items-center justify-between">
                     <div>
-                        <div className="font-medium">Delete Account</div>
-                        <div className="text-sm text-zinc-500">Permanently delete your account and all data</div>
+                        <div className="font-medium">Radera konto</div>
+                        <div className="text-sm text-zinc-500">Radera ditt konto och all data permanent</div>
                     </div>
                     <button className="px-4 py-2 bg-red-100 dark:bg-red-500/10 hover:bg-red-200 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 rounded-lg transition-all text-sm">
-                        Delete Account
+                        Radera konto
                     </button>
                 </div>
             </motion.div>

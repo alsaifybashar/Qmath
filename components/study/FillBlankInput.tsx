@@ -97,7 +97,7 @@ export function FillBlankInput({ question, onAnswer }: FillBlankProps) {
                     }
                 `}
             >
-                Check Answer
+                Kontrollera svar
             </button>
         </div>
     );

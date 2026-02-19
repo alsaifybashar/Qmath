@@ -109,16 +109,16 @@ export default function VirtualCity({ cityState, courseName, cityProgress }: Vir
                     <div>
                         <h2 className="text-xl font-bold flex items-center gap-2">
                             <span className="text-2xl">🏙️</span>
-                            {cityProgress?.levelName || 'Your City'}: {courseName}
+                            {cityProgress?.levelName || 'Din Stad'}: {courseName}
                         </h2>
                         <p className="text-sm text-zinc-500 mt-1">
-                            {cityProgress?.weather?.description || 'Build your knowledge city!'}
+                            {cityProgress?.weather?.description || 'Bygg din kunskapsstad!'}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <WeatherIndicator weather={weather} />
                         <div className="text-sm text-zinc-500">
-                            Level {cityProgress?.level || cityState.cityLevel}
+                            Nivå {cityProgress?.level || cityState.cityLevel}
                         </div>
                         <div className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-sm font-bold text-white shadow-lg">
                             ⚡ {cityState.totalXp} XP
@@ -143,10 +143,10 @@ export default function VirtualCity({ cityState, courseName, cityProgress }: Vir
                 </div>
                 <div className="flex justify-between items-center mt-1">
                     <div className="text-xs text-zinc-400">
-                        {Math.max(0, xpToNext)} XP to next level
+                        {Math.max(0, xpToNext)} XP till nästa nivå
                     </div>
                     <div className="text-xs text-zinc-400">
-                        {inhabitants} 👤 inhabitants
+                        {inhabitants} 👤 invånare
                     </div>
                 </div>
             </div>
@@ -339,7 +339,7 @@ export default function VirtualCity({ cityState, courseName, cityProgress }: Vir
                 ))}
                 {buildings.length > 5 && (
                     <span className="px-3 py-1.5 text-sm text-zinc-400">
-                        +{buildings.length - 5} more
+                        +{buildings.length - 5} fler
                     </span>
                 )}
             </div>
@@ -1067,7 +1067,7 @@ function BuildingTooltip({ building }: { building: BuildingState }) {
             <div className="font-bold">{building.definition.name}</div>
             {building.unlocked ? (
                 <>
-                    <div className="text-xs text-purple-500 font-medium">Level {building.level}/{building.definition.maxLevel}</div>
+                    <div className="text-xs text-purple-500 font-medium">Nivå {building.level}/{building.definition.maxLevel}</div>
                     <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full mt-1 overflow-hidden">
                         <div
                             className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
@@ -1077,7 +1077,7 @@ function BuildingTooltip({ building }: { building: BuildingState }) {
                 </>
             ) : (
                 <>
-                    <div className="text-xs text-zinc-500 mt-1">🔒 Locked</div>
+                    <div className="text-xs text-zinc-500 mt-1">🔒 Låst</div>
                     <div className="text-xs text-zinc-400">{building.definition.unlockRequirement.description}</div>
                     <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full mt-1 overflow-hidden">
                         <div className="h-full bg-zinc-400" style={{ width: `${building.progress}%` }} />
@@ -1115,9 +1115,9 @@ function BuildingDetails({ building, onClose }: { building: BuildingState; onClo
                 <>
                     <div className="mb-4">
                         <div className="flex justify-between text-sm mb-2">
-                            <span className="text-zinc-500">Level Progress</span>
+                            <span className="text-zinc-500">Nivåframsteg</span>
                             <span className="font-bold text-purple-500">
-                                Level {level}/{definition.maxLevel}
+                                Nivå {level}/{definition.maxLevel}
                             </span>
                         </div>
                         <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
@@ -1136,17 +1136,17 @@ function BuildingDetails({ building, onClose }: { building: BuildingState; onClo
                     {definition.bonuses && Object.keys(definition.bonuses).length > 0 && (
                         <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                             <div className="text-sm font-medium text-purple-900 dark:text-purple-100 mb-2">
-                                🎁 Building Bonuses
+                                🎁 Byggnadsbonusar
                             </div>
                             <ul className="text-xs text-purple-700 dark:text-purple-300 space-y-1">
                                 {definition.bonuses.xpMultiplier && (
-                                    <li>+{((definition.bonuses.xpMultiplier - 1) * 100).toFixed(0)}% XP from this area</li>
+                                    <li>+{((definition.bonuses.xpMultiplier - 1) * 100).toFixed(0)}% XP från detta område</li>
                                 )}
                                 {definition.bonuses.streakProtection && (
-                                    <li>🛡️ Streak protection available</li>
+                                    <li>🛡️ Streak-skydd tillgängligt</li>
                                 )}
                                 {definition.bonuses.unlockHints && (
-                                    <li>💡 Unlock additional hints</li>
+                                    <li>💡 Lås upp ytterligare ledtrådar</li>
                                 )}
                             </ul>
                         </div>
@@ -1155,7 +1155,7 @@ function BuildingDetails({ building, onClose }: { building: BuildingState; onClo
             ) : (
                 <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
                     <div className="text-sm font-medium text-orange-900 dark:text-orange-100 mb-2">
-                        🔒 How to Unlock
+                        🔒 Hur man låser upp
                     </div>
                     <p className="text-sm text-orange-700 dark:text-orange-300 mb-3">
                         {definition.unlockRequirement.description}
@@ -1169,7 +1169,7 @@ function BuildingDetails({ building, onClose }: { building: BuildingState; onClo
                         />
                     </div>
                     <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                        {progress.toFixed(0)}% complete
+                        {progress.toFixed(0)}% klar
                     </div>
                 </div>
             )}
@@ -1201,7 +1201,7 @@ function AchievementToast({ achievementId, onClose }: { achievementId: string; o
                 <div className="text-3xl">{achievement.emoji}</div>
                 <div>
                     <div className="text-xs uppercase tracking-wider" style={{ color: getRarityColor(achievement.rarity) }}>
-                        {achievement.rarity} Achievement
+                        {achievement.rarity} Prestation
                     </div>
                     <div className="font-bold">{achievement.name}</div>
                     <div className="text-xs text-zinc-500">{achievement.description}</div>

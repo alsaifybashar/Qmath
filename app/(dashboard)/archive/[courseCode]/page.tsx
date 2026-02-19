@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: PageProps) {
     const code = courseCode.toUpperCase();
 
     return {
-        title: `${code} Exams | Qmath Archive`,
-        description: `Browse and download old exams for ${code}`,
+        title: `${code} Tentor | Qmath Arkiv`,
+        description: `Bläddra och ladda ner gamla tentor för ${code}`,
     };
 }
 
@@ -64,7 +64,7 @@ export default async function CourseArchivePage({ params }: PageProps) {
                             className="flex items-center gap-2 text-slate-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                         >
                             <ArrowLeft size={18} />
-                            <span className="text-sm font-medium">Back to Search</span>
+                            <span className="text-sm font-medium">Tillbaka till sök</span>
                         </Link>
                     </div>
                 </div>
@@ -86,11 +86,11 @@ export default async function CourseArchivePage({ params }: PageProps) {
                     <div className="flex items-center gap-6 text-sm">
                         <div className="flex items-center gap-2 text-slate-600 dark:text-zinc-400">
                             <FileText size={16} />
-                            <span><strong className="text-slate-900 dark:text-white">{stats.total}</strong> exams</span>
+                            <span><strong className="text-slate-900 dark:text-white">{stats.total}</strong> tentor</span>
                         </div>
                         <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                             <CheckCircle size={16} />
-                            <span><strong>{stats.withSolution}</strong> with solutions</span>
+                            <span><strong>{stats.withSolution}</strong> med lösningar</span>
                         </div>
                     </div>
                 </div>
@@ -126,7 +126,7 @@ export default async function CourseArchivePage({ params }: PageProps) {
                                                     {exam.hasSolution && (
                                                         <span className="ml-3 inline-flex items-center gap-1 text-green-600 dark:text-green-400">
                                                             <CheckCircle size={12} />
-                                                            Solution available
+                                                            Lösning tillgänglig
                                                         </span>
                                                     )}
                                                 </div>
@@ -135,7 +135,7 @@ export default async function CourseArchivePage({ params }: PageProps) {
 
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                                                View exam →
+                                                Se tenta →
                                             </span>
                                         </div>
                                     </Link>

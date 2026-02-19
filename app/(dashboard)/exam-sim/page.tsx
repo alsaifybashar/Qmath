@@ -9,6 +9,13 @@ import type { ExamSimulation, SimAnswer, ExamResult, SimQuestion, ExamSimConfig 
 
 // ============ CONFIG SCREEN ============
 
+const difficultyLabels: Record<string, string> = {
+    adaptive: 'adaptiv',
+    easy: 'lätt',
+    medium: 'medel',
+    hard: 'svår'
+};
+
 function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void }) {
     const [courseId, setCourseId] = useState('');
     const [duration, setDuration] = useState(90);
@@ -30,9 +37,9 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center mx-auto mb-4">
                         <Timer className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Exam Simulation</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Tentamenssimulering</h1>
                     <p className="text-zinc-500 dark:text-zinc-400 mt-2 text-sm">
-                        Practice under real exam conditions with timed, course-specific questions.
+                        Öva under verkliga tentamensvillkor med tidsbegränsade, kursspecifika frågor.
                     </p>
                 </div>
 
@@ -40,13 +47,13 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                     {/* Course ID */}
                     <div>
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 block mb-2">
-                            Course ID
+                            Kurskod
                         </label>
                         <input
                             type="text"
                             value={courseId}
                             onChange={e => setCourseId(e.target.value)}
-                            placeholder="Enter your course ID..."
+                            placeholder="Ange din kurskod..."
                             className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                         />
                     </div>
@@ -54,7 +61,7 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                     {/* Duration */}
                     <div>
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 block mb-2">
-                            Duration
+                            Tid
                         </label>
                         <div className="grid grid-cols-4 gap-2">
                             {durations.map(d => (
@@ -75,7 +82,7 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                     {/* Question Count */}
                     <div>
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 block mb-2">
-                            Questions
+                            Antal frågor
                         </label>
                         <div className="grid grid-cols-3 gap-2">
                             {counts.map(c => (
@@ -96,7 +103,7 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                     {/* Difficulty */}
                     <div>
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 block mb-2">
-                            Difficulty
+                            Svårighetsgrad
                         </label>
                         <div className="grid grid-cols-4 gap-2">
                             {(['adaptive', 'easy', 'medium', 'hard'] as const).map(d => (
@@ -108,7 +115,7 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                                         }`}
                                 >
-                                    {d}
+                                    {difficultyLabels[d]}
                                 </button>
                             ))}
                         </div>
@@ -123,7 +130,7 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                             className="w-5 h-5 rounded-lg accent-blue-500"
                         />
                         <span className="text-sm text-zinc-700 dark:text-zinc-300">
-                            Focus on weak topics (recommended)
+                            Fokusera på svaga områden (rekommenderas)
                         </span>
                     </label>
 
@@ -134,7 +141,7 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                         className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-blue-500 to-violet-600 hover:from-blue-600 hover:to-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                     >
                         <Play className="w-5 h-5" />
-                        Start Simulation
+                        Starta simulering
                     </button>
                 </div>
             </motion.div>
@@ -236,10 +243,10 @@ function ExamScreen({
                 <div className="flex items-center gap-4">
                     <span className="text-sm font-bold text-blue-500">{simulation.courseCode}</span>
                     <span className="text-sm text-zinc-500">
-                        Q{currentIndex + 1} of {simulation.questions.length}
+                        Fråga {currentIndex + 1} av {simulation.questions.length}
                     </span>
                     <span className="text-xs text-zinc-400">
-                        {answeredCount}/{simulation.questions.length} answered
+                        {answeredCount}/{simulation.questions.length} besvarade
                     </span>
                 </div>
                 <div className="flex items-center gap-4">
@@ -252,7 +259,7 @@ function ExamScreen({
                         onClick={handleSubmit}
                         className="px-4 py-1.5 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition"
                     >
-                        Submit Exam
+                        Lämna in tenta
                     </button>
                 </div>
             </div>
@@ -290,7 +297,7 @@ function ExamScreen({
                                     {q.topicName}
                                 </span>
                                 <span className="text-xs text-zinc-400">
-                                    {q.points} pts • Difficulty {q.difficulty}/5
+                                    {q.points} p • Svårighet {q.difficulty}/5
                                 </span>
                             </div>
                             <button
@@ -312,7 +319,7 @@ function ExamScreen({
                             type="text"
                             value={currentAnswer}
                             onChange={e => setCurrentAnswer(e.target.value)}
-                            placeholder="Your answer..."
+                            placeholder="Ditt svar..."
                             className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-mono"
                             autoFocus
                             onKeyDown={e => {
@@ -333,7 +340,7 @@ function ExamScreen({
                             disabled={currentIndex === 0}
                             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-30 transition"
                         >
-                            <ChevronLeft className="w-4 h-4" /> Previous
+                            <ChevronLeft className="w-4 h-4" /> Föregående
                         </button>
                         <button
                             onClick={() => {
@@ -345,9 +352,9 @@ function ExamScreen({
                             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 transition"
                         >
                             {currentIndex < simulation.questions.length - 1 ? (
-                                <>Next <ChevronRight className="w-4 h-4" /></>
+                                <>Nästa <ChevronRight className="w-4 h-4" /></>
                             ) : (
-                                <>Review & Submit</>
+                                <>Granska & skicka in</>
                             )}
                         </button>
                     </div>
@@ -378,7 +385,7 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                     className="text-center mb-8"
                 >
                     <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-2">
-                        Exam Results
+                        Tentamensresultat
                     </h1>
                     <p className="text-zinc-500">{result.courseName} ({result.courseCode})</p>
                 </motion.div>
@@ -392,12 +399,12 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                 >
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-zinc-500 mb-1">Your Score</p>
+                            <p className="text-sm text-zinc-500 mb-1">Ditt resultat</p>
                             <p className="text-5xl font-bold" style={{ color: gradeColor }}>
                                 {result.percentage}%
                             </p>
                             <p className="text-sm text-zinc-400 mt-1">
-                                {result.earnedPoints}/{result.totalPoints} points • {result.duration} min
+                                {result.earnedPoints}/{result.totalPoints} poäng • {result.duration} min
                             </p>
                         </div>
                         <div
@@ -418,7 +425,7 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                 >
                     <h3 className="text-base font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
                         <Zap className="w-5 h-5 text-blue-500" />
-                        Key Insights
+                        Viktiga insikter
                     </h3>
                     <div className="space-y-2">
                         {result.insights.map((insight, i) => (
@@ -438,7 +445,7 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                 >
                     <h3 className="text-base font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
                         <BookOpen className="w-5 h-5 text-violet-500" />
-                        Topic Breakdown
+                        Ämnesanalys
                     </h3>
                     <div className="space-y-3">
                         {result.topicPerformance.map(tp => (
@@ -480,7 +487,7 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                 >
                     <h3 className="text-base font-semibold text-amber-900 dark:text-amber-300 mb-4 flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-amber-600" />
-                        Areas for Improvement
+                        Områden att förbättra
                     </h3>
                     <div className="space-y-2">
                         {result.improvements.map((imp, i) => (
@@ -497,13 +504,13 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                         href="/exam-sim"
                         className="flex-1 py-3 rounded-xl text-center font-medium text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
                     >
-                        Try Again
+                        Försök igen
                     </Link>
                     <Link
                         href="/study"
                         className="flex-1 py-3 rounded-xl text-center font-medium text-white bg-gradient-to-r from-blue-500 to-violet-600 hover:from-blue-600 hover:to-violet-700 transition shadow-lg flex items-center justify-center gap-2"
                     >
-                        Practice Weak Topics <ArrowRight className="w-4 h-4" />
+                        Öva svaga områden <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </div>
@@ -556,7 +563,7 @@ export default function ExamSimPage() {
                         transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                         className="w-12 h-12 border-3 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
                     />
-                    <p className="text-zinc-600 dark:text-zinc-400">Generating your exam...</p>
+                    <p className="text-zinc-600 dark:text-zinc-400">Genererar din tenta...</p>
                 </motion.div>
             </div>
         );
@@ -577,7 +584,7 @@ export default function ExamSimPage() {
                     >
                         <CheckCircle className="w-8 h-8 text-white" />
                     </motion.div>
-                    <p className="text-zinc-600 dark:text-zinc-400">Grading your exam...</p>
+                    <p className="text-zinc-600 dark:text-zinc-400">Rättar din tenta...</p>
                 </motion.div>
             </div>
         );

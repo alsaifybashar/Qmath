@@ -95,24 +95,24 @@ export default function FlashcardReviewPage() {
                     className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center"
                 >
                     <div className="text-5xl mb-6">🎉</div>
-                    <h1 className="text-3xl font-bold mb-2">Session Complete!</h1>
-                    <p className="text-zinc-400 mb-8">You reviewed {total} cards in {formatTime(sessionTime)}</p>
+                    <h1 className="text-3xl font-bold mb-2">Session klar!</h1>
+                    <p className="text-zinc-400 mb-8">Du repeterade {total} kort på {formatTime(sessionTime)}</p>
 
                     <div className="grid grid-cols-3 gap-4 mb-8">
                         <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
                             <CheckCircle2 className="w-6 h-6 text-green-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-green-400">{stats.easy}</div>
-                            <div className="text-xs text-zinc-500">Easy</div>
+                            <div className="text-xs text-zinc-500">Lätt</div>
                         </div>
                         <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
                             <Brain className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-yellow-400">{stats.hard}</div>
-                            <div className="text-xs text-zinc-500">Hard</div>
+                            <div className="text-xs text-zinc-500">Svårt</div>
                         </div>
                         <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
                             <RotateCcw className="w-6 h-6 text-red-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-red-400">{stats.again}</div>
-                            <div className="text-xs text-zinc-500">Again</div>
+                            <div className="text-xs text-zinc-500">Igen</div>
                         </div>
                     </div>
 
@@ -121,7 +121,7 @@ export default function FlashcardReviewPage() {
                             href="/flashcards"
                             className="block w-full py-4 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold transition-all"
                         >
-                            Back to Flashcards
+                            Tillbaka till översikten
                         </Link>
                         <button
                             onClick={() => {
@@ -132,7 +132,7 @@ export default function FlashcardReviewPage() {
                             }}
                             className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium transition-all"
                         >
-                            Review Again
+                            Repetera igen
                         </button>
                     </div>
                 </motion.div>
@@ -152,7 +152,7 @@ export default function FlashcardReviewPage() {
                         className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
-                        Exit
+                        Avsluta
                     </Link>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 text-zinc-500">
@@ -196,7 +196,7 @@ export default function FlashcardReviewPage() {
                             >
                                 <div className="text-xs text-purple-400 mb-4">{currentCard.deck}</div>
                                 <div className="text-xl text-center">{renderMath(currentCard.front)}</div>
-                                <div className="absolute bottom-6 text-sm text-zinc-500">Tap to flip</div>
+                                <div className="absolute bottom-6 text-sm text-zinc-500">Klicka för att vända</div>
                             </div>
 
                             {/* Back */}
@@ -204,7 +204,7 @@ export default function FlashcardReviewPage() {
                                 className={`absolute inset-0 bg-zinc-900 border border-purple-500/30 rounded-3xl p-8 flex flex-col items-center justify-center ${flipped ? 'opacity-100' : 'opacity-0'
                                     }`}
                             >
-                                <div className="text-xs text-purple-400 mb-4">Answer</div>
+                                <div className="text-xs text-purple-400 mb-4">Svar</div>
                                 <div className="text-2xl text-center font-bold">{renderMath(currentCard.back)}</div>
                             </div>
                         </div>
@@ -225,7 +225,7 @@ export default function FlashcardReviewPage() {
                                 className="py-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl transition-all"
                             >
                                 <RotateCcw className="w-5 h-5 text-red-400 mx-auto mb-1" />
-                                <span className="text-sm text-red-400">Again</span>
+                                <span className="text-sm text-red-400">Igen</span>
                                 <div className="text-xs text-zinc-500 mt-1">&lt; 1 min</div>
                             </button>
                             <button
@@ -233,7 +233,7 @@ export default function FlashcardReviewPage() {
                                 className="py-4 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 rounded-xl transition-all"
                             >
                                 <Brain className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
-                                <span className="text-sm text-yellow-400">Hard</span>
+                                <span className="text-sm text-yellow-400">Svårt</span>
                                 <div className="text-xs text-zinc-500 mt-1">10 min</div>
                             </button>
                             <button
@@ -241,8 +241,8 @@ export default function FlashcardReviewPage() {
                                 className="py-4 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-xl transition-all"
                             >
                                 <CheckCircle2 className="w-5 h-5 text-green-400 mx-auto mb-1" />
-                                <span className="text-sm text-green-400">Easy</span>
-                                <div className="text-xs text-zinc-500 mt-1">4 days</div>
+                                <span className="text-sm text-green-400">Lätt</span>
+                                <div className="text-xs text-zinc-500 mt-1">4 dagar</div>
                             </button>
                         </motion.div>
                     )}
@@ -250,10 +250,10 @@ export default function FlashcardReviewPage() {
 
                 {/* Keyboard shortcuts hint */}
                 <div className="text-center text-zinc-600 text-sm mt-8">
-                    Press <kbd className="px-2 py-1 bg-zinc-800 rounded">Space</kbd> to flip,{' '}
+                    Tryck <kbd className="px-2 py-1 bg-zinc-800 rounded">Space</kbd> för att vända,{' '}
                     <kbd className="px-2 py-1 bg-zinc-800 rounded">1</kbd>{' '}
                     <kbd className="px-2 py-1 bg-zinc-800 rounded">2</kbd>{' '}
-                    <kbd className="px-2 py-1 bg-zinc-800 rounded">3</kbd> to rate
+                    <kbd className="px-2 py-1 bg-zinc-800 rounded">3</kbd> för att betygsätta
                 </div>
             </div>
         </div>

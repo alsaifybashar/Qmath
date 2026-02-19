@@ -35,11 +35,11 @@ export default function RegisterPage() {
         if (step === 1) {
             // Validate passwords match before proceeding
             if (formData.password !== formData.confirmPassword) {
-                setError('Passwords do not match');
+                setError('Lösenorden matchar inte');
                 return;
             }
             if (formData.password.length < 6) {
-                setError('Password must be at least 6 characters');
+                setError('Lösenordet måste vara minst 6 tecken');
                 return;
             }
 
@@ -49,7 +49,7 @@ export default function RegisterPage() {
                 const isAvailable = await checkEmailAvailability(formData.email);
 
                 if (!isAvailable) {
-                    setError('Email is already registered. Please log in.');
+                    setError('E-postadressen är redan registrerad. Logga in istället.');
                     // Don't advance step
                 } else {
                     setStep(2);
@@ -97,25 +97,25 @@ export default function RegisterPage() {
 
                 <div className="relative z-10">
                     <Link href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-8">
-                        <ArrowLeft className="w-4 h-4" /> Back to Qmath
+                        <ArrowLeft className="w-4 h-4" /> Tillbaka till Qmath
                     </Link>
-                    <h1 className="text-4xl font-bold tracking-tight mb-2">Join 10,000+ Students</h1>
-                    <p className="text-white/80 text-lg">Start mastering engineering mathematics today.</p>
+                    <h1 className="text-4xl font-bold tracking-tight mb-2">Gå med 10 000+ studenter</h1>
+                    <p className="text-white/80 text-lg">Börja bemästra ingenjörsmatten idag.</p>
                 </div>
 
                 <div className="relative z-10 space-y-6">
                     <div className="grid grid-cols-3 gap-4">
                         <div className="p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 text-center">
                             <div className="text-3xl font-bold">50K+</div>
-                            <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Questions</div>
+                            <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Uppgifter</div>
                         </div>
                         <div className="p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 text-center">
                             <div className="text-3xl font-bold">95%</div>
-                            <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Pass Rate</div>
+                            <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Godkänd</div>
                         </div>
                         <div className="p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 text-center">
                             <div className="text-3xl font-bold">4.9★</div>
-                            <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Rating</div>
+                            <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Betyg</div>
                         </div>
                     </div>
                     <p className="text-xs text-white/40 uppercase tracking-widest pl-1">© 2026 Qmath EdTech AB</p>
@@ -138,10 +138,10 @@ export default function RegisterPage() {
 
                     <div className="text-center lg:text-left">
                         <h2 className="text-3xl font-bold text-zinc-900 dark:text-white">
-                            {step === 1 ? 'Create your account' : 'Complete your profile'}
+                            {step === 1 ? 'Skapa ditt konto' : 'Slutför din profil'}
                         </h2>
                         <p className="text-zinc-500 mt-2">
-                            {step === 1 ? 'Start your learning journey' : 'Tell us about yourself'}
+                            {step === 1 ? 'Börja din läranderesa' : 'Berätta om dig själv'}
                         </p>
                     </div>
 
@@ -156,7 +156,7 @@ export default function RegisterPage() {
                         {step === 1 ? (
                             <>
                                 <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Email address</label>
+                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">E-postadress</label>
                                     <div className="relative">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                                         <input
@@ -171,12 +171,12 @@ export default function RegisterPage() {
                                     {fieldErrors.email && <p className="mt-1 text-sm text-red-500">{fieldErrors.email[0]}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Password</label>
+                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Lösenord</label>
                                     <div className="relative">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                                         <input
                                             type="password"
-                                            placeholder="At least 6 characters"
+                                            placeholder="Minst 6 tecken"
                                             required
                                             minLength={6}
                                             className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
@@ -187,12 +187,12 @@ export default function RegisterPage() {
                                     {fieldErrors.password && <p className="mt-1 text-sm text-red-500">{fieldErrors.password[0]}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Confirm Password</label>
+                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Bekräfta lösenord</label>
                                     <div className="relative">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                                         <input
                                             type="password"
-                                            placeholder="Confirm your password"
+                                            placeholder="Bekräfta ditt lösenord"
                                             required
                                             className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                             value={formData.confirmPassword}
@@ -205,7 +205,7 @@ export default function RegisterPage() {
                             <>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">First Name</label>
+                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Förnamn</label>
                                         <div className="relative">
                                             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                                             <input
@@ -220,7 +220,7 @@ export default function RegisterPage() {
                                         {fieldErrors.name && <p className="mt-1 text-sm text-red-500">{fieldErrors.name[0]}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Last Name</label>
+                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Efternamn</label>
                                         <input
                                             type="text"
                                             placeholder="Doe"
@@ -232,7 +232,7 @@ export default function RegisterPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">University</label>
+                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Universitet</label>
                                     <div className="relative">
                                         <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                                         <select
@@ -241,48 +241,48 @@ export default function RegisterPage() {
                                             value={formData.university}
                                             onChange={(e) => setFormData({ ...formData, university: e.target.value })}
                                         >
-                                            <option value="">Select your university</option>
+                                            <option value="">Välj ditt universitet</option>
                                             {[
-                                                "Blekinge Institute of Technology",
-                                                "Chalmers University of Technology",
-                                                "Dalarna University",
-                                                "Halmstad University",
-                                                "Johannelund School of Theology",
+                                                "Blekinge Tekniska Högskola",
+                                                "Chalmers tekniska högskola",
+                                                "Högskolan Dalarna",
+                                                "Högskolan i Halmstad",
+                                                "Johannelunds teologiska högskola",
                                                 "Jönköping University",
-                                                "Karlstad University",
+                                                "Karlstads universitet",
                                                 "Karolinska Institutet",
-                                                "Konstfack, University of Arts, Crafts and Design",
-                                                "Kristianstad University",
-                                                "KTH Royal Institute of Technology",
-                                                "Linköping University",
-                                                "Linnaeus University",
-                                                "Luleå University of Technology",
-                                                "Lund University",
-                                                "Mälardalen University",
-                                                "Malmö University",
-                                                "Marie Cederschiöld University",
-                                                "Mid Sweden University",
-                                                "The Newman Institute",
-                                                "Örebro University",
-                                                "Royal College of Music",
-                                                "Royal Institute of Art",
-                                                "Södertörn University in Stockholm",
-                                                "Sophiahemmet University",
-                                                "Stockholm School of Economics",
-                                                "Stockholm University",
-                                                "Stockholm University of the Arts",
-                                                "Swedish Defence University",
-                                                "Swedish Red Cross University",
-                                                "The Swedish School of Sport and Health Sciences",
-                                                "Swedish University of Agricultural Sciences",
-                                                "Umeå University",
-                                                "University of Borås",
-                                                "University College Stockholm",
-                                                "University of Gävle",
-                                                "University of Gothenburg",
-                                                "University of Skövde",
-                                                "University West",
-                                                "Uppsala University"
+                                                "Konstfack",
+                                                "Högskolan Kristianstad",
+                                                "Kungliga Tekniska högskolan (KTH)",
+                                                "Linköpings universitet",
+                                                "Linnéuniversitetet",
+                                                "Luleå tekniska universitet",
+                                                "Lunds universitet",
+                                                "Mälardalens universitet",
+                                                "Malmö universitet",
+                                                "Marie Cederschiöld högskola",
+                                                "Mittuniversitetet",
+                                                "Newmaninstitutet",
+                                                "Örebro universitet",
+                                                "Kungliga Musikhögskolan",
+                                                "Kungliga Konsthögskolan",
+                                                "Södertörns högskola",
+                                                "Sophiahemmet Högskola",
+                                                "Handelshögskolan i Stockholm",
+                                                "Stockholms universitet",
+                                                "Stockholms konstnärliga högskola",
+                                                "Försvarshögskolan",
+                                                "Röda Korsets Högskola",
+                                                "Gymnastik- och idrottshögskolan",
+                                                "Sveriges lantbruksuniversitet",
+                                                "Umeå universitet",
+                                                "Högskolan i Borås",
+                                                "Enskilda Högskolan Stockholm",
+                                                "Högskolan i Gävle",
+                                                "Göteborgs universitet",
+                                                "Högskolan i Skövde",
+                                                "Högskolan Väst",
+                                                "Uppsala universitet"
                                             ].map((uni) => (
                                                 <option key={uni} value={uni}>{uni}</option>
                                             ))}
@@ -291,7 +291,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Year of Study</label>
+                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Årskurs</label>
                                         <div className="relative">
                                             <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                                             <select
@@ -300,26 +300,26 @@ export default function RegisterPage() {
                                                 value={formData.yearOfStudy}
                                                 onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
                                             >
-                                                <option value="">Year</option>
+                                                <option value="">Årskurs</option>
                                                 {[1, 2, 3, 4, 5].map((year) => (
-                                                    <option key={year} value={year}>Year {year}</option>
+                                                    <option key={year} value={year}>År {year}</option>
                                                 ))}
-                                                <option value="6">5+ Years</option>
+                                                <option value="6">5+ år</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Program</label>
+                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Utbildningsprogram</label>
                                         <div className="relative">
                                             <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                                            {formData.university === 'Linköping University' ? (
+                                            {formData.university === 'Linköpings universitet' ? (
                                                 <select
                                                     required
                                                     className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
                                                     value={formData.program}
                                                     onChange={(e) => setFormData({ ...formData, program: e.target.value })}
                                                 >
-                                                    <option value="">Select your program</option>
+                                                    <option value="">Välj ditt program</option>
                                                     <optgroup label="Civilingenjörsprogram (5 år)">
                                                         {[
                                                             "Datateknik",
@@ -376,8 +376,8 @@ export default function RegisterPage() {
                                         onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
                                     />
                                     <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                                        I agree to the <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link> and{' '}
-                                        <Link href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
+                                        Jag godkänner <Link href="/terms" className="text-blue-600 hover:underline">användarvillkoren</Link> och{' '}
+                                        <Link href="/privacy" className="text-blue-600 hover:underline">integritetspolicyn</Link>
                                     </span>
                                 </label>
                             </>
@@ -391,11 +391,11 @@ export default function RegisterPage() {
                             {isPending ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Creating account...
+                                    Skapar konto...
                                 </>
                             ) : (
                                 <>
-                                    {step === 1 ? 'Continue' : 'Create Account'}
+                                    {step === 1 ? 'Fortsätt' : 'Skapa konto'}
                                     <ArrowRight className="w-5 h-5" />
                                 </>
                             )}
@@ -408,15 +408,15 @@ export default function RegisterPage() {
                             onClick={() => setStep(1)}
                             className="w-full py-3 text-zinc-600 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-white transition-colors"
                         >
-                            ← Back to Step 1
+                            ← Tillbaka till steg 1
                         </button>
                     )}
 
                     <div className="text-center pt-4">
                         <p className="text-zinc-600 dark:text-zinc-400">
-                            Already have an account?{' '}
+                            Har du redan ett konto?{' '}
                             <Link href="/login" className="text-blue-600 font-bold hover:underline">
-                                Log in
+                                Logga in
                             </Link>
                         </p>
                     </div>

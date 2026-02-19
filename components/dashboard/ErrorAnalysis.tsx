@@ -35,14 +35,14 @@ const ERROR_COLORS: Record<string, string> = {
 };
 
 const ERROR_LABELS: Record<string, string> = {
-    'conceptual': 'Conceptual Gap',
-    'procedural': 'Wrong Method',
-    'computational': 'Calculation Error',
-    'interpretation': 'Misread Question',
-    'notation': 'Notation Error',
-    'time_pressure': 'Ran Out of Time',
-    'incomplete': 'Incomplete',
-    'unknown': 'Unclassified'
+    'conceptual': 'Konceptuellt fel',
+    'procedural': 'Fel metod',
+    'computational': 'Beräkningsfel',
+    'interpretation': 'Feltolkad fråga',
+    'notation': 'Notationsfel',
+    'time_pressure': 'Tidsbrist',
+    'incomplete': 'Ofullständig',
+    'unknown': 'Oklassificerad'
 };
 
 export default function ErrorAnalysis({ attempts }: ErrorAnalysisProps) {
@@ -92,32 +92,32 @@ export default function ErrorAnalysis({ attempts }: ErrorAnalysisProps) {
 
     // 3. Pattern Detection / Insights
     const insight = useMemo(() => {
-        if (errors.length === 0) return { title: "Looking Good!", message: "No errors detected recently. Keep up the streak!" };
+        if (errors.length === 0) return { title: "Ser bra ut!", message: "Inga fel upptäckta nyligen. Fortsätt så!" };
 
         const topError = distributionData[0];
         const percent = Math.round((topError.value / errors.length) * 100);
 
         if (topError.name === 'conceptual') {
             return {
-                title: "Deepen Understanding",
-                message: `${percent}% of your errors are conceptual. Try reviewing the core definitions and proofs before practicing.`
+                title: "Fördjupa förståelsen",
+                message: `${percent}% av dina fel är konceptuella. Prova att repetera definitioner och bevis innan du övar.`
             };
         }
         if (topError.name === 'computational') {
             return {
-                title: "Double Check Work",
-                message: `Calculation errors account for ${percent}% of mistakes. Slow down and verify each step.`
+                title: "Dubbelkolla arbetet",
+                message: `Beräkningsfel står för ${percent}% av misstagen. Sakta ner och verifiera varje steg.`
             };
         }
         if (topError.name === 'interpretation') {
             return {
-                title: "Read Carefully",
-                message: "You're misinterpreting questions often. Highlight keywords in the problem statement."
+                title: "Läs noggrant",
+                message: "Du misstolkar frågor ofta. Markera nyckelord i problembeskrivningen."
             };
         }
         return {
-            title: "Analyze Pattern",
-            message: `Your most common error type is ${ERROR_LABELS[topError.name] || topError.name}. Focus on this area.`
+            title: "Analysera mönster",
+            message: `Ditt vanligaste fel är ${ERROR_LABELS[topError.name] || topError.name}. Fokusera på detta område.`
         };
     }, [distributionData, errors.length]);
 
@@ -129,16 +129,16 @@ export default function ErrorAnalysis({ attempts }: ErrorAnalysisProps) {
                 <div>
                     <h3 className="font-bold text-lg flex items-center gap-2">
                         <span className="text-xl">🛡️</span>
-                        Error Analysis
+                        Felanalys
                     </h3>
-                    <p className="text-xs text-zinc-500">Understanding your mistake patterns</p>
+                    <p className="text-xs text-zinc-500">Förstå dina felmönster</p>
                 </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
                 {/* Left: Distribution Pie Chart */}
                 <div className="h-64 relative">
-                    <h4 className="text-sm font-bold mb-2 text-zinc-500 uppercase tracking-wider">Breakdown</h4>
+                    <h4 className="text-sm font-bold mb-2 text-zinc-500 uppercase tracking-wider">Fördelning</h4>
                     {errors.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -156,7 +156,7 @@ export default function ErrorAnalysis({ attempts }: ErrorAnalysisProps) {
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value: number) => [`${value} Errors`, 'Count']}
+                                    formatter={(value: number | undefined) => [`${value} Fel`, 'Antal']}
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />
                                 <Legend
@@ -171,7 +171,7 @@ export default function ErrorAnalysis({ attempts }: ErrorAnalysisProps) {
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center text-zinc-400">
                             <Brain size={48} className="mb-2 opacity-50" />
-                            <p>No errors to analyze</p>
+                            <p>Inga fel att analysera</p>
                         </div>
                     )}
                 </div>
@@ -199,7 +199,7 @@ export default function ErrorAnalysis({ attempts }: ErrorAnalysisProps) {
 
                     {/* Mini Trend Chart */}
                     <div className="flex-1 min-h-[120px]">
-                        <h4 className="text-sm font-bold mb-2 text-zinc-500 uppercase tracking-wider">7-Day Trend</h4>
+                        <h4 className="text-sm font-bold mb-2 text-zinc-500 uppercase tracking-wider">7-dagars trend</h4>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={trendData}>
                                 <XAxis
@@ -224,13 +224,13 @@ export default function ErrorAnalysis({ attempts }: ErrorAnalysisProps) {
                 <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-zinc-500">
                         <AlertTriangle size={14} className="text-amber-500" />
-                        <span>You have <strong>{distributionData.find(d => d.name === 'unknown')?.value}</strong> unclassified errors.</span>
+                        <span>Du har <strong>{distributionData.find(d => d.name === 'unknown')?.value}</strong> oklassificerade fel.</span>
                     </div>
                     <button
                         onClick={handleReviewClick}
                         className="text-xs font-bold text-blue-600 hover:underline"
                     >
-                        Review Now
+                        Granska nu
                     </button>
                 </div>
             )}

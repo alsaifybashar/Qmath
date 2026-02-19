@@ -84,10 +84,10 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
     const [showCelebration, setShowCelebration] = useState(false);
 
     const milestones = [
-        { days: 7, name: 'Week Warrior', emoji: '🥉', icon: Trophy, unlocked: streakData.longest >= 7 },
-        { days: 14, name: 'Fortnight Fighter', emoji: '🥈', icon: Star, unlocked: streakData.longest >= 14 },
-        { days: 30, name: 'Month Master', emoji: '🥇', icon: TrendingUp, unlocked: streakData.longest >= 30 },
-        { days: 60, name: 'Consistency King', emoji: '👑', icon: Flame, unlocked: streakData.longest >= 60 },
+        { days: 7, name: 'Veckokrigare', emoji: '🥉', icon: Trophy, unlocked: streakData.longest >= 7 },
+        { days: 14, name: 'Tvåveckorskrigare', emoji: '🥈', icon: Star, unlocked: streakData.longest >= 14 },
+        { days: 30, name: 'Månadsmästare', emoji: '🥇', icon: TrendingUp, unlocked: streakData.longest >= 30 },
+        { days: 60, name: 'Konsistenskung', emoji: '👑', icon: Flame, unlocked: streakData.longest >= 60 },
     ];
 
     const nextMilestone = milestones.find(m => !m.unlocked) || milestones[milestones.length - 1];
@@ -103,10 +103,10 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className={`relative overflow-hidden rounded-2xl p-6 border transition-all duration-300 ${isOnFire
-                    ? 'bg-gradient-to-br from-orange-50 via-red-50/50 to-yellow-50 dark:from-orange-900/30 dark:via-red-900/20 dark:to-yellow-900/20 border-orange-200 dark:border-orange-700/50 shadow-lg shadow-orange-500/10'
-                    : isCold
-                        ? 'bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-900/20 dark:to-slate-900/20 border-blue-200 dark:border-blue-700/50'
-                        : 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800'
+                ? 'bg-gradient-to-br from-orange-50 via-red-50/50 to-yellow-50 dark:from-orange-900/30 dark:via-red-900/20 dark:to-yellow-900/20 border-orange-200 dark:border-orange-700/50 shadow-lg shadow-orange-500/10'
+                : isCold
+                    ? 'bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-900/20 dark:to-slate-900/20 border-blue-200 dark:border-blue-700/50'
+                    : 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800'
                 }`}
         >
             {/* Celebration confetti */}
@@ -136,9 +136,9 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
                         <Flame className="w-8 h-8 text-orange-400" />
                     )}
                     <div>
-                        <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Study Streak</h3>
+                        <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Studie-streak</h3>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                            {isOnFire ? "You're on fire! 🔥" : isCold ? "Start your streak today!" : "Keep going!"}
+                            {isOnFire ? "Du är i zonen! 🔥" : isCold ? "Börja din streak idag!" : "Fortsätt så!"}
                         </p>
                     </div>
                 </div>
@@ -158,7 +158,7 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
                     >
                         {streakData.current}
                     </motion.div>
-                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">days</div>
+                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">dagar</div>
                 </motion.div>
             </div>
 
@@ -166,7 +166,7 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                        Next: {nextMilestone.emoji} {nextMilestone.name}
+                        Nästa: {nextMilestone.emoji} {nextMilestone.name}
                     </span>
                     <span className="text-xs font-medium text-zinc-500 bg-white/50 dark:bg-zinc-800/50 px-2 py-0.5 rounded-full">
                         {streakData.current}/{nextMilestone.days}
@@ -199,8 +199,8 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
                         transition={{ delay: idx * 0.1 }}
                         whileHover={{ scale: milestone.unlocked ? 1.05 : 1, y: milestone.unlocked ? -2 : 0 }}
                         className={`relative text-center p-3 rounded-xl border transition-all cursor-default ${milestone.unlocked
-                                ? 'bg-white dark:bg-zinc-800 border-orange-200 dark:border-orange-700 shadow-sm hover:shadow-md'
-                                : 'bg-zinc-100/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-700 opacity-50'
+                            ? 'bg-white dark:bg-zinc-800 border-orange-200 dark:border-orange-700 shadow-sm hover:shadow-md'
+                            : 'bg-zinc-100/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-700 opacity-50'
                             }`}
                     >
                         {/* Unlocked glow */}
@@ -231,14 +231,14 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
                     whileHover={{ scale: 1.02 }}
                     className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-zinc-200/50 dark:border-zinc-700/50"
                 >
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 font-medium">🏆 Longest Streak</div>
-                    <div className="text-2xl font-bold text-zinc-900 dark:text-white">{streakData.longest} <span className="text-sm font-normal text-zinc-500">days</span></div>
+                    <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 font-medium">🏆 Längsta streak</div>
+                    <div className="text-2xl font-bold text-zinc-900 dark:text-white">{streakData.longest} <span className="text-sm font-normal text-zinc-500">dagar</span></div>
                 </motion.div>
                 <motion.div
                     whileHover={{ scale: 1.02 }}
                     className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-zinc-200/50 dark:border-zinc-700/50"
                 >
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 font-medium">📅 Total Days</div>
+                    <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 font-medium">📅 Totalt antal dagar</div>
                     <div className="text-2xl font-bold text-zinc-900 dark:text-white">{streakData.totalStudyDays}</div>
                 </motion.div>
             </div>
@@ -259,8 +259,8 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
                                 <Snowflake className="w-5 h-5 text-blue-500" />
                             </motion.div>
                             <div>
-                                <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Freeze Days</div>
-                                <div className="text-xs text-zinc-500 dark:text-zinc-400">Protect your streak</div>
+                                <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Frysdagar</div>
+                                <div className="text-xs text-zinc-500 dark:text-zinc-400">Skydda din streak</div>
                             </div>
                         </div>
                         <div className="flex items-center gap-1">

@@ -66,7 +66,7 @@ export default function ExamViewer({ exam }: ExamViewerProps) {
                                 }`}
                         >
                             {solutionRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
-                            <span className="hidden sm:inline">{solutionRevealed ? 'Hide Solution' : 'Show Solution'}</span>
+                            <span className="hidden sm:inline">{solutionRevealed ? 'Dölj lösning' : 'Visa lösning'}</span>
                         </button>
                     )}
                 </div>
@@ -82,7 +82,7 @@ export default function ExamViewer({ exam }: ExamViewerProps) {
                             <div className="p-1 rounded bg-red-500/10">
                                 <FileText size={14} className="text-red-400" />
                             </div>
-                            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Exam Questions</span>
+                            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Tentafrågor</span>
                         </div>
                         <div className="flex items-center gap-1">
                             <a
@@ -98,7 +98,7 @@ export default function ExamViewer({ exam }: ExamViewerProps) {
                                 href={examUrlRaw}
                                 download={exam.fileName}
                                 className="p-1.5 text-zinc-500 hover:text-blue-400 hover:bg-blue-400/10 rounded transition-colors"
-                                title="Download Exam"
+                                title="Ladda ner tenta"
                             >
                                 <Download size={14} />
                             </a>
@@ -128,13 +128,13 @@ export default function ExamViewer({ exam }: ExamViewerProps) {
                                 <div className="p-1 rounded bg-emerald-500/10">
                                     <FileText size={14} className="text-emerald-400" />
                                 </div>
-                                <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Solution</span>
+                                <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Lösning</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 {!solutionRevealed && (
                                     <span className="text-xs text-zinc-500 flex items-center gap-1.5 mr-2">
                                         <Eye size={12} />
-                                        Hover to peek
+                                        Håll över för att kika
                                     </span>
                                 )}
                                 <div className="h-4 w-px bg-zinc-800 mx-1"></div>
@@ -151,7 +151,7 @@ export default function ExamViewer({ exam }: ExamViewerProps) {
                                     href={solutionUrlRaw}
                                     download={exam.solutionFileName || `solution-${exam.fileName}`}
                                     className="p-1.5 text-zinc-500 hover:text-emerald-400 hover:bg-emerald-400/10 rounded transition-colors"
-                                    title="Download Solution"
+                                    title="Ladda ner lösning"
                                 >
                                     <Download size={14} />
                                 </a>
@@ -184,9 +184,9 @@ export default function ExamViewer({ exam }: ExamViewerProps) {
                                     <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
                                         <EyeOff size={24} className="text-zinc-400" />
                                     </div>
-                                    <h3 className="text-lg font-medium text-white mb-1">Solutions Hidden</h3>
+                                    <h3 className="text-lg font-medium text-white mb-1">Lösningar dolda</h3>
                                     <p className="text-sm text-zinc-400">
-                                        Hover to peek or click &quot;Show Solution&quot;
+                                        Håll över för att kika eller klicka på &quot;Visa lösning&quot;
                                     </p>
                                 </div>
                             </div>

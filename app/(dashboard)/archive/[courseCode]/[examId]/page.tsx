@@ -20,14 +20,14 @@ export async function generateMetadata({ params }: PageProps) {
     });
 
     if (!exam) {
-        return { title: 'Exam Not Found | Qmath' };
+        return { title: 'Tenta hittades inte | Qmath' };
     }
 
     const dateStr = new Date(exam.examDate).toLocaleDateString('sv-SE');
 
     return {
-        title: `${exam.examType} ${dateStr} - ${code} | Qmath Archive`,
-        description: `View ${exam.examType} exam for ${exam.courseName} from ${dateStr}`,
+        title: `${exam.examType} ${dateStr} - ${code} | Qmath Arkiv`,
+        description: `Se ${exam.examType} för ${exam.courseName} från ${dateStr}`,
     };
 }
 

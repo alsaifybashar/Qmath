@@ -10,12 +10,12 @@ import { User, LogOut } from 'lucide-react';
 
 // Navigation items for reuse
 const navItems = [
-    { href: '/features', label: 'Features' },
-    { href: '/pricing', label: 'Pricing' },
-    { href: '/archive', label: 'Old Exams' },
+    { href: '/features', label: 'Funktioner' },
+    { href: '/pricing', label: 'Priser' },
+    { href: '/archive', label: 'Gamla tentor' },
     { href: '/demo', label: 'Demo' },
-    { href: '/universities', label: 'For Universities' },
-    { href: '/about', label: 'About' },
+    { href: '/universities', label: 'För universitet' },
+    { href: '/about', label: 'Om oss' },
 ];
 
 // Animation variants
@@ -199,13 +199,13 @@ export function Header() {
                                             onClick={() => setMobileMenuOpen(false)}
                                             className="w-full py-4 text-center bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-2xl font-semibold shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
                                         >
-                                            Go to Dashboard
+                                            Gå till dashboard
                                         </Link>
                                         <button
                                             onClick={() => signOut()}
                                             className="w-full py-4 text-center border border-zinc-200 dark:border-zinc-700 rounded-2xl font-medium text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900 transition-all"
                                         >
-                                            Sign Out
+                                            Logga ut
                                         </button>
                                     </>
                                 ) : (
@@ -215,14 +215,14 @@ export function Header() {
                                             onClick={() => setMobileMenuOpen(false)}
                                             className="w-full py-4 text-center rounded-2xl border border-zinc-200 dark:border-zinc-700 font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
                                         >
-                                            Log in
+                                            Logga in
                                         </Link>
                                         <Link
                                             href="/register"
                                             onClick={() => setMobileMenuOpen(false)}
                                             className="w-full py-4 text-center bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-2xl font-semibold shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
                                         >
-                                            Get Started Free
+                                            Kom igång gratis
                                         </Link>
                                     </>
                                 )}
@@ -279,14 +279,14 @@ function AuthenticatedButtons({ session }: { session: any }) {
                 href="/login"
                 className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all"
             >
-                Log in
+                Logga in
             </Link>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Link
                     href="/register"
                     className="hidden lg:flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-full text-sm font-semibold shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30"
                 >
-                    Get Started
+                    Kom igång
                 </Link>
             </motion.div>
         </>

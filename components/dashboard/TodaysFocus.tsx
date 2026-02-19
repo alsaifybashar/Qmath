@@ -63,7 +63,7 @@ export default function TodaysFocus({ recommendations, userName }: TodaysFocusPr
                             <span className="text-xl">🎯</span>
                         </motion.div>
                         <div>
-                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Today's Focus</h2>
+                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Dagens Fokus</h2>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
                                 {getTimeBasedGreeting()}, {userName}!
                             </p>
@@ -75,7 +75,7 @@ export default function TodaysFocus({ recommendations, userName }: TodaysFocusPr
                         transition={{ duration: 2, repeat: Infinity }}
                     >
                         <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                            ⚡ Priority
+                            ⚡ Prioritet
                         </span>
                     </motion.div>
                 </div>
@@ -96,7 +96,7 @@ export default function TodaysFocus({ recommendations, userName }: TodaysFocusPr
                             >
                                 ▼
                             </motion.span>
-                            {showAll ? 'Hide' : `${otherRecommendations.length} more`} recommendations
+                            {showAll ? 'Dölj' : `${otherRecommendations.length} fler`} rekommendationer
                         </button>
 
                         <AnimatePresence>
@@ -164,7 +164,7 @@ function HeroCard({ recommendation: rec }: { recommendation: DailyRecommendation
                             </span>
                             <span className="text-xs text-zinc-400">•</span>
                             <span className="text-xs text-zinc-500">
-                                {rec.metadata.daysSince ? `${rec.metadata.daysSince}d since last practice` : 'First time topic'}
+                                {rec.metadata.daysSince ? `${rec.metadata.daysSince}d sedan senaste övning` : 'Nytt ämne'}
                             </span>
                         </div>
                         <h3 className="text-xl font-bold text-zinc-900 dark:text-white leading-tight">
@@ -194,7 +194,7 @@ function HeroCard({ recommendation: rec }: { recommendation: DailyRecommendation
                             {'●'.repeat(rec.difficulty)}
                             {'○'.repeat(5 - rec.difficulty)}
                         </span>
-                        <span className="text-xs text-zinc-500">Difficulty</span>
+                        <span className="text-xs text-zinc-500">Svårighetsgrad</span>
                     </div>
                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg border border-amber-200/50 dark:border-amber-700/30">
                         <BoltIcon className="w-4 h-4 text-amber-500" />
@@ -227,7 +227,7 @@ function HeroCard({ recommendation: rec }: { recommendation: DailyRecommendation
                         />
 
                         <span className="relative flex items-center justify-center gap-2">
-                            Start Practice
+                            Starta övning
                             <motion.span
                                 animate={{ x: [0, 4, 0] }}
                                 transition={{ duration: 1, repeat: Infinity }}
@@ -292,16 +292,16 @@ function EmptyState({ userName }: { userName: string }) {
                 🎉
             </motion.div>
             <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">
-                You're all caught up, {userName}!
+                Du är ikapp, {userName}!
             </h3>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                No urgent reviews or recommendations right now. Feel free to explore any topic or take a well-deserved break!
+                Inga brådskande repetitioner eller rekommendationer just nu. Känn dig fri att utforska vilket ämne som helst eller ta en välförtjänt paus!
             </p>
             <Link
                 href="/topics"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
             >
-                Explore Topics
+                Utforska ämnen
                 <span>→</span>
             </Link>
         </motion.div>
@@ -314,23 +314,23 @@ function EmptyState({ userName }: { userName: string }) {
 
 function getTimeBasedGreeting(): string {
     const hour = new Date().getHours();
-    if (hour < 5) return 'Good night';
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    if (hour < 21) return 'Good evening';
-    return 'Good night';
+    if (hour < 5) return 'God natt';
+    if (hour < 12) return 'God morgon';
+    if (hour < 17) return 'God eftermiddag';
+    if (hour < 21) return 'God kväll';
+    return 'God natt';
 }
 
 function getTypeLabel(type: string): string {
     const labels: Record<string, string> = {
-        review: 'Review Due',
-        strengthen: 'Needs Practice',
-        new_content: 'New Topic',
-        challenge: 'Challenge',
-        warm_up: 'Warm Up',
-        deep_dive: 'Deep Dive',
+        review: 'Dags att repetera',
+        strengthen: 'Behöver övning',
+        new_content: 'Nytt ämne',
+        challenge: 'Utmaning',
+        warm_up: 'Uppvärmning',
+        deep_dive: 'Djupdykning',
     };
-    return labels[type] || 'Practice';
+    return labels[type] || 'Övning';
 }
 
 function generateNaturalExplanation(rec: DailyRecommendation): string {
@@ -338,36 +338,36 @@ function generateNaturalExplanation(rec: DailyRecommendation): string {
     const explanations: string[] = [];
 
     if (rec.type === 'review' && rec.metadata.daysSince) {
-        explanations.push(`It's been ${rec.metadata.daysSince} days since you practiced this topic.`);
+        explanations.push(`Det har gått ${rec.metadata.daysSince} dagar sedan du övade på detta ämne.`);
     }
 
     if (rec.metadata.errorRate && rec.metadata.errorRate > 0.3) {
         const accuracy = Math.round((1 - rec.metadata.errorRate) * 100);
-        explanations.push(`Your accuracy dropped to ${accuracy}% on this topic.`);
+        explanations.push(`Din noggrannhet sjönk till ${accuracy}% på detta ämne.`);
     }
 
     if (rec.metadata.masteryGain && rec.metadata.masteryGain > 0.1) {
-        explanations.push(`A quick session could boost your mastery by ${Math.round(rec.metadata.masteryGain * 100)}%.`);
+        explanations.push(`En snabb session kan öka din bemästring med ${Math.round(rec.metadata.masteryGain * 100)}%.`);
     }
 
     if (rec.type === 'new_content') {
-        explanations.push("This is a great time to learn something new!");
+        explanations.push("Detta är ett utmärkt tillfälle att lära sig något nytt!");
     }
 
     if (rec.type === 'challenge') {
-        explanations.push("Ready for a challenge? Test your skills with harder problems.");
+        explanations.push("Redo för en utmaning? Testa dina färdigheter med svårare problem.");
     }
 
     // Default explanation if none generated
     if (explanations.length === 0) {
-        explanations.push(rec.message || "Practicing this topic will help reinforce your understanding.");
+        explanations.push(rec.message || "Att öva på detta ämne hjälper dig att stärka din förståelse.");
     }
 
     // Add a motivational ending
     const endings = [
-        " A focused 10-minute session can make a real difference.",
-        " Consistency beats intensity – let's keep the momentum!",
-        " Small steps lead to big improvements.",
+        " En fokuserad 10-minuters session kan göra stor skillnad.",
+        " Konsekvens slår intensitet – låt oss behålla momentum!",
+        " Små steg leder till stora förbättringar.",
     ];
 
     return explanations.join(' ') + endings[Math.floor(Math.random() * endings.length)];

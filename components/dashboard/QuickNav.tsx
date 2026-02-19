@@ -17,13 +17,13 @@ import {
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-    { href: '/exams', label: 'Exams', icon: GraduationCap, color: 'text-blue-500' },
+    { href: '/exams', label: 'Tentor', icon: GraduationCap, color: 'text-blue-500' },
     { href: '/flashcards', label: 'Flashcards', icon: BookOpen, color: 'text-emerald-500' },
-    { href: '/courses', label: 'My Courses', icon: LayoutGrid, color: 'text-purple-500' },
-    { href: '/practice', label: 'Practice Arena', icon: Gamepad2, color: 'text-pink-500' },
-    { href: '/profile', label: 'Profile', icon: User, color: 'text-orange-500' },
-    { href: '/settings', label: 'Settings', icon: Settings, color: 'text-zinc-500' },
-    { href: '/help', label: 'Help & Support', icon: HelpCircle, color: 'text-cyan-500' },
+    { href: '/courses', label: 'Mina Kurser', icon: LayoutGrid, color: 'text-purple-500' },
+    { href: '/practice', label: 'Övningsarena', icon: Gamepad2, color: 'text-pink-500' },
+    { href: '/profile', label: 'Profil', icon: User, color: 'text-orange-500' },
+    { href: '/settings', label: 'Inställningar', icon: Settings, color: 'text-zinc-500' },
+    { href: '/help', label: 'Hjälp & Support', icon: HelpCircle, color: 'text-cyan-500' },
 ];
 
 export default function QuickNav() {
@@ -64,9 +64,9 @@ export default function QuickNav() {
                         <span className="p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
                             <Menu size={18} />
                         </span>
-                        Quick Access
+                        Snabbåtkomst
                     </h3>
-                    <p className="text-xs text-zinc-500 pl-10">Jump to other sections</p>
+                    <p className="text-xs text-zinc-500 pl-10">Hoppa till andra sektioner</p>
                 </div>
 
                 <div className="flex flex-col gap-2 overflow-y-auto flex-1">
@@ -88,7 +88,7 @@ export default function QuickNav() {
                 {/* Footer Info */}
                 <div className="mt-auto pt-6 border-t border-zinc-100 dark:border-zinc-800">
                     <div className="text-xs text-center text-zinc-400">
-                        Qmath Student Portal v1.0
+                        Qmath Studentportal v1.0
                     </div>
                 </div>
             </motion.div>

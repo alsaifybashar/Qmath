@@ -25,7 +25,7 @@ interface WeeklyProgressProps {
 export default function WeeklyProgress({ attempts, previousWeekAccuracy }: WeeklyProgressProps) {
     // Process weekly data
     const weekData = useMemo(() => {
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const days = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
         const today = new Date();
         const dayOfWeek = today.getDay(); // 0 = Sunday
         const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -117,9 +117,9 @@ export default function WeeklyProgress({ attempts, previousWeekAccuracy }: Weekl
                             <span className="text-xl">📈</span>
                         </motion.div>
                         <div>
-                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">This Week</h2>
+                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Denna vecka</h2>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                Daily activity breakdown
+                                Daglig aktivitetsöversikt
                             </p>
                         </div>
                     </div>
@@ -127,16 +127,16 @@ export default function WeeklyProgress({ attempts, previousWeekAccuracy }: Weekl
                     {/* Improvement badge */}
                     {stats.improvement !== null && (
                         <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full border ${stats.improvement >= 0
-                                ? 'bg-green-50 dark:bg-green-900/30 border-green-200/50 dark:border-green-700/30'
-                                : 'bg-red-50 dark:bg-red-900/30 border-red-200/50 dark:border-red-700/30'
+                            ? 'bg-green-50 dark:bg-green-900/30 border-green-200/50 dark:border-green-700/30'
+                            : 'bg-red-50 dark:bg-red-900/30 border-red-200/50 dark:border-red-700/30'
                             }`}>
                             <span className={`text-sm font-bold ${stats.improvement >= 0
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : 'text-red-600 dark:text-red-400'
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-red-600 dark:text-red-400'
                                 }`}>
                                 {stats.improvement >= 0 ? '↑' : '↓'} {Math.abs(stats.improvement)}%
                             </span>
-                            <span className="text-xs text-zinc-500">vs last week</span>
+                            <span className="text-xs text-zinc-500">jämfört med förra veckan</span>
                         </div>
                     )}
                 </div>
@@ -153,8 +153,8 @@ export default function WeeklyProgress({ attempts, previousWeekAccuracy }: Weekl
                                     ) : (
                                         <motion.div
                                             className={`w-3/4 rounded-t-lg relative overflow-hidden ${day.isToday
-                                                    ? 'bg-gradient-to-t from-blue-500 to-purple-500'
-                                                    : getBarColor(day.accuracy)
+                                                ? 'bg-gradient-to-t from-blue-500 to-purple-500'
+                                                : getBarColor(day.accuracy)
                                                 }`}
                                             initial={{ height: 0 }}
                                             animate={{ height: day.total > 0 ? `${(day.total / maxValue) * 100}%` : '4px' }}
@@ -187,8 +187,8 @@ export default function WeeklyProgress({ attempts, previousWeekAccuracy }: Weekl
 
                                 {/* Day label */}
                                 <span className={`text-xs font-medium ${day.isToday
-                                        ? 'text-blue-600 dark:text-blue-400 font-bold'
-                                        : 'text-zinc-500 dark:text-zinc-400'
+                                    ? 'text-blue-600 dark:text-blue-400 font-bold'
+                                    : 'text-zinc-500 dark:text-zinc-400'
                                     }`}>
                                     {day.name}
                                 </span>
@@ -203,19 +203,19 @@ export default function WeeklyProgress({ attempts, previousWeekAccuracy }: Weekl
                         <div className="text-2xl font-bold text-zinc-900 dark:text-white">
                             {stats.totalQuestions}
                         </div>
-                        <div className="text-xs text-zinc-500 dark:text-zinc-400">Questions</div>
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">Frågor</div>
                     </div>
                     <div className="text-center p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                         <div className="text-2xl font-bold text-zinc-900 dark:text-white">
                             {stats.avgAccuracy}%
                         </div>
-                        <div className="text-xs text-zinc-500 dark:text-zinc-400">Accuracy</div>
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">Träffsäkerhet</div>
                     </div>
                     <div className="text-center p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                         <div className="text-2xl font-bold text-zinc-900 dark:text-white">
                             {stats.studyDays}/7
                         </div>
-                        <div className="text-xs text-zinc-500 dark:text-zinc-400">Study Days</div>
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">Studiedagar</div>
                     </div>
                 </div>
             </div>

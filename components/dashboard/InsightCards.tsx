@@ -104,10 +104,9 @@ export function StudyPatternCard({ pattern }: { pattern: StudyPattern | null }) 
     if (!pattern) return null;
 
     const formatHour = (h: number) => {
-        if (h === 0) return '12 AM';
-        if (h < 12) return `${h} AM`;
-        if (h === 12) return '12 PM';
-        return `${h - 12} PM`;
+        if (h === 0) return '00:00';
+        if (h < 12) return `${h}:00`;
+        return `${h}:00`;
     };
 
     return (
@@ -122,36 +121,36 @@ export function StudyPatternCard({ pattern }: { pattern: StudyPattern | null }) 
             }}
         >
             <h3 className="text-base font-semibold mb-4" style={{ color: '#1A1D2E' }}>
-                Your Study Patterns
+                Dina studiemönster
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-xl p-3" style={{ background: '#F8FAFC' }}>
-                    <p className="text-xs" style={{ color: '#A0A5C0' }}>Best Day</p>
+                    <p className="text-xs" style={{ color: '#A0A5C0' }}>Bästa dag</p>
                     <p className="text-sm font-bold mt-1" style={{ color: '#1A1D2E' }}>
                         {pattern.mostProductiveDay}
                     </p>
                 </div>
                 <div className="rounded-xl p-3" style={{ background: '#F8FAFC' }}>
-                    <p className="text-xs" style={{ color: '#A0A5C0' }}>Peak Hour</p>
+                    <p className="text-xs" style={{ color: '#A0A5C0' }}>Topptimme</p>
                     <p className="text-sm font-bold mt-1" style={{ color: '#1A1D2E' }}>
                         {formatHour(pattern.mostProductiveHour)}
                     </p>
                 </div>
                 <div className="rounded-xl p-3" style={{ background: '#F8FAFC' }}>
-                    <p className="text-xs" style={{ color: '#A0A5C0' }}>Avg Session</p>
+                    <p className="text-xs" style={{ color: '#A0A5C0' }}>Snittsession</p>
                     <p className="text-sm font-bold mt-1" style={{ color: '#1A1D2E' }}>
                         {pattern.averageSessionMinutes} min
                     </p>
                 </div>
                 <div className="rounded-xl p-3" style={{ background: '#F8FAFC' }}>
-                    <p className="text-xs" style={{ color: '#A0A5C0' }}>Consistency</p>
+                    <p className="text-xs" style={{ color: '#A0A5C0' }}>Konsekvens</p>
                     <div className="flex items-center gap-2 mt-1">
                         <p className="text-sm font-bold" style={{ color: '#1A1D2E' }}>
                             {pattern.consistencyScore}%
                         </p>
                         <span className="text-[10px]" style={{ color: '#A0A5C0' }}>
-                            ({pattern.activeDays}/30 days)
+                            ({pattern.activeDays}/30 dagar)
                         </span>
                     </div>
                 </div>

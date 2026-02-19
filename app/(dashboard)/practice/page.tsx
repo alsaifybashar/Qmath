@@ -10,34 +10,34 @@ import {
 const practiceOptions = [
     {
         id: 'adaptive',
-        title: 'Adaptive Practice',
-        description: 'AI selects questions based on your knowledge state',
+        title: 'Adaptiv övning',
+        description: 'AI väljer frågor baserat på din kunskapsnivå',
         icon: Brain,
         color: 'from-purple-500 to-pink-500',
         bgColor: 'bg-purple-100 dark:bg-purple-500/10',
         borderColor: 'border-purple-200 dark:border-purple-500/30',
         textColor: 'text-purple-600 dark:text-purple-400',
         href: '/study',
-        badge: 'Recommended',
-        stats: { questions: 'Dynamic', difficulty: 'Auto-adjusted' }
+        badge: 'Rekommenderad',
+        stats: { questions: 'Dynamisk', difficulty: 'Auto-justerad' }
     },
     {
         id: 'weak-areas',
-        title: 'Weak Areas',
-        description: 'Focus on topics where you need the most improvement',
+        title: 'Svaga områden',
+        description: 'Fokusera på ämnen där du behöver mest förbättring',
         icon: AlertTriangle,
         color: 'from-red-500 to-orange-500',
         bgColor: 'bg-red-100 dark:bg-red-500/10',
         borderColor: 'border-red-200 dark:border-red-500/30',
         textColor: 'text-red-600 dark:text-red-400',
         href: '/study',
-        badge: '5 topics need attention',
-        stats: { questions: '45', difficulty: 'Targeted' }
+        badge: '5 ämnen behöver uppmärksamhet',
+        stats: { questions: '45', difficulty: 'Riktad' }
     },
     {
         id: 'quick',
-        title: 'Quick Practice',
-        description: 'A short 10-question session for daily practice',
+        title: 'Snabbövning',
+        description: 'En kort session med 10 frågor för daglig övning',
         icon: Zap,
         color: 'from-yellow-500 to-orange-500',
         bgColor: 'bg-yellow-100 dark:bg-yellow-500/10',
@@ -45,14 +45,14 @@ const practiceOptions = [
         textColor: 'text-yellow-600 dark:text-yellow-400',
         href: '/study',
         badge: '~10 min',
-        stats: { questions: '10', difficulty: 'Mixed' }
+        stats: { questions: '10', difficulty: 'Blandad' }
     }
 ];
 
 const recentTopics = [
-    { id: 'integration', name: 'Integration by Parts', course: 'Calculus I', mastery: 45, color: 'text-blue-500' },
-    { id: 'eigenvalues', name: 'Eigenvalues & Eigenvectors', course: 'Linear Algebra', mastery: 62, color: 'text-purple-500' },
-    { id: 'limits', name: 'Limits & Continuity', course: 'Calculus I', mastery: 88, color: 'text-green-500' }
+    { id: 'integration', name: 'Partiell integration', course: 'Envariabelanalys 1', mastery: 45, color: 'text-blue-500' },
+    { id: 'eigenvalues', name: 'Egenvärden & egenvektorer', course: 'Linjär algebra', mastery: 62, color: 'text-purple-500' },
+    { id: 'limits', name: 'Gränsvärden & kontinuitet', course: 'Envariabelanalys 1', mastery: 88, color: 'text-green-500' }
 ];
 
 export default function PracticePage() {
@@ -65,8 +65,8 @@ export default function PracticePage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-8"
             >
-                <h1 className="text-4xl font-bold mb-2">Practice</h1>
-                <p className="text-zinc-500 dark:text-zinc-400">Choose your practice mode and start learning</p>
+                <h1 className="text-4xl font-bold mb-2">Övning</h1>
+                <p className="text-zinc-500 dark:text-zinc-400">Välj ditt övningsläge och börja lära dig</p>
             </motion.div>
 
             {/* Practice Options */}
@@ -99,7 +99,7 @@ export default function PracticePage() {
 
                             <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
                                 <div className="text-xs text-zinc-500">
-                                    <span className="block">{option.stats.questions} questions</span>
+                                    <span className="block">{option.stats.questions} frågor</span>
                                     <span className="block">{option.stats.difficulty}</span>
                                 </div>
                                 <ArrowRight className="w-5 h-5 text-zinc-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
@@ -119,10 +119,10 @@ export default function PracticePage() {
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <Target className="w-5 h-5 text-blue-500" />
-                        <h2 className="text-xl font-bold">Practice by Topic</h2>
+                        <h2 className="text-xl font-bold">Öva efter ämne</h2>
                     </div>
                     <Link href="/courses" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                        View all topics
+                        Se alla ämnen
                     </Link>
                 </div>
 
@@ -145,7 +145,7 @@ export default function PracticePage() {
                             <div className="flex items-center gap-4">
                                 <div className="text-right">
                                     <div className="text-sm font-medium">{topic.mastery}%</div>
-                                    <div className="text-xs text-zinc-500">Mastery</div>
+                                    <div className="text-xs text-zinc-500">Bemästring</div>
                                 </div>
                                 <ArrowRight className="w-5 h-5 text-zinc-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                             </div>
@@ -164,22 +164,22 @@ export default function PracticePage() {
                 <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-center">
                     <TrendingUp className="w-5 h-5 text-green-500 mx-auto mb-2" />
                     <div className="text-xl font-bold">+12%</div>
-                    <div className="text-xs text-zinc-500">Weekly Growth</div>
+                    <div className="text-xs text-zinc-500">Veckotillväxt</div>
                 </div>
                 <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-center">
                     <BarChart3 className="w-5 h-5 text-blue-500 mx-auto mb-2" />
                     <div className="text-xl font-bold">156</div>
-                    <div className="text-xs text-zinc-500">Questions This Week</div>
+                    <div className="text-xs text-zinc-500">Frågor denna vecka</div>
                 </div>
                 <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-center">
                     <Clock className="w-5 h-5 text-purple-500 mx-auto mb-2" />
                     <div className="text-xl font-bold">4.5h</div>
-                    <div className="text-xs text-zinc-500">Study Time</div>
+                    <div className="text-xs text-zinc-500">Studietid</div>
                 </div>
                 <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-center">
                     <Sparkles className="w-5 h-5 text-yellow-500 mx-auto mb-2" />
                     <div className="text-xl font-bold">7</div>
-                    <div className="text-xs text-zinc-500">Day Streak</div>
+                    <div className="text-xs text-zinc-500">Dagar i rad</div>
                 </div>
             </motion.div>
 

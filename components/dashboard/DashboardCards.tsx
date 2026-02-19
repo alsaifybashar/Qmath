@@ -77,14 +77,14 @@ export function WeeklyActivityChart({ data, totalQuestions, accuracy }: WeeklyAc
         >
             <div className="flex justify-between items-center mb-5">
                 <h3 className="text-xl font-bold" style={{ color: C.text }}>
-                    Your Progress
+                    Dina framsteg
                 </h3>
                 <div className="flex gap-4 text-sm">
                     <span style={{ color: C.text, fontWeight: 600 }}>
-                        Total answered: <span style={{ color: C.blue }}>{totalQuestions}</span>
+                        Antal svar: <span style={{ color: C.blue }}>{totalQuestions}</span>
                     </span>
                     <span style={{ color: C.text, fontWeight: 600 }}>
-                        Accuracy: <span style={{ color: C.green }}>{accuracy}%</span>
+                        Noggrannhet: <span style={{ color: C.green }}>{accuracy}%</span>
                     </span>
                 </div>
             </div>
@@ -151,7 +151,7 @@ export function StreakCard({ currentStreak, weekStreak, level }: StreakCardProps
                 <div className="flex items-center gap-1.5 mb-3">
                     <span className="text-2xl">🔥</span>
                     <span className="text-sm font-bold text-white/70 uppercase tracking-wider">
-                        Weekly Streak
+                        Veckosvit
                     </span>
                 </div>
 
@@ -176,7 +176,7 @@ export function StreakCard({ currentStreak, weekStreak, level }: StreakCardProps
                     <div className="text-5xl font-extrabold text-white leading-none">
                         {currentStreak}
                     </div>
-                    <div className="text-sm text-white/60 mt-0.5">days streak</div>
+                    <div className="text-sm text-white/60 mt-0.5">dagars svit</div>
                 </div>
                 <div
                     className="px-4 py-2.5 rounded-xl flex items-center gap-2.5"
@@ -184,7 +184,7 @@ export function StreakCard({ currentStreak, weekStreak, level }: StreakCardProps
                 >
                     <span className="text-2xl">⭐</span>
                     <div>
-                        <div className="font-bold text-sm text-white">Level {level}</div>
+                        <div className="font-bold text-sm text-white">Nivå {level}</div>
                     </div>
                 </div>
             </div>
@@ -243,7 +243,7 @@ export function CourseCard({
 
                 <div className="relative z-10 flex justify-between items-end">
                     <div>
-                        <div className="text-xs text-white/60 mb-0.5">Progress</div>
+                        <div className="text-xs text-white/60 mb-0.5">Framsteg</div>
                         <div className="text-3xl font-extrabold" style={{ color: progressColor }}>
                             {progress}%
                         </div>
@@ -256,13 +256,13 @@ export function CourseCard({
                 style={{ background: C.surface, borderTop: `1px solid ${C.borderLight}` }}
             >
                 <div className="text-sm" style={{ color: C.textSec }}>
-                    <strong style={{ color: C.text }}>{topicsMastered}</strong>/{topicsTotal} topics done
+                    <strong style={{ color: C.text }}>{topicsMastered}</strong>/{topicsTotal} områden klara
                 </div>
                 <div
                     className="flex items-center gap-1.5 text-sm font-semibold"
                     style={{ color: C.blue }}
                 >
-                    Continue <ArrowRight size={14} />
+                    Fortsätt <ArrowRight size={14} />
                 </div>
             </div>
         </Link>
@@ -324,24 +324,24 @@ export function QuickActions({ reviewCount }: QuickActionsProps) {
     const actions = [
         {
             icon: <Brain size={20} />,
-            label: 'Adaptive Practice',
-            desc: 'AI selects optimal level',
+            label: 'Adaptiv övning',
+            desc: 'AI väljer optimal nivå',
             color: C.blue,
             primary: true,
             href: '/practice',
         },
         {
             icon: <RefreshCw size={20} />,
-            label: `Review (${reviewCount})`,
-            desc: 'Spaced repetition',
+            label: `Repetera (${reviewCount})`,
+            desc: 'Upprepad repetition',
             color: C.orange,
             badge: reviewCount,
             href: '/review',
         },
         {
             icon: <FileText size={20} />,
-            label: 'Exam Simulation',
-            desc: 'Practice under exam conditions',
+            label: 'Tentamenssimulering',
+            desc: 'Öva under tentamensvillkor',
             color: C.purple,
             href: '/exams',
         },
@@ -357,7 +357,7 @@ export function QuickActions({ reviewCount }: QuickActionsProps) {
             }}
         >
             <h3 className="text-xl font-bold mb-4" style={{ color: C.text }}>
-                Start Studying
+                Börja studera
             </h3>
             <div className="flex flex-col gap-2.5">
                 {actions.map((a, i) => (
@@ -446,20 +446,20 @@ export function AIRecommendationCard({ topicName, mastery, courseName, daysUntil
                     style={{ background: `${C.blue}25` }}
                 >
                     <Sparkles size={14} color="#A5B4FC" />
-                    <span className="text-xs font-semibold text-[#A5B4FC]">AI Recommendation</span>
+                    <span className="text-xs font-semibold text-[#A5B4FC]">AI-rekommendation</span>
                 </div>
 
                 <h3 className="text-xl font-bold text-white mb-2.5 leading-snug">
-                    Focus on {topicName}
+                    Fokusera på {topicName}
                 </h3>
 
                 <p className="text-sm text-[#8890B5] leading-relaxed">
-                    Your mastery is at <strong style={{ color: C.orange }}>{Math.round(mastery * 100)}%</strong>.
+                    Din mästerskapsnivå är <strong style={{ color: C.orange }}>{Math.round(mastery * 100)}%</strong>.
                     {daysUntilExam && (
                         <>
                             {' '}
-                            This topic is important for your <strong className="text-white">{courseName}</strong> exam in{' '}
-                            <strong className="text-white">{daysUntilExam} days</strong>.
+                            Detta område är viktigt för din tenta i <strong className="text-white">{courseName}</strong> om{' '}
+                            <strong className="text-white">{daysUntilExam} dagar</strong>.
                         </>
                     )}
                 </p>
@@ -473,7 +473,7 @@ export function AIRecommendationCard({ topicName, mastery, courseName, daysUntil
                     boxShadow: `0 4px 16px ${C.blue}40`,
                 }}
             >
-                <Play size={16} /> Start Session
+                <Play size={16} /> Starta session
             </Link>
         </div>
     );
@@ -483,40 +483,40 @@ export function AIRecommendationCard({ topicName, mastery, courseName, daysUntil
 const navigationItems = [
     // Learning section
     {
-        category: 'Learning',
+        category: 'Lärande',
         items: [
-            { icon: <BookOpen size={18} />, label: 'Courses', href: '/courses', color: '#667EEA' },
-            { icon: <Brain size={18} />, label: 'Practice', href: '/practice', color: '#4361EE' },
+            { icon: <BookOpen size={18} />, label: 'Kurser', href: '/courses', color: '#667EEA' },
+            { icon: <Brain size={18} />, label: 'Övning', href: '/practice', color: '#4361EE' },
             { icon: <Zap size={18} />, label: 'Flashcards', href: '/flashcards', color: '#7C5CFC' },
-            { icon: <Library size={18} />, label: 'Exam Archive', href: '/exams', color: '#11998E' },
+            { icon: <Library size={18} />, label: 'Tenta-arkiv', href: '/exams', color: '#11998E' },
         ],
     },
     // Resources section
     {
-        category: 'Resources',
+        category: 'Resurser',
         items: [
-            { icon: <School size={18} />, label: 'Universities', href: '/universities', color: '#F59E0B' },
-            { icon: <Layers size={18} />, label: 'Study Tools', href: '/study', color: '#10B981' },
+            { icon: <School size={18} />, label: 'Universitet', href: '/universities', color: '#F59E0B' },
+            { icon: <Layers size={18} />, label: 'Studieverktyg', href: '/study', color: '#10B981' },
             { icon: <FileText size={18} />, label: 'Demo', href: '/demo', color: '#8B5CF6' },
         ],
     },
     // Account section
     {
-        category: 'Account',
+        category: 'Konto',
         items: [
-            { icon: <User size={18} />, label: 'Profile', href: '/profile', color: '#3B82F6' },
-            { icon: <Settings size={18} />, label: 'Settings', href: '/settings', color: '#6B7280' },
-            { icon: <CreditCard size={18} />, label: 'Pricing', href: '/pricing', color: '#EC4899' },
+            { icon: <User size={18} />, label: 'Profil', href: '/profile', color: '#3B82F6' },
+            { icon: <Settings size={18} />, label: 'Inställningar', href: '/settings', color: '#6B7280' },
+            { icon: <CreditCard size={18} />, label: 'Priser', href: '/pricing', color: '#EC4899' },
         ],
     },
     // Info section
     {
         category: 'Information',
         items: [
-            { icon: <Info size={18} />, label: 'About', href: '/about', color: '#0EA5E9' },
-            { icon: <GraduationCap size={18} />, label: 'Features', href: '/features', color: '#14B8A6' },
-            { icon: <HelpCircle size={18} />, label: 'Help', href: '/help', color: '#F97316' },
-            { icon: <MessageSquare size={18} />, label: 'Contact', href: '/contact', color: '#8B5CF6' },
+            { icon: <Info size={18} />, label: 'Om oss', href: '/about', color: '#0EA5E9' },
+            { icon: <GraduationCap size={18} />, label: 'Funktioner', href: '/features', color: '#14B8A6' },
+            { icon: <HelpCircle size={18} />, label: 'Hjälp', href: '/help', color: '#F97316' },
+            { icon: <MessageSquare size={18} />, label: 'Kontakt', href: '/contact', color: '#8B5CF6' },
         ],
     },
 ];
@@ -532,7 +532,7 @@ export function QuickNavigation() {
             }}
         >
             <h3 className="text-xl font-bold mb-5" style={{ color: C.text }}>
-                Quick Navigation
+                Snabbnavigering
             </h3>
 
             <div className="space-y-5">

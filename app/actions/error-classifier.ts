@@ -1,6 +1,8 @@
 'use server';
 
 import Anthropic from '@anthropic-ai/sdk';
+import { db } from '@/db/drizzle';
+import { misconceptions } from '@/db/schema';
 
 // ============ TYPES ============
 
@@ -15,8 +17,12 @@ export type ErrorType =
 export interface ErrorClassification {
     errorType: ErrorType;
     feedback: string;           // Shown to student — specific, not generic
+    feedbackSv?: string;        // Swedish version of feedback
     remediation: string;        // Internal — what the next question should target
     confidence: number;         // 0-1 how confident the classification is
+    misconceptionCode?: string; // If matched to a known misconception
+    misconceptionId?: string;   // Database ID of the matched misconception
+    remediationTopicId?: string; // Topic to remediate if misconception detected
 }
 
 export interface ClassifyRequest {
@@ -57,6 +63,13 @@ export async function classifyError(request: ClassifyRequest): Promise<ErrorClas
     if (quickResult) {
         console.log(`[ErrorClassifier] ⚡ Quick classification: ${quickResult.errorType}`);
         return quickResult;
+    }
+
+    // --- 1b. Misconception matching (no AI needed, saves API calls) ---
+    const misconceptionResult = await matchMisconception(request);
+    if (misconceptionResult) {
+        console.log(`[ErrorClassifier] ⚡ Misconception match: ${misconceptionResult.misconceptionCode}`);
+        return misconceptionResult;
     }
 
     // --- 2. Check cache ---
@@ -184,6 +197,163 @@ function quickClassify(correctAnswer: string, studentAnswer: string, timeTakenMs
     }
 
     return null; // Can't determine quickly — need AI
+}
+
+// ============ MISCONCEPTION MATCHING ============
+
+interface MisconceptionPattern {
+    type: 'regex' | 'description';
+    pattern: string;
+}
+
+interface MisconceptionRecord {
+    id: string;
+    code: string;
+    description: string;
+    affectedTopicIds: string[] | null;
+    commonWrongPatterns: MisconceptionPattern[] | null;
+    feedbackEn: string | null;
+    feedbackSv: string | null;
+    remediationTopicId: string | null;
+    severity: string | null;
+}
+
+/**
+ * Match a student's error against the misconception catalog.
+ * This runs BEFORE the AI classifier to save API calls.
+ *
+ * Matching strategy:
+ * 1. Filter misconceptions to those affecting the current topic
+ * 2. For each, check regex patterns against the student answer
+ * 3. For description-based patterns, do keyword matching against
+ *    the relationship between the student answer and correct answer
+ *
+ * Research: elaborated feedback (d = 0.49) vastly outperforms simple
+ * correctness feedback (d = 0.05).
+ */
+async function matchMisconception(request: ClassifyRequest): Promise<ErrorClassification | null> {
+    const { topicId, correctAnswer, studentAnswer, questionText } = request;
+
+    try {
+        // Load misconceptions that affect this topic
+        const allMisconceptions = await db.query.misconceptions.findMany();
+
+        // Filter to those that affect the current topic
+        const relevant = allMisconceptions.filter(m => {
+            const affected = m.affectedTopicIds as string[] | null;
+            if (!affected) return true; // If no topic filter, apply globally
+            return affected.some(tid =>
+                topicId.toLowerCase().includes(tid.toLowerCase()) ||
+                tid.toLowerCase().includes(topicId.toLowerCase())
+            );
+        });
+
+        if (relevant.length === 0) return null;
+
+        const student = studentAnswer.trim();
+        const correct = correctAnswer.trim();
+
+        for (const misconception of relevant) {
+            const patterns = misconception.commonWrongPatterns as MisconceptionPattern[] | null;
+            if (!patterns) continue;
+
+            for (const pattern of patterns) {
+                let matched = false;
+
+                if (pattern.type === 'regex') {
+                    try {
+                        const regex = new RegExp(pattern.pattern, 'i');
+                        // Test against the combined "student wrote X when correct was Y" context
+                        const testString = `${questionText} = ${student}`;
+                        matched = regex.test(testString) || regex.test(student);
+                    } catch {
+                        // Invalid regex — skip
+                    }
+                } else if (pattern.type === 'description') {
+                    // Keyword-based matching on the error signature
+                    matched = matchDescriptionPattern(pattern.pattern, student, correct, questionText);
+                }
+
+                if (matched) {
+                    return {
+                        errorType: 'conceptual',
+                        feedback: misconception.feedbackEn || `This looks like a common misconception: ${misconception.description}`,
+                        feedbackSv: misconception.feedbackSv || undefined,
+                        remediation: `Remediate misconception: ${misconception.code}`,
+                        confidence: 0.85,
+                        misconceptionCode: misconception.code,
+                        misconceptionId: misconception.id,
+                        remediationTopicId: misconception.remediationTopicId || undefined,
+                    };
+                }
+            }
+        }
+
+        return null;
+    } catch (error) {
+        console.error('[ErrorClassifier] Misconception matching failed:', error);
+        return null;
+    }
+}
+
+/**
+ * Heuristic matching for description-based misconception patterns.
+ * Checks if the relationship between student answer and correct answer
+ * matches the described error signature.
+ */
+function matchDescriptionPattern(
+    description: string,
+    studentAnswer: string,
+    correctAnswer: string,
+    questionText: string
+): boolean {
+    const desc = description.toLowerCase();
+    const student = studentAnswer.toLowerCase();
+    const correct = correctAnswer.toLowerCase();
+
+    // "Answer differs from correct only by sign"
+    if (desc.includes('differs') && desc.includes('sign')) {
+        const sNum = parseFloat(student);
+        const cNum = parseFloat(correct);
+        if (!isNaN(sNum) && !isNaN(cNum) && Math.abs(sNum) === Math.abs(cNum) && sNum !== cNum) {
+            return true;
+        }
+    }
+
+    // "Forgot to negate" or "missing minus"
+    if (desc.includes('negate') || desc.includes('minus')) {
+        const sNum = parseFloat(student);
+        const cNum = parseFloat(correct);
+        if (!isNaN(sNum) && !isNaN(cNum) && sNum === -cNum) return true;
+    }
+
+    // "Missing +C" (integration constant)
+    if (desc.includes('+c') || desc.includes('missing +c')) {
+        if (!student.includes('c') && correct.includes('c')) return true;
+    }
+
+    // "Squared sum without cross term"
+    if (desc.includes('cross term') || desc.includes('2ab')) {
+        // If the question involves squaring a sum and the student answer lacks middle terms
+        if (questionText.includes('^2') || questionText.includes('²')) {
+            // Simple heuristic: student answer has fewer terms than expected
+            const studentTerms = student.split(/[+-]/).filter(Boolean).length;
+            const correctTerms = correct.split(/[+-]/).filter(Boolean).length;
+            if (studentTerms < correctTerms) return true;
+        }
+    }
+
+    // "Answer contains x when a number was expected"
+    if (desc.includes('contains x') && desc.includes('number')) {
+        if (student.includes('x') && !correct.includes('x')) return true;
+    }
+
+    // "Added numerators and denominators separately"
+    if (desc.includes('numerators') && desc.includes('denominators')) {
+        // Hard to detect without parsing — skip for now
+    }
+
+    return false;
 }
 
 // ============ HELPERS ============

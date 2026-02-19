@@ -55,15 +55,15 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
                     animate={{ scale: 1, opacity: 1 }}
                 >
                     <Trophy className="w-24 h-24 text-yellow-400 mx-auto mb-6" />
-                    <h2 className="text-3xl font-bold text-white mb-2">{question.summary?.title || "Problem Complete!"}</h2>
+                    <h2 className="text-3xl font-bold text-white mb-2">{question.summary?.title || "Problemet klart!"}</h2>
                     <div className="text-xl text-zinc-300 mb-8 max-w-lg">
-                        <MathRenderer text={question.summary?.finalAnswer || "Great job!"} block />
+                        <MathRenderer text={question.summary?.finalAnswer || "Bra jobbat!"} block />
                     </div>
 
                     <div className="space-y-3 mb-8 text-left w-full max-w-md mx-auto">
                         {question.steps.map((step, idx) => (
                             <div key={idx} className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
-                                <span className="text-zinc-400 text-sm">Step {idx + 1}</span>
+                                <span className="text-zinc-400 text-sm">Steg {idx + 1}</span>
                                 <div className="flex items-center gap-2">
                                     <span className="text-zinc-200 text-sm truncate max-w-[150px]">{step.instruction}</span>
                                     <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -76,7 +76,7 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
                         onClick={() => onComplete(true)}
                         className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2 mx-auto"
                     >
-                        Continue <ArrowRight className="w-5 h-5" />
+                        Fortsätt <ArrowRight className="w-5 h-5" />
                     </button>
                 </motion.div>
             </div>
@@ -89,10 +89,10 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
             <div className="flex items-center justify-between mb-6">
                 <button onClick={onExit} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors">
                     <ArrowLeft className="w-4 h-4" />
-                    <span>Back</span>
+                    <span>Tillbaka</span>
                 </button>
                 <div className="text-sm font-medium text-zinc-400">
-                    Step {currentStepIndex + 1} of {question.steps.length}
+                    Steg {currentStepIndex + 1} av {question.steps.length}
                 </div>
             </div>
 
@@ -134,7 +134,7 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
                                 <div className="absolute -left-3 top-6 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-4 border-black">
                                     <ArrowRight className="w-3 h-3 text-white" />
                                 </div>
-                                <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 pl-2">Current Context</h3>
+                                <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 pl-2">Nuvarande kontext</h3>
                                 <div className="pl-2 text-zinc-200">
                                     <MathRenderer text={currentStep.context} />
                                 </div>
@@ -201,11 +201,11 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
                                     }}
                                     className="text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
                                 >
-                                    <Lightbulb className="w-3 h-3" /> Need a hint?
+                                    <Lightbulb className="w-3 h-3" /> Behöver du en ledtråd?
                                 </button>
                             )}
                             <div id={`hint-${currentStep.id}`} className="hidden mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-900 dark:text-blue-100">
-                                💡 {currentStep.feedback?.hint || "Think about the definition carefully."}
+                                💡 {currentStep.feedback?.hint || "Tänk noggrant på definitionen."}
                             </div>
                         </div>
                     </motion.div>

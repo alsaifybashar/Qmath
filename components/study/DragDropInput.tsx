@@ -86,18 +86,18 @@ export function DragDropInput({ question, onAnswer }: DragDropProps) {
                     }
                 `}
             >
-                Check Order
+                Kontrollera ordning
             </button>
 
             {isSubmitted && (
                 <div className="mt-8 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4">
                     {JSON.stringify(items.map(i => i.id)) === JSON.stringify(question.correctOrder) ? (
                         <div className="flex items-center gap-2 text-green-500 font-bold bg-green-500/10 px-4 py-2 rounded-full">
-                            <CheckCircle2 className="w-5 h-5" /> Correct Order!
+                            <CheckCircle2 className="w-5 h-5" /> Rätt ordning!
                         </div>
                     ) : (
                         <div className="text-center">
-                            <div className="text-red-500 font-bold mb-2">Incorrect Order</div>
+                            <div className="text-red-500 font-bold mb-2">Fel ordning</div>
                             {/* Ideally show correct order logic here */}
                         </div>
                     )}

@@ -23,7 +23,7 @@ import { ExamReadinessBar } from '@/components/dashboard/ExamReadinessBar';
 
 export const metadata = {
     title: 'Dashboard | Qmath',
-    description: 'Your personalized learning dashboard',
+    description: 'Din personliga lärplattform',
 };
 
 const C = {
@@ -169,8 +169,8 @@ export default async function DashboardPage() {
             const course = userCourses.find((c) => topic?.courseId === c.id);
             return {
                 id: m.topicId,
-                name: topic?.title || 'Unknown Topic',
-                course: course?.code || 'Unknown',
+                name: topic?.title || 'Okänt område',
+                course: course?.code || 'Okänd',
                 mastery: (m.masteryLevel || 0) / 5,
             };
         })
@@ -183,8 +183,8 @@ export default async function DashboardPage() {
             const topic = topicsData.find((t) => t.id === m.topicId);
             const course = userCourses.find((c) => topic?.courseId === c.id);
             return {
-                name: topic?.title || 'Unknown Topic',
-                course: course?.name || 'your course',
+                name: topic?.title || 'Okänt område',
+                course: course?.name || 'din kurs',
                 mastery: (m.masteryLevel || 0) / 5,
             };
         })
@@ -192,7 +192,7 @@ export default async function DashboardPage() {
 
     // Get greeting based on time
     const hour = now.getHours();
-    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    const greeting = hour < 12 ? 'God morgon' : hour < 18 ? 'God eftermiddag' : 'God kväll';
 
     // Calculate review count (topics needing review)
     const reviewCount = masteryData.filter((m) => (m.masteryLevel || 0) < 3).length;
@@ -208,8 +208,8 @@ export default async function DashboardPage() {
                     </h1>
                     <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>
                         {reviewCount > 0
-                            ? <><strong style={{ color: C.blue }}>{reviewCount} topics</strong> need your attention</>
-                            : 'Everything is up to date — keep it up!'}
+                            ? <><strong style={{ color: C.blue }}>{reviewCount} områden</strong> behöver din uppmärksamhet</>
+                            : 'Allt är uppdaterat — bra jobbat!'}
                     </p>
                 </div>
 
@@ -260,9 +260,9 @@ export default async function DashboardPage() {
                     />
                 ) : (
                     <AIRecommendationCard
-                        topicName="a new topic"
+                        topicName="ett nytt område"
                         mastery={0}
-                        courseName="your studies"
+                        courseName="dina studier"
                     />
                 )}
                 <QuickActions reviewCount={reviewCount} />
@@ -272,7 +272,7 @@ export default async function DashboardPage() {
             <div className="mb-6">
                 <div className="flex justify-between items-center mb-3">
                     <h2 className="text-base font-semibold" style={{ color: C.text }}>
-                        Your Courses
+                        Dina kurser
                     </h2>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
@@ -290,7 +290,7 @@ export default async function DashboardPage() {
                         return (
                             <CourseCard
                                 key={course.id}
-                                code={course.code || `Course ${idx + 1}`}
+                                code={course.code || `Kurs ${idx + 1}`}
                                 name={course.name}
                                 progress={Math.round(avgMastery * 100)}
                                 topicsMastered={masteredCount}
@@ -305,7 +305,7 @@ export default async function DashboardPage() {
                             className="col-span-3 rounded-2xl p-8 text-center"
                             style={{ background: 'white', border: '1px solid #EFF1F8' }}
                         >
-                            <p style={{ color: C.textMuted }}>No courses yet. Browse the course catalog to get started!</p>
+                            <p style={{ color: C.textMuted }}>Inga kurser än. Bläddra i kurskatalogen för att komma igång!</p>
                         </div>
                     )}
                 </div>
@@ -329,7 +329,7 @@ export default async function DashboardPage() {
             {examReadiness.length > 0 && (
                 <div className="mb-6">
                     <h2 className="text-base font-semibold mb-3" style={{ color: C.text }}>
-                        Exam Readiness
+                        Tentamensredo
                     </h2>
                     <div className="space-y-3">
                         {examReadiness.map(er => (
@@ -362,20 +362,20 @@ export default async function DashboardPage() {
                 <div className="flex justify-between items-center mb-5">
                     <div>
                         <h3 className="text-base font-semibold" style={{ color: C.text }}>
-                            Knowledge Map
+                            Kunskapskarta
                         </h3>
                         <p className="text-xs mt-0.5" style={{ color: C.textMuted }}>
-                            Your mastery level across all topics
+                            Din mästerskapsnivå över alla områden
                         </p>
                     </div>
 
                     {/* Legend */}
                     <div className="flex gap-3 flex-wrap justify-end">
                         {[
-                            { color: '#10B981', label: 'Mastered' },
-                            { color: '#3B82F6', label: 'Learning' },
-                            { color: '#F59E0B', label: 'Developing' },
-                            { color: '#EF4444', label: 'Needs focus' },
+                            { color: '#10B981', label: 'Bemästrad' },
+                            { color: '#3B82F6', label: 'Lärande' },
+                            { color: '#F59E0B', label: 'Utvecklas' },
+                            { color: '#EF4444', label: 'Behöver fokus' },
                         ].map((l, i) => (
                             <div key={i} className="flex items-center gap-1.5">
                                 <div className="w-2 h-2 rounded-sm" style={{ background: l.color }} />
@@ -399,7 +399,7 @@ export default async function DashboardPage() {
                     ))}
                     {masteryTopics.length === 0 && (
                         <div className="col-span-full text-center py-8" style={{ color: C.textMuted }}>
-                            Start practicing to see your knowledge map!
+                            Börja öva för att se din kunskapskarta!
                         </div>
                     )}
                 </div>

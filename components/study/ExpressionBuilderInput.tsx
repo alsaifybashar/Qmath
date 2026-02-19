@@ -66,7 +66,7 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
                         : 'border-red-500 bg-red-50 dark:bg-red-900/10')
                     : 'border-zinc-200 dark:border-zinc-800 focus-within:border-blue-500'}
             `}>
-                {!displayExpression && <span className="text-zinc-400 italic">Build your expression...</span>}
+                {!displayExpression && <span className="text-zinc-400 italic">Bygg ditt uttryck...</span>}
                 <div className="text-2xl md:text-3xl font-medium">
                     <MathRenderer text={displayExpression || "\\text{ }"} block />
                 </div>
@@ -75,7 +75,7 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
                     <button
                         onClick={handleClear}
                         className="absolute top-2 right-2 p-2 text-zinc-400 hover:text-red-500 transition-colors"
-                        title="Clear All"
+                        title="Rensa allt"
                     >
                         <Eraser className="w-5 h-5" />
                     </button>
@@ -133,18 +133,18 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
                     }
                 `}
             >
-                Submit Expression <ChevronRight className="w-5 h-5" />
+                Skicka uttryck <ChevronRight className="w-5 h-5" />
             </button>
 
             {isSubmitted && (
                 <div className="mt-4 animate-in fade-in slide-in-from-bottom-4">
                     {displayExpression.replace(/\s+/g, '') === question.correctExpression.replace(/\s+/g, '') ? (
                         <div className="flex items-center gap-2 text-green-500 font-bold bg-green-500/10 px-6 py-2 rounded-full">
-                            <CheckCircle2 className="w-5 h-5" /> Perfect Match!
+                            <CheckCircle2 className="w-5 h-5" /> Perfekt matchning!
                         </div>
                     ) : (
                         <div className="text-center bg-red-500/10 p-4 rounded-xl">
-                            <div className="text-red-500 font-bold mb-2">Incorrect Expression</div>
+                            <div className="text-red-500 font-bold mb-2">Felaktigt uttryck</div>
                             {/* <div className="text-sm text-zinc-500">Expected: <MathRenderer text={question.correctExpression} /></div> */}
                         </div>
                     )}

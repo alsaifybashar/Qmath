@@ -37,6 +37,7 @@ export interface QuestionItem {
     prerequisites: string[];
     irtParams: IRTParameters;
     scaffoldQuestions?: QuestionItem[];  // Breakdown questions
+    strategyTag?: string;  // e.g. "chain_rule", "integration_by_parts" — for interleaved practice
 }
 
 // ============================================================================
@@ -48,6 +49,22 @@ export class AdaptiveLearningEngine {
     private spacedRepetition: SpacedRepetitionManager;
     private studentState: StudentLearningState;
     private currentSession: StudySession | null = null;
+
+    // ── Interleaving state ──────────────────────────────────────────────
+    // Tracks recently served topics/strategies to enforce interleaving.
+    // Research: interleaved practice d = 1.21 (highest effect of any intervention).
+    private recentTopics: string[] = [];
+    private recentStrategies: string[] = [];
+    private static readonly RECENT_WINDOW = 5;          // sliding window size
+    private interleavingWeight: number = 0.8;            // 0 = no interleaving, 1 = maximum
+    private inRemediationDetour: boolean = false;        // skip interleaving during prerequisite detours
+
+    // ── Anxiety-aware parameters ────────────────────────────────────────
+    // When mathAnxietyLevel is high (4-5), shifts initial difficulty
+    // downward and adds warm-up questions at session start.
+    private mathAnxietyLevel: number = 1;                // 1-5 scale (1 = no anxiety)
+    private sessionQuestionsServed: number = 0;          // tracks position in session for warm-up
+    private static readonly WARMUP_COUNT = 3;            // first N questions are easier for anxious students
 
     constructor(userId: string, initialState?: Partial<StudentLearningState>) {
         this.knowledgeManager = new KnowledgeStateManager();
@@ -67,6 +84,31 @@ export class AdaptiveLearningEngine {
             recommendedFocusAreas: [],
             ...initialState
         };
+    }
+
+    /**
+     * Configure interleaving behaviour.
+     * @param weight 0 = no interleaving, 1 = maximum interleaving
+     */
+    setInterleavingWeight(weight: number): void {
+        this.interleavingWeight = Math.max(0, Math.min(1, weight));
+    }
+
+    /**
+     * Set the student's math anxiety level (from profile / onboarding screening).
+     * 1 = no anxiety, 5 = severe anxiety.
+     */
+    setMathAnxietyLevel(level: number): void {
+        this.mathAnxietyLevel = Math.max(1, Math.min(5, level));
+    }
+
+    /**
+     * Enter or exit a prerequisite remediation detour.
+     * While in a detour, interleaving is suspended so the student can
+     * focus on the weak prerequisite topic.
+     */
+    setRemediationDetour(active: boolean): void {
+        this.inRemediationDetour = active;
     }
 
     // ========================================================================
@@ -171,9 +213,16 @@ export class AdaptiveLearningEngine {
 
         // 2. Zone of Proximal Development (ZPD)
         // Optimal difficulty is slightly above current ability
-        const optimalDifficulty = studentAbility + 0.3;
+        // ── Anxiety-aware: shift target DOWN for anxious students during warm-up
+        let zpd = studentAbility + 0.3;
+        if (this.mathAnxietyLevel >= 4 && this.sessionQuestionsServed < AdaptiveLearningEngine.WARMUP_COUNT) {
+            // High-anxiety student in warm-up phase → target easier questions
+            // Shift down by 0.5 for level 4, 0.8 for level 5
+            const anxietyShift = this.mathAnxietyLevel === 5 ? 0.8 : 0.5;
+            zpd = studentAbility - anxietyShift;
+        }
         const difficultyMatch = 1 - Math.abs(
-            IRTModel.difficultyToIRT(question.difficulty) - optimalDifficulty
+            IRTModel.difficultyToIRT(question.difficulty) - zpd
         );
         score += difficultyMatch * 25;
 
@@ -206,6 +255,37 @@ export class AdaptiveLearningEngine {
             if (daysLeft < 7) {
                 // Close to exam - focus on weak areas
                 score += (1 - topicMastery) * 10;
+            }
+        }
+
+        // ── 8. Interleaving penalty ────────────────────────────────────
+        // Penalize questions from recently served topics/strategies.
+        // Skipped during remediation detours (student needs to focus).
+        // Research: interleaved practice d = 1.21
+        if (!this.inRemediationDetour && this.interleavingWeight > 0) {
+            // Topic-level interleaving: penalize if same topic was recent
+            const topicRecency = this.recentTopics.indexOf(question.topicId);
+            if (topicRecency !== -1) {
+                // More recent → bigger penalty. Position 0 = most recent → full penalty
+                const recencyFactor = 1 - (topicRecency / AdaptiveLearningEngine.RECENT_WINDOW);
+                score -= 20 * recencyFactor * this.interleavingWeight;
+            }
+
+            // Strategy-level interleaving: penalize if same strategy was recent
+            // This forces students to discriminate *which* method to use (the key
+            // mechanism behind interleaving's benefit over blocked practice)
+            if (question.strategyTag) {
+                const strategyRecency = this.recentStrategies.indexOf(question.strategyTag);
+                if (strategyRecency !== -1) {
+                    const recencyFactor = 1 - (strategyRecency / AdaptiveLearningEngine.RECENT_WINDOW);
+                    score -= 15 * recencyFactor * this.interleavingWeight;
+                }
+            }
+
+            // Bonus for questions with a *different* strategy from any recent one
+            // Encourages "look-alike" problems that need different solutions
+            if (question.strategyTag && !this.recentStrategies.includes(question.strategyTag)) {
+                score += 5 * this.interleavingWeight;
             }
         }
 
@@ -304,6 +384,21 @@ export class AdaptiveLearningEngine {
                 this.currentSession.topicsCovered.push(question.topicId);
             }
         }
+
+        // 7b. Update interleaving sliding windows
+        this.recentTopics.unshift(question.topicId);
+        if (this.recentTopics.length > AdaptiveLearningEngine.RECENT_WINDOW) {
+            this.recentTopics.pop();
+        }
+        if (question.strategyTag) {
+            this.recentStrategies.unshift(question.strategyTag);
+            if (this.recentStrategies.length > AdaptiveLearningEngine.RECENT_WINDOW) {
+                this.recentStrategies.pop();
+            }
+        }
+
+        // 7c. Increment session question counter (for anxiety warm-up tracking)
+        this.sessionQuestionsServed++;
 
         // 8. Get next review date
         const nextReviewDate = this.spacedRepetition.getNextReviewDate(question.topicId);
@@ -444,6 +539,12 @@ export class AdaptiveLearningEngine {
             topicsCovered: [],
             sessionType
         };
+
+        // Reset per-session state
+        this.recentTopics = [];
+        this.recentStrategies = [];
+        this.sessionQuestionsServed = 0;
+        this.inRemediationDetour = false;
 
         // Update streak
         this.updateStreak();
@@ -587,6 +688,64 @@ export class AdaptiveLearningEngine {
             .map(([id, mastery]) => ({ id, mastery }))
             .sort((a, b) => a.mastery - b.mastery)
             .slice(0, count);
+    }
+
+    // ========================================================================
+    // PREREQUISITE GAP DETECTION
+    // ========================================================================
+
+    /**
+     * Detect whether a failure is caused by a prerequisite gap rather than
+     * the current topic being too hard.
+     *
+     * Heuristic: if the student has reasonable mastery of the *current* topic
+     * but keeps getting questions wrong, check if any prerequisite topics
+     * have low mastery — that's the real bottleneck.
+     *
+     * Returns the weakest prerequisite topicId, or null if no gap detected.
+     */
+    detectPrerequisiteGap(
+        question: QuestionItem,
+        consecutiveFailures: number
+    ): string | null {
+        // Only trigger after 2+ consecutive failures on the same topic
+        if (consecutiveFailures < 2) return null;
+
+        // If the student has very low mastery on the current topic itself,
+        // the problem is the current topic, not a prerequisite
+        const currentMastery = this.knowledgeManager.getTopicMastery(question.topicId);
+        if (currentMastery < 0.2) return null;
+
+        // Check each prerequisite — find the weakest one
+        let weakestPrereq: string | null = null;
+        let lowestMastery = 1.0;
+
+        for (const prereqId of question.prerequisites) {
+            const mastery = this.knowledgeManager.getTopicMastery(prereqId);
+            if (mastery < 0.5 && mastery < lowestMastery) {
+                lowestMastery = mastery;
+                weakestPrereq = prereqId;
+            }
+        }
+
+        return weakestPrereq;
+    }
+
+    /**
+     * Get anxiety-adjusted optimal difficulty.
+     * For anxious students, the first few questions in a session are easier
+     * to build confidence before ramping to the normal ZPD level.
+     */
+    getAnxietyAdjustedDifficulty(topicId: string): number {
+        const baseDifficulty = this.calculateOptimalDifficulty(topicId);
+
+        if (this.mathAnxietyLevel >= 4 && this.sessionQuestionsServed < AdaptiveLearningEngine.WARMUP_COUNT) {
+            // Shift difficulty down by 1-2 levels during warm-up
+            const shift = this.mathAnxietyLevel === 5 ? 2 : 1;
+            return Math.max(1, baseDifficulty - shift);
+        }
+
+        return baseDifficulty;
     }
 
     // ========================================================================

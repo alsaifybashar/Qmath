@@ -45,7 +45,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
         setError(null);
         const res = await addCourseEnrollment(courseId);
         if (res?.error) {
-            setError(res.error === 'Already enrolled in this course' ? 'Already in your list' : res.error);
+            setError(res.error === 'Already enrolled in this course' ? 'Redan i din lista' : res.error);
         } else {
             setAddedIds((prev) => [...prev, courseId]);
         }
@@ -61,11 +61,11 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
             <div className="flex items-center gap-2 mb-4">
                 <Search size={16} style={{ color: '#A0A5C0' }} />
                 <h2 className="text-base font-semibold" style={{ color: '#1A1D2E' }}>
-                    Discover courses
+                    Upptäck kurser
                 </h2>
             </div>
             <p className="text-sm mb-4" style={{ color: '#A0A5C0' }}>
-                Search by course code. If we have old exams for that course, you can add it to your list.
+                Sök efter kurskod. Om vi har gamla tentor för kursen kan du lägga till den i din lista.
             </p>
 
             {/* Search bar */}
@@ -82,7 +82,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value.toUpperCase())}
-                        placeholder="e.g. TSRT19"
+                        placeholder="t.ex. TSRT19"
                         className="flex-1 bg-transparent border-0 outline-none text-sm font-mono"
                         style={{ color: '#1A1D2E' }}
                         autoComplete="off"
@@ -95,7 +95,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                     className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-40"
                     style={{ background: '#4361EE' }}
                 >
-                    {isSearching ? <Loader2 size={15} className="animate-spin" /> : 'Search'}
+                    {isSearching ? <Loader2 size={15} className="animate-spin" /> : 'Sök'}
                 </button>
             </form>
 
@@ -111,7 +111,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                     style={{ background: '#F7F8FC', border: '1px dashed #EFF1F8' }}
                 >
                     <p className="text-sm" style={{ color: '#A0A5C0' }}>
-                        No exams found for &quot;{query}&quot;. Try the exact course code.
+                        Inga tentor hittades för &quot;{query}&quot;. Prova den exakta kurskoden.
                     </p>
                 </div>
             )}
@@ -152,7 +152,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                                                 style={{ color: '#A0A5C0' }}
                                             >
                                                 <Archive size={11} />
-                                                {course.examCount} past exam{course.examCount !== 1 ? 's' : ''}
+                                                {course.examCount} gamla tentor
                                             </span>
                                         </div>
                                         <p
@@ -171,7 +171,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                                         className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all"
                                         style={{ color: '#6B7194', background: '#F7F8FC', border: '1px solid #EFF1F8' }}
                                     >
-                                        View exams <ChevronRight size={12} />
+                                        Se tentor <ChevronRight size={12} />
                                     </Link>
 
                                     {course.canEnroll && (
@@ -180,7 +180,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                                                 className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg"
                                                 style={{ background: '#ECFDF5', color: '#059669' }}
                                             >
-                                                <Check size={13} /> Added
+                                                <Check size={13} /> Tillagd
                                             </span>
                                         ) : (
                                             <button
@@ -192,7 +192,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                                                 {isAdding ? (
                                                     <Loader2 size={13} className="animate-spin" />
                                                 ) : (
-                                                    <><Plus size={13} /> Add course</>
+                                                    <><Plus size={13} /> Lägg till kurs</>
                                                 )}
                                             </button>
                                         )
@@ -203,7 +203,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                                             className="text-xs px-2.5 py-1.5 rounded-lg"
                                             style={{ color: '#A0A5C0', background: '#F7F8FC', border: '1px solid #EFF1F8' }}
                                         >
-                                            Archive only
+                                            Endast arkiv
                                         </span>
                                     )}
                                 </div>

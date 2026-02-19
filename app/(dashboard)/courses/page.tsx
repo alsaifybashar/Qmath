@@ -25,7 +25,7 @@ const courseGradients = [
 ];
 
 export const metadata = {
-    title: 'Courses | Qmath',
+    title: 'Kurser | Qmath',
 };
 
 export default async function CoursesPage() {
@@ -40,10 +40,10 @@ export default async function CoursesPage() {
             {/* ── Header ── */}
             <div className="mb-6">
                 <h1 className="text-2xl font-semibold" style={{ color: C.text }}>
-                    Courses
+                    Kurser
                 </h1>
                 <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>
-                    Your enrolled courses and study tools
+                    Dina registrerade kurser och studieverktyg
                 </p>
             </div>
 
@@ -51,11 +51,11 @@ export default async function CoursesPage() {
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-3">
                     <h2 className="text-base font-semibold" style={{ color: C.text }}>
-                        My courses
+                        Mina kurser
                     </h2>
                     <span className="text-xs font-medium px-2 py-0.5 rounded-full"
                         style={{ background: C.blueLight, color: C.blue }}>
-                        {courses.length} enrolled
+                        {courses.length} registrerade
                     </span>
                 </div>
 
@@ -90,7 +90,7 @@ export default async function CoursesPage() {
                                 >
                                     <div className="flex items-center gap-1.5 text-xs" style={{ color: C.textSec }}>
                                         <GraduationCap size={13} />
-                                        <span>Analysis & study plan</span>
+                                        <span>Analys & studieplan</span>
                                     </div>
                                     <ChevronRight size={14} style={{ color: C.textMuted }} className="group-hover:text-blue-500 transition-colors" />
                                 </div>
@@ -108,9 +108,9 @@ export default async function CoursesPage() {
                         >
                             <BookOpen size={24} style={{ color: C.blue }} />
                         </div>
-                        <p className="font-semibold mb-1" style={{ color: C.text }}>No courses yet</p>
+                        <p className="font-semibold mb-1" style={{ color: C.text }}>Inga kurser än</p>
                         <p className="text-sm mb-5" style={{ color: C.textMuted }}>
-                            Search below to find courses and add them to your list.
+                            Sök nedan för att hitta kurser och lägg till dem i din lista.
                         </p>
                     </div>
                 )}
@@ -125,7 +125,7 @@ export default async function CoursesPage() {
                     className="mt-[-1px] flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full"
                     style={{ background: C.blueLight, color: C.blue }}
                 >
-                    <Plus size={12} /> Add a course
+                    <Plus size={12} /> Lägg till en kurs
                 </div>
             </div>
 

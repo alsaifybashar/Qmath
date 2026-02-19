@@ -116,14 +116,14 @@ export function ToggleInput({ question, onAnswer }: ToggleProps) {
                     }
                 `}
             >
-                Submit Choices
+                Skicka val
             </button>
 
             {isSubmitted && (
                 <div className="mt-8 font-bold text-lg">
                     {question.items.every(item => states[item.id] === item.correctState)
-                        ? <span className="text-green-500">Perfect!</span>
-                        : <span className="text-red-500">Not quite.</span>}
+                        ? <span className="text-green-500">Perfekt!</span>
+                        : <span className="text-red-500">Inte riktigt.</span>}
                 </div>
             )}
         </div>

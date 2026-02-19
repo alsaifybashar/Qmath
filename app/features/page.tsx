@@ -14,8 +14,8 @@ import type { FreeFormProblem } from '@/components/content';
 const demoLearningPaths: LearningPath[] = [
     {
         id: 'calc-1',
-        title: 'Calculus I',
-        description: 'Limits, derivatives, and basic integration',
+        title: 'Envariabelanalys 1',
+        description: 'Gränsvärden, derivator och grundläggande integration',
         icon: '📐',
         color: 'blue',
         totalXP: 1200,
@@ -23,8 +23,8 @@ const demoLearningPaths: LearningPath[] = [
         nodes: [
             {
                 id: 'limits-intro',
-                title: 'Introduction to Limits',
-                description: 'Understanding the concept of limits and continuity',
+                title: 'Introduktion till gränsvärden',
+                description: 'Förståelse för gränsvärden och kontinuitet',
                 type: 'theory',
                 status: 'completed',
                 xpReward: 50,
@@ -33,8 +33,8 @@ const demoLearningPaths: LearningPath[] = [
             },
             {
                 id: 'limits-practice',
-                title: 'Limit Calculations',
-                description: 'Practice evaluating limits algebraically',
+                title: 'Gränsvärdesberäkningar',
+                description: 'Öva på att beräkna gränsvärden algebraiskt',
                 type: 'practice',
                 status: 'completed',
                 xpReward: 100,
@@ -43,8 +43,8 @@ const demoLearningPaths: LearningPath[] = [
             },
             {
                 id: 'derivatives-intro',
-                title: 'Introduction to Derivatives',
-                description: 'The derivative as rate of change',
+                title: 'Introduktion till derivator',
+                description: 'Derivatan som förändringshastighet',
                 type: 'theory',
                 status: 'in_progress',
                 xpReward: 50,
@@ -52,8 +52,8 @@ const demoLearningPaths: LearningPath[] = [
             },
             {
                 id: 'derivatives-rules',
-                title: 'Differentiation Rules',
-                description: 'Power rule, product rule, chain rule',
+                title: 'Deriveringsregler',
+                description: 'Potensregeln, produktregeln, kedjeregeln',
                 type: 'examples',
                 status: 'available',
                 xpReward: 75,
@@ -61,8 +61,8 @@ const demoLearningPaths: LearningPath[] = [
             },
             {
                 id: 'integration-basics',
-                title: 'Basic Integration',
-                description: 'Antiderivatives and indefinite integrals',
+                title: 'Grundläggande integration',
+                description: 'Primitiva funktioner och obestämda integraler',
                 type: 'theory',
                 status: 'locked',
                 xpReward: 50,
@@ -73,8 +73,8 @@ const demoLearningPaths: LearningPath[] = [
     },
     {
         id: 'linear-algebra',
-        title: 'Linear Algebra',
-        description: 'Vectors, matrices, and linear transformations',
+        title: 'Linjär algebra',
+        description: 'Vektorer, matriser och linjära transformationer',
         icon: '🔢',
         color: 'purple',
         totalXP: 800,
@@ -82,8 +82,8 @@ const demoLearningPaths: LearningPath[] = [
         nodes: [
             {
                 id: 'vectors-intro',
-                title: 'Vectors in Rⁿ',
-                description: 'Vector operations and geometric interpretation',
+                title: 'Vektorer i Rⁿ',
+                description: 'Vektoroperationer och geometrisk tolkning',
                 type: 'theory',
                 status: 'completed',
                 xpReward: 50,
@@ -92,8 +92,8 @@ const demoLearningPaths: LearningPath[] = [
             },
             {
                 id: 'matrices-intro',
-                title: 'Matrix Operations',
-                description: 'Addition, multiplication, and properties',
+                title: 'Matrisoperationer',
+                description: 'Addition, multiplikation och egenskaper',
                 type: 'practice',
                 status: 'available',
                 xpReward: 100,
@@ -101,8 +101,8 @@ const demoLearningPaths: LearningPath[] = [
             },
             {
                 id: 'determinants',
-                title: 'Determinants',
-                description: 'Computing and interpreting determinants',
+                title: 'Determinanter',
+                description: 'Beräkning och tolkning av determinanter',
                 type: 'examples',
                 status: 'locked',
                 xpReward: 75,
@@ -114,15 +114,15 @@ const demoLearningPaths: LearningPath[] = [
 
 const demoFlashcardDeck: FlashcardDeck = {
     id: 'calc-formulas',
-    title: 'Calculus Formulas',
-    description: 'Essential derivatives and integrals',
+    title: 'Formler för analys',
+    description: 'Viktiga derivator och integraler',
     masteryLevel: 72,
     totalCards: 25,
     dueToday: 5,
     cards: [
         {
             id: 'card-1',
-            front: 'What is the derivative of sin(x)?',
+            front: 'Vad är derivatan av sin(x)?',
             back: 'cos(x)',
             frontMath: '\\frac{d}{dx}\\sin(x) = ?',
             backMath: '\\cos(x)',
@@ -136,7 +136,7 @@ const demoFlashcardDeck: FlashcardDeck = {
         },
         {
             id: 'card-2',
-            front: 'What is the integral of 1/x?',
+            front: 'Vad är integralen av 1/x?',
             back: 'ln|x| + C',
             frontMath: '\\int \\frac{1}{x} dx = ?',
             backMath: '\\ln|x| + C',
@@ -150,7 +150,7 @@ const demoFlashcardDeck: FlashcardDeck = {
         },
         {
             id: 'card-3',
-            front: 'What is the chain rule formula?',
+            front: 'Vad är formeln för kedjeregeln?',
             frontMath: '\\frac{d}{dx}[f(g(x))] = ?',
             back: 'f\'(g(x)) · g\'(x)',
             backMath: "f'(g(x)) \\cdot g'(x)",
@@ -169,10 +169,10 @@ const demoLibraryItems: LibraryItem[] = [
     {
         id: 'item-1',
         type: 'problem',
-        title: 'Integration by Parts - Challenging Problem',
-        description: 'A difficult integration problem using integration by parts twice',
+        title: 'Partiell integration - Utmanande problem',
+        description: 'Ett svårt integrationsproblem som använder partiell integration två gånger',
         courseId: 'calc-2',
-        courseTitle: 'Calculus II',
+        courseTitle: 'Envariabelanalys 2',
         savedAt: new Date('2024-01-15'),
         tags: ['integration', 'challenging'],
         isFavorite: true,
@@ -181,10 +181,10 @@ const demoLibraryItems: LibraryItem[] = [
     {
         id: 'item-2',
         type: 'topic',
-        title: 'Eigenvalues and Eigenvectors',
-        description: 'Complete guide to finding and interpreting eigenvalues',
+        title: 'Egenvärden och egenvektorer',
+        description: 'Komplett guide till att hitta och tolka egenvärden',
         courseId: 'linear-algebra',
-        courseTitle: 'Linear Algebra',
+        courseTitle: 'Linjär algebra',
         savedAt: new Date('2024-01-10'),
         tags: ['eigenvalues', 'matrices'],
         isFavorite: false,
@@ -193,10 +193,10 @@ const demoLibraryItems: LibraryItem[] = [
     {
         id: 'item-3',
         type: 'flashcard_deck',
-        title: 'Trig Identities',
-        description: '25 essential trigonometric identities',
+        title: 'Trigonometriska identiteter',
+        description: '25 viktiga trigonometriska identiteter',
         courseId: 'calc-1',
-        courseTitle: 'Calculus I',
+        courseTitle: 'Envariabelanalys 1',
         savedAt: new Date('2024-01-08'),
         tags: ['trigonometry', 'formulas'],
         isFavorite: true
@@ -204,10 +204,10 @@ const demoLibraryItems: LibraryItem[] = [
     {
         id: 'item-4',
         type: 'exam',
-        title: 'Midterm Exam - Fall 2023',
-        description: 'Past exam covering chapters 1-5',
+        title: 'Dugga - Höst 2023',
+        description: 'Tidigare tenta som täcker kapitel 1-5',
         courseId: 'calc-2',
-        courseTitle: 'Calculus II',
+        courseTitle: 'Envariabelanalys 2',
         savedAt: new Date('2024-01-05'),
         tags: ['exam', 'practice'],
         isFavorite: false
@@ -215,8 +215,8 @@ const demoLibraryItems: LibraryItem[] = [
 ];
 
 const demoQuizConfig: QuizConfig = {
-    title: 'Calculus Quick Quiz',
-    description: 'Test your knowledge of basic calculus concepts',
+    title: 'Snabbquiz i analys',
+    description: 'Testa dina kunskaper i grundläggande analyskoncept',
     showTimer: true,
     showProgress: true,
     allowSkip: true,
@@ -226,7 +226,7 @@ const demoQuizConfig: QuizConfig = {
     questions: [
         {
             id: 'q1',
-            content: 'What is the derivative of x²?',
+            content: 'Vad är derivatan av x²?',
             mathContent: '\\frac{d}{dx}(x^2) = ?',
             options: [
                 { id: 'a', content: 'x', mathContent: 'x' },
@@ -235,14 +235,14 @@ const demoQuizConfig: QuizConfig = {
                 { id: 'd', content: 'x²', mathContent: 'x^2' }
             ],
             correctOptionId: 'b',
-            explanation: 'Using the power rule, d/dx(xⁿ) = nxⁿ⁻¹, so d/dx(x²) = 2x.',
+            explanation: 'Med potensregeln, d/dx(xⁿ) = nxⁿ⁻¹, alltså d/dx(x²) = 2x.',
             difficulty: 1,
             topicId: 'power-rule',
             topicTitle: 'Power Rule'
         },
         {
             id: 'q2',
-            content: 'What is the integral of cos(x)?',
+            content: 'Vad är integralen av cos(x)?',
             mathContent: '\\int \\cos(x) dx = ?',
             options: [
                 { id: 'a', content: '-sin(x) + C', mathContent: '-\\sin(x) + C' },
@@ -251,23 +251,23 @@ const demoQuizConfig: QuizConfig = {
                 { id: 'd', content: '-cos(x) + C', mathContent: '-\\cos(x) + C' }
             ],
             correctOptionId: 'b',
-            explanation: 'The integral of cos(x) is sin(x) + C, since d/dx(sin(x)) = cos(x).',
+            explanation: 'Integralen av cos(x) är sin(x) + C, eftersom d/dx(sin(x)) = cos(x).',
             difficulty: 2,
             topicId: 'trig-integrals',
             topicTitle: 'Trigonometric Integrals'
         },
         {
             id: 'q3',
-            content: 'What is the limit as x approaches 0 of sin(x)/x?',
+            content: 'Vad är gränsvärdet när x går mot 0 för sin(x)/x?',
             mathContent: '\\lim_{x \\to 0} \\frac{\\sin(x)}{x} = ?',
             options: [
                 { id: 'a', content: '0' },
                 { id: 'b', content: '1' },
                 { id: 'c', content: '∞' },
-                { id: 'd', content: 'Does not exist' }
+                { id: 'd', content: 'Existerar ej' }
             ],
             correctOptionId: 'b',
-            explanation: 'This is a famous limit. Using L\'Hôpital\'s rule or the squeeze theorem, we can show that lim(x→0) sin(x)/x = 1.',
+            explanation: 'Detta är ett känt gränsvärde. Med L\'Hôpitals regel eller instängningssatsen kan vi visa att lim(x→0) sin(x)/x = 1.',
             difficulty: 2,
             topicId: 'limits',
             topicTitle: 'Limits'
@@ -278,16 +278,16 @@ const demoQuizConfig: QuizConfig = {
 // Demo AI-generated content
 const demoFreeFormProblem: FreeFormProblem = {
     id: 'demo-1',
-    problem: 'Simplify the following expression:',
+    problem: 'Förenkla följande uttryck:',
     problemMath: '\\frac{x^2 - 1}{x - 1}',
     expectedAnswer: 'x + 1',
     alternativeForms: ['1 + x', '(x+1)'],
     hints: [
-        'Try factoring the numerator',
-        'Remember: a² - b² = (a+b)(a-b)',
+        'Försök faktorisera täljaren',
+        'Kom ihåg: a² - b² = (a+b)(a-b)',
         'x² - 1 = (x+1)(x-1)'
     ],
-    explanation: 'Factor the numerator as a difference of squares: x² - 1 = (x+1)(x-1). Then cancel (x-1) from numerator and denominator, leaving x+1.',
+    explanation: 'Faktorisera täljaren som en differens av kvadrater: x² - 1 = (x+1)(x-1). Förkorta sedan med (x-1) i täljare och nämnare, kvar blir x+1.',
     difficulty: 0.4
 };
 
@@ -295,8 +295,8 @@ const demoContentCards = [
     {
         id: 'content-1',
         contentType: 'free_form_symbolic' as const,
-        title: 'Simplify Rational Expression',
-        preview: 'Factor and simplify (x²-4)/(x-2)',
+        title: 'Förenkla rationellt uttryck',
+        preview: 'Faktorisera och förenkla (x²-4)/(x-2)',
         difficulty: 0.3,
         estimatedMinutes: 5,
         tags: ['algebra', 'factoring']
@@ -304,8 +304,8 @@ const demoContentCards = [
     {
         id: 'content-2',
         contentType: 'faded_worked_example' as const,
-        title: 'Product Rule Derivative',
-        preview: 'Learn to differentiate f(x)·g(x) step by step',
+        title: 'Derivata med produktregeln',
+        preview: 'Lär dig derivera f(x)·g(x) steg för steg',
         difficulty: 0.5,
         estimatedMinutes: 10,
         tags: ['calculus', 'derivatives']
@@ -313,8 +313,8 @@ const demoContentCards = [
     {
         id: 'content-3',
         contentType: 'error_spotting' as const,
-        title: 'Find the Integration Error',
-        preview: 'Identify the mistake in this integration by parts solution',
+        title: 'Hitta integrationsfelet',
+        preview: 'Identifiera misstaget i denna lösning med partiell integration',
         difficulty: 0.7,
         estimatedMinutes: 8,
         tags: ['calculus', 'integration']
@@ -322,8 +322,8 @@ const demoContentCards = [
     {
         id: 'content-4',
         contentType: 'parsons_problem' as const,
-        title: 'Proof: Triangle Inequality',
-        preview: 'Arrange the proof steps in correct order',
+        title: 'Bevis: Triangelolikheten',
+        preview: 'Ordna bevisstegen i rätt ordning',
         difficulty: 0.6,
         estimatedMinutes: 12,
         tags: ['analysis', 'proofs']
@@ -337,11 +337,11 @@ export default function FeaturesDemo() {
     const [libraryItems, setLibraryItems] = useState(demoLibraryItems);
 
     const tabs = [
-        { id: 'paths' as DemoTab, label: 'Learning Paths', icon: BookOpen },
+        { id: 'paths' as DemoTab, label: 'Lärvägar', icon: BookOpen },
         { id: 'flashcards' as DemoTab, label: 'Flashcards', icon: Layers },
-        { id: 'library' as DemoTab, label: 'My Library', icon: Library },
+        { id: 'library' as DemoTab, label: 'Mitt bibliotek', icon: Library },
         { id: 'quiz' as DemoTab, label: 'Quiz', icon: Trophy },
-        { id: 'ai-content' as DemoTab, label: 'AI Content', icon: Sparkles }
+        { id: 'ai-content' as DemoTab, label: 'AI-innehåll', icon: Sparkles }
     ];
 
     return (
@@ -354,7 +354,7 @@ export default function FeaturesDemo() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-4xl font-bold mb-4"
                     >
-                        Feature Demo
+                        Funktionsdemo
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0, y: -10 }}
@@ -362,7 +362,7 @@ export default function FeaturesDemo() {
                         transition={{ delay: 0.1 }}
                         className="text-white/80 text-lg"
                     >
-                        Explore the new learning features powered by modern UI/UX design
+                        Utforska de nya inlärningsfunktionerna drivna av modern UI/UX-design
                     </motion.p>
                 </div>
             </div>
@@ -403,8 +403,8 @@ export default function FeaturesDemo() {
                                 <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{demoFlashcardDeck.title}</h3>
                                 <p className="text-zinc-500">{demoFlashcardDeck.description}</p>
                                 <div className="flex gap-4 mt-2 text-sm">
-                                    <span className="text-blue-600">{demoFlashcardDeck.dueToday} due today</span>
-                                    <span className="text-zinc-400">{demoFlashcardDeck.totalCards} total cards</span>
+                                    <span className="text-blue-600">{demoFlashcardDeck.dueToday} att göra idag</span>
+                                    <span className="text-zinc-400">{demoFlashcardDeck.totalCards} totalt antal kort</span>
                                 </div>
                             </div>
                         </div>
@@ -455,21 +455,21 @@ export default function FeaturesDemo() {
                             >
                                 <Sparkles className="w-4 h-4 text-purple-500" />
                                 <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                                    AI-Generated Content
+                                    AI-genererat innehåll
                                 </span>
                             </motion.div>
                             <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
-                                Practice with AI-Generated Problems
+                                Öva med AI-genererade problem
                             </h2>
                             <p className="text-zinc-500 max-w-lg mx-auto">
-                                Automatically generated practice problems based on exam patterns and pedagogical research.
+                                Automatiskt genererade övningsproblem baserade på tentamensmönster och pedagogisk forskning.
                             </p>
                         </div>
 
                         {/* Content cards grid */}
                         <div>
                             <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-                                Available Problems
+                                Tillgängliga problem
                             </h3>
                             <div className="grid md:grid-cols-2 gap-4">
                                 {demoContentCards.map((card) => (
@@ -485,7 +485,7 @@ export default function FeaturesDemo() {
                         {/* Interactive demo */}
                         <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800">
                             <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-                                Try It: Free-Form Input
+                                Prova: Fritextinmatning
                             </h3>
                             <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6">
                                 <FreeFormInput
