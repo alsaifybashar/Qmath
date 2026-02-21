@@ -27,6 +27,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
         { name: 'Users', href: '/admin/users', icon: Users },
         { name: 'Courses', href: '/admin/courses', icon: BookOpen },
+        { name: 'Articles', href: '/admin/articles', icon: FileText },
         { name: 'Exams', href: '/admin/exams', icon: FileText },
         { name: 'Questions', href: '/admin/questions', icon: HelpCircle },
         { name: 'Upload Exam', href: '/admin/upload-exam', icon: Upload },

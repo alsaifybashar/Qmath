@@ -96,11 +96,13 @@ export async function POST(request: NextRequest) {
         // Save exam record to database
         const [exam] = await db.insert(sourceExams).values({
             courseId,
-            examYear: examYear ? parseInt(examYear) : new Date().getFullYear(),
-            examPeriod: examPeriod || 'unknown',
-            originalFile: filePath,
-            fileType: fileExtension.replace('.', ''),
-            extractedText: null, // Will be populated by extraction process
+            examDate: new Date(examYear ? parseInt(examYear) : new Date().getFullYear(), 0, 1),
+            examType: examPeriod || 'unknown',
+            fileName: safeFileName,
+            filePath: filePath,
+            fileSize: file.size,
+            format: fileExtension.replace('.', ''),
+            parsedContent: null, // Will be populated by extraction process
             processingStatus: 'pending',
             uploadedBy: user.id,
         }).returning();

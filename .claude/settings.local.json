@@ -22,7 +22,10 @@
       "Bash(npm run db:push:*)",
       "Bash(echo:*)",
       "Bash(npx tsx:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm rebuild:*)",
+      "Bash(wsl.exe -d Ubuntu -- bash -lc \"cd /home/wsl-bashar/Qmath && npm rebuild better-sqlite3 2>&1\")",
+      "Bash(wsl.exe -d Ubuntu -- bash -lc \"cd /home/wsl-bashar/Qmath && npm run db:push 2>&1\":*)"
     ]
   }
 }

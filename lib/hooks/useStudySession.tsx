@@ -3,6 +3,7 @@
 import { useReducer, useEffect, useCallback, useState } from 'react';
 import { classifyError } from '@/app/actions/error-classifier';
 import type { ErrorType } from '@/app/actions/error-classifier';
+import { checkMathEquivalence } from '@/lib/utils/mathEquivalence';
 
 // Types
 // Common wrong answer structure for diagnostic feedback
@@ -587,13 +588,7 @@ export function useStudySession(topicId?: string) {
 
 // Helper functions
 function validateAnswer(answer: string, correctAnswer: any): boolean {
-    if (typeof correctAnswer === 'string') {
-        return answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
-    }
-    if (typeof correctAnswer === 'number') {
-        return parseFloat(answer) === correctAnswer;
-    }
-    return false;
+    return checkMathEquivalence(answer, correctAnswer);
 }
 
 function getMockQuestions(topic?: string): QuestionWithHelp[] {

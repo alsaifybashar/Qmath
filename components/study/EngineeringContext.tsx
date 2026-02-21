@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
+import { MathRenderer } from './MathRenderer';
 
 interface EngineeringContextProps {
     topicTitle: string;
@@ -47,9 +48,9 @@ export function EngineeringContext({
                         Varför behöver ingenjörer detta?
                     </p>
                     {!expanded && (
-                        <p className="text-xs text-emerald-600/70 dark:text-emerald-400/60 truncate mt-0.5">
-                            {engineeringContext}
-                        </p>
+                        <div className="text-xs text-emerald-600/70 dark:text-emerald-400/60 truncate mt-0.5">
+                            <MathRenderer text={engineeringContext} />
+                        </div>
                     )}
                 </div>
                 <div className="text-emerald-500 shrink-0">
@@ -70,9 +71,9 @@ export function EngineeringContext({
                             <div className="p-4 bg-white/50 dark:bg-zinc-800/30 rounded-xl">
                                 <div className="flex items-start gap-3">
                                     <Lightbulb className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
-                                        {engineeringContext}
-                                    </p>
+                                    <div className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                                        <MathRenderer text={engineeringContext} />
+                                    </div>
                                 </div>
                             </div>
                         </div>

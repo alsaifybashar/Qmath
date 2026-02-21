@@ -2,11 +2,12 @@
 
 import { db } from '@/db/drizzle';
 import { questions, topics, courses, exams } from '@/db/schema';
-import { eq, desc, inArray } from 'drizzle-orm';
+import { eq, desc, inArray, and } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
-// Helper to check admin access
+// ── Auth helper ──────────────────────────────────────────────────────────────
+
 async function checkAdmin() {
     const session = await auth();
     if (!session?.user || session.user.role !== 'admin') {
@@ -14,6 +15,8 @@ async function checkAdmin() {
     }
     return session.user;
 }
+
+// ── Courses ──────────────────────────────────────────────────────────────────
 
 export async function getAdminCourses() {
     try {
@@ -44,6 +47,8 @@ export async function getAdminCourses() {
     }
 }
 
+// ── Topics ───────────────────────────────────────────────────────────────────
+
 export async function createTopic(data: {
     courseId: string;
     title: string;
@@ -52,7 +57,6 @@ export async function createTopic(data: {
     try {
         await checkAdmin();
 
-        // Use a random suffix to avoid slug collisions on concurrent inserts
         const slug = data.title
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
@@ -88,6 +92,8 @@ export async function getAdminTopics(courseId: string) {
     }
 }
 
+// ── Questions — CRUD ─────────────────────────────────────────────────────────
+
 export async function getAdminQuestions(topicId: string) {
     try {
         await checkAdmin();
@@ -110,7 +116,6 @@ export async function createQuestion(data: {
     options?: any;
     explanationMarkdown?: string;
     difficultyTier: number;
-    isPublished?: boolean;
 }) {
     try {
         await checkAdmin();
@@ -123,7 +128,8 @@ export async function createQuestion(data: {
             options: data.options,
             explanationMarkdown: data.explanationMarkdown,
             difficultyTier: data.difficultyTier,
-            isPublished: data.isPublished ?? false,
+            status: 'draft',
+            isPublished: false,
         });
 
         revalidatePath('/admin/questions');
@@ -141,13 +147,20 @@ export async function updateQuestion(id: string, data: Partial<{
     options: any;
     explanationMarkdown: string;
     difficultyTier: number;
-    isPublished: boolean;
 }>) {
     try {
         await checkAdmin();
 
+        // When content is edited, reset to draft so it can be re-analyzed
         await db.update(questions)
-            .set(data)
+            .set({
+                ...data,
+                status: 'draft',
+                aiDifficultyTier: null,
+                aiAnalysis: null,
+                aiAnalyzedAt: null,
+                isPublished: false,
+            })
             .where(eq(questions.id, id));
 
         revalidatePath('/admin/questions');
@@ -169,5 +182,77 @@ export async function deleteQuestion(id: string) {
     } catch (error) {
         console.error('Failed to delete question:', error);
         return { error: 'Failed to delete question' };
+    }
+}
+
+// ── Questions — Status & Publishing ──────────────────────────────────────────
+
+export type QuestionStatus = 'draft' | 'ai_review' | 'ready' | 'published';
+
+export async function updateQuestionStatus(
+    id: string,
+    status: QuestionStatus
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        await checkAdmin();
+
+        await db.update(questions)
+            .set({
+                status,
+                isPublished: status === 'published',
+            })
+            .where(eq(questions.id, id));
+
+        revalidatePath('/admin/questions');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to update question status:', error);
+        return { success: false, error: 'Failed to update status' };
+    }
+}
+
+export async function publishQuestions(
+    ids: string[]
+): Promise<{ success: boolean; published: number; error?: string }> {
+    try {
+        await checkAdmin();
+
+        // Only publish questions that are in 'ready' state
+        let published = 0;
+        for (const id of ids) {
+            const q = await db.query.questions.findFirst({
+                where: eq(questions.id, id),
+            });
+            if (q && (q.status === 'ready' || q.status === 'published')) {
+                await db.update(questions)
+                    .set({ status: 'published', isPublished: true })
+                    .where(eq(questions.id, id));
+                published++;
+            }
+        }
+
+        revalidatePath('/admin/questions');
+        return { success: true, published };
+    } catch (error) {
+        console.error('Failed to publish questions:', error);
+        return { success: false, published: 0, error: 'Failed to publish questions' };
+    }
+}
+
+export async function unpublishQuestion(
+    id: string
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        await checkAdmin();
+
+        await db.update(questions)
+            .set({ status: 'ready', isPublished: false })
+            .where(eq(questions.id, id));
+
+        revalidatePath('/admin/questions');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to unpublish question:', error);
+        return { success: false, error: 'Failed to unpublish question' };
     }
 }

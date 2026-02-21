@@ -15,14 +15,15 @@ export async function updateProfile(formData: FormData) {
 
     const universityProgram = formData.get('universityProgram') as string;
     const enrollmentYear = parseInt(formData.get('enrollmentYear') as string);
-    const targetGpa = formData.get('targetGpa') as string; // decimal
+    const targetGpaRaw = formData.get('targetGpa') as string;
+    const targetGpa = targetGpaRaw ? parseFloat(targetGpaRaw) : undefined;
 
     try {
         await db.update(profiles)
             .set({
                 universityProgram,
                 enrollmentYear: isNaN(enrollmentYear) ? undefined : enrollmentYear,
-                targetGpa: targetGpa ? targetGpa : undefined, // drizzle handles string for decimal
+                targetGpa: targetGpa === undefined || isNaN(targetGpa) ? undefined : targetGpa,
             })
             .where(eq(profiles.id, session.user.id));
 

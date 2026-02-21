@@ -146,6 +146,12 @@ export const questions = sqliteTable('questions', {
     difficultyTier: integer('difficulty_tier').default(1),
     strategyTag: text('strategy_tag'), // e.g. "chain_rule", "integration_by_parts" — for interleaved practice
     isPublished: integer('is_published', { mode: 'boolean' }).default(false),
+    // Workflow status: draft → ai_review → ready → published
+    status: text('status').default('draft'),
+    // AI analysis fields
+    aiDifficultyTier: integer('ai_difficulty_tier'),       // AI's estimated difficulty (1-5)
+    aiAnalysis: text('ai_analysis', { mode: 'json' }),     // Full AI analysis JSON blob
+    aiAnalyzedAt: integer('ai_analyzed_at', { mode: 'timestamp' }),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
@@ -378,3 +384,42 @@ export const courseExamAnalysisCache = sqliteTable('course_exam_analysis_cache',
     // Updated whenever we write a fresh Claude result
     updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
+
+// ── Articles (Study Material) ─────────────────────────────────────────────────
+// Structured study articles authored by admins, linked to courses and topics.
+// Content is stored as typed JSON blocks (text, LaTeX, image, callout, heading).
+export const articles = sqliteTable('articles', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    slug: text('slug').unique().notNull(),
+    title: text('title').notNull(),
+    titleSv: text('title_sv'),
+    excerpt: text('excerpt'),             // Short description for cards / search results
+    courseId: text('course_id').references(() => courses.id, { onDelete: 'set null' }),
+    topicId: text('topic_id').references(() => topics.id, { onDelete: 'set null' }),
+    // JSON array of ArticleBlock — see types/articles.ts for block definitions
+    contentBlocks: text('content_blocks', { mode: 'json' }),
+    status: text('status').notNull().default('draft'), // draft | published | archived
+    authorId: text('author_id').references(() => users.id, { onDelete: 'set null' }),
+    tags: text('tags', { mode: 'json' }),              // string[] — for search/filtering
+    readingTimeMinutes: integer('reading_time_minutes'),
+    viewCount: integer('view_count').default(0),
+    sortOrder: integer('sort_order').default(0),            // Admin-controlled order within course/topic
+    publishedAt: integer('published_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const articlesRelations = relations(articles, ({ one }) => ({
+    course: one(courses, {
+        fields: [articles.courseId],
+        references: [courses.id],
+    }),
+    topic: one(topics, {
+        fields: [articles.topicId],
+        references: [topics.id],
+    }),
+    author: one(users, {
+        fields: [articles.authorId],
+        references: [users.id],
+    }),
+}));

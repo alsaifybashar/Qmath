@@ -148,9 +148,9 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
         <div className="w-full max-w-2xl mx-auto">
             {/* Question */}
             <div className="mb-6">
-                <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
-                    {question.content.question.text}
-                </h2>
+                <div className="text-xl font-medium text-zinc-900 dark:text-zinc-100 leading-relaxed mb-4">
+                    <MathRenderer text={question.content.question.text} />
+                </div>
                 {question.content.question.math && (
                     <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl inline-block">
                         <MathRenderer text={question.content.question.math} block />

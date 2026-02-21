@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
@@ -13,7 +13,15 @@ import {
     updateQuestion,
     createTopic,
     deleteQuestion,
+    updateQuestionStatus,
+    publishQuestions,
+    unpublishQuestion,
 } from '@/app/actions/admin-questions';
+import {
+    analyzeQuestionDifficulty,
+    analyzeQuestionsBatch,
+} from '@/app/actions/ai-question-analysis';
+import type { AIQuestionAnalysis } from '@/app/actions/ai-question-analysis';
 import {
     Plus,
     Trash2,
@@ -25,13 +33,25 @@ import {
     ArrowRight,
     Check,
     Edit,
+    Sparkles,
+    Send,
+    Eye,
+    Loader2,
+    Brain,
+    Clock,
+    Target,
+    Lightbulb,
+    ArrowUpDown,
+    CheckCircle2,
+    XCircle,
+    FileText,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface SolutionStep {
-    label: string;  // e.g. "Step 1"
-    content: string; // Markdown + LaTeX
+    label: string;
+    content: string;
 }
 
 interface FormData {
@@ -41,7 +61,6 @@ interface FormData {
     options: string;
     difficultyTier: number;
     solutionSteps: SolutionStep[];
-    isPublished: boolean;
 }
 
 const DEFAULT_FORM: FormData = {
@@ -51,10 +70,18 @@ const DEFAULT_FORM: FormData = {
     options: '["Option A", "Option B", "Option C", "Option D"]',
     difficultyTier: 1,
     solutionSteps: [{ label: 'Step 1', content: '' }],
-    isPublished: false,
 };
 
-// ─── Helper: build explanationMarkdown from steps ─────────────────────────────
+type TabKey = 'draft' | 'ai_review' | 'ready' | 'published';
+
+const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+    { key: 'draft', label: 'Utkast', icon: <FileText className="w-4 h-4" /> },
+    { key: 'ai_review', label: 'AI-analys', icon: <Loader2 className="w-4 h-4" /> },
+    { key: 'ready', label: 'Redo', icon: <Eye className="w-4 h-4" /> },
+    { key: 'published', label: 'Publicerad', icon: <CheckCircle2 className="w-4 h-4" /> },
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function stepsToMarkdown(steps: SolutionStep[]): string {
     return steps
@@ -63,7 +90,27 @@ function stepsToMarkdown(steps: SolutionStep[]): string {
         .join('\n\n');
 }
 
-// ─── Shared textarea + preview panel ─────────────────────────────────────────
+const DIFFICULTY_LABELS = ['', 'Beginner', 'Easy', 'Intermediate', 'Hard', 'Expert'];
+const DIFFICULTY_COLORS = [
+    '',
+    'bg-emerald-100 text-emerald-700',
+    'bg-green-100 text-green-700',
+    'bg-yellow-100 text-yellow-700',
+    'bg-orange-100 text-orange-700',
+    'bg-red-100 text-red-700',
+];
+
+function DifficultyBadge({ tier, label }: { tier: number; label?: string }) {
+    const t = Math.max(1, Math.min(5, tier));
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${DIFFICULTY_COLORS[t]}`}>
+            {label && <span className="opacity-60">{label}:</span>}
+            {t} — {DIFFICULTY_LABELS[t]}
+        </span>
+    );
+}
+
+// ─── LaTeX Editor ─────────────────────────────────────────────────────────────
 
 function LatexEditor({
     label,
@@ -82,28 +129,150 @@ function LatexEditor({
 }) {
     return (
         <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                {label}
-            </label>
+            {label && (
+                <label className="block text-sm font-medium text-zinc-700 mb-1">{label}</label>
+            )}
             {hint && <p className="text-xs text-zinc-500 mb-2">{hint}</p>}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 <textarea
                     value={value}
                     onChange={e => onChange(e.target.value)}
                     rows={rows}
-                    className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white font-mono text-sm resize-y"
+                    className="w-full p-3 rounded-lg border border-zinc-200 bg-white text-zinc-900 font-mono text-sm resize-y"
                     placeholder={placeholder}
                 />
                 <div
-                    className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 overflow-y-auto"
+                    className="p-3 rounded-lg border border-zinc-200 bg-zinc-50 overflow-y-auto"
                     style={{ minHeight: `${rows * 1.5}rem` }}
                 >
                     <p className="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Preview</p>
-                    <div className="prose dark:prose-invert max-w-none text-sm">
+                    <div className="prose max-w-none text-sm">
                         <MathRenderer content={value || '*Nothing to preview yet.*'} />
                     </div>
                 </div>
             </div>
+        </div>
+    );
+}
+
+// ─── AI Analysis Card ─────────────────────────────────────────────────────────
+
+function AIAnalysisCard({ question }: { question: any }) {
+    const analysis = question.aiAnalysis as AIQuestionAnalysis | null;
+    if (!analysis) return null;
+
+    return (
+        <div className="border border-blue-200 bg-blue-50/50 rounded-xl p-5 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-blue-800">
+                <Brain className="w-4 h-4" />
+                AI-analys
+                {question.aiAnalyzedAt && (
+                    <span className="text-[10px] font-normal text-blue-500 ml-auto">
+                        {new Date(question.aiAnalyzedAt).toLocaleString('sv-SE')}
+                    </span>
+                )}
+            </div>
+
+            {/* Difficulty comparison */}
+            <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-zinc-500">Admin:</span>
+                    <DifficultyBadge tier={question.difficultyTier} />
+                </div>
+                <ArrowUpDown className="w-3.5 h-3.5 text-zinc-400" />
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-zinc-500">AI:</span>
+                    <DifficultyBadge tier={analysis.difficulty} />
+                </div>
+                {question.difficultyTier !== analysis.difficulty && (
+                    <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
+                        Avvikelse
+                    </span>
+                )}
+            </div>
+
+            {/* Details grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="flex items-start gap-2">
+                    <Target className="w-3.5 h-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                        <p className="text-[10px] uppercase tracking-wider text-zinc-400 mb-0.5">Bloom-nivå</p>
+                        <p className="text-zinc-700 capitalize">{analysis.bloomLevel}</p>
+                    </div>
+                </div>
+                <div className="flex items-start gap-2">
+                    <Clock className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                        <p className="text-[10px] uppercase tracking-wider text-zinc-400 mb-0.5">Estimerad tid</p>
+                        <p className="text-zinc-700">{analysis.estimatedTimeMinutes} min</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Concepts */}
+            {analysis.conceptsTested.length > 0 && (
+                <div>
+                    <p className="text-[10px] uppercase tracking-wider text-zinc-400 mb-1">Koncept som testas</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {analysis.conceptsTested.map(c => (
+                            <span key={c} className="px-2 py-0.5 bg-white border border-zinc-200 rounded text-xs text-zinc-600">
+                                {c.replace(/_/g, ' ')}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Prerequisites */}
+            {analysis.prerequisiteTopics.length > 0 && (
+                <div>
+                    <p className="text-[10px] uppercase tracking-wider text-zinc-400 mb-1">Förkunskaper</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {analysis.prerequisiteTopics.map(p => (
+                            <span key={p} className="px-2 py-0.5 bg-purple-50 border border-purple-200 rounded text-xs text-purple-600">
+                                {p.replace(/_/g, ' ')}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Strategy tag */}
+            {analysis.strategyTag && (
+                <div>
+                    <p className="text-[10px] uppercase tracking-wider text-zinc-400 mb-1">Strategi</p>
+                    <span className="px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-700">
+                        {analysis.strategyTag.replace(/_/g, ' ')}
+                    </span>
+                </div>
+            )}
+
+            {/* Admin feedback */}
+            {analysis.feedbackForAdmin && (
+                <div className="bg-white rounded-lg p-3 border border-zinc-100">
+                    <p className="text-[10px] uppercase tracking-wider text-zinc-400 mb-1">AI-kommentar</p>
+                    <p className="text-sm text-zinc-700">{analysis.feedbackForAdmin}</p>
+                </div>
+            )}
+
+            {/* Suggested hints */}
+            {analysis.suggestedHints && analysis.suggestedHints.length > 0 && (
+                <div>
+                    <p className="text-[10px] uppercase tracking-wider text-zinc-400 mb-1 flex items-center gap-1">
+                        <Lightbulb className="w-3 h-3" /> Föreslagna ledtrådar
+                    </p>
+                    <ol className="space-y-1">
+                        {analysis.suggestedHints.map((h, i) => (
+                            <li key={i} className="text-xs text-zinc-600 flex items-start gap-2">
+                                <span className="w-4 h-4 rounded-full bg-zinc-100 text-zinc-500 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">
+                                    {i + 1}
+                                </span>
+                                {h}
+                            </li>
+                        ))}
+                    </ol>
+                </div>
+            )}
         </div>
     );
 }
@@ -113,17 +282,17 @@ function LatexEditor({
 export default function AdminQuestionsPage() {
     const { data: session } = useSession();
     const searchParams = useSearchParams();
-    // Optional: pre-select a course when navigating from /admin/courses
     const preselectedCourseId = searchParams.get('course') ?? '';
 
     // Data
     const [courses, setCourses] = useState<any[]>([]);
     const [topics, setTopics] = useState<any[]>([]);
-    const [questions, setQuestions] = useState<any[]>([]);
+    const [allQuestions, setAllQuestions] = useState<any[]>([]);
 
     // Selection
     const [selectedCourse, setSelectedCourse] = useState<any | null>(null);
     const [selectedTopicId, setSelectedTopicId] = useState('');
+    const [activeTab, setActiveTab] = useState<TabKey>('draft');
 
     // UI modes
     const [isCreatingTopic, setIsCreatingTopic] = useState(false);
@@ -138,14 +307,38 @@ export default function AdminQuestionsPage() {
     // Question form
     const [formData, setFormData] = useState<FormData>(DEFAULT_FORM);
 
-    // Loading / submitting
+    // Loading
     const [loadingCourses, setLoadingCourses] = useState(true);
     const [loadingTopics, setLoadingTopics] = useState(false);
     const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [submittingQuestion, setSubmittingQuestion] = useState(false);
     const [submittingTopic, setSubmittingTopic] = useState(false);
+    const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
+    const [publishingIds, setPublishingIds] = useState<Set<string>>(new Set());
 
-    // ── Fetching ──────────────────────────────────────────────────────────────
+    // Filtered questions per tab
+    const filteredQuestions = allQuestions.filter(q => {
+        const status = q.status || (q.isPublished ? 'published' : 'draft');
+        return status === activeTab;
+    });
+
+    // Tab counts
+    const tabCounts: Record<TabKey, number> = {
+        draft: allQuestions.filter(q => (q.status || 'draft') === 'draft').length,
+        ai_review: allQuestions.filter(q => q.status === 'ai_review').length,
+        ready: allQuestions.filter(q => q.status === 'ready').length,
+        published: allQuestions.filter(q => q.status === 'published' || (!q.status && q.isPublished)).length,
+    };
+
+    // ── Refresh questions ────────────────────────────────────────────────────
+
+    const refreshQuestions = useCallback(async () => {
+        if (!selectedTopicId) return;
+        const { data } = await getAdminQuestions(selectedTopicId);
+        if (data) setAllQuestions(data);
+    }, [selectedTopicId]);
+
+    // ── Fetching ─────────────────────────────────────────────────────────────
 
     useEffect(() => {
         (async () => {
@@ -173,16 +366,16 @@ export default function AdminQuestionsPage() {
     }, [selectedCourse]);
 
     useEffect(() => {
-        if (!selectedTopicId) { setQuestions([]); return; }
+        if (!selectedTopicId) { setAllQuestions([]); return; }
         (async () => {
             setLoadingQuestions(true);
             const { data } = await getAdminQuestions(selectedTopicId);
-            if (data) setQuestions(data);
+            if (data) setAllQuestions(data);
             setLoadingQuestions(false);
         })();
     }, [selectedTopicId]);
 
-    // ── Topic creation ────────────────────────────────────────────────────────
+    // ── Topic creation ───────────────────────────────────────────────────────
 
     const handleCreateTopic = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -204,7 +397,7 @@ export default function AdminQuestionsPage() {
         setSubmittingTopic(false);
     };
 
-    // ── Question creation / editing ──────────────────────────────────────────
+    // ── Question form helpers ────────────────────────────────────────────────
 
     const addStep = () => {
         setFormData(f => ({
@@ -233,12 +426,10 @@ export default function AdminQuestionsPage() {
     };
 
     const handleEditQuestion = (q: any) => {
-        // Parse options safely
         let optionsStr = '[]';
         if (typeof q.options === 'string') optionsStr = q.options;
         else if (Array.isArray(q.options)) optionsStr = JSON.stringify(q.options);
 
-        // Parse solution steps from markdown
         const steps: SolutionStep[] = [];
         const stepRegex = /###\s+(.*?)\n([\s\S]*?)(?=###\s+|$)/g;
         let match;
@@ -259,12 +450,10 @@ export default function AdminQuestionsPage() {
             options: optionsStr,
             difficultyTier: q.difficultyTier,
             solutionSteps: steps,
-            isPublished: q.isPublished ?? false,
         });
         setEditingQuestionId(q.id);
         setIsCreatingQuestion(true);
-
-        // Scroll to form
+        setActiveTab('draft');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -300,7 +489,6 @@ export default function AdminQuestionsPage() {
                 options: parsedOptions,
                 explanationMarkdown,
                 difficultyTier: formData.difficultyTier,
-                isPublished: formData.isPublished,
             });
         } else {
             result = await createQuestion({
@@ -311,18 +499,17 @@ export default function AdminQuestionsPage() {
                 options: parsedOptions,
                 explanationMarkdown,
                 difficultyTier: formData.difficultyTier,
-                isPublished: formData.isPublished,
             });
         }
 
         if (result.success) {
-            const { data } = await getAdminQuestions(selectedTopicId);
-            if (data) setQuestions(data);
+            await refreshQuestions();
             setIsCreatingQuestion(false);
             setEditingQuestionId(null);
             setFormData(DEFAULT_FORM);
+            setActiveTab('draft');
         } else {
-            alert(`Failed to ${editingQuestionId ? 'update' : 'create'} question. Please try again.`);
+            alert(`Failed to ${editingQuestionId ? 'update' : 'create'} question.`);
         }
         setSubmittingQuestion(false);
     };
@@ -330,15 +517,67 @@ export default function AdminQuestionsPage() {
     const handleDeleteQuestion = async (id: string) => {
         if (!confirm('Delete this question? This cannot be undone.')) return;
         const result = await deleteQuestion(id);
-        if (result.success) {
-            const { data } = await getAdminQuestions(selectedTopicId);
-            if (data) setQuestions(data);
-        }
+        if (result.success) await refreshQuestions();
+    };
+
+    // ── AI Analysis ──────────────────────────────────────────────────────────
+
+    const handleAnalyze = async (id: string) => {
+        setAnalyzingIds(prev => new Set(prev).add(id));
+        const result = await analyzeQuestionDifficulty(id);
+        await refreshQuestions();
+        setAnalyzingIds(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+        if (!result.success) alert(result.error);
+    };
+
+    const handleAnalyzeBatch = async () => {
+        const draftIds = allQuestions
+            .filter(q => (q.status || 'draft') === 'draft')
+            .map(q => q.id);
+        if (draftIds.length === 0) return;
+        const batch = draftIds.slice(0, 5);
+        setAnalyzingIds(new Set(batch));
+        await analyzeQuestionsBatch(batch);
+        await refreshQuestions();
+        setAnalyzingIds(new Set());
+    };
+
+    // ── Publishing ───────────────────────────────────────────────────────────
+
+    const handlePublish = async (id: string) => {
+        setPublishingIds(prev => new Set(prev).add(id));
+        await publishQuestions([id]);
+        await refreshQuestions();
+        setPublishingIds(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+    };
+
+    const handlePublishAll = async () => {
+        const readyIds = allQuestions
+            .filter(q => q.status === 'ready')
+            .map(q => q.id);
+        if (readyIds.length === 0) return;
+        setPublishingIds(new Set(readyIds));
+        await publishQuestions(readyIds);
+        await refreshQuestions();
+        setPublishingIds(new Set());
+    };
+
+    const handleUnpublish = async (id: string) => {
+        await unpublishQuestion(id);
+        await refreshQuestions();
     };
 
     if (!session) return null;
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    // ── Render ───────────────────────────────────────────────────────────────
 
     return (
         <AdminLayout>
@@ -346,26 +585,26 @@ export default function AdminQuestionsPage() {
 
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-2">
-                        Manage Questions
+                    <h1 className="text-3xl font-bold text-zinc-900 mb-2">
+                        Frågehantering
                     </h1>
-                    <p className="text-zinc-600 dark:text-zinc-400">
-                        Select a course with old exams, choose or create a topic, then add questions with step-by-step LaTeX solutions.
+                    <p className="text-zinc-600">
+                        Skapa frågor, analysera med AI och publicera till studenter.
                     </p>
                 </div>
 
                 {/* ── Step 1: Course selection ── */}
                 <section className="mb-6">
-                    <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
-                        <BookOpen className="w-4 h-4" /> Step 1 — Select a Course
+                    <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 mb-3 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" /> Steg 1 — Välj kurs
                     </h2>
 
                     {loadingCourses ? (
-                        <p className="text-zinc-500 text-sm">Loading courses…</p>
+                        <p className="text-zinc-500 text-sm">Laddar kurser...</p>
                     ) : courses.length === 0 ? (
-                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-5 text-amber-800 dark:text-amber-300 text-sm">
-                            No courses available yet. Courses are created automatically when you upload old exams via{' '}
-                            <a href="/admin/upload-exam" className="underline font-medium">Upload Exam</a>.
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-amber-800 text-sm">
+                            Inga kurser tillgängliga. Kurser skapas automatiskt när du laddar upp gamla tentor via{' '}
+                            <a href="/admin/upload-exam" className="underline font-medium">Ladda upp tenta</a>.
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -379,20 +618,18 @@ export default function AdminQuestionsPage() {
                                         setIsCreatingTopic(false);
                                     }}
                                     className={`text-left p-4 rounded-xl border transition-all ${selectedCourse?.id === course.id
-                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-500/20'
-                                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-600'
+                                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20'
+                                        : 'border-zinc-200 bg-white hover:border-blue-400'
                                         }`}
                                 >
-                                    <div className="font-mono font-bold text-zinc-900 dark:text-white text-lg">
+                                    <div className="font-mono font-bold text-zinc-900 text-lg">
                                         {course.code}
                                     </div>
-                                    <div className="text-sm text-zinc-600 dark:text-zinc-400 truncate">
+                                    <div className="text-sm text-zinc-600 truncate">
                                         {course.name}
                                     </div>
                                     {selectedCourse?.id === course.id && (
-                                        <div className="mt-1">
-                                            <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                        </div>
+                                        <Check className="w-4 h-4 text-blue-600 mt-1" />
                                     )}
                                 </button>
                             ))}
@@ -404,42 +641,41 @@ export default function AdminQuestionsPage() {
                 {selectedCourse && (
                     <section className="mb-6">
                         <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                                <Layers className="w-4 h-4" /> Step 2 — Select or Create a Topic
+                            <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                                <Layers className="w-4 h-4" /> Steg 2 — Välj eller skapa ämne
                             </h2>
                             {!isCreatingTopic && (
                                 <button
                                     onClick={() => setIsCreatingTopic(true)}
-                                    className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                    className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
                                 >
-                                    <Plus className="w-3 h-3" /> New Topic
+                                    <Plus className="w-3 h-3" /> Nytt ämne
                                 </button>
                             )}
                         </div>
 
-                        {/* New topic form */}
                         {isCreatingTopic && (
                             <form
                                 onSubmit={handleCreateTopic}
-                                className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-5 mb-4 space-y-3"
+                                className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-4 space-y-3"
                             >
-                                <h3 className="font-semibold text-blue-900 dark:text-blue-300 text-sm">
-                                    Create new topic for {selectedCourse.code}
+                                <h3 className="font-semibold text-blue-900 text-sm">
+                                    Skapa nytt ämne för {selectedCourse.code}
                                 </h3>
                                 <input
                                     type="text"
                                     value={newTopicTitle}
                                     onChange={e => setNewTopicTitle(e.target.value)}
-                                    placeholder="Topic title (e.g. Matrix Inversion)"
+                                    placeholder="Ämnesnamn (t.ex. Matriser, Derivator)"
                                     required
-                                    className="w-full p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm"
+                                    className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
                                 />
                                 <textarea
                                     value={newTopicDesc}
                                     onChange={e => setNewTopicDesc(e.target.value)}
-                                    placeholder="Short description (optional)"
+                                    placeholder="Kort beskrivning (valfritt)"
                                     rows={2}
-                                    className="w-full p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm resize-none"
+                                    className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm resize-none"
                                 />
                                 <div className="flex gap-2">
                                     <button
@@ -447,25 +683,24 @@ export default function AdminQuestionsPage() {
                                         disabled={submittingTopic || !newTopicTitle.trim()}
                                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50"
                                     >
-                                        {submittingTopic ? 'Creating…' : 'Create Topic'}
+                                        {submittingTopic ? 'Skapar...' : 'Skapa ämne'}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setIsCreatingTopic(false)}
-                                        className="px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-sm"
+                                        className="px-4 py-2 text-zinc-600 hover:bg-zinc-100 rounded-lg text-sm"
                                     >
-                                        Cancel
+                                        Avbryt
                                     </button>
                                 </div>
                             </form>
                         )}
 
-                        {/* Topic list */}
                         {loadingTopics ? (
-                            <p className="text-zinc-500 text-sm">Loading topics…</p>
+                            <p className="text-zinc-500 text-sm">Laddar ämnen...</p>
                         ) : topics.length === 0 ? (
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400 italic">
-                                No topics for this course yet. Create one above.
+                            <p className="text-sm text-zinc-500 italic">
+                                Inga ämnen för denna kurs. Skapa ett ovan.
                             </p>
                         ) : (
                             <div className="flex flex-wrap gap-2">
@@ -475,10 +710,11 @@ export default function AdminQuestionsPage() {
                                         onClick={() => {
                                             setSelectedTopicId(topic.id);
                                             setIsCreatingQuestion(false);
+                                            setActiveTab('draft');
                                         }}
                                         className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${selectedTopicId === topic.id
                                             ? 'border-blue-500 bg-blue-600 text-white'
-                                            : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-blue-400'
+                                            : 'border-zinc-200 bg-white text-zinc-700 hover:border-blue-400'
                                             }`}
                                     >
                                         {topic.title}
@@ -489,15 +725,15 @@ export default function AdminQuestionsPage() {
                     </section>
                 )}
 
-                {/* ── Step 3: Questions ── */}
+                {/* ── Step 3: Questions with workflow tabs ── */}
                 {selectedTopicId && (
                     <section>
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                                <HelpCircle className="w-4 h-4" /> Step 3 — Questions
-                                {questions.length > 0 && (
-                                    <span className="ml-1 px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-full text-xs text-zinc-600 dark:text-zinc-400">
-                                        {questions.length}
+                            <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                                <HelpCircle className="w-4 h-4" /> Steg 3 — Frågor
+                                {allQuestions.length > 0 && (
+                                    <span className="ml-1 px-2 py-0.5 bg-zinc-100 rounded-full text-xs text-zinc-600">
+                                        {allQuestions.length}
                                     </span>
                                 )}
                             </h2>
@@ -510,99 +746,89 @@ export default function AdminQuestionsPage() {
                                     }}
                                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
                                 >
-                                    <Plus className="w-4 h-4" /> Add Question
+                                    <Plus className="w-4 h-4" /> Ny fråga
                                 </button>
                             )}
                         </div>
 
                         {/* ── Question creation form ── */}
                         {isCreatingQuestion && (
-                            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 mb-6 space-y-6">
+                            <div className="bg-white border border-zinc-200 rounded-xl p-6 mb-6 space-y-6">
                                 <div className="flex justify-between items-center">
-                                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
-                                        {editingQuestionId ? 'Edit Question' : 'New Question'}
+                                    <h3 className="text-lg font-bold text-zinc-900">
+                                        {editingQuestionId ? 'Redigera fråga' : 'Ny fråga'}
                                     </h3>
                                     <button
                                         onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); }}
-                                        className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                                        className="text-zinc-400 hover:text-zinc-600"
                                     >
                                         <X className="w-5 h-5" />
                                     </button>
                                 </div>
 
                                 <form onSubmit={handleSubmitQuestion} className="space-y-6">
-
-                                    {/* Question content */}
                                     <LatexEditor
-                                        label="Question Text (Markdown + LaTeX)"
-                                        hint="Use $$...$$ for block equations and $...$ for inline math."
+                                        label="Frågetext (Markdown + LaTeX)"
+                                        hint="Använd $$...$$ för block-ekvationer och $...$ för inline-matte."
                                         value={formData.contentMarkdown}
                                         onChange={v => setFormData(f => ({ ...f, contentMarkdown: v }))}
-                                        placeholder={"Solve the system of equations:\n$$\\begin{cases} 2x + y = 5 \\\\ x - y = 1 \\end{cases}$$"}
+                                        placeholder={"Lös ekvationssystemet:\n$$\\begin{cases} 2x + y = 5 \\\\ x - y = 1 \\end{cases}$$"}
                                         rows={6}
                                     />
 
-                                    {/* Question type & difficulty */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                                Question Type
-                                            </label>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-1">Frågetyp</label>
                                             <select
                                                 value={formData.questionType}
                                                 onChange={e => setFormData(f => ({ ...f, questionType: e.target.value }))}
-                                                className="w-full p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm"
+                                                className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
                                             >
-                                                <option value="multiple_choice">Multiple Choice</option>
-                                                <option value="numeric">Numeric Answer</option>
-                                                <option value="free_response">Free Response</option>
+                                                <option value="multiple_choice">Flerval</option>
+                                                <option value="numeric">Numeriskt svar</option>
+                                                <option value="free_response">Fri text</option>
                                             </select>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                                Correct Answer
-                                            </label>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-1">Korrekt svar</label>
                                             <input
                                                 type="text"
                                                 value={formData.correctAnswer}
                                                 onChange={e => setFormData(f => ({ ...f, correctAnswer: e.target.value }))}
                                                 required
-                                                placeholder="e.g. Option A, or 3.14"
-                                                className="w-full p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm"
+                                                placeholder="t.ex. Alternativ A, eller 3.14"
+                                                className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                                Difficulty
-                                            </label>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-1">Svårighetsgrad</label>
                                             <select
                                                 value={formData.difficultyTier}
                                                 onChange={e => setFormData(f => ({ ...f, difficultyTier: Number(e.target.value) }))}
-                                                className="w-full p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm"
+                                                className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
                                             >
-                                                <option value={1}>1 – Beginner</option>
-                                                <option value={2}>2 – Easy</option>
-                                                <option value={3}>3 – Intermediate</option>
-                                                <option value={4}>4 – Hard</option>
+                                                <option value={1}>1 – Nybörjare</option>
+                                                <option value={2}>2 – Lätt</option>
+                                                <option value={3}>3 – Medel</option>
+                                                <option value={4}>4 – Svår</option>
                                                 <option value={5}>5 – Expert</option>
                                             </select>
                                         </div>
                                     </div>
 
-                                    {/* Multiple choice options */}
                                     {formData.questionType === 'multiple_choice' && (
                                         <div>
-                                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                                Answer Options (JSON array — LaTeX allowed inside strings)
+                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                Svarsalternativ (JSON-array — LaTeX tillåtet)
                                             </label>
                                             <input
                                                 type="text"
                                                 value={formData.options}
                                                 onChange={e => setFormData(f => ({ ...f, options: e.target.value }))}
                                                 placeholder='["$x=2$", "$x=3$", "$x=-1$", "$x=0$"]'
-                                                className="w-full p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white font-mono text-sm"
+                                                className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 font-mono text-sm"
                                             />
                                         </div>
                                     )}
@@ -610,30 +836,30 @@ export default function AdminQuestionsPage() {
                                     {/* Step-by-step solution */}
                                     <div>
                                         <div className="flex items-center justify-between mb-3">
-                                            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                                Step-by-Step Solution (Markdown + LaTeX)
+                                            <label className="text-sm font-medium text-zinc-700">
+                                                Steg-för-steg-lösning (Markdown + LaTeX)
                                             </label>
                                             <button
                                                 type="button"
                                                 onClick={addStep}
-                                                className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                                className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
                                             >
-                                                <Plus className="w-3 h-3" /> Add Step
+                                                <Plus className="w-3 h-3" /> Lägg till steg
                                             </button>
                                         </div>
 
                                         <div className="space-y-4">
                                             {formData.solutionSteps.map((step, index) => (
-                                                <div key={index} className="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
+                                                <div key={index} className="border border-zinc-200 rounded-xl p-4">
                                                     <div className="flex items-center gap-3 mb-3">
                                                         <input
                                                             type="text"
                                                             value={step.label}
                                                             onChange={e => updateStep(index, 'label', e.target.value)}
-                                                            className="w-32 p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm font-semibold"
+                                                            className="w-32 p-1.5 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm font-semibold"
                                                         />
                                                         <ArrowRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                                                        <span className="text-xs text-zinc-500 flex-1">Describe what to do in this step</span>
+                                                        <span className="text-xs text-zinc-500 flex-1">Beskriv vad som görs i detta steg</span>
                                                         {formData.solutionSteps.length > 1 && (
                                                             <button
                                                                 type="button"
@@ -648,7 +874,7 @@ export default function AdminQuestionsPage() {
                                                         label=""
                                                         value={step.content}
                                                         onChange={v => updateStep(index, 'content', v)}
-                                                        placeholder={"Multiply both sides by 2:\n$$2 \\cdot \\frac{x}{2} = 2 \\cdot 3$$\nSo $x = 6$."}
+                                                        placeholder={"Multiplicera båda sidor med 2:\n$$2 \\cdot \\frac{x}{2} = 2 \\cdot 3$$\nSå $x = 6$."}
                                                         rows={4}
                                                     />
                                                 </div>
@@ -656,133 +882,220 @@ export default function AdminQuestionsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Publishing Options */}
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            id="isPublished"
-                                            checked={formData.isPublished}
-                                            onChange={e => setFormData(f => ({ ...f, isPublished: e.target.checked }))}
-                                            className="w-4 h-4 text-blue-600 rounded border-zinc-300 focus:ring-blue-500"
-                                        />
-                                        <label htmlFor="isPublished" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 select-none">
-                                            Publish Question (Visible to Students)
-                                        </label>
-                                    </div>
-
                                     {/* Submit */}
-                                    <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                                    <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">
                                         <button
                                             type="button"
                                             onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); }}
-                                            className="px-4 py-2 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm"
+                                            className="px-4 py-2 rounded-lg text-zinc-600 hover:bg-zinc-100 text-sm"
                                         >
-                                            Cancel
+                                            Avbryt
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={submittingQuestion}
                                             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50 transition-colors"
                                         >
-                                            {submittingQuestion ? 'Saving…' : 'Save Question'}
+                                            {submittingQuestion ? 'Sparar...' : (editingQuestionId ? 'Uppdatera fråga' : 'Spara som utkast')}
                                         </button>
                                     </div>
                                 </form>
                             </div>
                         )}
 
+                        {/* ── Workflow tabs ── */}
+                        <div className="flex gap-1 border-b border-zinc-200 mb-4">
+                            {TABS.map(tab => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveTab(tab.key)}
+                                    className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
+                                        activeTab === tab.key
+                                            ? 'border-blue-600 text-blue-600'
+                                            : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
+                                    }`}
+                                >
+                                    {tab.icon}
+                                    {tab.label}
+                                    {tabCounts[tab.key] > 0 && (
+                                        <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                            activeTab === tab.key
+                                                ? 'bg-blue-100 text-blue-700'
+                                                : 'bg-zinc-100 text-zinc-500'
+                                        }`}>
+                                            {tabCounts[tab.key]}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* ── Batch actions ── */}
+                        {activeTab === 'draft' && tabCounts.draft > 0 && (
+                            <div className="flex items-center gap-3 mb-4">
+                                <button
+                                    onClick={handleAnalyzeBatch}
+                                    disabled={analyzingIds.size > 0}
+                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm disabled:opacity-50 transition-colors"
+                                >
+                                    {analyzingIds.size > 0 ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="w-4 h-4" />
+                                    )}
+                                    Analysera alla med AI ({Math.min(tabCounts.draft, 5)})
+                                </button>
+                            </div>
+                        )}
+
+                        {activeTab === 'ready' && tabCounts.ready > 0 && (
+                            <div className="flex items-center gap-3 mb-4">
+                                <button
+                                    onClick={handlePublishAll}
+                                    disabled={publishingIds.size > 0}
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm disabled:opacity-50 transition-colors"
+                                >
+                                    {publishingIds.size > 0 ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Send className="w-4 h-4" />
+                                    )}
+                                    Publicera alla ({tabCounts.ready})
+                                </button>
+                            </div>
+                        )}
+
                         {/* ── Question list ── */}
                         {loadingQuestions ? (
-                            <p className="text-zinc-500 text-sm text-center py-8">Loading questions…</p>
-                        ) : questions.length === 0 ? (
-                            <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                                <HelpCircle className="w-10 h-10 text-zinc-300 dark:text-zinc-700 mx-auto mb-3" />
-                                <p className="text-zinc-500 dark:text-zinc-400">No questions in this topic yet.</p>
-                                {!isCreatingQuestion && (
-                                    <button
-                                        onClick={() => setIsCreatingQuestion(true)}
-                                        className="mt-3 text-blue-600 hover:underline text-sm"
-                                    >
-                                        Add the first question
-                                    </button>
-                                )}
+                            <p className="text-zinc-500 text-sm text-center py-8">Laddar frågor...</p>
+                        ) : filteredQuestions.length === 0 ? (
+                            <div className="text-center py-12 bg-white rounded-xl border border-zinc-200">
+                                <HelpCircle className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
+                                <p className="text-zinc-500">
+                                    {activeTab === 'draft' && 'Inga utkast. Skapa en ny fråga ovan.'}
+                                    {activeTab === 'ai_review' && 'Inga frågor under analys.'}
+                                    {activeTab === 'ready' && 'Inga frågor redo att publiceras. Analysera utkast med AI först.'}
+                                    {activeTab === 'published' && 'Inga publicerade frågor ännu.'}
+                                </p>
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {questions.map(q => (
+                                {filteredQuestions.map(q => (
                                     <div
                                         key={q.id}
-                                        className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden"
+                                        className="bg-white rounded-xl border border-zinc-200 overflow-hidden"
                                     >
                                         {/* Question header */}
                                         <div className="flex items-start justify-between p-5">
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${q.difficultyTier <= 2
-                                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                        : q.difficultyTier === 3
-                                                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                                                        }`}>
-                                                        Tier {q.difficultyTier}
-                                                    </span>
+                                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                    <DifficultyBadge tier={q.difficultyTier} label="Admin" />
+                                                    {q.aiDifficultyTier && (
+                                                        <DifficultyBadge tier={q.aiDifficultyTier} label="AI" />
+                                                    )}
                                                     <span className="text-xs text-zinc-400 uppercase tracking-wide">
-                                                        {q.questionType.replace('_', ' ')}
+                                                        {q.questionType === 'multiple_choice' ? 'Flerval' :
+                                                         q.questionType === 'numeric' ? 'Numeriskt' : 'Fri text'}
                                                     </span>
-                                                    {q.isPublished ? (
-                                                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                                                            Published
-                                                        </span>
-                                                    ) : (
-                                                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
-                                                            Draft
+                                                    {q.strategyTag && (
+                                                        <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                            {q.strategyTag.replace(/_/g, ' ')}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="prose dark:prose-invert max-w-none text-sm text-zinc-800 dark:text-zinc-200 line-clamp-2">
+                                                <div className="prose max-w-none text-sm text-zinc-800 line-clamp-2">
                                                     <MathRenderer content={q.contentMarkdown} />
                                                 </div>
                                             </div>
+
                                             <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                                                {/* Tab-specific actions */}
+                                                {activeTab === 'draft' && (
+                                                    <button
+                                                        onClick={() => handleAnalyze(q.id)}
+                                                        disabled={analyzingIds.has(q.id)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                                                        title="Analysera med AI"
+                                                    >
+                                                        {analyzingIds.has(q.id) ? (
+                                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Sparkles className="w-3.5 h-3.5" />
+                                                        )}
+                                                        AI
+                                                    </button>
+                                                )}
+                                                {activeTab === 'ai_review' && (
+                                                    <div className="flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-medium">
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        Analyserar...
+                                                    </div>
+                                                )}
+                                                {activeTab === 'ready' && (
+                                                    <button
+                                                        onClick={() => handlePublish(q.id)}
+                                                        disabled={publishingIds.has(q.id)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                                                    >
+                                                        {publishingIds.has(q.id) ? (
+                                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Send className="w-3.5 h-3.5" />
+                                                        )}
+                                                        Publicera
+                                                    </button>
+                                                )}
+                                                {activeTab === 'published' && (
+                                                    <button
+                                                        onClick={() => handleUnpublish(q.id)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-lg text-xs font-medium transition-colors"
+                                                    >
+                                                        <XCircle className="w-3.5 h-3.5" />
+                                                        Avpublicera
+                                                    </button>
+                                                )}
+
+                                                {/* Expand solution */}
                                                 {q.explanationMarkdown && (
                                                     <button
-                                                        onClick={() =>
-                                                            setExpandedQuestionId(prev =>
-                                                                prev === q.id ? null : q.id
-                                                            )
-                                                        }
-                                                        className="flex items-center gap-1 text-xs text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                                        onClick={() => setExpandedQuestionId(prev => prev === q.id ? null : q.id)}
+                                                        className="flex items-center gap-1 text-xs text-zinc-500 hover:text-blue-600 transition-colors"
                                                     >
-                                                        <ChevronDown
-                                                            className={`w-4 h-4 transition-transform ${expandedQuestionId === q.id ? 'rotate-180' : ''}`}
-                                                        />
-                                                        Solution
+                                                        <ChevronDown className={`w-4 h-4 transition-transform ${expandedQuestionId === q.id ? 'rotate-180' : ''}`} />
+                                                        Lösning
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleEditQuestion(q)}
-                                                    className="text-zinc-400 hover:text-blue-500 transition-colors ml-1"
-                                                    title="Edit question"
+                                                    className="text-zinc-400 hover:text-blue-500 transition-colors"
+                                                    title="Redigera"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteQuestion(q.id)}
-                                                    className="text-zinc-400 hover:text-red-500 transition-colors ml-1"
-                                                    title="Delete question"
+                                                    className="text-zinc-400 hover:text-red-500 transition-colors"
+                                                    title="Ta bort"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>
 
+                                        {/* AI Analysis panel (shown in Ready + Published tabs) */}
+                                        {(activeTab === 'ready' || activeTab === 'published') && q.aiAnalysis && (
+                                            <div className="px-5 pb-5">
+                                                <AIAnalysisCard question={q} />
+                                            </div>
+                                        )}
+
                                         {/* Expanded solution */}
                                         {expandedQuestionId === q.id && q.explanationMarkdown && (
-                                            <div className="border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-5">
+                                            <div className="border-t border-zinc-100 bg-zinc-50 p-5">
                                                 <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-                                                    Step-by-Step Solution
+                                                    Steg-för-steg-lösning
                                                 </p>
-                                                <div className="prose dark:prose-invert max-w-none text-sm">
+                                                <div className="prose max-w-none text-sm">
                                                     <MathRenderer content={q.explanationMarkdown} />
                                                 </div>
                                             </div>

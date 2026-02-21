@@ -24,7 +24,7 @@ const headerVariants = {
     visible: {
         y: 0,
         opacity: 1,
-        transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
+        transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }
     }
 };
 
@@ -34,7 +34,7 @@ const mobileMenuVariants = {
         opacity: 1,
         y: 0,
         scale: 1,
-        transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
+        transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
     },
     exit: {
         opacity: 0,
@@ -49,7 +49,7 @@ const navItemVariants = {
     visible: (i: number) => ({
         opacity: 1,
         x: 0,
-        transition: { delay: i * 0.1, duration: 0.3, ease: [0.16, 1, 0.3, 1] }
+        transition: { delay: i * 0.1, duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
     })
 };
 
@@ -74,8 +74,8 @@ export function Header() {
                 initial="hidden"
                 animate="visible"
                 className={`fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 md:px-6 py-3 transition-all duration-300 ${scrolled
-                        ? 'bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/20'
-                        : 'bg-transparent'
+                    ? 'bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/20'
+                    : 'bg-transparent'
                     }`}
             >
                 {/* Logo with subtle animation */}

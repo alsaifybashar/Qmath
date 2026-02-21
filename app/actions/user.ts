@@ -49,7 +49,8 @@ export async function getUserProgress() {
 
         // Calculate overall progress
         const totalMastery = masteryData.reduce((sum, item) => {
-            return sum + parseFloat(item.masteryProbability as string || '0');
+            const prob = typeof item.masteryProbability === 'number' ? item.masteryProbability : parseFloat(String(item.masteryProbability || '0'));
+            return sum + (isNaN(prob) ? 0 : prob);
         }, 0);
 
         const overallProgress = masteryData.length > 0
@@ -60,7 +61,10 @@ export async function getUserProgress() {
             data: {
                 topics: masteryData,
                 overallProgress: Math.round(overallProgress),
-                topicsCompleted: masteryData.filter(m => parseFloat(m.masteryProbability as string) >= 0.8).length,
+                topicsCompleted: masteryData.filter(m => {
+                    const p = typeof m.masteryProbability === 'number' ? m.masteryProbability : parseFloat(String(m.masteryProbability || '0'));
+                    return !isNaN(p) && p >= 0.8;
+                }).length,
                 totalTopics: masteryData.length,
             }
         };
@@ -80,7 +84,8 @@ export async function updateUserProfile(formData: FormData) {
     const universityId = formData.get('universityId') as string;
     const universityProgram = formData.get('universityProgram') as string;
     const enrollmentYear = parseInt(formData.get('enrollmentYear') as string);
-    const targetGpa = formData.get('targetGpa') as string;
+    const targetGpaRaw = formData.get('targetGpa') as string;
+    const targetGpa = targetGpaRaw ? parseFloat(targetGpaRaw) : null;
 
     try {
         // Update user name
@@ -96,7 +101,7 @@ export async function updateUserProfile(formData: FormData) {
                 universityId: universityId || null,
                 universityProgram,
                 enrollmentYear: isNaN(enrollmentYear) ? null : enrollmentYear,
-                targetGpa: targetGpa || null,
+                targetGpa: targetGpa,
             })
             .where(eq(profiles.id, session.user.id));
 

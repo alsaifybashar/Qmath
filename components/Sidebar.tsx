@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
     LayoutDashboard, BookOpen, Brain, Target, Layers,
     Settings, HelpCircle, ChevronLeft,
-    GraduationCap, Sparkles, User, Home, FlaskConical, Archive
+    GraduationCap, Sparkles, User, Home, FlaskConical, Archive, FileText
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const studyItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'blue' },
     { href: '/courses', label: 'Kurser', icon: BookOpen, color: 'emerald' },
+    { href: '/articles', label: 'Artiklar', icon: FileText, color: 'indigo' },
     { href: '/practice', label: 'Öva', icon: Target, color: 'orange' },
     { href: '/flashcards', label: 'Flashcards', icon: Layers, color: 'pink' },
 ];

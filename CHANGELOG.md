@@ -4,6 +4,34 @@ All notable changes to Qmath are documented here.
 
 ---
 
+## [Unreleased] — AI Study Plan Generation & Caching
+
+### Summary
+Introduced an AI-powered Study Plan generator that uses Claude to analyze course content and produce weekly study schedules based on exam history and topic importance. Includes robust caching and security validations.
+
+---
+
+### Problem Solved
+Students lacked structured guidance on what to study and in what order for specific courses. Existing study plans were manual and not connected to real exam statistics.
+
+---
+
+### What Changed
+
+#### New AI Study Plan Engine
+- Generates a 6-week study plan dynamically based on uploaded exams using Claude.
+- Evaluates the importance of topics on a scale of 1-10.
+- Handles edge cases such as empty exams or missing PDFs gracefully.
+
+#### Enhanced Security and Stability (Agent B Audited)
+- XSS inputs are sanitized and safely cached without leaking.
+- Implemented robust caching using SQLite and a 24-hour TTL mechanism to optimize API usage and speed up repeated requests.
+
+#### Test Coverage
+- Added comprehensive integration tests (`tests/integration/ai-feature.test.ts`) covering cache hits, XSS, empty inputs, and validation of importance scores.
+
+---
+
 ## [Unreleased] — Course-Linked Question Bank & Admin Courses Page
 
 ### Summary

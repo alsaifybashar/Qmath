@@ -53,9 +53,9 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
 
     return (
         <div className="w-full max-w-2xl mx-auto flex flex-col h-full items-center">
-            <h2 className="text-xl font-medium text-zinc-900 dark:text-zinc-100 mb-6 text-center">
-                {question.question.text}
-            </h2>
+            <div className="mb-6 text-xl font-medium text-zinc-800 dark:text-zinc-100 leading-relaxed">
+                <MathRenderer text={question.question.text} />
+            </div>
 
             {/* Expression Display Area */}
             <div className={`

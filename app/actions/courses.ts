@@ -180,47 +180,23 @@ export async function getSuggestedCourses() {
             return { data: [] };
         }
 
+        const universityName = user.profile.university.name;
+
         // Get codes of courses that have exams (global availability filter)
         const coursesWithExams = await db
             .selectDistinct({ code: exams.courseCode })
             .from(exams);
         const validCodes = coursesWithExams.map(c => c.code);
 
-        if (validCodes.length === 0) return { data: [], universityName: user.profile.university.name };
+        if (validCodes.length === 0) return { data: [], universityName };
 
-        const { university, universityProgram } = user.profile;
-        let coursesData = [];
+        // Users should see a list of all courses that are available with old exams
+        const coursesData = await db.query.courses.findMany({
+            where: (courses, { inArray }) => inArray(courses.code, validCodes),
+            orderBy: (courses, { asc }) => [asc(courses.code)],
+        });
 
-        // Check for Linköping University + Information Technology match
-        // "civilingenjör i informationsteknologi" is the key string
-        const programLower = universityProgram?.toLowerCase() || '';
-        const isLiu = university.name.includes('Linköping');
-        const isIT = programLower.includes('informationsteknologi') || programLower.includes('datateknik');
-
-        if (isLiu && isIT) {
-            const specificCodes = ['TDDC75', 'TATB04', 'TANA23', 'TATA41', 'TATA24', 'TATA91', 'TAMS42'];
-
-            coursesData = await db.query.courses.findMany({
-                where: (courses, { inArray, and, eq }) => and(
-                    eq(courses.universityId, university.id),
-                    inArray(courses.code, validCodes),
-                    inArray(courses.code, specificCodes)
-                )
-            });
-
-            // If some courses are missing (not seeded yet), we just return what we find.
-        } else {
-            // Default: Return up to 10 courses for that university that have exams
-            coursesData = await db.query.courses.findMany({
-                where: (courses, { and, eq, inArray }) => and(
-                    eq(courses.universityId, university.id),
-                    inArray(courses.code, validCodes)
-                ),
-                limit: 10,
-            });
-        }
-
-        return { data: coursesData, universityName: university.name };
+        return { data: coursesData, universityName };
     } catch (error) {
         console.error('Failed to fetch suggested courses:', error);
         return { error: 'Failed to fetch suggested courses' };

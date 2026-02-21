@@ -15,6 +15,20 @@
       "when": 1769817171371,
       "tag": "0001_tan_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1771587101214,
+      "tag": "0002_reflective_raider",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1771587733596,
+      "tag": "0003_loud_masque",
+      "breakpoints": true
     }
   ]
 }

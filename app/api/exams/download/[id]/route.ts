@@ -13,9 +13,10 @@ import path from 'path';
  */
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const resolvedParams = await params;
         // Check authentication
         const session = await auth();
 
@@ -33,7 +34,7 @@ export async function GET(
         const [exam] = await db
             .select()
             .from(exams)
-            .where(eq(exams.id, params.id))
+            .where(eq(exams.id, resolvedParams.id))
             .limit(1);
 
         if (!exam) {

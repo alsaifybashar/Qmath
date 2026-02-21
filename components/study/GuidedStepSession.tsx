@@ -112,9 +112,9 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
                     {/* Problem Statement (Always visible) */}
                     <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl">
                         <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Problem</h3>
-                        <div className="text-lg text-zinc-100 mb-2">{question.problem.title}</div>
+                        <div className="text-lg text-zinc-100 mb-2"><MathRenderer text={question.problem.title} /></div>
                         <div className="text-zinc-400 text-sm leading-relaxed mb-4">
-                            {question.problem.statement}
+                            <MathRenderer text={question.problem.statement} />
                         </div>
                         {question.problem.math && (
                             <div className="p-3 bg-zinc-950 rounded-lg border border-zinc-800/50">
@@ -158,7 +158,7 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
                                 {currentStep.instruction}
                             </h2>
                             <p className="text-zinc-600 dark:text-zinc-400">
-                                {currentStep.question}
+                                <MathRenderer text={currentStep.question} />
                             </p>
                         </div>
 

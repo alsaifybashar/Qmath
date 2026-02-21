@@ -13,7 +13,7 @@ async function main() {
     // 1. Test Limit Connection
     try {
         console.log('Testing Database Connection...');
-        const result = await db.execute(sql`SELECT 1`);
+        const result = await db.select().from(users).limit(1);
         console.log('✅ Database Connection Successful');
     } catch (e) {
         console.error('❌ Database Connection Failed:', e);

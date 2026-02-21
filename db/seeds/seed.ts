@@ -167,9 +167,10 @@ async function seed() {
     // ============================================
     // 5. TEST USER (for development)
     // ============================================
-    console.log('👤 Seeding test user...');
+    console.log('👤 Seeding test users...');
 
     const hashedPassword = await bcrypt.hash('test123456', 10);
+    const adminHashedPassword = await bcrypt.hash('admin123456', 10);
 
     const [testUser] = await db.insert(users).values({
         email: 'test@qmath.se',
@@ -186,7 +187,21 @@ async function seed() {
         targetGpa: 4.5,
     });
 
+    const [adminUser] = await db.insert(users).values({
+        email: 'admin@qmath.se',
+        password: adminHashedPassword,
+        name: 'Admin',
+        role: 'admin',
+    }).returning();
+
+    await db.insert(profiles).values({
+        id: adminUser.id,
+        universityId: kth.id,
+        universityProgram: 'Staff',
+    });
+
     console.log(`   ✓ Created test user: test@qmath.se (password: test123456)`);
+    console.log(`   ✓ Created admin user: admin@qmath.se (password: admin123456)`);
 
     // ============================================
     // DONE
@@ -197,10 +212,10 @@ async function seed() {
     console.log(`   • ${insertedCourses.length} courses`);
     console.log(`   • ${insertedTopics.length} topics`);
     console.log(`   • ${insertedQuestions.length} questions`);
-    console.log(`   • 1 test user`);
+    console.log(`   • 2 test users`);
     console.log('\n🔐 Test credentials:');
-    console.log('   Email: test@qmath.se');
-    console.log('   Password: test123456');
+    console.log('   Email: test@qmath.se / Password: test123456');
+    console.log('   Email: admin@qmath.se / Password: admin123456');
 
     process.exit(0);
 }

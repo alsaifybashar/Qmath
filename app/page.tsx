@@ -34,7 +34,7 @@ const scaleIn = {
     visible: {
         opacity: 1,
         scale: 1,
-        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const }
     }
 };
 
@@ -129,7 +129,7 @@ export default function Home() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                         </span>
-                                v1.0 Offentlig Beta — Nu Live
+                        v1.0 Offentlig Beta — Nu Live
                     </motion.div>
 
                     {/* Main heading with text reveal */}

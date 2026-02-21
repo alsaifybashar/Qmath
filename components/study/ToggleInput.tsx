@@ -40,7 +40,7 @@ export function ToggleInput({ question, onAnswer }: ToggleProps) {
     return (
         <div className="w-full max-w-2xl mx-auto flex flex-col h-full items-center justify-center">
             <h2 className="text-xl md:text-2xl font-medium text-zinc-900 dark:text-zinc-100 mb-8 text-center leading-relaxed">
-                {question.question.text}
+                <MathRenderer text={question.question.text} />
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">

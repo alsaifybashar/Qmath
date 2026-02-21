@@ -29,15 +29,16 @@ export async function checkAndMaintainStreak(userId: string) {
     if (diffDays > 1) {
         // Calculate missing days
         const missedDays = diffDays - 1;
+        const freezeDays = streakRecord.freezeDaysAvailable ?? 0;
 
-        if (streakRecord.freezeDaysAvailable >= missedDays) {
+        if (freezeDays >= missedDays) {
             // Use freeze days to protect streak
             console.log(`User ${userId} used ${missedDays} freeze days to protect streak.`);
 
             await db.update(userStreaks)
                 .set({
-                    freezeDaysAvailable: streakRecord.freezeDaysAvailable - missedDays,
-                    freezeDaysUsed: (streakRecord.freezeDaysUsed || 0) + missedDays,
+                    freezeDaysAvailable: freezeDays - missedDays,
+                    freezeDaysUsed: (streakRecord.freezeDaysUsed ?? 0) + missedDays,
                     lastStudyDate: new Date(today.getTime() - (24 * 60 * 60 * 1000)), // Set to "yesterday" effectively to bridge the gap? 
                     // Actually, usually we just don't reset the streak. 
                     // But if we don't update lastStudyDate, the next check will still see a gap.
@@ -56,7 +57,7 @@ export async function checkAndMaintainStreak(userId: string) {
                 })
                 .where(eq(userStreaks.userId, userId));
 
-            return { ...streakRecord, freezeDaysAvailable: streakRecord.freezeDaysAvailable - missedDays };
+            return { ...streakRecord, freezeDaysAvailable: freezeDays - missedDays };
         } else {
             // Streak broken
             console.log(`User ${userId} broke streak. Resetting to 0.`);

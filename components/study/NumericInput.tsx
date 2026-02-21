@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Delete, Check, ArrowRight } from 'lucide-react';
 import { NumericInputQuestion } from '@/types/study';
 import { MathRenderer } from './MathRenderer';
+import { evaluateToNumber, checkMathEquivalence } from '@/lib/utils/mathEquivalence';
 
 interface NumericInputProps {
     question: NumericInputQuestion;
@@ -54,39 +55,29 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
     };
 
     const validateAnswer = (input: string): boolean => {
-        // Parse input
-        let numVal: number | null = null;
         const normalized = input.trim();
-
-        try {
-            if (normalized.includes('/')) {
-                const [n, d] = normalized.split('/').map(Number);
-                if (!isNaN(n) && !isNaN(d) && d !== 0) numVal = n / d;
-            } else {
-                numVal = parseFloat(normalized);
-            }
-        } catch {
-            return false;
-        }
-
-        if (numVal === null || isNaN(numVal)) return false;
-
         const { exact, range, tolerance, acceptedForms } = question.answer;
 
         // Check accepted forms string match
-        if (acceptedForms?.includes(normalized)) return true;
+        if (acceptedForms && acceptedForms.some(f => checkMathEquivalence(normalized, f))) return true;
 
-        // Check exact match
+        // Check exact match using equivalency check if exact is string, or via evaluation if numeric
         if (exact !== undefined) {
-            if (tolerance !== undefined) {
-                if (Math.abs(numVal - exact) <= tolerance) return true;
-            } else {
-                if (numVal === exact) return true;
+            if (typeof exact === 'string' && checkMathEquivalence(normalized, exact)) return true;
+
+            const numVal = evaluateToNumber(normalized);
+            if (numVal !== null) {
+                if (tolerance !== undefined) {
+                    if (Math.abs(numVal - Number(exact)) <= tolerance) return true;
+                } else {
+                    if (numVal === exact) return true;
+                }
             }
         }
 
         // Check range
-        if (range) {
+        const numVal = evaluateToNumber(normalized);
+        if (range && numVal !== null) {
             if (numVal >= range[0] && numVal <= range[1]) return true;
         }
 
@@ -128,7 +119,7 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
             {/* Question Area */}
             <div className="flex-1 mb-8 text-center flex flex-col items-center justify-center">
                 <div className="text-xl font-medium text-zinc-800 dark:text-zinc-100 mb-4">
-                    {question.question.text}
+                    <MathRenderer text={question.question.text} />
                 </div>
                 {question.question.math && (
                     <div className="mb-8">

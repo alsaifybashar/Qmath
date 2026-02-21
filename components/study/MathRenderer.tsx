@@ -14,18 +14,29 @@ interface MathRendererProps {
 }
 
 export const MathRenderer = memo(({ text, block = false, className = '' }: MathRendererProps) => {
-    // Check if text contains LaTeX delimiters
-    // If block=true, we treat the whole string as latex
-    // If block=false, we might auto-detect
+    if (!text) return null;
 
     if (block) {
         return <div className={`katex-block ${className}`}><BlockMath math={text} /></div>;
     }
 
-    // For inline, we just basic wrap. 
-    // Ideally we parse mixed text/latex, but for this specific "Math" input, we usually pass pure latex or rely on the parent to split it.
-    // As per previous existing code style, we'll assume the parent might pass mixed content if they handle it, or we handle pure latex here.
-    return <span className={`katex-inline ${className}`}><InlineMath math={text} /></span>;
+    const parts = text.split(/(\$\$[\s\S]*?\$\$)|(\$[\s\S]*?\$)|(\\\([\s\S]*?\\\))/g).filter(p => p !== undefined && p !== '');
+
+    return (
+        <span className={`katex-inline whitespace-pre-wrap ${className}`}>
+            {parts.map((part, i) => {
+                if (part.startsWith('$$') && part.endsWith('$$')) {
+                    return <div key={i} className="my-2"><BlockMath math={part.slice(2, -2)} /></div>;
+                } else if (part.startsWith('$') && part.endsWith('$')) {
+                    return <InlineMath key={i} math={part.slice(1, -1)} />;
+                } else if (part.startsWith('\\(') && part.endsWith('\\)')) {
+                    return <InlineMath key={i} math={part.slice(2, -2)} />;
+                } else {
+                    return <span key={i}>{part}</span>;
+                }
+            })}
+        </span>
+    );
 });
 
 MathRenderer.displayName = 'MathRenderer';

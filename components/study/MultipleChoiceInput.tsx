@@ -68,7 +68,7 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
             {/* Question Area - Top */}
             <div className="flex-1 mb-6">
                 <div className="text-lg md:text-xl font-medium text-zinc-800 dark:text-zinc-100 leading-relaxed">
-                    {questionData.text}
+                    <MathRenderer text={questionData.text} />
                 </div>
                 {questionData.math && (
                     <div className="my-6 flex justify-center p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800">
@@ -137,7 +137,7 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
                             {/* Option Content */}
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 font-medium text-lg text-zinc-900 dark:text-zinc-100">
-                                    {option.label}
+                                    <MathRenderer text={option.label} />
                                     {option.formula && (
                                         <span className="ml-2">
                                             <MathRenderer text={option.formula} />
@@ -146,7 +146,7 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
                                 </div>
                                 {option.description && (
                                     <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                                        {option.description}
+                                        <MathRenderer text={option.description} />
                                     </div>
                                 )}
                             </div>
