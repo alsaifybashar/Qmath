@@ -155,7 +155,7 @@ export default function PracticePage() {
                         {topics.map((topic, i) => (
                             <Link
                                 key={topic.id}
-                                href={`/study?topic=${topic.id}`}
+                                href={`/study?topic=${topic.id}&topicName=${encodeURIComponent(topic.title)}`}
                                 className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group"
                             >
                                 <div className="flex items-center gap-4">

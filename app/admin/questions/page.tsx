@@ -20,8 +20,9 @@ import {
 import {
     analyzeQuestionDifficulty,
     analyzeQuestionsBatch,
+    reviewSolutionSteps,
 } from '@/app/actions/ai-question-analysis';
-import type { AIQuestionAnalysis } from '@/app/actions/ai-question-analysis';
+import type { AIQuestionAnalysis, AISolutionReview } from '@/app/actions/ai-question-analysis';
 import {
     Plus,
     Trash2,
@@ -45,6 +46,12 @@ import {
     CheckCircle2,
     XCircle,
     FileText,
+    Wand2,
+    ThumbsUp,
+    ThumbsDown,
+    Star,
+    AlertTriangle,
+    PlusCircle,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -277,6 +284,242 @@ function AIAnalysisCard({ question }: { question: any }) {
     );
 }
 
+// ─── AI Solution Review Panel ─────────────────────────────────────────────────
+
+const RATING_LABELS = ['', 'Bristfällig', 'Behöver förbättring', 'Godkänd', 'Bra', 'Utmärkt'];
+const RATING_COLORS = ['', 'text-red-600', 'text-orange-600', 'text-yellow-600', 'text-emerald-600', 'text-green-600'];
+const RATING_BG = ['', 'bg-red-50', 'bg-orange-50', 'bg-yellow-50', 'bg-emerald-50', 'bg-green-50'];
+
+function AISolutionReviewPanel({
+    review,
+    onAcceptStep,
+    onRejectStep,
+    onAcceptAdditionalStep,
+    acceptedSteps,
+    rejectedSteps,
+    acceptedAdditionalSteps,
+    onDismiss,
+}: {
+    review: AISolutionReview;
+    onAcceptStep: (stepIndex: number) => void;
+    onRejectStep: (stepIndex: number) => void;
+    onAcceptAdditionalStep: (idx: number) => void;
+    acceptedSteps: Set<number>;
+    rejectedSteps: Set<number>;
+    acceptedAdditionalSteps: Set<number>;
+    onDismiss: () => void;
+}) {
+    const rating = Math.max(1, Math.min(5, review.overallRating));
+    const improvableSteps = review.stepReviews.filter(s => s.verdict === 'improve');
+    const okSteps = review.stepReviews.filter(s => s.verdict === 'ok');
+
+    return (
+        <div className="border border-purple-200 bg-gradient-to-br from-purple-50/80 to-blue-50/40 rounded-xl p-5 space-y-5 animate-in fade-in duration-300">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                        <Wand2 className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-purple-900">AI-granskning av lösning</h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <Star
+                                        key={i}
+                                        className={`w-3 h-3 ${i <= rating ? 'text-amber-400 fill-amber-400' : 'text-zinc-300'}`}
+                                    />
+                                ))}
+                            </div>
+                            <span className={`text-xs font-medium ${RATING_COLORS[rating]}`}>
+                                {RATING_LABELS[rating]}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <button
+                    onClick={onDismiss}
+                    className="text-zinc-400 hover:text-zinc-600 transition-colors"
+                    title="Stäng granskning"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            </div>
+
+            {/* Overall assessment */}
+            <div className={`rounded-lg p-3 ${RATING_BG[rating]} border border-purple-100`}>
+                <p className="text-sm text-zinc-700 leading-relaxed">{review.overallAssessment}</p>
+            </div>
+
+            {/* Summary chips */}
+            <div className="flex gap-2 flex-wrap">
+                {okSteps.length > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium">
+                        <CheckCircle2 className="w-3 h-3" />
+                        {okSteps.length} steg godkända
+                    </span>
+                )}
+                {improvableSteps.length > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
+                        <AlertTriangle className="w-3 h-3" />
+                        {improvableSteps.length} förslag till förbättring
+                    </span>
+                )}
+                {review.additionalSteps.length > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                        <PlusCircle className="w-3 h-3" />
+                        {review.additionalSteps.length} föreslagna nya steg
+                    </span>
+                )}
+            </div>
+
+            {/* Step-by-step reviews */}
+            {review.stepReviews.length > 0 && (
+                <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-purple-500">Steg-granskning</p>
+                    {review.stepReviews.map((sr) => {
+                        const isAccepted = acceptedSteps.has(sr.stepIndex);
+                        const isRejected = rejectedSteps.has(sr.stepIndex);
+                        const isDecided = isAccepted || isRejected;
+
+                        return (
+                            <div
+                                key={sr.stepIndex}
+                                className={`rounded-lg border p-4 transition-all ${sr.verdict === 'ok'
+                                    ? 'border-emerald-200 bg-emerald-50/50'
+                                    : isAccepted
+                                        ? 'border-emerald-300 bg-emerald-50 ring-1 ring-emerald-200'
+                                        : isRejected
+                                            ? 'border-zinc-200 bg-zinc-50 opacity-60'
+                                            : 'border-amber-200 bg-white'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    {sr.verdict === 'ok' ? (
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                    ) : (
+                                        <Lightbulb className="w-4 h-4 text-amber-500" />
+                                    )}
+                                    <span className="text-sm font-semibold text-zinc-800">
+                                        {sr.originalLabel}
+                                    </span>
+                                    {sr.verdict === 'ok' && (
+                                        <span className="text-xs text-emerald-600 font-medium">Godkänt</span>
+                                    )}
+                                    {isAccepted && (
+                                        <span className="text-xs text-emerald-600 font-medium ml-auto">✓ Accepterat</span>
+                                    )}
+                                    {isRejected && (
+                                        <span className="text-xs text-zinc-500 font-medium ml-auto">✗ Nekat</span>
+                                    )}
+                                </div>
+
+                                {sr.verdict === 'improve' && (
+                                    <>
+                                        <p className="text-xs text-amber-700 mb-3 italic">
+                                            💡 {sr.reason}
+                                        </p>
+
+                                        {/* AI suggestion preview */}
+                                        <div className="bg-white rounded-lg border border-amber-100 p-3 mb-3">
+                                            <p className="text-[10px] uppercase tracking-wider text-amber-500 mb-1.5 font-semibold">
+                                                AI:s förslag
+                                            </p>
+                                            {sr.suggestedLabel !== sr.originalLabel && (
+                                                <p className="text-xs text-zinc-500 mb-1">
+                                                    Ny etikett: <strong className="text-zinc-700">{sr.suggestedLabel}</strong>
+                                                </p>
+                                            )}
+                                            <div className="prose max-w-none text-sm">
+                                                <MathRenderer content={sr.suggestion || '*Inget förslag*'} />
+                                            </div>
+                                        </div>
+
+                                        {/* Accept / Reject buttons */}
+                                        {!isDecided && (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onAcceptStep(sr.stepIndex)}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                                >
+                                                    <ThumbsUp className="w-3 h-3" />
+                                                    Acceptera förslag
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onRejectStep(sr.stepIndex)}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-50 text-zinc-600 border border-zinc-200 rounded-lg text-xs font-medium transition-colors"
+                                                >
+                                                    <ThumbsDown className="w-3 h-3" />
+                                                    Behåll original
+                                                </button>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Additional steps suggestions */}
+            {review.additionalSteps.length > 0 && (
+                <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-blue-500">Föreslagna nya steg</p>
+                    {review.additionalSteps.map((as, idx) => {
+                        const isAccepted = acceptedAdditionalSteps.has(idx);
+
+                        return (
+                            <div
+                                key={idx}
+                                className={`rounded-lg border p-4 transition-all ${isAccepted
+                                    ? 'border-emerald-300 bg-emerald-50 ring-1 ring-emerald-200'
+                                    : 'border-blue-200 bg-blue-50/50'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <PlusCircle className="w-4 h-4 text-blue-500" />
+                                    <span className="text-sm font-semibold text-zinc-800">
+                                        {as.label}
+                                    </span>
+                                    <span className="text-[10px] text-blue-500 font-medium">
+                                        Infoga efter steg {as.afterStepIndex + 1}
+                                    </span>
+                                    {isAccepted && (
+                                        <span className="text-xs text-emerald-600 font-medium ml-auto">✓ Tillagt</span>
+                                    )}
+                                </div>
+                                <p className="text-xs text-blue-700 mb-3 italic">
+                                    💡 {as.reason}
+                                </p>
+                                <div className="bg-white rounded-lg border border-blue-100 p-3 mb-3">
+                                    <div className="prose max-w-none text-sm">
+                                        <MathRenderer content={as.content} />
+                                    </div>
+                                </div>
+
+                                {!isAccepted && (
+                                    <button
+                                        type="button"
+                                        onClick={() => onAcceptAdditionalStep(idx)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                    >
+                                        <PlusCircle className="w-3 h-3" />
+                                        Lägg till detta steg
+                                    </button>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminQuestionsPage() {
@@ -315,6 +558,13 @@ export default function AdminQuestionsPage() {
     const [submittingTopic, setSubmittingTopic] = useState(false);
     const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
     const [publishingIds, setPublishingIds] = useState<Set<string>>(new Set());
+
+    // AI Solution Review state
+    const [solutionReview, setSolutionReview] = useState<AISolutionReview | null>(null);
+    const [reviewingSteps, setReviewingSteps] = useState(false);
+    const [acceptedSteps, setAcceptedSteps] = useState<Set<number>>(new Set());
+    const [rejectedSteps, setRejectedSteps] = useState<Set<number>>(new Set());
+    const [acceptedAdditionalSteps, setAcceptedAdditionalSteps] = useState<Set<number>>(new Set());
 
     // Filtered questions per tab
     const filteredQuestions = allQuestions.filter(q => {
@@ -427,6 +677,87 @@ export default function AdminQuestionsPage() {
         }));
     };
 
+    // ── AI Solution Review ────────────────────────────────────────────────────
+
+    const handleReviewSolution = async () => {
+        if (formData.solutionSteps.every(s => !s.content.trim())) {
+            alert('Skriv minst ett lösningssteg innan du granskar med AI.');
+            return;
+        }
+
+        setReviewingSteps(true);
+        setSolutionReview(null);
+        setAcceptedSteps(new Set());
+        setRejectedSteps(new Set());
+        setAcceptedAdditionalSteps(new Set());
+
+        const topicObj = topics.find((t: any) => t.id === selectedTopicId);
+        const courseObj = selectedCourse;
+
+        const result = await reviewSolutionSteps({
+            questionContent: formData.contentMarkdown,
+            correctAnswer: formData.correctAnswer,
+            questionType: formData.questionType,
+            solutionSteps: formData.solutionSteps,
+            topicName: topicObj?.title,
+            courseCode: courseObj?.code,
+            courseName: courseObj?.name,
+        });
+
+        if (result.success) {
+            setSolutionReview(result.review);
+        } else {
+            alert(result.error);
+        }
+        setReviewingSteps(false);
+    };
+
+    const handleAcceptStep = (stepIndex: number) => {
+        if (!solutionReview) return;
+        const sr = solutionReview.stepReviews.find(s => s.stepIndex === stepIndex);
+        if (!sr || !sr.suggestion) return;
+
+        // Replace the step content and label with AI suggestion
+        setFormData(f => ({
+            ...f,
+            solutionSteps: f.solutionSteps.map((s, i) =>
+                i === stepIndex
+                    ? { label: sr.suggestedLabel || s.label, content: sr.suggestion }
+                    : s
+            ),
+        }));
+        setAcceptedSteps(prev => new Set(prev).add(stepIndex));
+    };
+
+    const handleRejectStep = (stepIndex: number) => {
+        setRejectedSteps(prev => new Set(prev).add(stepIndex));
+    };
+
+    const handleAcceptAdditionalStep = (idx: number) => {
+        if (!solutionReview) return;
+        const additional = solutionReview.additionalSteps[idx];
+        if (!additional) return;
+
+        // Insert the new step at the correct position
+        const insertAt = additional.afterStepIndex + 1;
+        setFormData(f => {
+            const newSteps = [...f.solutionSteps];
+            newSteps.splice(insertAt, 0, {
+                label: additional.label,
+                content: additional.content,
+            });
+            return { ...f, solutionSteps: newSteps };
+        });
+        setAcceptedAdditionalSteps(prev => new Set(prev).add(idx));
+    };
+
+    const handleDismissReview = () => {
+        setSolutionReview(null);
+        setAcceptedSteps(new Set());
+        setRejectedSteps(new Set());
+        setAcceptedAdditionalSteps(new Set());
+    };
+
     const handleEditQuestion = (q: any) => {
         let optionsStr = '[]';
         if (typeof q.options === 'string') optionsStr = q.options;
@@ -509,6 +840,7 @@ export default function AdminQuestionsPage() {
             setIsCreatingQuestion(false);
             setEditingQuestionId(null);
             setFormData(DEFAULT_FORM);
+            setSolutionReview(null);
             setActiveTab('draft');
         } else {
             alert(`Failed to ${editingQuestionId ? 'update' : 'create'} question.`);
@@ -773,7 +1105,7 @@ export default function AdminQuestionsPage() {
                                         {editingQuestionId ? 'Redigera fråga' : 'Ny fråga'}
                                     </h3>
                                     <button
-                                        onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); }}
+                                        onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); }}
                                         className="text-zinc-400 hover:text-zinc-600"
                                     >
                                         <X className="w-5 h-5" />
@@ -853,13 +1185,29 @@ export default function AdminQuestionsPage() {
                                             <label className="text-sm font-medium text-zinc-700">
                                                 Steg-för-steg-lösning (Markdown + LaTeX)
                                             </label>
-                                            <button
-                                                type="button"
-                                                onClick={addStep}
-                                                className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                                            >
-                                                <Plus className="w-3 h-3" /> Lägg till steg
-                                            </button>
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleReviewSolution}
+                                                    disabled={reviewingSteps || formData.solutionSteps.every(s => !s.content.trim())}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    title="Låt AI granska lösningsstegen och föreslå förbättringar"
+                                                >
+                                                    {reviewingSteps ? (
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Wand2 className="w-3.5 h-3.5" />
+                                                    )}
+                                                    {reviewingSteps ? 'Granskar...' : 'Granska med AI'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={addStep}
+                                                    className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                                >
+                                                    <Plus className="w-3 h-3" /> Lägg till steg
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className="space-y-4">
@@ -894,13 +1242,29 @@ export default function AdminQuestionsPage() {
                                                 </div>
                                             ))}
                                         </div>
+
+                                        {/* AI Solution Review Panel */}
+                                        {solutionReview && (
+                                            <div className="mt-4">
+                                                <AISolutionReviewPanel
+                                                    review={solutionReview}
+                                                    onAcceptStep={handleAcceptStep}
+                                                    onRejectStep={handleRejectStep}
+                                                    onAcceptAdditionalStep={handleAcceptAdditionalStep}
+                                                    acceptedSteps={acceptedSteps}
+                                                    rejectedSteps={rejectedSteps}
+                                                    acceptedAdditionalSteps={acceptedAdditionalSteps}
+                                                    onDismiss={handleDismissReview}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Submit */}
                                     <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">
                                         <button
                                             type="button"
-                                            onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); }}
+                                            onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); }}
                                             className="px-4 py-2 rounded-lg text-zinc-600 hover:bg-zinc-100 text-sm"
                                         >
                                             Avbryt
@@ -923,20 +1287,18 @@ export default function AdminQuestionsPage() {
                                 <button
                                     key={tab.key}
                                     onClick={() => setActiveTab(tab.key)}
-                                    className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
-                                        activeTab === tab.key
-                                            ? 'border-blue-600 text-blue-600'
-                                            : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
-                                    }`}
+                                    className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${activeTab === tab.key
+                                        ? 'border-blue-600 text-blue-600'
+                                        : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
+                                        }`}
                                 >
                                     {tab.icon}
                                     {tab.label}
                                     {tabCounts[tab.key] > 0 && (
-                                        <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                            activeTab === tab.key
-                                                ? 'bg-blue-100 text-blue-700'
-                                                : 'bg-zinc-100 text-zinc-500'
-                                        }`}>
+                                        <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.key
+                                            ? 'bg-blue-100 text-blue-700'
+                                            : 'bg-zinc-100 text-zinc-500'
+                                            }`}>
                                             {tabCounts[tab.key]}
                                         </span>
                                     )}
@@ -1009,7 +1371,7 @@ export default function AdminQuestionsPage() {
                                                     )}
                                                     <span className="text-xs text-zinc-400 uppercase tracking-wide">
                                                         {q.questionType === 'multiple_choice' ? 'Flerval' :
-                                                         q.questionType === 'numeric' ? 'Numeriskt' : 'Fri text'}
+                                                            q.questionType === 'numeric' ? 'Numeriskt' : 'Fri text'}
                                                     </span>
                                                     {q.strategyTag && (
                                                         <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">

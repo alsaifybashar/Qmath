@@ -11,10 +11,37 @@ import type { QuestionWithHelp } from '@/lib/hooks/useStudySession';
 
 type MCOption = { id: string; label: string; isCorrect: boolean };
 
+/**
+ * Parse the admin's explanationMarkdown (format: "### Label\nContent\n\n### Label2\nContent2")
+ * back into a structured stepBreakdown for the student view.
+ */
+function parseExplanationMarkdown(
+    markdown: string | null | undefined,
+): QuestionWithHelp['helps']['stepBreakdown'] {
+    if (!markdown?.trim()) return undefined;
+
+    const steps: Array<{ prompt: string; correctAnswer: string }> = [];
+    const stepRegex = /###\s+(.+?)\n([\s\S]*?)(?=###\s|\s*$)/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = stepRegex.exec(markdown)) !== null) {
+        const content = match[2].trim();
+        if (content) steps.push({ prompt: match[1].trim(), correctAnswer: content });
+    }
+
+    // Fallback: no ### headers found — treat entire text as one step
+    if (steps.length === 0) {
+        steps.push({ prompt: 'Lösning', correctAnswer: markdown.trim() });
+    }
+
+    return { intro: '', steps, conclusion: '' };
+}
+
 function mapDbQuestion(q: {
     id: string;
     topicId: string;
     contentMarkdown: string;
+    explanationMarkdown: string | null;
     questionType: string;
     correctAnswer: string;
     options: unknown;
@@ -73,6 +100,7 @@ function mapDbQuestion(q: {
                 hints[0] ?? 'Fundera på vilken metod som passar bäst för den här typen av uppgift.',
             guidedHint:
                 hints[1] ?? 'Titta på definitionen och försök applicera den steg för steg.',
+            stepBreakdown: parseExplanationMarkdown(q.explanationMarkdown),
             relatedFormulas: [],
             relatedTopics: [],
         },

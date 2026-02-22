@@ -255,3 +255,183 @@ function generateFallbackAnalysis(question: any): AIQuestionAnalysis {
         suggestedHints: ['Gå igenom de relevanta definitionerna', 'Försök tillämpa formeln steg för steg'],
     };
 }
+
+// ============ AI SOLUTION REVIEW ============
+
+export interface AISolutionStepReview {
+    stepIndex: number;
+    originalLabel: string;
+    verdict: 'ok' | 'improve' | 'missing_step';
+    suggestion: string;         // Improved version of the step content (markdown+LaTeX)
+    suggestedLabel: string;     // Improved label if applicable
+    reason: string;             // Why the AI suggests this change (Swedish)
+}
+
+export interface AISolutionReview {
+    overallAssessment: string;  // General comment on the solution (Swedish)
+    overallRating: number;      // 1-5 quality rating
+    stepReviews: AISolutionStepReview[];
+    additionalSteps: {          // Steps the AI suggests adding (e.g. missing justification)
+        afterStepIndex: number; // Insert after this step (-1 = before first step)
+        label: string;
+        content: string;
+        reason: string;
+    }[];
+}
+
+/**
+ * AI-powered solution review. Sends the question + admin's solution steps to Claude
+ * for pedagogical review. Returns suggestions that the admin can accept or reject.
+ */
+export async function reviewSolutionSteps(input: {
+    questionContent: string;
+    correctAnswer: string;
+    questionType: string;
+    solutionSteps: { label: string; content: string }[];
+    topicName?: string;
+    courseCode?: string;
+    courseName?: string;
+}): Promise<{ success: true; review: AISolutionReview } | { success: false; error: string }> {
+    try {
+        await checkAdmin();
+
+        if (input.solutionSteps.length === 0 || input.solutionSteps.every(s => !s.content.trim())) {
+            return { success: false, error: 'Inga lösningssteg att granska. Skriv minst ett steg.' };
+        }
+
+        // Check for API key
+        if (!process.env.ANTHROPIC_API_KEY) {
+            return {
+                success: true,
+                review: {
+                    overallAssessment: 'AI-granskning ej tillgänglig — API-nyckel saknas. Lösningen sparas som den är.',
+                    overallRating: 3,
+                    stepReviews: input.solutionSteps.map((s, i) => ({
+                        stepIndex: i,
+                        originalLabel: s.label,
+                        verdict: 'ok' as const,
+                        suggestion: s.content,
+                        suggestedLabel: s.label,
+                        reason: 'Ingen AI-granskning genomförd.',
+                    })),
+                    additionalSteps: [],
+                },
+            };
+        }
+
+        const prompt = buildSolutionReviewPrompt(input);
+
+        const response = await anthropic.messages.create({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 2000,
+            temperature: 0.3,
+            system: `Du är en erfaren matematiklektor vid ett svenskt universitet som granskar lösningsförslag till matematikuppgifter. Din uppgift är att granska varje steg i lösningen och föreslå förbättringar som ökar tydligheten, pedagogiken och den matematiska korrektheten.
+
+Dina förslag ska:
+- Vara på svenska
+- Förbättra pedagogisk tydlighet (t.ex. lägga till motiveringar, mellsteg)
+- Korrigera eventuella matematiska fel
+- Förbättra LaTeX-formateringen om det behövs
+- Föreslå saknade steg om lösningen hoppar över viktiga resonemang
+- Behålla den övergripande strukturen och stilen
+
+Svara ALLTID med giltig JSON utan markdown-formatering utanför JSON.`,
+            messages: [{ role: 'user', content: prompt }],
+        });
+
+        const rawText = response.content[0].type === 'text' ? response.content[0].text : '';
+
+        let review: AISolutionReview;
+        try {
+            review = JSON.parse(stripMarkdownFences(rawText));
+        } catch {
+            console.error('[AI Solution Review] Failed to parse JSON:', rawText);
+            return { success: false, error: 'AI-granskningen kunde inte tolkas. Försök igen.' };
+        }
+
+        // Validate and clamp rating
+        review.overallRating = Math.max(1, Math.min(5, Math.round(review.overallRating ?? 3)));
+
+        // Ensure arrays exist
+        review.stepReviews = review.stepReviews ?? [];
+        review.additionalSteps = review.additionalSteps ?? [];
+
+        return { success: true, review };
+    } catch (error) {
+        console.error('[AI Solution Review] Error:', error);
+        return { success: false, error: 'AI-granskning misslyckades. Kontrollera API-nyckeln och försök igen.' };
+    }
+}
+
+function buildSolutionReviewPrompt(input: {
+    questionContent: string;
+    correctAnswer: string;
+    questionType: string;
+    solutionSteps: { label: string; content: string }[];
+    topicName?: string;
+    courseCode?: string;
+    courseName?: string;
+}): string {
+    const stepsText = input.solutionSteps
+        .map((s, i) => `### Steg ${i} — ${s.label}\n${s.content}`)
+        .join('\n\n');
+
+    return `Granska denna lösning till en matematikuppgift och föreslå förbättringar.
+
+## Uppgiftskontext
+- Kurs: ${input.courseCode ?? '?'} ${input.courseName ?? ''}
+- Ämne: ${input.topicName ?? 'Ej angivet'}
+- Frågetyp: ${input.questionType}
+
+## Frågetext
+${input.questionContent}
+
+## Korrekt svar
+${input.correctAnswer}
+
+## Admins lösningssteg
+${stepsText}
+
+## Instruktioner
+Granska varje steg och ge förslag till förbättringar. Svara med JSON:
+
+{
+  "overallAssessment": "<Övergripande bedömning av lösningens kvalitet, max 2-3 meningar>",
+  "overallRating": <1-5 kvalitetsbetyg>,
+  "stepReviews": [
+    {
+      "stepIndex": <0-baserat index>,
+      "originalLabel": "<stegets etikett>",
+      "verdict": "<ok|improve|missing_step>",
+      "suggestion": "<förbättrad version av stegets innehåll (behåll Markdown + LaTeX, eller tom sträng om ok)>",
+      "suggestedLabel": "<förbättrad etikett om tillämpligt, annars samma>",
+      "reason": "<kort motivering till förslaget>"
+    }
+  ],
+  "additionalSteps": [
+    {
+      "afterStepIndex": <infoga efter detta steg, -1 = före första steget>,
+      "label": "<etikett för det nya steget>",
+      "content": "<innehåll med Markdown + LaTeX>",
+      "reason": "<varför detta steg bör läggas till>"
+    }
+  ]
+}
+
+Bedömningsskala (overallRating):
+1 = Bristfällig (allvarliga fel eller saknade steg)
+2 = Behöver förbättring (flera oklarheter)
+3 = Godkänd (fungerar men kan förbättras)
+4 = Bra (tydlig och korrekt, smärre förbättringsmöjligheter)
+5 = Utmärkt (pedagogiskt exemplarisk)
+
+Regler:
+- Sätt verdict "ok" om steget är bra som det är
+- Sätt verdict "improve" om du har ett konkret förbättringsförslag
+- suggestion SKA innehålla hela det förbättrade steget (inte bara ändringen)
+- Om lösningen saknar viktiga mellansteg, lägg till dem i additionalSteps
+- Alla texter MÅSTE vara på svenska
+- Behåll korrekt LaTeX-syntax ($...$ för inline, $$...$$ för block)
+
+Svara med JSON only.`;
+}

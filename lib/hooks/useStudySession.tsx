@@ -471,8 +471,8 @@ export function useStudySession(topicId?: string) {
         const isCorrect = validateAnswer(answer, correctAnswer);
 
         let feedback = isCorrect
-            ? "Great job! That's correct."
-            : "Not quite. Let's try again or get some help.";
+            ? 'Du svarade rätt!'
+            : 'Inte riktigt, försök igen!';
         let misconception: string | undefined;
         let shouldProbePrerequisite = false;
 
@@ -517,12 +517,12 @@ export function useStudySession(topicId?: string) {
             });
         }
 
-        // If correct, auto-advance after delay
+        // If correct, auto-advance after delay (2200ms gives celebration time to show)
         if (isCorrect) {
             setTimeout(() => {
                 dispatch({ type: 'CLEAR_FEEDBACK' });
                 dispatch({ type: 'NEXT_QUESTION' });
-            }, 1500);
+            }, 2200);
         }
     }, []);
 

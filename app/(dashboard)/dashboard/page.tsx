@@ -20,6 +20,7 @@ import {
     AIRecommendationCard,
 } from '@/components/dashboard/DashboardCards';
 import { ExamReadinessBar } from '@/components/dashboard/ExamReadinessBar';
+import { DashboardGamificationHeader } from '@/components/gamification/DashboardGamificationHeader';
 
 export const metadata = {
     title: 'Dashboard | Qmath',
@@ -200,54 +201,14 @@ export default async function DashboardPage() {
     return (
         <div className="p-7 max-w-[1060px] min-w-0 mx-auto">
 
-            {/* ── Header + XP bar (compact, single row) ── */}
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-2xl font-semibold" style={{ color: C.text }}>
-                        {greeting}, {user.name || 'Student'}
-                    </h1>
-                    <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>
-                        {reviewCount > 0
-                            ? <><strong style={{ color: C.blue }}>{reviewCount} områden</strong> behöver din uppmärksamhet</>
-                            : 'Allt är uppdaterat — bra jobbat!'}
-                    </p>
-                </div>
-
-                {/* XP pill — compact, right-aligned */}
-                <div
-                    className="flex items-center gap-2.5 rounded-xl px-4 py-2"
-                    style={{
-                        background: 'rgba(255,255,255,0.8)',
-                        backdropFilter: 'blur(12px)',
-                        border: '1px solid #EFF1F8',
-                        minWidth: 200,
-                    }}
-                >
-                    <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                        style={{
-                            background: `linear-gradient(135deg, #4361EE, #7C5CFC)`,
-                            boxShadow: '0 3px 10px rgba(67,97,238,0.3)',
-                        }}
-                    >
-                        {userLevel}
-                    </div>
-                    <div className="flex-1">
-                        <div className="h-1.5 rounded-full bg-[#EFF1F8] overflow-hidden">
-                            <div
-                                className="h-full rounded-full transition-all duration-1000"
-                                style={{
-                                    width: `${(totalXP % 500) / 5}%`,
-                                    background: 'linear-gradient(90deg, #4361EE, #7C5CFC)',
-                                }}
-                            />
-                        </div>
-                    </div>
-                    <span className="text-xs font-semibold text-[#6B7194] whitespace-nowrap">
-                        {totalXP % 500} / 500 XP
-                    </span>
-                </div>
-            </div>
+            {/* ── Header + XP bar with Qlix ── */}
+            <DashboardGamificationHeader
+                greeting={greeting}
+                userName={user.name || 'Student'}
+                reviewCount={reviewCount}
+                totalXP={totalXP}
+                currentStreak={currentStreak}
+            />
 
             {/* ── Row 1: Today's Focus (primary CTA) + Quick Actions ── */}
             <div className="grid grid-cols-[1fr_300px] gap-4 mb-6">

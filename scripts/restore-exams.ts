@@ -1,73 +1,121 @@
 import { db } from '../db/drizzle';
 import { courses, exams, universities } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
 
+// Known course names for LiU courses
+const COURSE_NAMES: Record<string, string> = {
+    'TATA24': 'Linjär algebra',
+    'TATA41': 'Envariabelanalys 1',
+    'TSRT19': 'Reglerteknik',
+};
+
 async function restore() {
-    let liuId = "liu-id-fallback";
-    // Tries to find Linköping
-    const existing = await db.query.universities.findFirst({
-        where: (u, { like }) => like(u.name, '%Linköping%')
+    // 1. Clear all stale exam entries
+    await db.delete(exams);
+    console.log('Cleared old exam entries.');
+
+    // 2. Ensure Linköping University exists
+    let liuId = 'liu-id-fallback';
+    const existingUni = await db.query.universities.findFirst({
+        where: (u, { like }) => like(u.name, '%Linköping%'),
     });
-    if (existing) {
-        liuId = existing.id;
+    if (existingUni) {
+        liuId = existingUni.id;
     } else {
         const [inserted] = await db.insert(universities).values({
             name: 'Linköping University',
-            country: 'Sweden'
+            country: 'Sweden',
         }).returning();
         liuId = inserted.id;
+        console.log('Created Linköping University entry.');
     }
 
     const baseDir = path.join(process.cwd(), 'uploads', 'exams');
+
+    if (!fs.existsSync(baseDir)) {
+        console.error(`Upload directory not found: ${baseDir}`);
+        process.exit(1);
+    }
+
     const courseDirs = fs.readdirSync(baseDir);
+    let total = 0;
 
     for (const code of courseDirs) {
-        if (!['TATA24', 'TATA41', 'TSRT19'].includes(code)) continue;
-
         const coursePath = path.join(baseDir, code);
-        const stats = fs.statSync(coursePath);
-        if (!stats.isDirectory()) continue;
+        if (!fs.statSync(coursePath).isDirectory()) continue;
 
-        // Ensure course exists
+        const courseName = COURSE_NAMES[code] ?? code;
+
+        // 3. Ensure course entry exists
         const existingCourse = await db.query.courses.findFirst({
-            where: (c, { eq }) => eq(c.code, code)
+            where: (c, { eq }) => eq(c.code, code),
         });
-
         if (!existingCourse) {
             await db.insert(courses).values({
-                code: code,
-                name: code + ' Recovered Course',
-                universityId: liuId
+                code,
+                name: courseName,
+                universityId: liuId,
             });
+            console.log(`  Created course: ${code} (${courseName})`);
         }
 
-        const files = fs.readdirSync(coursePath);
-        for (const file of files) {
-            if (!file.endsWith('.pdf')) continue;
+        // 4. Get all PDF files and pair exams with solutions
+        const allFiles = fs.readdirSync(coursePath).filter(f => f.endsWith('.pdf'));
 
-            const filePath = `/uploads/exams/${code}/${file}`;
+        // Only process main exam files (not solution files)
+        const examFiles = allFiles.filter(f => !f.endsWith('_solution.pdf'));
 
-            // Check if exam exists
-            const existingExam = await db.query.exams.findFirst({
-                where: (e, { eq }) => eq(e.filePath, filePath)
+        for (const file of examFiles) {
+            // Parse filename: TEN1_2022-03-15.pdf
+            const match = file.match(/^([A-Z0-9]+)_(\d{4}-\d{2}-\d{2})\.pdf$/);
+            if (!match) {
+                console.warn(`  Skipping unrecognized filename: ${code}/${file}`);
+                continue;
+            }
+
+            const [, examType, dateStr] = match;
+            // Use noon UTC to avoid timezone edge cases
+            const examDate = new Date(`${dateStr}T12:00:00Z`);
+
+            // Check for paired solution file
+            const solutionFileName = `${examType}_${dateStr}_solution.pdf`;
+            const hasSolution = allFiles.includes(solutionFileName);
+
+            // Use relative paths (no leading slash) — this is what existsSync() expects at CWD
+            const examRelPath = path.join('uploads', 'exams', code, file);
+            const solutionRelPath = hasSolution
+                ? path.join('uploads', 'exams', code, solutionFileName)
+                : null;
+
+            await db.insert(exams).values({
+                courseCode: code,
+                courseName,
+                examDate,
+                examType,
+                fileName: file,
+                filePath: examRelPath,
+                fileSize: fs.statSync(path.join(coursePath, file)).size,
+                hasSolution,
+                solutionFileName: hasSolution ? solutionFileName : null,
+                solutionFilePath: solutionRelPath,
+                solutionFileSize:
+                    hasSolution && solutionRelPath
+                        ? fs.statSync(path.join(coursePath, solutionFileName)).size
+                        : null,
             });
 
-            if (!existingExam) {
-                await db.insert(exams).values({
-                    courseCode: code,
-                    courseName: code + ' Recovered Course',
-                    examDate: new Date(),
-                    examType: 'TEN1',
-                    fileName: file,
-                    filePath: filePath,
-                    fileSize: fs.statSync(path.join(coursePath, file)).size
-                });
-                console.log(`Restored exam: ${filePath}`);
-            }
+            const label = `${code} ${examType} ${dateStr}${hasSolution ? ' + lösning' : ''}`;
+            console.log(`  ✓ ${label}`);
+            total++;
         }
     }
-    console.log('Restoration complete.');
+
+    console.log(`\nRestoration complete! Imported ${total} exams.`);
 }
 
-restore().catch(console.error);
+restore().catch(err => {
+    console.error('Restore failed:', err);
+    process.exit(1);
+});

@@ -7,6 +7,8 @@ import { notFound } from 'next/navigation';
 export default async function CoursePage({ params }: { params: Promise<{ code: string }> }) {
     const { code } = await params;
 
+    console.log(`[CoursePage] Resolving course for param: "${code}"`);
+
     // 1. Try to find course by ID (UUID) if it looks like one
     let courseResult = code.includes('-')
         ? await getCourseById(code)
@@ -17,11 +19,20 @@ export default async function CoursePage({ params }: { params: Promise<{ code: s
         courseResult = await getCourseByCode(code);
     }
 
+    // 3. Also try uppercased code directly (e.g. URL is /courses/TATA24)
+    if (!courseResult.data && 'error' in courseResult) {
+        console.log(`[CoursePage] getCourseByCode("${code}") returned error:`, (courseResult as any).error);
+        // Try the original code as-is (in case toUpperCase isn't matching)
+        courseResult = await getCourseByCode(code.toUpperCase());
+    }
+
     if (!courseResult.data) {
+        console.log(`[CoursePage] Course not found for code: "${code}" (tried both original and uppercase)`);
         return notFound();
     }
 
     const course = courseResult.data;
+    console.log(`[CoursePage] Found course: ${course.code} (${course.name}), id: ${course.id}`);
 
     // Fetch analysis + overview data in parallel (overview reuses cached analysis)
     const [analysisData, overviewData] = await Promise.all([
@@ -43,3 +54,4 @@ export default async function CoursePage({ params }: { params: Promise<{ code: s
         />
     );
 }
+
