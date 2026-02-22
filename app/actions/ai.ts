@@ -334,7 +334,7 @@ Return ONLY raw JSON (no markdown, no code fences) with EXACTLY this structure:
   },
   "topics": [
     {
-      "name": "Topic name in the course language (Swedish or English as used in the exam)",
+      "name": "Ämnesnamn på svenska (t.ex. 'Egenvärden och egenvektorer', 'Derivataregler')",
       "importance": 9,
       "frequency": "Appears in most/every exam OR estimate like '8/10 exams'",
       "examSection": "Which section label this topic appears in (e.g. 'Del C' or 'B')",
@@ -376,11 +376,11 @@ Rules for topics:
             model: 'claude-sonnet-4-20250514',
             max_tokens: 6000,
             temperature: 0.2,
-            system: `You are an expert at analyzing university exam papers across all STEM subjects — mathematics, computer science, statistics, physics, and engineering. Your job is to read actual exam PDFs and extract precise, student-actionable analysis.
+            system: `Du är expert på att analysera universitetstentor inom alla STEM-ämnen — matematik, datavetenskap, statistik, fysik och teknik. Ditt jobb är att läsa faktiska tentamensfiler och extrahera precis, studentanpassad analys.
 
-You focus entirely on what you can observe in the exam PDFs. You cite specific question types and patterns you actually see. You never invent topics not evidenced in the exams.
+Du fokuserar enbart på vad du kan observera i tentamensfilerna. Du hänvisar till specifika uppgiftstyper och mönster du faktiskt ser. Du hittar aldrig på ämnen som inte finns i tentamen.
 
-Always respond with raw JSON only — no markdown, no code fences, no explanations outside the JSON.`,
+Svara alltid på svenska — alla ämnesnamn (topics.name), studyTips, commonMistakes, reasoning och strategy ska vara på svenska. Svara med råa JSON endast — ingen markdown, inga kodramar, inga förklaringar utanför JSON.`,
             messages: [
                 { role: 'user', content: allContent }
             ]
@@ -546,7 +546,7 @@ Return ONLY raw JSON (no markdown, no code fences):
             model: 'claude-sonnet-4-20250514',
             max_tokens: 4000,
             temperature: 0.3,
-            system: 'You are an expert university tutor specializing in mathematics. You analyze real exam papers to create precise, actionable study plans. Always respond with raw JSON only — no markdown, no code fences.',
+            system: 'Du är en expert på universitetsundervisning med specialisering inom matematik. Du analyserar riktiga tentamenspapper för att skapa precisa, handlingsbara studieplaner. Svara alltid på svenska — alla ämnesnamn, reasoning, activity och strategy ska vara på svenska. Svara med råa JSON endast — ingen markdown, inga kodramar.',
             messages: [
                 { role: 'user', content: allContent }
             ]

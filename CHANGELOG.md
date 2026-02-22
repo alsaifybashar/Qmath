@@ -4,6 +4,371 @@ All notable changes to Qmath are documented here.
 
 ---
 
+## [Unreleased] — Admin Questions Wired to Student Study Flow
+
+### Summary
+Admin-published questions are now the **sole source** of questions in the student study session. When a student opens `/study?topic=<id>`, the app fetches all questions with `isPublished = true` for that topic from the database and serves them through the existing adaptive-engine session. Hardcoded mock/demo questions have been removed entirely.
+
+---
+
+### Problem Solved
+
+Previously, `useStudySession.tsx` loaded a hardcoded `getMockQuestions()` function — four fixed derivative questions that appeared regardless of which topic a student selected. Admin-published questions sitting in the database with `isPublished = true` and `status = 'published'` were never fetched for students.
+
+---
+
+### What Changed
+
+#### New Server Action — `app/actions/study-questions.ts`
+
+- `getStudyQuestions(topicId: string): Promise<QuestionWithHelp[]>` — queries the `questions` table for all rows where `topicId = ?` AND `isPublished = true`, then maps each row to the `QuestionWithHelp` shape required by `useStudySession`
+- Type mapping: `'numeric'` → `'numeric_input'`, `'multiple_choice'` → `'multiple_choice'`, `'free_response'` → `'numeric_input'`
+- Content mapping: For numeric questions, inline `$$...$$` LaTeX is extracted into `content.question.math`; the rest becomes `content.question.text`. For multiple-choice, option strings from the DB are converted to `{ id, label, isCorrect }` objects with `correctOptionId` set
+- AI hints: `aiAnalysis.suggestedHints[0]` → `helps.nudgeHint`, `[1]` → `helps.guidedHint`. Falls back to Swedish default strings if hints are absent
+
+#### Updated Hook — `lib/hooks/useStudySession.tsx`
+
+- `loadQuestions()` is now `async` — calls `getStudyQuestions(topicId)` via server action RPC
+- Added `isLoading: boolean` state (exposed in return value) — `true` during fetch, `false` after
+- Added `questionsError: string | null` state — set on network/DB failure
+- Hardcoded `getMockQuestions()` function **removed**
+- All labels that were already Swedish remain unchanged
+
+#### Updated Page — `app/study/page.tsx`
+
+- `useSearchParams()` reads `?topic=<topicId>` from the URL and passes it to `useStudySession(topicId)`
+- Page wrapped in `<Suspense>` boundary (required for `useSearchParams` in App Router)
+- **Loading state**: spinner + "Hämtar frågor…" while DB fetch is in progress
+- **Error state**: red error message + "Tillbaka till övning" link if fetch fails
+- **Empty state**: "Inga övningsfrågor ännu" card with link back to practice, shown when topic has 0 published questions
+- Main component renamed to `StudyHubContent` (inner); `StudyHubPage` is now the Suspense wrapper
+
+---
+
+### Student Experience
+
+| Before | After |
+|--------|-------|
+| Always showed the same 4 hardcoded derivatives questions | Shows questions the admin published for the selected topic |
+| Topic selection in URL had no effect | `/study?topic=<id>` loads questions specific to that topic |
+| No loading or empty state | Loading spinner + Swedish empty-state when no questions exist |
+
+### Security Notes
+
+| Vector | Mitigation |
+|--------|-----------|
+| Unauthenticated question access | The study layout (`app/study/layout.tsx`) redirects to `/login` for unauthenticated users before the server action is ever called |
+| Cross-topic data leakage | `getStudyQuestions` filters strictly by `topicId` AND `isPublished = true` — no extra data is returned |
+| Server action called with arbitrary topicId | Returns an empty array for unrecognised IDs — no error thrown, no data leaked |
+
+---
+
+### Test Coverage
+
+All 54 Agent B integration tests continue to pass (0 failures). Build: `npm run build` succeeds with `ƒ /study` listed as a dynamic server-rendered route.
+
+---
+
+## [Unreleased] — Admin Topics Management & AI Topic Sync
+
+### Summary
+AI-generated exam analysis topics (previously locked inside the `courseExamAnalysisCache` blob and invisible to admins) are now fully manageable from the admin panel. A one-click sync imports AI topics into the `topics` table, after which admins can edit, reorder, delete, and attach practice questions to them. The student-facing Course Overview now reads from this admin-managed source as its primary data path.
+
+---
+
+### Problem Solved
+
+Previously, AI topics generated from exam analysis existed only as a raw JSON blob inside `courseExamAnalysisCache`. Admins had no way to:
+1. View which AI topics existed for a course.
+2. Correct inaccurate topic names, descriptions, or difficulty ratings produced by the AI.
+3. Remove irrelevant topics or adjust the learning path order.
+4. Attach practice questions to specific AI-generated topics.
+
+The `topics` table (used by the question bank) and the AI analysis cache were two completely separate systems with no connection.
+
+---
+
+### What Changed
+
+#### New Database Columns — `topics` table
+
+Eight new columns added to the existing `topics` table to store AI-sourced metadata:
+
+| Column | Type | Description |
+|---|---|---|
+| `source` | TEXT | `'ai'` (synced from exam analysis) or `'manual'` (created by admin) |
+| `sort_order` | INTEGER | Admin-controlled display order within a phase |
+| `phase` | TEXT | `'foundation'` \| `'core'` \| `'advanced'` |
+| `ai_importance` | INTEGER | AI-scored importance 1–10 |
+| `ai_difficulty` | TEXT | `'easy'` \| `'medium'` \| `'hard'` |
+| `study_tips` | TEXT (JSON) | Array of study tips generated by AI |
+| `common_mistakes` | TEXT (JSON) | Array of common student mistakes from AI |
+| `exam_frequency` | TEXT | Human-readable frequency label (e.g. `"8/10 tentor"`) |
+| `exam_sections` | TEXT (JSON) | Array of exam section labels this topic appears in |
+
+#### New Admin Page — Topics Management (`/admin/courses/[courseId]/topics`)
+
+A dedicated topics management page per course with:
+
+- **Synka AI-ämnen** — one-click import of AI topics from exam analysis into the `topics` table. Shows count of new vs. updated topics on each sync.
+- **Phase-grouped layout** — topics grouped under Grundläggande / Kärna / Fördjupning with colour-coded headers.
+- **Inline edit** — click the edit icon on any topic to edit title, description, phase, and difficulty in-place without leaving the page.
+- **Reorder** — up/down arrow buttons reorder topics within their phase group; order is persisted to `sort_order`.
+- **Delete with warning** — topics with attached questions show a confirmation that mentions the question count before deletion.
+- **Expandable details** — click the chevron to expand study tips, common mistakes, and exam sections imported from AI.
+- **Source badge** — each topic shows whether it originated from AI or was created manually.
+- **Questions link** — each topic row links directly to `/admin/questions?course=<id>` scoped to that course.
+
+#### Updated Admin Page — Courses (`/admin/courses`)
+
+Each course card now has a **Topics** button (purple) linking to `/admin/courses/[courseId]/topics`, alongside the existing Questions, Archive, and Exams buttons.
+
+#### Updated Course Overview (`app/actions/course-overview.ts`)
+
+`getCourseOverview()` now uses a two-path strategy:
+
+```
+Student requests course overview
+    │
+    ▼
+Primary: Read from topics table (admin-managed)
+    │  Topics exist → build modules from DB rows
+    │  No topics ↓
+    ▼
+Fallback: Read from raw AI cache (courseExamAnalysisCache)
+    │  AI cache has topics → build modules from JSON blob
+    │  Still empty ↓
+    ▼
+Return error: "Synka AI-ämnen eller lägg till ämnen manuellt"
+```
+
+This means synced / edited topics immediately reflect in the student-facing Course Overview without any extra step.
+
+#### Updated Admin Questions (`app/actions/admin-questions.ts`)
+
+`getAdminCourses()` now returns **all** courses (not just those with uploaded exams), so admins can create questions for any course including those with manually-created topics only.
+
+---
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `db/schema.ts` | Added 8 AI-metadata columns to `topics` table |
+| `app/actions/course-overview.ts` | Full rewrite — topics table as primary source, AI cache as fallback |
+| `app/actions/admin-questions.ts` | `getAdminCourses()` returns all courses; unused `exams`/`inArray` imports removed |
+| `app/admin/courses/page.tsx` | Added "Topics" button on each course card |
+
+### Files Added
+
+| File | Purpose |
+|---|---|
+| `app/actions/admin-topics.ts` | New server actions: `getAdminCourseTopics`, `syncAITopics`, `updateTopic`, `deleteTopic`, `reorderTopics`, `getAllAdminCourses` |
+| `app/admin/courses/[courseId]/topics/page.tsx` | New admin topics management UI |
+
+---
+
+### Security Notes (Agent B Audit — 53/53 tests passed)
+
+| Risk | Mitigation |
+|---|---|
+| **Unauthorized topic management** | All actions in `admin-topics.ts` call `checkAdmin()` first; non-admin sessions receive `{ success: false, error: '...' }` |
+| **SQLi via topic title/slug** | `slugify()` strips all non-alphanumeric characters; all DB writes use Drizzle ORM parameterized queries — verified by static code scan |
+| **XSS via topic title in slug** | `slugify()` removes `<`, `>`, `"`, `'` HTML metacharacters — slug is always URL-safe and cannot inject HTML |
+| **IDOR — editing another course's topics** | `updateTopic`/`deleteTopic` operate by primary key (`id`) which comes from admin UI only; `checkAdmin()` guards every call |
+| **Slug collision on AI sync** | `syncAITopics` upserts by slug match (update existing, insert new) — never creates duplicates for the same AI topic |
+| **AI data poisoning via sync** | Sync reads only from the validated `ExamAnalysisData` structure already produced by a trusted Claude pipeline — no user-supplied data flows into AI field values |
+
+---
+
+### How to Use
+
+#### As an admin — Syncing and managing AI topics
+
+1. Navigate to **Courses** (`/admin/courses`) in the sidebar.
+2. Find a course that has uploaded exams with AI analysis and click **Topics**.
+3. Click **Synka AI-ämnen från tenta** — the system imports all AI topics into the database. A summary shows how many were new vs. updated.
+4. Topics appear grouped by phase (Grundläggande → Kärna → Fördjupning).
+5. Click the ✏️ **edit icon** on any topic to fix the title, description, phase, or difficulty.
+6. Use the **▲ / ▼** arrows to reorder topics within their phase.
+7. Click the **chevron** (▼) to expand a topic and view AI-generated study tips, common mistakes, and exam sections.
+8. To delete a topic, click the 🗑️ icon and confirm. Questions attached to the topic are also removed.
+9. To create a new manual topic, click **Nytt ämne**, fill in the form, and choose a phase.
+
+#### As an admin — Attaching questions to topics
+
+After syncing AI topics, any topic is available in the Questions admin page:
+
+1. Go to **Questions** (`/admin/questions`) and select the course.
+2. Topics (both AI-synced and manual) appear as selectable chips in Step 2.
+3. Select a topic and add questions normally.
+
+#### As a student — Seeing managed topics in Course Overview
+
+No change in navigation. If an admin has synced AI topics, the Course Overview (`/courses/[code]`) immediately reflects any edits:
+- Corrected topic names and descriptions
+- Reordered learning path
+- Accurate difficulty ratings
+- Study tips and common mistakes from AI
+
+---
+
+## [Unreleased] — Question Flow System (Draft → AI Review → Ready → Published)
+
+### Summary
+Questions now follow a structured four-stage workflow from admin creation through AI-powered difficulty analysis to publication. Admins can trigger Claude to independently review each question's difficulty, Bloom's taxonomy level, prerequisite topics, and estimated solving time before the question is published to students.
+
+---
+
+### Problem Solved
+
+Previously, questions went from creation directly to publication with no review step. This meant:
+1. Admin-assigned difficulty ratings were unchecked and could be inconsistent.
+2. There was no way to see what concepts a question actually tested.
+3. Students received questions without any AI-generated hints to scaffold their learning.
+4. Batch-publishing questions bypassed any quality gate.
+
+---
+
+### What Changed
+
+#### New Database Columns — `questions` table
+
+Four new columns added to track AI analysis state:
+
+| Column | Type | Description |
+|---|---|---|
+| `status` | TEXT | `'draft'` \| `'ai_review'` \| `'ready'` \| `'published'` |
+| `ai_difficulty_tier` | INTEGER | AI-assessed difficulty 1–5 (may differ from admin's rating) |
+| `ai_analysis` | TEXT (JSON) | Full `AIQuestionAnalysis` object from Claude |
+| `ai_analyzed_at` | INTEGER | Timestamp of last AI analysis |
+
+#### Question Status State Machine
+
+```
+[create / edit]
+      │
+      ▼
+   DRAFT ──── "Analysera med AI" ──→ AI_REVIEW ──── (Claude responds) ──→ READY
+      ↑                                                                       │
+      └──── [any content edit resets to DRAFT] ◄──────────────────── "Publicera" ──→ PUBLISHED
+                                                                              │
+                                                                     "Avpublicera" ──→ READY
+```
+
+Rules enforced by server actions:
+- `createQuestion`: always sets `status = 'draft'`, `isPublished = false`
+- `updateQuestion`: resets to `status = 'draft'`, clears all AI analysis fields — content changes always require re-analysis
+- `publishQuestions`: only acts on questions in `ready` or `published` state — draft/ai_review questions are silently skipped
+- `unpublishQuestion`: sets `status = 'ready'`, `isPublished = false`
+- `isPublished` boolean is kept in sync with status for backward compatibility with the adaptive engine
+
+#### New Server Action — `analyzeQuestionDifficulty(questionId)`
+
+Calls Claude Sonnet 4 with full question context (course, topic, content, solution, admin difficulty) and returns a structured `AIQuestionAnalysis`:
+
+```typescript
+interface AIQuestionAnalysis {
+    difficulty: number;           // 1–5, independently assessed
+    bloomLevel: string;           // remember | understand | apply | analyze | evaluate | create
+    conceptsTested: string[];     // e.g. ["matrix_multiplication", "determinant"]
+    prerequisiteTopics: string[]; // e.g. ["linear_equations", "basic_algebra"]
+    strategyTag: string;          // e.g. "gaussian_elimination"
+    estimatedTimeMinutes: number;
+    feedbackForAdmin: string;     // 1–2 sentence human-readable summary
+    suggestedHints: string[];     // 2–3 progressive hints for students
+}
+```
+
+Fallback: if `ANTHROPIC_API_KEY` is not set, a deterministic fallback analysis is generated from the admin's difficulty tier — no API call, no failure.
+
+#### New Server Action — `analyzeQuestionsBatch(questionIds)`
+
+Processes up to 5 questions sequentially to respect Claude API rate limits. Returns per-question success/error results.
+
+#### Rebuilt Admin Questions Page (`/admin/questions`)
+
+Four workflow tabs replace the flat question list:
+
+| Tab | Swedish label | Contents |
+|---|---|---|
+| `draft` | Utkast | Newly created / edited questions awaiting AI analysis |
+| `ai_review` | AI-analys | Questions currently being processed by Claude |
+| `ready` | Redo | Analysed questions ready to publish |
+| `published` | Publicerad | Live questions visible to students |
+
+**Per-question features:**
+- **Difficulty comparison** — side-by-side Admin vs AI difficulty with coloured badges (green/amber/red)
+- **Bloom's level** — shown as a labelled chip
+- **Concepts & prerequisites** — tags listing what the question tests and requires
+- **Strategy tag** — the solving approach Claude identified
+- **Estimated time** — solving time in minutes
+- **Suggested hints** — collapsible list of student-facing progressive hints
+- **Admin feedback** — Claude's 1–2 sentence notes for the admin
+
+**Batch actions:**
+- Draft tab: **Analysera alla med AI** — triggers AI analysis for all draft questions in the current topic
+- Ready tab: **Publicera alla** — batch-publishes all ready questions
+
+---
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `db/schema.ts` | Added 4 AI-analysis columns to `questions` table |
+| `app/actions/admin-questions.ts` | `createQuestion` defaults to draft; `updateQuestion` resets to draft + clears AI fields; added `updateQuestionStatus`, `publishQuestions`, `unpublishQuestion` |
+| `app/admin/questions/page.tsx` | Full rewrite — 4-tab workflow UI with AI analysis cards |
+
+### Files Added
+
+| File | Purpose |
+|---|---|
+| `app/actions/ai-question-analysis.ts` | `analyzeQuestionDifficulty()` and `analyzeQuestionsBatch()` with Claude integration and fallback |
+| `tests/integration/question-flow-and-topics.test.ts` | 53-test Agent B suite covering unit logic, security, and robustness |
+
+---
+
+### Security Notes (Agent B Audit — 53/53 tests passed)
+
+| Risk | Mitigation |
+|---|---|
+| **Unauthorized AI analysis trigger** | `analyzeQuestionDifficulty()` calls `checkAdmin()` before any DB read or Claude call |
+| **Unauthorized bulk publish** | `publishQuestions()` checks admin role; skips questions not in `ready` state — draft/ai_review questions cannot be published even if their IDs are submitted |
+| **AI difficulty out of range** | `Math.max(1, Math.min(5, Math.round(analysis.difficulty)))` clamps Claude's output to 1–5 before storage |
+| **Malformed Claude JSON** | `stripMarkdownFences()` + `JSON.parse()` in a try/catch; falls back to `generateFallbackAnalysis()` on any parse error — never crashes |
+| **Rate limit abuse via batch** | `analyzeQuestionsBatch` hard-caps at `questionIds.slice(0, 5)` — verified by test |
+| **SQLi via question content** | All DB operations use Drizzle ORM parameterized queries — static scan confirms no raw SQL string interpolation in any action file |
+| **Hardcoded API key** | Static scan confirms `ANTHROPIC_API_KEY` is read only from `process.env`, never hardcoded |
+
+---
+
+### How to Use
+
+#### As an admin — Full question workflow
+
+1. Go to **Questions** (`/admin/questions`), select a course and topic.
+2. Fill in the question form and click **Add Question** — it appears in the **Utkast** tab.
+3. Click **Analysera med AI** on a single question (or **Analysera alla med AI** for the whole topic).
+   - The question moves to **AI-analys** while Claude processes it (~5–10 seconds).
+   - When done, it moves to **Redo** with the full AI breakdown visible.
+4. Review the AI analysis card:
+   - If the AI difficulty matches your assessment → proceed.
+   - If the AI flags a mismatch → consider editing the question (which resets to draft for re-analysis).
+5. Click **Publicera** (or **Publicera alla** on the Redo tab) to make the question live.
+6. Published questions appear in the **Publicerad** tab. Use **Avpublicera** to pull a question back to draft.
+
+#### Running the tests
+
+```bash
+nvm use 22
+npx tsx tests/integration/question-flow-and-topics.test.ts
+```
+
+Expected output: `Results: 53 passed, 0 failed`
+
+---
+
 ## [Unreleased] — AI Study Plan Generation & Caching
 
 ### Summary

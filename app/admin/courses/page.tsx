@@ -11,6 +11,7 @@ import {
     Upload,
     HelpCircle,
     ExternalLink,
+    Layers,
 } from 'lucide-react';
 
 interface AdminCourse {
@@ -165,11 +166,19 @@ export default function AdminCoursesPage() {
                                 {/* Actions */}
                                 <div className="flex gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                                     <Link
+                                        href={`/admin/courses/${course.id ?? ''}/topics`}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
+                                        title="Manage topics for this course"
+                                    >
+                                        <Layers className="w-3.5 h-3.5" />
+                                        Topics
+                                    </Link>
+                                    <Link
                                         href={`/admin/questions?course=${course.id ?? ''}`}
                                         className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors"
                                     >
                                         <HelpCircle className="w-3.5 h-3.5" />
-                                        Add Questions
+                                        Questions
                                     </Link>
                                     <Link
                                         href={`/archive/${course.courseCode}`}
@@ -178,7 +187,6 @@ export default function AdminCoursesPage() {
                                         title="View student archive page"
                                     >
                                         <ExternalLink className="w-3.5 h-3.5" />
-                                        Archive
                                     </Link>
                                     <Link
                                         href={`/admin/exams?course=${course.courseCode}`}
@@ -186,7 +194,6 @@ export default function AdminCoursesPage() {
                                         title="View exams for this course"
                                     >
                                         <FileText className="w-3.5 h-3.5" />
-                                        Exams
                                     </Link>
                                 </div>
                             </div>

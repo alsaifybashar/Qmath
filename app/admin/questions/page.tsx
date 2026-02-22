@@ -393,6 +393,8 @@ export default function AdminQuestionsPage() {
             setNewTopicDesc('');
             setIsCreatingTopic(false);
             if (result.data) setSelectedTopicId(result.data.id);
+        } else {
+            alert(result.error);
         }
         setSubmittingTopic(false);
     };
@@ -551,6 +553,18 @@ export default function AdminQuestionsPage() {
     const handlePublish = async (id: string) => {
         setPublishingIds(prev => new Set(prev).add(id));
         await publishQuestions([id]);
+        await refreshQuestions();
+        setPublishingIds(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+    };
+
+    // Direct publish from draft — skips AI analysis requirement
+    const handlePublishDirect = async (id: string) => {
+        setPublishingIds(prev => new Set(prev).add(id));
+        await updateQuestionStatus(id, 'published');
         await refreshQuestions();
         setPublishingIds(prev => {
             const next = new Set(prev);
@@ -1011,19 +1025,34 @@ export default function AdminQuestionsPage() {
                                             <div className="flex items-center gap-2 ml-4 flex-shrink-0">
                                                 {/* Tab-specific actions */}
                                                 {activeTab === 'draft' && (
-                                                    <button
-                                                        onClick={() => handleAnalyze(q.id)}
-                                                        disabled={analyzingIds.has(q.id)}
-                                                        className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
-                                                        title="Analysera med AI"
-                                                    >
-                                                        {analyzingIds.has(q.id) ? (
-                                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                        ) : (
-                                                            <Sparkles className="w-3.5 h-3.5" />
-                                                        )}
-                                                        AI
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleAnalyze(q.id)}
+                                                            disabled={analyzingIds.has(q.id) || publishingIds.has(q.id)}
+                                                            className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                                                            title="Analysera med AI"
+                                                        >
+                                                            {analyzingIds.has(q.id) ? (
+                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                            ) : (
+                                                                <Sparkles className="w-3.5 h-3.5" />
+                                                            )}
+                                                            AI
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handlePublishDirect(q.id)}
+                                                            disabled={publishingIds.has(q.id) || analyzingIds.has(q.id)}
+                                                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                                                            title="Publicera direkt utan AI-analys"
+                                                        >
+                                                            {publishingIds.has(q.id) ? (
+                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                            ) : (
+                                                                <Send className="w-3.5 h-3.5" />
+                                                            )}
+                                                            Publicera
+                                                        </button>
+                                                    </>
                                                 )}
                                                 {activeTab === 'ai_review' && (
                                                     <div className="flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-medium">

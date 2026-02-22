@@ -91,9 +91,9 @@ export async function generateHint(request: HintRequest): Promise<HintResult> {
         const anthropic = new Anthropic({ apiKey });
 
         const levelInstructions = {
-            1: `Give a gentle conceptual nudge — ONE sentence. Do NOT reveal the answer or method. Just point the student's thinking in the right direction. Example: "Have you considered what happens geometrically here?"`,
-            2: `Show the relevant formula or theorem. State it clearly with its name. Then give ONE sentence about how it applies here. Do NOT solve the problem.`,
-            3: `Show the FIRST STEP of the solution only. Explain what to do and why. Show the result of that first step. Do NOT complete the solution.`,
+            1: `Ge en försiktig konceptuell knuff — EN mening. Avslöja INTE svaret eller metoden. Peka bara studentens tankegång i rätt riktning. Exempel: "Har du tänkt på vad som händer geometriskt här?"`,
+            2: `Visa den relevanta formeln eller satsen. Ange den tydligt med dess namn. Ge sedan EN mening om hur den gäller här. LÖS INTE uppgiften.`,
+            3: `Visa BARA FÖRSTA STEGET i lösningen. Förklara vad man ska göra och varför. Visa resultatet av det första steget. Slutför INTE lösningen.`,
         };
 
         const contextParts: string[] = [];
@@ -124,7 +124,7 @@ Respond with ONLY a JSON object (no markdown):
             model: 'claude-sonnet-4-20250514',
             max_tokens: 200,
             temperature: 0.3,
-            system: 'You are a concise math tutor. Respond with JSON only. Keep hints short and natural — never say "AI" or "I", speak as the platform.',
+            system: 'Du är en kortfattad mattehandledare. Svara med JSON endast. Håll ledtrådar korta och naturliga — säg aldrig "AI" eller "jag", tala som plattformen. Svara alltid på svenska.',
             messages: [{ role: 'user', content: prompt }],
         });
 
@@ -179,9 +179,9 @@ function getFallbackHint(
     relatedFormulas?: Array<{ name: string; latex: string }>
 ): HintResult {
     const hints: Record<number, string> = {
-        1: 'Take a step back and think about which concept or theorem applies here.',
-        2: 'Try writing down the relevant formula first, then identify which values you know.',
-        3: 'Start by setting up the equation. Identify what you need to find and what information you have.',
+        1: 'Ta ett steg tillbaka och tänk på vilket begrepp eller vilken sats som gäller här.',
+        2: 'Försök att skriva ner den relevanta formeln först, identifiera sedan vilka värden du känner till.',
+        3: 'Börja med att sätta upp ekvationen. Identifiera vad du behöver hitta och vilken information du har.',
     };
 
     return {

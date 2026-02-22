@@ -116,6 +116,17 @@ export const topics = sqliteTable('topics', {
     baseDifficulty: integer('base_difficulty'),
     engineeringContext: text('engineering_context'), // Why this topic matters in engineering
     curriculumStandardId: text('curriculum_standard_id').references(() => curriculumStandards.id, { onDelete: 'set null' }),
+    // Source & ordering
+    source: text('source').default('manual'),              // 'ai' | 'manual'
+    sortOrder: integer('sort_order').default(0),
+    // AI-extracted metadata (populated when imported from exam analysis)
+    phase: text('phase'),                                   // 'foundation' | 'core' | 'advanced'
+    aiImportance: integer('ai_importance'),                  // 1-10
+    aiDifficulty: text('ai_difficulty'),                     // 'easy' | 'medium' | 'hard'
+    studyTips: text('study_tips', { mode: 'json' }),         // string[]
+    commonMistakes: text('common_mistakes', { mode: 'json' }), // string[]
+    examFrequency: text('exam_frequency'),                   // e.g. "8/10 tentor"
+    examSections: text('exam_sections', { mode: 'json' }),   // string[]
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 

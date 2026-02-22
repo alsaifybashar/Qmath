@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, ChevronLeft, ChevronRight, CheckCircle, XCircle, Lightbulb } from 'lucide-react';
+import { Trophy, ChevronLeft, ChevronRight, CheckCircle, XCircle, Lightbulb, BookOpen, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import 'katex/dist/katex.min.css';
@@ -98,6 +99,21 @@ function SimpleNumericInput({
 
 
 export default function StudyHubPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-700 border-t-zinc-900 dark:border-t-white rounded-full animate-spin" />
+            </div>
+        }>
+            <StudyHubContent />
+        </Suspense>
+    );
+}
+
+function StudyHubContent() {
+    const searchParams = useSearchParams();
+    const topicId = searchParams.get('topic') ?? undefined;
+
     const {
         currentQuestion,
         questionIndex,
@@ -105,12 +121,14 @@ export default function StudyHubPage() {
         feedbackState,
         currentAttempt,
         isSessionComplete,
+        isLoading,
+        questionsError,
         submitAnswer,
         revealHint,
         toggleAI,
         nextQuestion,
         clearFeedback,
-    } = useStudySession();
+    } = useStudySession(topicId);
 
     // Help panel state
     const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -264,7 +282,66 @@ export default function StudyHubPage() {
         revealHint(level);
     }, [revealHint]);
 
-    // Session Complete Screen
+    // ====== LOADING STATE ======
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-white dark:bg-zinc-950 flex flex-col items-center justify-center gap-4 p-4">
+                <div className="w-10 h-10 border-2 border-zinc-200 dark:border-zinc-700 border-t-zinc-900 dark:border-t-white rounded-full animate-spin" />
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">Hämtar frågor…</p>
+            </div>
+        );
+    }
+
+    // ====== ERROR STATE ======
+    if (questionsError) {
+        return (
+            <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center p-4">
+                <div className="max-w-sm w-full text-center space-y-4">
+                    <p className="text-red-600 dark:text-red-400 font-medium">{questionsError}</p>
+                    <Link
+                        href="/practice"
+                        className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        Tillbaka till övning
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // ====== EMPTY STATE — no published questions for this topic ======
+    if (!isLoading && totalQuestions === 0) {
+        return (
+            <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center p-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-sm w-full text-center"
+                >
+                    <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                        <BookOpen className="w-8 h-8 text-zinc-400" />
+                    </div>
+                    <h1 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
+                        Inga övningsfrågor ännu
+                    </h1>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
+                        Det finns inga publicerade frågor för det här ämnet just nu.
+                        Administratörer kan lägga till och publicera frågor under Admin → Frågor.
+                    </p>
+                    <Link
+                        href="/practice"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-medium transition-colors text-sm"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        Tillbaka till övning
+                    </Link>
+                </motion.div>
+            </div>
+        );
+    }
+
+    // ====== SESSION COMPLETE SCREEN ======
     if (isSessionComplete) {
         return (
             <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center p-4">

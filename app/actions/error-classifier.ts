@@ -109,10 +109,10 @@ Classify the error as ONE of:
 - "interpretation" — misread or misunderstood the question
 - "incomplete" — right approach but didn't complete
 
-Return JSON only:
+Return JSON only (feedback MUST be in Swedish):
 {
   "errorType": "one_of_above",
-  "feedback": "One sentence explaining what went wrong, addressed to the student. Be specific. Don't say 'incorrect'.",
+  "feedback": "En mening på svenska som förklarar vad som gick fel, riktad till studenten. Var specifik. Säg inte 'fel'.",
   "remediation": "What type of follow-up question would help (one sentence, for internal use)",
   "confidence": 0.85
 }`;
@@ -122,7 +122,7 @@ Return JSON only:
             model: 'claude-sonnet-4-20250514',
             max_tokens: 200,
             temperature: 0.2,
-            system: 'You are a concise math error classifier. Return JSON only. Be kind but specific in feedback.',
+            system: 'Du är en kortfattad klassificerare av matematikfel. Returnera endast JSON. Var vänlig men specifik i återkopplingen. Svara alltid på svenska — feedback-fältet ska vara på svenska.',
             messages: [{ role: 'user', content: prompt }],
         });
 
@@ -156,7 +156,7 @@ function quickClassify(correctAnswer: string, studentAnswer: string, timeTakenMs
     if (student.length === 0 || (timeTakenMs && timeTakenMs < 3000 && student.length < 3)) {
         return {
             errorType: 'time_pressure',
-            feedback: 'It looks like you might have been rushing. Take your time with this one.',
+            feedback: 'Det verkar som om du kan ha skyndat dig. Ta den tid du behöver på den här uppgiften.',
             remediation: 'Repeat same difficulty, no time pressure',
             confidence: 0.9,
         };
@@ -166,7 +166,7 @@ function quickClassify(correctAnswer: string, studentAnswer: string, timeTakenMs
     if (correct.replace(/-/g, '') === student.replace(/-/g, '') && correct !== student) {
         return {
             errorType: 'computational',
-            feedback: 'Check the sign of your answer — the magnitude is correct but the sign is off.',
+            feedback: 'Kontrollera tecknet på ditt svar — beloppet stämmer, men tecknet är fel.',
             remediation: 'Same topic, focus on sign conventions',
             confidence: 0.95,
         };
@@ -179,7 +179,7 @@ function quickClassify(correctAnswer: string, studentAnswer: string, timeTakenMs
         if (Math.abs(studentNum) === Math.abs(correctNum) * 2 || Math.abs(studentNum) * 2 === Math.abs(correctNum)) {
             return {
                 errorType: 'computational',
-                feedback: 'Your answer is off by a factor of 2. Double-check your multiplication or division steps.',
+                feedback: 'Ditt svar skiljer sig med en faktor 2. Dubbelkolla dina multiplikations- eller divisionssteg.',
                 remediation: 'Same topic, simpler numbers',
                 confidence: 0.85,
             };
@@ -190,7 +190,7 @@ function quickClassify(correctAnswer: string, studentAnswer: string, timeTakenMs
     if (student.includes('x') && !correct.includes('x')) {
         return {
             errorType: 'incomplete',
-            feedback: `You found the general expression, but the question asks for a specific numerical value. Try substituting in the given value.`,
+            feedback: `Du hittade det allmänna uttrycket, men uppgiften frågar efter ett specifikt numeriskt värde. Försök sätta in det givna värdet.`,
             remediation: 'Practice evaluating expressions at specific points',
             confidence: 0.9,
         };
@@ -397,7 +397,7 @@ function parseClassificationJson(text: string): ErrorClassification | null {
 function getFallbackClassification(correctAnswer: string, studentAnswer: string): ErrorClassification {
     return {
         errorType: 'computational',
-        feedback: `The expected answer is ${correctAnswer}. Review your calculation steps carefully.`,
+        feedback: `Det förväntade svaret är ${correctAnswer}. Gå igenom dina beräkningssteg noggrant.`,
         remediation: 'Repeat similar problem at same difficulty',
         confidence: 0.3,
     };

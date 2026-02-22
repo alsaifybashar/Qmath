@@ -1,11 +1,14 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
     Brain, Target, AlertTriangle, Zap, ArrowRight, Clock, BookOpen,
-    TrendingUp, BarChart3, Sparkles
+    TrendingUp, BarChart3, Sparkles, Loader2
 } from 'lucide-react';
+import { getPracticeTopics } from '@/app/actions/study-questions';
+import type { PracticeTopic } from '@/app/actions/study-questions';
 
 const practiceOptions = [
     {
@@ -49,13 +52,25 @@ const practiceOptions = [
     }
 ];
 
-const recentTopics = [
-    { id: 'integration', name: 'Partiell integration', course: 'Envariabelanalys 1', mastery: 45, color: 'text-blue-500' },
-    { id: 'eigenvalues', name: 'Egenvärden & egenvektorer', course: 'Linjär algebra', mastery: 62, color: 'text-purple-500' },
-    { id: 'limits', name: 'Gränsvärden & kontinuitet', course: 'Envariabelanalys 1', mastery: 88, color: 'text-green-500' }
+const topicColors = [
+    'text-blue-500',
+    'text-purple-500',
+    'text-green-500',
+    'text-rose-500',
+    'text-amber-500',
+    'text-teal-500',
 ];
 
 export default function PracticePage() {
+    const [topics, setTopics] = useState<PracticeTopic[]>([]);
+    const [loadingTopics, setLoadingTopics] = useState(true);
+
+    useEffect(() => {
+        getPracticeTopics()
+            .then(setTopics)
+            .finally(() => setLoadingTopics(false));
+    }, []);
+
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
 
@@ -126,32 +141,45 @@ export default function PracticePage() {
                     </Link>
                 </div>
 
-                <div className="grid gap-3">
-                    {recentTopics.map((topic) => (
-                        <Link
-                            key={topic.id}
-                            href={`/study`}
-                            className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
-                                    <BookOpen className={`w-5 h-5 ${topic.color}`} />
+                {loadingTopics ? (
+                    <div className="flex items-center justify-center py-8 text-zinc-400">
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                        Laddar ämnen...
+                    </div>
+                ) : topics.length === 0 ? (
+                    <div className="text-center py-8 text-zinc-400 text-sm">
+                        Inga publicerade frågor ännu. Kontakta din administratör.
+                    </div>
+                ) : (
+                    <div className="grid gap-3">
+                        {topics.map((topic, i) => (
+                            <Link
+                                key={topic.id}
+                                href={`/study?topic=${topic.id}`}
+                                className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
+                                        <BookOpen className={`w-5 h-5 ${topicColors[i % topicColors.length]}`} />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                            {topic.title}
+                                        </div>
+                                        <div className="text-sm text-zinc-500">{topic.courseName} · {topic.courseCode}</div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div className="font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{topic.name}</div>
-                                    <div className="text-sm text-zinc-500">{topic.course}</div>
+                                <div className="flex items-center gap-4">
+                                    <div className="text-right">
+                                        <div className="text-sm font-medium">{topic.publishedCount}</div>
+                                        <div className="text-xs text-zinc-500">frågor</div>
+                                    </div>
+                                    <ArrowRight className="w-5 h-5 text-zinc-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                    <div className="text-sm font-medium">{topic.mastery}%</div>
-                                    <div className="text-xs text-zinc-500">Bemästring</div>
-                                </div>
-                                <ArrowRight className="w-5 h-5 text-zinc-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
-                            </div>
-                        </Link>
-                    ))}
-                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
             </motion.div>
 
             {/* Quick Stats */}

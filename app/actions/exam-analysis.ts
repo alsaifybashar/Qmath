@@ -276,12 +276,15 @@ export async function getExamAnalysis(courseId: string): Promise<ExamAnalysisDat
     const session = await auth();
     if (!session?.user?.id) return { error: 'Not authenticated' };
     const userId = session.user.id;
+    const isAdmin = session.user.role === 'admin';
 
-    // Enrollment check
-    const enrollment = await db.select().from(enrollments)
-        .where(and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId)))
-        .limit(1);
-    if (enrollment.length === 0) return { error: 'Not enrolled in this course' };
+    // Admins have full access to all courses — skip enrollment check
+    if (!isAdmin) {
+        const enrollment = await db.select().from(enrollments)
+            .where(and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId)))
+            .limit(1);
+        if (enrollment.length === 0) return { error: 'Not enrolled in this course' };
+    }
 
     // Fetch course first (needed for course.code)
     const courseData = await db.select().from(courses).where(eq(courses.id, courseId)).limit(1);

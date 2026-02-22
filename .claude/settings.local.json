@@ -25,7 +25,18 @@
       "Bash(node:*)",
       "Bash(npm rebuild:*)",
       "Bash(wsl.exe -d Ubuntu -- bash -lc \"cd /home/wsl-bashar/Qmath && npm rebuild better-sqlite3 2>&1\")",
-      "Bash(wsl.exe -d Ubuntu -- bash -lc \"cd /home/wsl-bashar/Qmath && npm run db:push 2>&1\":*)"
+      "Bash(wsl.exe -d Ubuntu -- bash -lc \"cd /home/wsl-bashar/Qmath && npm run db:push 2>&1\":*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl:*)",
+      "mcp__binstrike-ai__create_file",
+      "Bash(bash -i -c \"nvm use 22 && cd /home/wsl-bashar/Qmath && node cleanup-courses.js && rm cleanup-courses.js\")",
+      "Bash(source:*)",
+      "Bash(//wsl.localhost/Ubuntu/home/wsl-bashar/.nvm/versions/node/v22.22.0/bin/node:*)",
+      "Bash(wsl.exe -d Ubuntu -u wsl-bashar -- bash -c 'source ~/.nvm/nvm.sh && nvm use 22 && cd ~/Qmath && node cleanup-courses.js && rm cleanup-courses.js')",
+      "Bash(nvm use:*)",
+      "Bash(npm run build:*)",
+      "Bash(export NVM_DIR=\"$HOME/.nvm\")",
+      "Bash([ -s \"$NVM_DIR/nvm.sh\" ])"
     ]
   }
 }

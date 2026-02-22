@@ -4,6 +4,7 @@ import { useReducer, useEffect, useCallback, useState } from 'react';
 import { classifyError } from '@/app/actions/error-classifier';
 import type { ErrorType } from '@/app/actions/error-classifier';
 import { checkMathEquivalence } from '@/lib/utils/mathEquivalence';
+import { getStudyQuestions } from '@/app/actions/study-questions';
 
 // Types
 // Common wrong answer structure for diagnostic feedback
@@ -431,6 +432,8 @@ function studySessionReducer(state: StudySessionState, action: StudySessionActio
 export function useStudySession(topicId?: string) {
     const [state, dispatch] = useReducer(studySessionReducer, initialState);
     const [sessionTime, setSessionTime] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [questionsError, setQuestionsError] = useState<string | null>(null);
 
     // Session timer
     useEffect(() => {
@@ -443,16 +446,24 @@ export function useStudySession(topicId?: string) {
         return () => clearInterval(interval);
     }, [state.isSessionActive, state.isSessionComplete]);
 
-    // Load questions (mock for now)
+    // Load questions from DB when topicId changes
     useEffect(() => {
         loadQuestions(topicId);
-    }, [topicId]);
+    }, [topicId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const loadQuestions = useCallback((topic?: string) => {
-        // Mock questions - in production this would fetch from API/adaptive engine
-        const mockQuestions: QuestionWithHelp[] = getMockQuestions(topic);
-        dispatch({ type: 'SET_QUESTIONS', payload: mockQuestions });
-        dispatch({ type: 'START_SESSION' });
+    const loadQuestions = useCallback(async (topic?: string) => {
+        setIsLoading(true);
+        setQuestionsError(null);
+        try {
+            const fetchedQuestions = await getStudyQuestions(topic ?? '');
+            dispatch({ type: 'SET_QUESTIONS', payload: fetchedQuestions });
+            dispatch({ type: 'START_SESSION' });
+        } catch (err) {
+            console.error('[Study] Failed to load questions:', err);
+            setQuestionsError('Kunde inte ladda frågor. Försök ladda om sidan.');
+        } finally {
+            setIsLoading(false);
+        }
     }, []);
 
     const submitAnswer = useCallback((answer: string, correctAnswer: any, question?: QuestionWithHelp) => {
@@ -565,6 +576,8 @@ export function useStudySession(topicId?: string) {
         // State
         ...state,
         sessionTime,
+        isLoading,
+        questionsError,
         progress: state.totalQuestions > 0
             ? Math.round((state.questionIndex / state.totalQuestions) * 100)
             : 0,
@@ -589,216 +602,6 @@ export function useStudySession(topicId?: string) {
 // Helper functions
 function validateAnswer(answer: string, correctAnswer: any): boolean {
     return checkMathEquivalence(answer, correctAnswer);
-}
-
-function getMockQuestions(topic?: string): QuestionWithHelp[] {
-    // Mock questions for demonstration
-    return [
-        {
-            id: 'q1',
-            type: 'numeric_input',
-            topicId: topic || 'derivatives',
-            difficulty: 3,
-            content: {
-                question: {
-                    text: "Find the derivative of:",
-                    math: "f(x) = x^2 + 3x"
-                },
-                answer: { exact: "2x+3" },
-            },
-            correctAnswer: "2x+3",
-            // NEW: Common wrong answers with specific feedback
-            commonWrongAnswers: [
-                {
-                    answer: "2x",
-                    feedback: "You got the first term right (x² → 2x), but you forgot the derivative of 3x. The derivative of 3x is just 3.",
-                    misconception: "incomplete-sum-rule"
-                },
-                {
-                    answer: "x+3",
-                    feedback: "Remember the power rule: when differentiating x², multiply by the exponent (2) and reduce it by 1.",
-                    misconception: "power-rule-error"
-                },
-                {
-                    answer: "2x+3x",
-                    feedback: "The derivative of 3x is just 3, not 3x. The constant multiplier stays, but x disappears.",
-                    misconception: "linear-term-derivative"
-                }
-            ],
-            prerequisites: [
-                { topicId: "power-rule-basics", description: "Understanding the power rule" },
-                { topicId: "sum-rule", description: "Derivative of sums" }
-            ],
-            helps: {
-                nudgeHint: "Think about the power rule for each term.",
-                guidedHint: "For x², bring down the exponent and reduce it by 1. For 3x, what's the derivative of a linear term?",
-                stepBreakdown: {
-                    intro: "Let's find the derivative step by step.",
-                    steps: [
-                        { prompt: "What is the derivative of x²?", correctAnswer: "2x", hint: "Power rule: d/dx(x^n) = nx^(n-1)" },
-                        { prompt: "What is the derivative of 3x?", correctAnswer: "3", hint: "The derivative of ax is just a" },
-                        { prompt: "What's the final answer (sum of parts)?", correctAnswer: "2x+3" }
-                    ],
-                    conclusion: "Great! The derivative of x² + 3x is 2x + 3."
-                },
-                workedExample: {
-                    similarQuestion: "Find d/dx of x³ + 2x",
-                    solution: [
-                        { step: 1, action: "Apply power rule to x³", result: "3x²", explanation: "Bring down 3, reduce exponent to 2" },
-                        { step: 2, action: "Apply power rule to 2x", result: "2", explanation: "Derivative of 2x is just 2" },
-                        { step: 3, action: "Combine the results", result: "3x² + 2" }
-                    ]
-                },
-                relatedFormulas: [
-                    { name: "Power Rule", latex: "\\frac{d}{dx}x^n = nx^{n-1}", explanation: "Multiply by the exponent, then reduce the exponent by 1" },
-                    { name: "Sum Rule", latex: "\\frac{d}{dx}[f+g] = f' + g'", explanation: "The derivative of a sum is the sum of derivatives" }
-                ],
-                relatedTopics: ["power-rule", "sum-rule"]
-            },
-            aiContext: {
-                conceptsTested: ["power rule", "sum rule", "differentiation"],
-                commonMistakes: ["forgetting to reduce the exponent", "missing the coefficient"],
-                prerequisiteTopics: ["exponents", "algebra basics"],
-                teachingApproach: "Start with power rule concept, then show it applies term by term"
-            }
-        },
-        {
-            id: 'q2',
-            type: 'multiple_choice',
-            topicId: topic || 'derivatives',
-            difficulty: 2,
-            content: {
-                question: { text: "Which rule should you apply to find the derivative of sin(x)?" },
-                options: [
-                    { id: 'a', label: "Power Rule", isCorrect: false },
-                    { id: 'b', label: "Trigonometric Rule", isCorrect: true },
-                    { id: 'c', label: "Chain Rule", isCorrect: false },
-                    { id: 'd', label: "Product Rule", isCorrect: false }
-                ],
-                correctOptionId: 'b'
-            },
-            correctAnswer: "b",
-            helps: {
-                nudgeHint: "Think about what type of function sin(x) is.",
-                guidedHint: "sin(x) is a trigonometric function. There are specific rules for trig derivatives.",
-                relatedFormulas: [
-                    { name: "Sine Derivative", latex: "\\frac{d}{dx}\\sin(x) = \\cos(x)" },
-                    { name: "Cosine Derivative", latex: "\\frac{d}{dx}\\cos(x) = -\\sin(x)" }
-                ],
-                relatedTopics: ["trig-derivatives"]
-            },
-            aiContext: {
-                conceptsTested: ["trigonometric derivatives"],
-                commonMistakes: ["confusing with other rules"],
-                prerequisiteTopics: ["basic trigonometry"],
-            }
-        },
-        {
-            id: 'q3',
-            type: 'numeric_input',
-            topicId: topic || 'derivatives',
-            difficulty: 4,
-            content: {
-                question: {
-                    text: "If f(x) = 3x² - 2x + 1, find f'(2).",
-                    math: "f(x) = 3x^2 - 2x + 1"
-                },
-                answer: { exact: 10 },
-            },
-            correctAnswer: "10",
-            commonWrongAnswers: [
-                {
-                    answer: "6x-2",
-                    feedback: "That's the derivative f'(x), but you need to evaluate it at x=2. Substitute 2 into 6x - 2.",
-                    misconception: "forgot-to-evaluate"
-                },
-                {
-                    answer: "12",
-                    feedback: "You calculated 6(2) = 12, but forgot to subtract 2. The answer is 6(2) - 2 = 10.",
-                    misconception: "arithmetic-error"
-                },
-                {
-                    answer: "8",
-                    feedback: "Check your arithmetic: f'(x) = 6x - 2, so f'(2) = 6(2) - 2 = 12 - 2 = 10.",
-                    misconception: "arithmetic-error"
-                }
-            ],
-            helps: {
-                nudgeHint: "First find the derivative, then substitute x = 2.",
-                guidedHint: "f'(x) = 6x - 2. Now evaluate at x = 2: f'(2) = 6(2) - 2 = ?",
-                stepBreakdown: {
-                    intro: "Let's solve this in two steps: differentiate, then evaluate.",
-                    steps: [
-                        { prompt: "What is f'(x)?", correctAnswer: "6x-2", hint: "Use power rule on each term" },
-                        { prompt: "What is f'(2)?", correctAnswer: "10", hint: "Substitute 2 for x: 6(2) - 2" }
-                    ],
-                    conclusion: "f'(2) = 6(2) - 2 = 12 - 2 = 10"
-                },
-                relatedFormulas: [
-                    { name: "Power Rule", latex: "\\frac{d}{dx}x^n = nx^{n-1}" },
-                    { name: "Constant Rule", latex: "\\frac{d}{dx}c = 0" }
-                ],
-                relatedTopics: ["power-rule", "evaluating-derivatives"]
-            },
-            aiContext: {
-                conceptsTested: ["power rule", "derivative evaluation"],
-                commonMistakes: ["forgetting to substitute", "arithmetic errors"],
-                prerequisiteTopics: ["differentiation basics"],
-            }
-        },
-        // NEW: Solution Builder question type
-        {
-            id: 'q4',
-            type: 'solution_builder',
-            topicId: topic || 'algebra',
-            difficulty: 3,
-            content: {
-                question: {
-                    text: "Solve the equation step by step:",
-                    math: "2x + 5 = 13"
-                },
-                initialEquation: "2x + 5 = 13",
-                steps: [
-                    {
-                        id: 'step1',
-                        operation: 'subtract',
-                        operationLabel: 'Subtract 5 from both sides',
-                        value: '5',
-                        resultEquation: "2x = 8",
-                        hint: "To isolate the term with x, we need to remove the +5 from the left side."
-                    },
-                    {
-                        id: 'step2',
-                        operation: 'divide',
-                        operationLabel: 'Divide both sides by 2',
-                        value: '2',
-                        resultEquation: "x = 4",
-                        hint: "Now divide both sides by the coefficient of x to solve for x."
-                    }
-                ],
-                availableOperations: [
-                    { id: 'add', label: 'Add to both sides', requiresValue: true, valuePlaceholder: 'What number?' },
-                    { id: 'subtract', label: 'Subtract from both sides', requiresValue: true, valuePlaceholder: 'What number?' },
-                    { id: 'multiply', label: 'Multiply both sides by', requiresValue: true, valuePlaceholder: 'What number?' },
-                    { id: 'divide', label: 'Divide both sides by', requiresValue: true, valuePlaceholder: 'What number?' }
-                ]
-            },
-            correctAnswer: "x=4",
-            helps: {
-                nudgeHint: "Start by isolating the term with x.",
-                guidedHint: "First remove the constant term (+5) by subtracting, then divide to solve for x.",
-                relatedFormulas: [
-                    { name: "Solving Linear Equations", latex: "ax + b = c \\Rightarrow x = \\frac{c-b}{a}" }
-                ],
-                relatedTopics: ["linear-equations", "algebra-basics"]
-            },
-            aiContext: {
-                conceptsTested: ["linear equations", "algebraic manipulation"],
-                commonMistakes: ["wrong operation order", "arithmetic errors"],
-                prerequisiteTopics: ["basic arithmetic", "equation balancing"],
-            }
-        }
-    ];
 }
 
 // Export types for use in other components

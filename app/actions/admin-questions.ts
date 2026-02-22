@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import { questions, topics, courses, exams } from '@/db/schema';
-import { eq, desc, inArray, and } from 'drizzle-orm';
+import { questions, topics, courses } from '@/db/schema';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -22,19 +22,7 @@ export async function getAdminCourses() {
     try {
         await checkAdmin();
 
-        // Get codes of courses that have exams
-        const coursesWithExams = await db
-            .selectDistinct({ code: exams.courseCode })
-            .from(exams);
-
-        const validCodes = coursesWithExams.map(c => c.code);
-
-        if (validCodes.length === 0) {
-            return { data: [] };
-        }
-
         const result = await db.query.courses.findMany({
-            where: inArray(courses.code, validCodes),
             with: {
                 university: true,
             },
@@ -56,6 +44,22 @@ export async function createTopic(data: {
 }): Promise<{ success: true; data: { id: string; title: string; slug: string } } | { success: false; error: string }> {
     try {
         await checkAdmin();
+
+        // Guard: reject duplicate titles within the same course (case-insensitive)
+        const duplicate = await db
+            .select({ id: topics.id })
+            .from(topics)
+            .where(
+                and(
+                    eq(topics.courseId, data.courseId),
+                    sql`lower(trim(${topics.title})) = lower(trim(${data.title}))`,
+                )
+            )
+            .limit(1);
+
+        if (duplicate.length > 0) {
+            return { success: false, error: `Ett ämne med namnet "${data.title}" finns redan i den här kursen.` };
+        }
 
         const slug = data.title
             .toLowerCase()
@@ -133,6 +137,8 @@ export async function createQuestion(data: {
         });
 
         revalidatePath('/admin/questions');
+        revalidatePath('/study');
+        revalidatePath('/practice');
         return { success: true };
     } catch (error) {
         console.error('Failed to create question:', error);
@@ -164,6 +170,8 @@ export async function updateQuestion(id: string, data: Partial<{
             .where(eq(questions.id, id));
 
         revalidatePath('/admin/questions');
+        revalidatePath('/study');
+        revalidatePath('/practice');
         return { success: true };
     } catch (error) {
         console.error('Failed to update question:', error);
@@ -178,6 +186,8 @@ export async function deleteQuestion(id: string) {
         await db.delete(questions).where(eq(questions.id, id));
 
         revalidatePath('/admin/questions');
+        revalidatePath('/study');
+        revalidatePath('/practice');
         return { success: true };
     } catch (error) {
         console.error('Failed to delete question:', error);
@@ -204,6 +214,8 @@ export async function updateQuestionStatus(
             .where(eq(questions.id, id));
 
         revalidatePath('/admin/questions');
+        revalidatePath('/study');
+        revalidatePath('/practice');
         return { success: true };
     } catch (error) {
         console.error('Failed to update question status:', error);
@@ -232,6 +244,8 @@ export async function publishQuestions(
         }
 
         revalidatePath('/admin/questions');
+        revalidatePath('/study');
+        revalidatePath('/practice');
         return { success: true, published };
     } catch (error) {
         console.error('Failed to publish questions:', error);
@@ -250,6 +264,8 @@ export async function unpublishQuestion(
             .where(eq(questions.id, id));
 
         revalidatePath('/admin/questions');
+        revalidatePath('/study');
+        revalidatePath('/practice');
         return { success: true };
     } catch (error) {
         console.error('Failed to unpublish question:', error);

@@ -112,7 +112,7 @@ export async function analyzeQuestionDifficulty(
             model: 'claude-sonnet-4-20250514',
             max_tokens: 800,
             temperature: 0.2,
-            system: `You are a mathematics education expert specializing in university-level engineering mathematics (Swedish curriculum). You analyze math questions and provide structured difficulty assessments. Always respond with valid JSON only — no markdown, no explanation outside the JSON.`,
+            system: `Du är en matematikpedagogik-expert specialiserad på universitetsmatematik för svenska ingenjörsstudenter. Du analyserar matematikuppgifter och ger strukturerade svårighetsbedömningar. Svara alltid med giltig JSON — ingen markdown, inga förklaringar utanför JSON. Fälten feedbackForAdmin och suggestedHints MÅSTE vara på svenska.`,
             messages: [{ role: 'user', content: prompt }],
         });
 
@@ -234,6 +234,7 @@ Difficulty scale:
 5 = Expert (proof-level or competition-level)
 
 Use snake_case for strategyTag (e.g. "gaussian_elimination", "chain_rule").
+IMPORTANT: feedbackForAdmin and all suggestedHints MUST be written in Swedish.
 Respond with JSON only.`;
 }
 
@@ -250,7 +251,7 @@ function generateFallbackAnalysis(question: any): AIQuestionAnalysis {
         prerequisiteTopics: [],
         strategyTag: question.strategyTag ?? 'general',
         estimatedTimeMinutes: tier * 3,
-        feedbackForAdmin: `Fallback analysis: AI key not configured. Using admin difficulty (tier ${tier}).`,
-        suggestedHints: ['Review the relevant definitions', 'Try applying the formula step by step'],
+        feedbackForAdmin: `Reservanalys: AI-nyckel inte konfigurerad. Använder admins svårighetsgrad (nivå ${tier}).`,
+        suggestedHints: ['Gå igenom de relevanta definitionerna', 'Försök tillämpa formeln steg för steg'],
     };
 }
