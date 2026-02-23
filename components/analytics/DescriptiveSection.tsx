@@ -341,7 +341,7 @@ function ComparisonRadar({ topics }: { topics: StudentProgress[] }) {
                     />
 
                     <Tooltip
-                        formatter={(v: number, name: string) => [`${v}%`, name]}
+                        formatter={(v: number | string | undefined) => [`${v ?? ''}%`]}
                         contentStyle={{
                             borderRadius: 10,
                             border: 'none',

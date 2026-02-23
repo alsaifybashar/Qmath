@@ -1,17 +1,12 @@
 'use server';
 
-import Anthropic from '@anthropic-ai/sdk';
+import crypto from 'crypto';
+import { callOllama } from '@/lib/ollama';
 import { db } from '@/db/drizzle';
 import { questions, topics, courses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
-
-// ============ ANTHROPIC CLIENT ============
-
-const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 // ============ TYPES ============
 
@@ -44,6 +39,18 @@ function stripMarkdownFences(text: string): string {
         .trim();
 }
 
+/**
+ * Fix unescaped LaTeX backslashes inside JSON strings.
+ * The AI often outputs \frac, \lim, \sin etc. which are invalid JSON escape
+ * sequences and cause JSON.parse to throw. This replaces any \ not followed
+ * by a valid JSON escape character with \\, making the JSON parseable.
+ * Valid JSON escapes kept intact: " \ / b f n r t u
+ */
+function fixLatexBackslashes(json: string): string {
+    // Match backslashes not followed by valid JSON escape chars
+    return json.replace(/\\(?!["\\\//bfnrtu0-9])/g, '\\\\');
+}
+
 // ============ SINGLE QUESTION ANALYSIS ============
 
 export async function analyzeQuestionDifficulty(
@@ -73,25 +80,7 @@ export async function analyzeQuestionDifficulty(
             .set({ status: 'ai_review' })
             .where(eq(questions.id, questionId));
 
-        // 3. Check for API key
-        if (!process.env.ANTHROPIC_API_KEY) {
-            // Fallback: generate a reasonable default analysis without AI
-            const fallback = generateFallbackAnalysis(question);
-            await db.update(questions)
-                .set({
-                    status: 'ready',
-                    aiDifficultyTier: fallback.difficulty,
-                    aiAnalysis: fallback,
-                    aiAnalyzedAt: new Date(),
-                    strategyTag: question.strategyTag || fallback.strategyTag,
-                })
-                .where(eq(questions.id, questionId));
-
-            revalidatePath('/admin/questions');
-            return { success: true, analysis: fallback };
-        }
-
-        // 4. Build prompt
+        // 3. Build prompt
         const topicName = question.topic?.title ?? 'Unknown topic';
         const courseCode = question.topic?.course?.code ?? '';
         const courseName = question.topic?.course?.name ?? '';
@@ -107,23 +96,20 @@ export async function analyzeQuestionDifficulty(
             courseName,
         });
 
-        // 5. Call Claude
-        const response = await anthropic.messages.create({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 800,
+        // 4. Call Ollama
+        const rawText = await callOllama({
+            messages: [
+                { role: 'system', content: 'Du är en matematikpedagogik-expert specialiserad på universitetsmatematik för svenska ingenjörsstudenter. Du analyserar matematikuppgifter och ger strukturerade svårighetsbedömningar. Svara alltid med giltig JSON — ingen markdown, inga förklaringar utanför JSON. Fälten feedbackForAdmin och suggestedHints MÅSTE vara på svenska.' },
+                { role: 'user', content: prompt },
+            ],
+            maxTokens: 800,
             temperature: 0.2,
-            system: `Du är en matematikpedagogik-expert specialiserad på universitetsmatematik för svenska ingenjörsstudenter. Du analyserar matematikuppgifter och ger strukturerade svårighetsbedömningar. Svara alltid med giltig JSON — ingen markdown, inga förklaringar utanför JSON. Fälten feedbackForAdmin och suggestedHints MÅSTE vara på svenska.`,
-            messages: [{ role: 'user', content: prompt }],
+            timeoutMs: 60_000,
         });
-
-        // 6. Parse response
-        const rawText = response.content[0].type === 'text'
-            ? response.content[0].text
-            : '';
 
         let analysis: AIQuestionAnalysis;
         try {
-            analysis = JSON.parse(stripMarkdownFences(rawText));
+            analysis = JSON.parse(fixLatexBackslashes(stripMarkdownFences(rawText)));
         } catch {
             console.error('[AI Analysis] Failed to parse JSON:', rawText);
             // Use fallback on parse failure
@@ -256,6 +242,108 @@ function generateFallbackAnalysis(question: any): AIQuestionAnalysis {
     };
 }
 
+// ============ GUIDANCE STEPS SUGGESTION (from form content) ============
+
+/**
+ * Generate guidance step suggestions from raw form content — no saved question needed.
+ * Called from the admin form for both new and existing questions.
+ */
+export async function suggestGuidanceSteps(input: {
+    questionContent: string;
+    correctAnswer: string;
+    questionType: string;
+    solutionSteps?: { label: string; content: string }[];
+    topicName?: string;
+    courseCode?: string;
+    existingGuidanceSteps?: { id: string; order: number; content: string }[];
+}): Promise<{ success: true; steps: GuidanceStep[] } | { success: false; error: string }> {
+    try {
+        await checkAdmin();
+
+        if (!input.questionContent.trim()) {
+            return { success: false, error: 'Frågeinnehållet får inte vara tomt.' };
+        }
+
+        const solutionText = input.solutionSteps
+            ?.filter(s => s.content.trim())
+            .map((s, i) => `### ${i + 1}. ${s.label}\n${s.content}`)
+            .join('\n\n') ?? '';
+
+        const existingText = input.existingGuidanceSteps?.length
+            ? '\n\nAdmins befintliga vägledningssteg:\n' +
+            input.existingGuidanceSteps.map((s, i) => `${i + 1}. ${s.content}`).join('\n') +
+            '\n\nFörbättra dessa eller föreslå nya.'
+            : '';
+
+        const prompt = `Du är en erfaren matematiklektor som skapar pedagogiska ledtrådar för studenter.
+
+## Uppgift
+${input.courseCode ? `Kurs: ${input.courseCode}` : ''}${input.topicName ? ` — Ämne: ${input.topicName}` : ''}
+Frågetyp: ${input.questionType}
+
+Frågetext:
+${input.questionContent}
+
+Korrekt svar: ${input.correctAnswer}
+${solutionText ? `\nLösningssteg:\n${solutionText}` : ''}${existingText}
+
+## Din uppgift
+Skapa 3–5 progressiva vägledningssteg som hjälper en student att TÄNKA rätt utan att avslöja svaret. Varje steg ska:
+- Vägleda studentens resonemang (inte avslöja lösningsvägen direkt)
+- Vara kort och tydligt (1-2 meningar)
+- Bygga vidare på föregående steg
+- Vara på svenska
+- Inte innehålla det korrekta svaret
+- Gärna inkludera en reflektionsfråga eller ett tips om vilken metod/formel som kan hjälpa
+
+Svara med JSON:
+{
+  "steps": [
+    { "order": 1, "content": "<vägledningstext>" },
+    { "order": 2, "content": "<nästa steg>" }
+  ]
+}
+
+Svara med JSON only.`;
+
+        const rawText = await callOllama({
+            messages: [
+                {
+                    role: 'system',
+                    content: 'Du är en matematikpedagog. Skapa vägledningssteg som hjälper studenter TÄNKA rätt utan att avslöja svaret. Skriv på svenska. Svara med JSON only.',
+                },
+                { role: 'user', content: prompt },
+            ],
+            maxTokens: 800,
+            temperature: 0.45,
+            timeoutMs: 60_000,
+        });
+
+        let parsed: { steps: Array<{ order: number; content: string }> };
+        try {
+            parsed = JSON.parse(fixLatexBackslashes(stripMarkdownFences(rawText)));
+        } catch {
+            console.error('[Guidance Suggest] Failed to parse JSON:', rawText);
+            return { success: false, error: 'AI-förslaget kunde inte tolkas. Försök igen.' };
+        }
+
+        if (!Array.isArray(parsed.steps) || parsed.steps.length === 0) {
+            return { success: false, error: 'AI returnerade inga vägledningssteg.' };
+        }
+
+        const steps: GuidanceStep[] = parsed.steps.map((s, i) => ({
+            id: crypto.randomUUID(),
+            order: typeof s.order === 'number' ? s.order : i + 1,
+            content: String(s.content ?? '').trim(),
+        }));
+
+        return { success: true, steps };
+    } catch (error) {
+        console.error('[Guidance Suggest] Error:', error);
+        return { success: false, error: 'Kunde inte generera vägledningssteg. Försök igen.' };
+    }
+}
+
 // ============ AI SOLUTION REVIEW ============
 
 export interface AISolutionStepReview {
@@ -299,33 +387,13 @@ export async function reviewSolutionSteps(input: {
             return { success: false, error: 'Inga lösningssteg att granska. Skriv minst ett steg.' };
         }
 
-        // Check for API key
-        if (!process.env.ANTHROPIC_API_KEY) {
-            return {
-                success: true,
-                review: {
-                    overallAssessment: 'AI-granskning ej tillgänglig — API-nyckel saknas. Lösningen sparas som den är.',
-                    overallRating: 3,
-                    stepReviews: input.solutionSteps.map((s, i) => ({
-                        stepIndex: i,
-                        originalLabel: s.label,
-                        verdict: 'ok' as const,
-                        suggestion: s.content,
-                        suggestedLabel: s.label,
-                        reason: 'Ingen AI-granskning genomförd.',
-                    })),
-                    additionalSteps: [],
-                },
-            };
-        }
-
         const prompt = buildSolutionReviewPrompt(input);
 
-        const response = await anthropic.messages.create({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 2000,
-            temperature: 0.3,
-            system: `Du är en erfaren matematiklektor vid ett svenskt universitet som granskar lösningsförslag till matematikuppgifter. Din uppgift är att granska varje steg i lösningen och föreslå förbättringar som ökar tydligheten, pedagogiken och den matematiska korrektheten.
+        const rawText = await callOllama({
+            messages: [
+                {
+                    role: 'system',
+                    content: `Du är en erfaren matematiklektor vid ett svenskt universitet som granskar lösningsförslag till matematikuppgifter. Din uppgift är att granska varje steg i lösningen och föreslå förbättringar som ökar tydligheten, pedagogiken och den matematiska korrektheten.
 
 Dina förslag ska:
 - Vara på svenska
@@ -336,14 +404,17 @@ Dina förslag ska:
 - Behålla den övergripande strukturen och stilen
 
 Svara ALLTID med giltig JSON utan markdown-formatering utanför JSON.`,
-            messages: [{ role: 'user', content: prompt }],
+                },
+                { role: 'user', content: prompt },
+            ],
+            maxTokens: 2000,
+            temperature: 0.3,
+            timeoutMs: 90_000,
         });
-
-        const rawText = response.content[0].type === 'text' ? response.content[0].text : '';
 
         let review: AISolutionReview;
         try {
-            review = JSON.parse(stripMarkdownFences(rawText));
+            review = JSON.parse(fixLatexBackslashes(stripMarkdownFences(rawText)));
         } catch {
             console.error('[AI Solution Review] Failed to parse JSON:', rawText);
             return { success: false, error: 'AI-granskningen kunde inte tolkas. Försök igen.' };
@@ -360,6 +431,115 @@ Svara ALLTID med giltig JSON utan markdown-formatering utanför JSON.`,
     } catch (error) {
         console.error('[AI Solution Review] Error:', error);
         return { success: false, error: 'AI-granskning misslyckades. Kontrollera API-nyckeln och försök igen.' };
+    }
+}
+
+// ============ GUIDANCE STEPS GENERATION ============
+
+export interface GuidanceStep {
+    id: string;
+    order: number;
+    content: string;  // Markdown/plain text with optional inline math $...$
+}
+
+/**
+ * Generate pedagogical guidance steps for a question using Ollama.
+ * Returns suggested steps WITHOUT saving to DB — admin decides whether to accept.
+ *
+ * Guidance steps guide the student's THINKING without revealing the answer.
+ * They are shown progressively after a wrong answer, one at a time.
+ */
+export async function generateGuidanceSteps(
+    questionId: string
+): Promise<{ success: true; steps: GuidanceStep[] } | { success: false; error: string }> {
+    try {
+        await checkAdmin();
+
+        // Fetch question with topic/course context
+        const question = await db.query.questions.findFirst({
+            where: eq(questions.id, questionId),
+            with: {
+                topic: {
+                    with: {
+                        course: true,
+                    },
+                },
+            },
+        });
+
+        if (!question) {
+            return { success: false, error: 'Frågan hittades inte.' };
+        }
+
+        const topicName = question.topic?.title ?? 'Okänt ämne';
+        const courseCode = question.topic?.course?.code ?? '';
+
+        const prompt = `Du är en erfaren matematiklektor som skapar pedagogiska ledtrådar för studenter som svarar fel på en uppgift.
+
+## Uppgift
+Kurs: ${courseCode} — Ämne: ${topicName}
+Fråga:
+${question.contentMarkdown}
+
+Korrekt svar: ${question.correctAnswer}
+${question.explanationMarkdown ? `\nLösningsskiss:\n${question.explanationMarkdown}` : ''}
+
+## Din uppgift
+Skapa 3–5 progressiva vägledningssteg som hjälper en student att TÄNKA rätt utan att avslöja svaret. Varje steg ska:
+- Vägleda studentens resonemang (inte avslöja lösningsvägen direkt)
+- Vara kort och tydligt (1-2 meningar max)
+- Bygga vidare på föregående steg
+- Vara på svenska
+- Inte innehålla det korrekta svaret
+- Gärna inkludera en reflektionsfråga
+
+Svara med JSON:
+{
+  "steps": [
+    { "order": 1, "content": "<vägledningstext med eventuell $latex$>" },
+    { "order": 2, "content": "<nästa steg>" },
+    ...
+  ]
+}
+
+Svara med JSON only.`;
+
+        const rawText = await callOllama({
+            messages: [
+                {
+                    role: 'system',
+                    content: 'Du är en matematikpedagog som skapar vägledningssteg för studenter. Skriv alltid på svenska. Svara med JSON only.',
+                },
+                { role: 'user', content: prompt },
+            ],
+            maxTokens: 800,
+            temperature: 0.4,
+            timeoutMs: 60_000,
+        });
+
+        let parsed: { steps: Array<{ order: number; content: string }> };
+        try {
+            parsed = JSON.parse(stripMarkdownFences(rawText));
+        } catch {
+            console.error('[Guidance Steps] Failed to parse JSON:', rawText);
+            return { success: false, error: 'AI-förslaget kunde inte tolkas. Försök igen.' };
+        }
+
+        if (!Array.isArray(parsed.steps) || parsed.steps.length === 0) {
+            return { success: false, error: 'AI returnerade inga vägledningssteg.' };
+        }
+
+        // Assign UUIDs to each step
+        const steps: GuidanceStep[] = parsed.steps.map((s, i) => ({
+            id: crypto.randomUUID(),
+            order: s.order ?? i + 1,
+            content: String(s.content ?? '').trim(),
+        }));
+
+        return { success: true, steps };
+    } catch (error) {
+        console.error('[Guidance Steps] Error:', error);
+        return { success: false, error: 'Kunde inte generera vägledningssteg. Försök igen.' };
     }
 }
 

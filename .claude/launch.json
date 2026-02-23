@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
-      "runtimeExecutable": "wsl",
-      "runtimeArgs": ["-d", "Ubuntu", "--", "bash", "-i", "-c", "source ~/.nvm/nvm.sh && nvm use 22 && cd ~/Qmath && npx next dev --port 3000"],
-      "port": 3000
+      "name": "qmath-dev",
+      "runtimeExecutable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "runtimeArgs": ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "D:\\start-qmath-ps.ps1"],
+      "port": 3003
     }
   ]
 }

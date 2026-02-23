@@ -21,8 +21,9 @@ import {
     analyzeQuestionDifficulty,
     analyzeQuestionsBatch,
     reviewSolutionSteps,
+    suggestGuidanceSteps,
 } from '@/app/actions/ai-question-analysis';
-import type { AIQuestionAnalysis, AISolutionReview } from '@/app/actions/ai-question-analysis';
+import type { AIQuestionAnalysis, AISolutionReview, GuidanceStep } from '@/app/actions/ai-question-analysis';
 import {
     Plus,
     Trash2,
@@ -58,7 +59,8 @@ import {
 
 interface SolutionStep {
     label: string;
-    content: string;
+    expectedAnswer: string;  // Short expected value shown to student on wrong (e.g. "(x+1)(x-1)")
+    content: string;         // Full solution explanation (shown in breakdown view)
 }
 
 interface FormData {
@@ -68,6 +70,7 @@ interface FormData {
     options: string;
     difficultyTier: number;
     solutionSteps: SolutionStep[];
+    guidanceSteps: GuidanceStep[];
 }
 
 const DEFAULT_FORM: FormData = {
@@ -76,7 +79,8 @@ const DEFAULT_FORM: FormData = {
     correctAnswer: '',
     options: '["Option A", "Option B", "Option C", "Option D"]',
     difficultyTier: 1,
-    solutionSteps: [{ label: 'Step 1', content: '' }],
+    solutionSteps: [{ label: 'Step 1', expectedAnswer: '', content: '' }],
+    guidanceSteps: [],
 };
 
 type TabKey = 'draft' | 'ai_review' | 'ready' | 'published';
@@ -92,8 +96,11 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 
 function stepsToMarkdown(steps: SolutionStep[]): string {
     return steps
-        .filter(s => s.content.trim())
-        .map(s => `### ${s.label}\n${s.content}`)
+        .filter(s => s.content.trim() || s.expectedAnswer.trim())
+        .map(s => {
+            const answerLine = s.expectedAnswer.trim() ? `ANSWER: ${s.expectedAnswer.trim()}\n` : '';
+            return `### ${s.label}\n${answerLine}${s.content}`;
+        })
         .join('\n\n');
 }
 
@@ -566,6 +573,10 @@ export default function AdminQuestionsPage() {
     const [rejectedSteps, setRejectedSteps] = useState<Set<number>>(new Set());
     const [acceptedAdditionalSteps, setAcceptedAdditionalSteps] = useState<Set<number>>(new Set());
 
+    // AI Guidance Steps suggestion state
+    const [aiGuidanceSuggestions, setAiGuidanceSuggestions] = useState<GuidanceStep[] | null>(null);
+    const [generatingGuidance, setGeneratingGuidance] = useState(false);
+
     // Filtered questions per tab
     const filteredQuestions = allQuestions.filter(q => {
         const status = q.status || (q.isPublished ? 'published' : 'draft');
@@ -677,6 +688,85 @@ export default function AdminQuestionsPage() {
         }));
     };
 
+    // ── Guidance step helpers ────────────────────────────────────────────────
+
+    const addGuidanceStep = () => {
+        setFormData(f => ({
+            ...f,
+            guidanceSteps: [
+                ...f.guidanceSteps,
+                { id: crypto.randomUUID(), order: f.guidanceSteps.length + 1, content: '' },
+            ],
+        }));
+    };
+
+    const removeGuidanceStep = (id: string) => {
+        setFormData(f => ({
+            ...f,
+            guidanceSteps: f.guidanceSteps
+                .filter(s => s.id !== id)
+                .map((s, i) => ({ ...s, order: i + 1 })),
+        }));
+    };
+
+    const updateGuidanceStep = (id: string, content: string) => {
+        setFormData(f => ({
+            ...f,
+            guidanceSteps: f.guidanceSteps.map(s => s.id === id ? { ...s, content } : s),
+        }));
+    };
+
+    const handleSuggestGuidance = async () => {
+        if (!formData.contentMarkdown.trim()) {
+            alert('Skriv frågetext innan du genererar vägledningssteg.');
+            return;
+        }
+        setGeneratingGuidance(true);
+        setAiGuidanceSuggestions(null);
+
+        const topicObj = topics.find((t: any) => t.id === selectedTopicId);
+        const result = await suggestGuidanceSteps({
+            questionContent: formData.contentMarkdown,
+            correctAnswer: formData.correctAnswer,
+            questionType: formData.questionType,
+            solutionSteps: formData.solutionSteps.filter(s => s.content.trim()),
+            topicName: topicObj?.title,
+            courseCode: selectedCourse?.code,
+            existingGuidanceSteps: formData.guidanceSteps.length > 0 ? formData.guidanceSteps : undefined,
+        });
+
+        if (result.success) {
+            setAiGuidanceSuggestions(result.steps);
+        } else {
+            alert(result.error);
+        }
+        setGeneratingGuidance(false);
+    };
+
+    const handleAcceptAllGuidance = () => {
+        if (!aiGuidanceSuggestions) return;
+        setFormData(f => ({ ...f, guidanceSteps: aiGuidanceSuggestions }));
+        setAiGuidanceSuggestions(null);
+    };
+
+    const handleAcceptGuidanceStep = (step: GuidanceStep) => {
+        setFormData(f => {
+            const exists = f.guidanceSteps.some(s => s.id === step.id);
+            if (exists) return f;
+            return {
+                ...f,
+                guidanceSteps: [
+                    ...f.guidanceSteps,
+                    { ...step, order: f.guidanceSteps.length + 1 },
+                ],
+            };
+        });
+    };
+
+    const handleDismissGuidanceSuggestions = () => {
+        setAiGuidanceSuggestions(null);
+    };
+
     // ── AI Solution Review ────────────────────────────────────────────────────
 
     const handleReviewSolution = async () => {
@@ -767,14 +857,29 @@ export default function AdminQuestionsPage() {
         const stepRegex = /###\s+(.*?)\n([\s\S]*?)(?=###\s+|$)/g;
         let match;
         while ((match = stepRegex.exec(q.explanationMarkdown)) !== null) {
-            steps.push({ label: match[1].trim(), content: match[2].trim() });
+            const rawContent = match[2].trim();
+            const answerMatch = rawContent.match(/^ANSWER:\s*(.+)\n?/);
+            const expectedAnswer = answerMatch ? answerMatch[1].trim() : '';
+            const content = answerMatch ? rawContent.replace(/^ANSWER:\s*.+\n?/, '').trim() : rawContent;
+            steps.push({ label: match[1].trim(), expectedAnswer, content });
         }
 
         if (steps.length === 0 && q.explanationMarkdown) {
-            steps.push({ label: 'Solution', content: q.explanationMarkdown });
+            steps.push({ label: 'Solution', expectedAnswer: '', content: q.explanationMarkdown });
         } else if (steps.length === 0) {
-            steps.push({ label: 'Step 1', content: '' });
+            steps.push({ label: 'Step 1', expectedAnswer: '', content: '' });
         }
+
+        // Load existing guidance steps
+        const rawGuidance = Array.isArray(q.guidanceSteps) ? q.guidanceSteps : [];
+        const loadedGuidanceSteps: GuidanceStep[] = rawGuidance
+            .filter((s: any) => s && typeof s.content === 'string')
+            .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+            .map((s: any, i: number) => ({
+                id: String(s.id ?? crypto.randomUUID()),
+                order: Number(s.order ?? i + 1),
+                content: String(s.content ?? ''),
+            }));
 
         setFormData({
             contentMarkdown: q.contentMarkdown,
@@ -783,10 +888,12 @@ export default function AdminQuestionsPage() {
             options: optionsStr,
             difficultyTier: q.difficultyTier,
             solutionSteps: steps,
+            guidanceSteps: loadedGuidanceSteps,
         });
         setEditingQuestionId(q.id);
         setIsCreatingQuestion(true);
         setActiveTab('draft');
+        setAiGuidanceSuggestions(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -813,6 +920,11 @@ export default function AdminQuestionsPage() {
 
         const explanationMarkdown = stepsToMarkdown(formData.solutionSteps);
 
+        // Normalise guidance steps (remove empty ones, renumber)
+        const cleanedGuidanceSteps = formData.guidanceSteps
+            .filter(s => s.content.trim())
+            .map((s, i) => ({ ...s, order: i + 1 }));
+
         let result;
         if (editingQuestionId) {
             result = await updateQuestion(editingQuestionId, {
@@ -822,6 +934,7 @@ export default function AdminQuestionsPage() {
                 options: parsedOptions,
                 explanationMarkdown,
                 difficultyTier: formData.difficultyTier,
+                guidanceSteps: cleanedGuidanceSteps.length > 0 ? cleanedGuidanceSteps : null,
             });
         } else {
             result = await createQuestion({
@@ -832,6 +945,7 @@ export default function AdminQuestionsPage() {
                 options: parsedOptions,
                 explanationMarkdown,
                 difficultyTier: formData.difficultyTier,
+                guidanceSteps: cleanedGuidanceSteps.length > 0 ? cleanedGuidanceSteps : null,
             });
         }
 
@@ -841,6 +955,7 @@ export default function AdminQuestionsPage() {
             setEditingQuestionId(null);
             setFormData(DEFAULT_FORM);
             setSolutionReview(null);
+            setAiGuidanceSuggestions(null);
             setActiveTab('draft');
         } else {
             alert(`Failed to ${editingQuestionId ? 'update' : 'create'} question.`);
@@ -920,6 +1035,7 @@ export default function AdminQuestionsPage() {
         await unpublishQuestion(id);
         await refreshQuestions();
     };
+
 
     if (!session) return null;
 
@@ -1232,8 +1348,26 @@ export default function AdminQuestionsPage() {
                                                             </button>
                                                         )}
                                                     </div>
+
+                                                    {/* Expected answer for this sub-question */}
+                                                    <div className="mb-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                                        <label className="block text-xs font-semibold text-emerald-800 mb-1">
+                                                            Förväntat svar (delfråga) <span className="font-normal text-emerald-600">— t.ex. <code className="bg-emerald-100 px-1 rounded">{'(x+1)(x-1)'}</code> eller <code className="bg-emerald-100 px-1 rounded">{'1/2'}</code></span>
+                                                        </label>
+                                                        <p className="text-[10px] text-emerald-600 mb-1.5">
+                                                            Visas för studenten om de svarar fel — kort uttryck eller värde, ej förklaring.
+                                                        </p>
+                                                        <input
+                                                            type="text"
+                                                            value={step.expectedAnswer}
+                                                            onChange={e => updateStep(index, 'expectedAnswer', e.target.value)}
+                                                            placeholder="t.ex. (x+1)(x-1) eller 1/2 eller lim_{t→0}"
+                                                            className="w-full p-2 rounded-lg border border-emerald-300 bg-white text-zinc-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                                                        />
+                                                    </div>
+
                                                     <LatexEditor
-                                                        label=""
+                                                        label="Full förklaring (visas i lösningspanelen)"
                                                         value={step.content}
                                                         onChange={v => updateStep(index, 'content', v)}
                                                         placeholder={"Multiplicera båda sidor med 2:\n$$2 \\cdot \\frac{x}{2} = 2 \\cdot 3$$\nSå $x = 6$."}
@@ -1260,11 +1394,135 @@ export default function AdminQuestionsPage() {
                                         )}
                                     </div>
 
+                                    {/* ── Guidance steps (shown to students after wrong answer) ── */}
+                                    <div className="border border-amber-200 bg-amber-50/40 rounded-xl p-5 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h4 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
+                                                    <Lightbulb className="w-4 h-4 text-amber-600" />
+                                                    Vägledning vid fel svar
+                                                </h4>
+                                                <p className="text-xs text-amber-700 mt-0.5">
+                                                    Progressiva ledtrådar som hjälper studenten tänka rätt — utan att avslöja svaret.
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSuggestGuidance}
+                                                    disabled={generatingGuidance || !formData.contentMarkdown.trim()}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    title="Låt AI föreslå vägledningssteg baserat på frågan"
+                                                >
+                                                    {generatingGuidance ? (
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Sparkles className="w-3.5 h-3.5" />
+                                                    )}
+                                                    {generatingGuidance ? 'Genererar...' : 'AI-föreslå'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={addGuidanceStep}
+                                                    className="flex items-center gap-1 text-xs text-amber-700 hover:underline"
+                                                >
+                                                    <Plus className="w-3 h-3" /> Lägg till steg
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Current guidance steps */}
+                                        {formData.guidanceSteps.length > 0 ? (
+                                            <div className="space-y-2.5">
+                                                {formData.guidanceSteps.map((step, index) => (
+                                                    <div key={step.id} className="flex items-start gap-2.5">
+                                                        <div className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-2.5">
+                                                            {index + 1}
+                                                        </div>
+                                                        <textarea
+                                                            value={step.content}
+                                                            onChange={e => updateGuidanceStep(step.id, e.target.value)}
+                                                            rows={2}
+                                                            placeholder="T.ex. Titta på täljaren — kan you faktorisera den? Vilka faktorer delar du med nämnaren?"
+                                                            className="flex-1 p-2.5 rounded-lg border border-amber-200 bg-white text-zinc-900 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeGuidanceStep(step.id)}
+                                                            className="text-zinc-300 hover:text-red-400 mt-2.5 flex-shrink-0"
+                                                            title="Ta bort detta steg"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-amber-600 italic text-center py-2">
+                                                Inga vägledningssteg ännu. Klicka "AI-föreslå" eller "Lägg till steg".
+                                            </p>
+                                        )}
+
+                                        {/* AI Guidance Suggestions Panel */}
+                                        {aiGuidanceSuggestions && aiGuidanceSuggestions.length > 0 && (
+                                            <div className="border border-amber-300 bg-white rounded-xl p-4 space-y-3 mt-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <Sparkles className="w-4 h-4 text-amber-600" />
+                                                        <span className="text-sm font-semibold text-amber-900">
+                                                            AI-förslag ({aiGuidanceSuggestions.length} steg)
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleAcceptAllGuidance}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                                        >
+                                                            <Check className="w-3 h-3" />
+                                                            Acceptera alla
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleDismissGuidanceSuggestions}
+                                                            className="text-zinc-400 hover:text-zinc-600"
+                                                            title="Avvisa förslag"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    {aiGuidanceSuggestions.map((step, i) => (
+                                                        <div key={step.id} className="flex items-start gap-2.5 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                                            <div className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">
+                                                                {i + 1}
+                                                            </div>
+                                                            <p className="flex-1 text-sm text-zinc-700 leading-relaxed">{step.content}</p>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleAcceptGuidanceStep(step)}
+                                                                className="flex-shrink-0 p-1 rounded text-amber-600 hover:bg-amber-100 transition-colors"
+                                                                title="Lägg till detta steg"
+                                                            >
+                                                                <Plus className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <p className="text-[10px] text-amber-600">
+                                                    Klicka + för att lägga till enstaka steg, eller "Acceptera alla" för att ersätta befintliga.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+
                                     {/* Submit */}
                                     <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">
                                         <button
                                             type="button"
-                                            onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); }}
+                                            onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); setAiGuidanceSuggestions(null); }}
                                             className="px-4 py-2 rounded-lg text-zinc-600 hover:bg-zinc-100 text-sm"
                                         >
                                             Avbryt
@@ -1376,6 +1634,12 @@ export default function AdminQuestionsPage() {
                                                     {q.strategyTag && (
                                                         <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                             {q.strategyTag.replace(/_/g, ' ')}
+                                                        </span>
+                                                    )}
+                                                    {Array.isArray(q.guidanceSteps) && q.guidanceSteps.length > 0 && (
+                                                        <span className="px-2 py-0.5 rounded text-[10px] bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-0.5">
+                                                            <Lightbulb className="w-2.5 h-2.5" />
+                                                            {q.guidanceSteps.length} ledtrådar
                                                         </span>
                                                     )}
                                                 </div>

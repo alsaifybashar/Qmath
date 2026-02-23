@@ -12,6 +12,7 @@ import dynamic from 'next/dynamic';
 import 'katex/dist/katex.min.css';
 
 import { FocusedStudyLayout } from '@/components/layout/FocusedStudyLayout';
+import { WorkShowPanel } from '@/components/study/WorkShowPanel';
 import { MultipleChoiceInput } from '@/components/study/MultipleChoiceInput';
 import { GuidedStepSession } from '@/components/study/GuidedStepSession';
 import { FillBlankInput } from '@/components/study/FillBlankInput';
@@ -21,6 +22,7 @@ import { ExpressionBuilderInput } from '@/components/study/ExpressionBuilderInpu
 import { SolutionBuilderInput } from '@/components/study/SolutionBuilderInput';
 import { MinimalHelpPanel } from '@/components/study/MinimalHelpPanel';
 import { HintBubble } from '@/components/study/HintBubble';
+import { GuidancePanel } from '@/components/study/GuidancePanel';
 import { generateHint } from '@/app/actions/hint-engine';
 import type { HintResult } from '@/app/actions/hint-engine';
 import { useStudySession } from '@/lib/hooks/useStudySession';
@@ -528,6 +530,7 @@ function StudyHubContent() {
                             errorType={(feedbackState as any).errorType}
                             attempts={currentAttempt.attempts}
                             correctAnswer={currentAttempt.attempts >= 3 ? String(currentQuestion?.correctAnswer ?? '') : undefined}
+                            guidanceSteps={currentQuestion?.helps?.guidanceSteps}
                             stepBreakdown={currentQuestion?.helps?.stepBreakdown}
                             workedExample={currentQuestion?.helps?.workedExample}
                             onTryAgain={handleTryAgain}
@@ -689,12 +692,13 @@ function CorrectFeedback({
 
 // ── Wrong feedback ────────────────────────────────────────────────────────────
 function WrongFeedback({
-    message, errorType, attempts, correctAnswer, stepBreakdown, workedExample, onTryAgain, onSkip,
+    message, errorType, attempts, correctAnswer, guidanceSteps, stepBreakdown, workedExample, onTryAgain, onSkip,
 }: {
     message: string;
     errorType?: string;
     attempts: number;
     correctAnswer?: string;
+    guidanceSteps?: Array<{ id: string; order: number; content: string }>;
     stepBreakdown?: {
         intro: string;
         steps: Array<{ prompt: string; correctAnswer: string; hint?: string }>;
@@ -707,9 +711,16 @@ function WrongFeedback({
     onTryAgain: () => void;
     onSkip: () => void;
 }) {
-    const [showSolution, setShowSolution] = useState(false);
+    // "show work" panel: starts in checkpoint mode so the student can
+    // immediately enter their intermediate steps after getting it wrong.
+    // Falls back to the full passive solution when requested.
+    const [showFullSolution, setShowFullSolution] = useState(false);
+    // Whether to bypass guidance and jump straight to solution checkpoints
+    const [skipGuidance, setSkipGuidance] = useState(false);
     const label = errorType ? (ERROR_TYPE_LABELS[errorType] ?? 'Inte riktigt') : 'Inte riktigt';
-    const hasSolution = !!(stepBreakdown || workedExample);
+    const hasSteps = !!stepBreakdown?.steps?.length;
+    const hasFallback = !!(stepBreakdown || workedExample);
+    const hasGuidance = !!guidanceSteps?.length && !skipGuidance;
 
     return (
         <motion.div
@@ -780,45 +791,77 @@ function WrongFeedback({
                     </button>
                 </div>
 
-                {/* ── Solution toggle ──────────────────────────────────────── */}
-                {hasSolution && (
-                    <div className="px-5 pb-5">
-                        <button
-                            onClick={() => setShowSolution(prev => !prev)}
-                            className={`w-full py-2.5 px-4 rounded-xl border-2 border-dashed font-medium text-sm transition-all flex items-center justify-center gap-2 ${showSolution
-                                    ? 'border-orange-300 dark:border-orange-500/50 bg-orange-100/60 dark:bg-orange-500/15 text-orange-700 dark:text-orange-300'
-                                    : 'border-orange-200 dark:border-orange-500/30 text-orange-600 dark:text-orange-400 hover:bg-orange-100/50 dark:hover:bg-orange-500/10'
-                                }`}
-                        >
-                            <BookOpen className="w-4 h-4" />
-                            {showSolution ? 'Dölj lösning' : 'Visa steg-för-steg lösning'}
-                            <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${showSolution ? 'rotate-90' : ''}`} />
-                        </button>
+                {/* ── Admin guidance steps (progressive thinking hints) ────── */}
+                {hasGuidance && (
+                    <div className="px-5 pb-4">
+                        <GuidancePanel
+                            steps={guidanceSteps!}
+                            onDone={
+                                hasSteps
+                                    ? () => setSkipGuidance(true)          // → show WorkShowPanel
+                                    : hasFallback
+                                        ? () => { setSkipGuidance(true); setShowFullSolution(true); } // → show passive solution
+                                        : undefined
+                            }
+                            doneLabel={hasSteps ? 'Visa lösningssteg' : hasFallback ? 'Visa full lösning' : undefined}
+                        />
                     </div>
                 )}
 
-                {/* ── Expandable solution panel ────────────────────────────── */}
-                <AnimatePresence>
-                    {showSolution && (
-                        <motion.div
-                            key="solution-panel"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.28, ease: 'easeInOut' }}
-                            className="overflow-hidden"
-                        >
-                            <div className="px-5 pb-6 border-t-2 border-orange-200 dark:border-orange-500/30">
-                                {stepBreakdown
-                                    ? <StepBreakdownView breakdown={stepBreakdown} />
-                                    : workedExample
-                                        ? <WorkedExampleView example={workedExample} />
-                                        : null
-                                }
+                {/* ── Interactive WorkShow panel (replaces the passive toggle) ─ */}
+                {hasSteps && !showFullSolution && (!hasGuidance) && (
+                    <div className="px-5 pb-5">
+                        {/* After the first wrong answer, open directly in checkpoint
+                            mode so the student can immediately enter their work.
+                            On the first attempt (attempts===1) show the softer CTA. */}
+                        <WorkShowPanel
+                            stepBreakdown={stepBreakdown!}
+                            defaultMode={attempts >= 2 ? 'checkpoints' : 'cta'}
+                            accentColor="orange"
+                            onRequestFullSolution={() => setShowFullSolution(true)}
+                        />
+                    </div>
+                )}
+
+                {/* ── Fallback: full passive solution ──────────────────────── */}
+                {hasFallback && (showFullSolution || (!hasSteps && !hasGuidance)) && (
+                    <>
+                        {/* Show toggle only when WorkShowPanel isn't displayed */}
+                        {!showFullSolution && (
+                            <div className="px-5 pb-5">
+                                <button
+                                    onClick={() => setShowFullSolution(true)}
+                                    className="w-full py-2.5 px-4 rounded-xl border-2 border-dashed font-medium text-sm transition-all flex items-center justify-center gap-2 border-orange-200 dark:border-orange-500/30 text-orange-600 dark:text-orange-400 hover:bg-orange-100/50 dark:hover:bg-orange-500/10"
+                                >
+                                    <BookOpen className="w-4 h-4" />
+                                    Visa steg-för-steg lösning
+                                </button>
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        )}
+
+                        <AnimatePresence>
+                            {showFullSolution && (
+                                <motion.div
+                                    key="solution-panel"
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.28, ease: 'easeInOut' }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="px-5 pb-6 border-t-2 border-orange-200 dark:border-orange-500/30">
+                                        {stepBreakdown
+                                            ? <StepBreakdownView breakdown={stepBreakdown} />
+                                            : workedExample
+                                                ? <WorkedExampleView example={workedExample} />
+                                                : null
+                                        }
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </>
+                )}
             </div>
         </motion.div>
     );
@@ -1087,6 +1130,17 @@ function QuestionCard({
                         correctAnswer={question.correctAnswer}
                         onAnswer={(val, isCorrect) => onAnswer(val, isCorrect)}
                     />
+                    {/* Pre-submission work-show CTA — only if the question
+                        has checkpoint data and the student hasn't answered yet */}
+                    {question.helps?.stepBreakdown?.steps?.length > 0 && (
+                        <div className="mt-4">
+                            <WorkShowPanel
+                                stepBreakdown={question.helps.stepBreakdown}
+                                defaultMode="cta"
+                                accentColor="blue"
+                            />
+                        </div>
+                    )}
                 </div>
             );
 

@@ -7,6 +7,7 @@ import {
     ChevronDown, ChevronUp, ArrowRight, Sparkles, Brain
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { MathRenderer } from './MathRenderer';
 import type { ErrorClassification } from '@/app/actions/error-classifier';
 
 const BlockMath = dynamic(
@@ -191,11 +192,23 @@ export function ElaboratedFeedback({
                             <div className="grid grid-cols-2 gap-2 text-sm">
                                 <div className="p-3 bg-red-100/50 dark:bg-red-500/5 rounded-xl">
                                     <div className="text-xs text-red-500 dark:text-red-400 mb-1 font-medium">Ditt svar</div>
-                                    <div className="font-mono text-red-800 dark:text-red-300 break-all">{studentAnswer || '(tomt)'}</div>
+                                    <div className="break-all">
+                                        {studentAnswer ? (
+                                            <MathRenderer text={studentAnswer} className="font-mono text-red-800 dark:text-red-300" />
+                                        ) : (
+                                            <div className="font-mono text-red-800 dark:text-red-300">(tomt)</div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="p-3 bg-green-100/50 dark:bg-green-500/5 rounded-xl">
                                     <div className="text-xs text-green-600 dark:text-green-400 mb-1 font-medium">Rätt svar</div>
-                                    <div className="font-mono text-green-800 dark:text-green-300 break-all">{correctAnswer}</div>
+                                    <div className="break-all">
+                                        {correctAnswer ? (
+                                            <MathRenderer text={correctAnswer} className="font-mono text-green-800 dark:text-green-300" />
+                                        ) : (
+                                            <div className="font-mono text-green-800 dark:text-green-300">(ingen)</div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -206,7 +219,13 @@ export function ElaboratedFeedback({
                                         <BookOpen className="w-3 h-3" />
                                         Lösning
                                     </div>
-                                    <div className="leading-relaxed">{explanationMarkdown}</div>
+                                    <div className="leading-relaxed">
+                                        {typeof explanationMarkdown === 'string' ? (
+                                            <MathRenderer text={explanationMarkdown} />
+                                        ) : (
+                                            explanationMarkdown
+                                        )}
+                                    </div>
                                 </div>
                             )}
 

@@ -35,6 +35,13 @@ interface QuestionWithHelp {
     helps: {
         nudgeHint: string;
         guidedHint: string;
+        /** Admin-authored guidance steps shown progressively after a wrong answer.
+         *  These guide the student's THINKING without revealing the answer. */
+        guidanceSteps?: Array<{
+            id: string;
+            order: number;
+            content: string;
+        }>;
         stepBreakdown?: {
             intro: string;
             steps: Array<{

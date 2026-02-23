@@ -1,6 +1,6 @@
 'use server';
 
-import Anthropic from '@anthropic-ai/sdk';
+import { callOllama } from '@/lib/ollama';
 import { db } from '@/db/drizzle';
 import { misconceptions } from '@/db/schema';
 
@@ -80,16 +80,8 @@ export async function classifyError(request: ClassifyRequest): Promise<ErrorClas
         return cached.result;
     }
 
-    // --- 3. Check API key ---
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-        return getFallbackClassification(correctAnswer, studentAnswer);
-    }
-
-    // --- 4. Call Claude ---
+    // --- 4. Call Ollama ---
     try {
-        const anthropic = new Anthropic({ apiKey });
-
         const contextParts: string[] = [];
         if (questionMath) contextParts.push(`Math: ${questionMath}`);
         if (conceptsTested?.length) contextParts.push(`Concepts: ${conceptsTested.join(', ')}`);
@@ -118,17 +110,17 @@ Return JSON only (feedback MUST be in Swedish):
 }`;
 
         const startTime = Date.now();
-        const message = await anthropic.messages.create({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 200,
+        const raw = await callOllama({
+            messages: [
+                { role: 'system', content: 'Du är en kortfattad klassificerare av matematikfel. Returnera endast JSON. Var vänlig men specifik i återkopplingen. Svara alltid på svenska — feedback-fältet ska vara på svenska.' },
+                { role: 'user', content: prompt },
+            ],
+            maxTokens: 200,
             temperature: 0.2,
-            system: 'Du är en kortfattad klassificerare av matematikfel. Returnera endast JSON. Var vänlig men specifik i återkopplingen. Svara alltid på svenska — feedback-fältet ska vara på svenska.',
-            messages: [{ role: 'user', content: prompt }],
         });
 
         const elapsed = Date.now() - startTime;
-        const raw = message.content[0].type === 'text' ? message.content[0].text : '';
-        console.log(`[ErrorClassifier] Claude responded in ${elapsed}ms (${message.usage.input_tokens}+${message.usage.output_tokens} tokens)`);
+        console.log(`[ErrorClassifier] Ollama responded in ${elapsed}ms`);
 
         const parsed = parseClassificationJson(raw);
         if (parsed) {

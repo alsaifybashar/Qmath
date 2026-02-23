@@ -1,6 +1,6 @@
 'use server';
 
-import Anthropic from '@anthropic-ai/sdk';
+import { callOllama } from '@/lib/ollama';
 
 // ============ TYPES ============
 
@@ -79,17 +79,8 @@ export async function generateHint(request: HintRequest): Promise<HintResult> {
         return cached.result;
     }
 
-    // --- 3. Check API key ---
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-        console.warn('[Hint] No API key, returning fallback hint');
-        return getFallbackHint(hintLevel, relatedFormulas);
-    }
-
-    // --- 4. Call Claude with focused micro-prompt ---
+    // --- 4. Call Ollama with focused micro-prompt ---
     try {
-        const anthropic = new Anthropic({ apiKey });
-
         const levelInstructions = {
             1: `Ge en försiktig konceptuell knuff — EN mening. Avslöja INTE svaret eller metoden. Peka bara studentens tankegång i rätt riktning. Exempel: "Har du tänkt på vad som händer geometriskt här?"`,
             2: `Visa den relevanta formeln eller satsen. Ange den tydligt med dess namn. Ge sedan EN mening om hur den gäller här. LÖS INTE uppgiften.`,
@@ -120,17 +111,17 @@ Respond with ONLY a JSON object (no markdown):
 }`;
 
         const startTime = Date.now();
-        const message = await anthropic.messages.create({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 200,
+        const raw = await callOllama({
+            messages: [
+                { role: 'system', content: 'Du är en kortfattad mattehandledare. Svara med JSON endast. Håll ledtrådar korta och naturliga — säg aldrig "AI" eller "jag", tala som plattformen. Svara alltid på svenska.' },
+                { role: 'user', content: prompt },
+            ],
+            maxTokens: 200,
             temperature: 0.3,
-            system: 'Du är en kortfattad mattehandledare. Svara med JSON endast. Håll ledtrådar korta och naturliga — säg aldrig "AI" eller "jag", tala som plattformen. Svara alltid på svenska.',
-            messages: [{ role: 'user', content: prompt }],
         });
 
         const elapsed = Date.now() - startTime;
-        const raw = message.content[0].type === 'text' ? message.content[0].text : '';
-        console.log(`[Hint] Claude responded in ${elapsed}ms (${message.usage.input_tokens}+${message.usage.output_tokens} tokens)`);
+        console.log(`[Hint] Ollama responded in ${elapsed}ms`);
 
         // Parse response
         const parsed = parseHintJson(raw);

@@ -6,6 +6,7 @@ import {
     Lightbulb, BookOpen, ListOrdered, FileText, Bot,
     ChevronRight, CheckCircle, XCircle, RefreshCw
 } from 'lucide-react';
+import { MathRenderer } from '../MathRenderer';
 
 interface HelpPanelProps {
     nudgeHint?: string;
@@ -239,9 +240,9 @@ function HintCard({ level, title, content, icon }: HintCardProps) {
                     <h4 className="font-semibold text-sm text-amber-900 dark:text-amber-100 mb-1">
                         {title}
                     </h4>
-                    <p className="text-sm text-amber-800 dark:text-amber-200">
-                        {content}
-                    </p>
+                    <div className="text-sm text-amber-800 dark:text-amber-200">
+                        <MathRenderer text={content} />
+                    </div>
                 </div>
             </div>
         </motion.div>
@@ -302,9 +303,9 @@ function StepBreakdownPanel({ breakdown, onClose }: StepBreakdownPanelProps) {
                             ✕
                         </button>
                     </div>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
-                        {breakdown.intro}
-                    </p>
+                    <div className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
+                        <MathRenderer text={breakdown.intro} />
+                    </div>
                 </div>
 
                 <div className="p-6 space-y-4">
@@ -322,7 +323,7 @@ function StepBreakdownPanel({ breakdown, onClose }: StepBreakdownPanelProps) {
                                 <span className="w-6 h-6 rounded-full bg-violet-500 text-white text-xs font-bold flex items-center justify-center">
                                     {index + 1}
                                 </span>
-                                <span className="font-medium">{step.prompt}</span>
+                                <span className="font-medium"><MathRenderer text={step.prompt} /></span>
                                 {stepResults[index] === true && (
                                     <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />
                                 )}
@@ -358,7 +359,7 @@ function StepBreakdownPanel({ breakdown, onClose }: StepBreakdownPanelProps) {
                         >
                             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                                 <CheckCircle className="w-5 h-5" />
-                                <span className="font-semibold">{breakdown.conclusion}</span>
+                                <span className="font-semibold"><MathRenderer text={breakdown.conclusion} /></span>
                             </div>
                         </motion.div>
                     )}
@@ -405,9 +406,9 @@ function WorkedExamplePanel({ example, onClose }: WorkedExamplePanelProps) {
                             ✕
                         </button>
                     </div>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
-                        Similar problem: <span className="font-medium">{example.similarQuestion}</span>
-                    </p>
+                    <div className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
+                        Similar problem: <span className="font-medium"><MathRenderer text={example.similarQuestion} /></span>
+                    </div>
                 </div>
 
                 <div className="p-6 space-y-4">
@@ -431,15 +432,13 @@ function WorkedExamplePanel({ example, onClose }: WorkedExamplePanelProps) {
                                 </span>
                                 <div className="flex-1">
                                     <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                                        {step.action}
+                                        <MathRenderer text={step.action} />
                                     </p>
-                                    <p className="font-mono text-lg mt-1 text-zinc-900 dark:text-white">
-                                        {step.result}
-                                    </p>
+                                    <div className="font-mono text-lg mt-1 text-zinc-900 dark:text-white">
+                                        <MathRenderer text={step.result} />
+                                    </div>
                                     {step.explanation && index <= currentStep && (
-                                        <p className="text-xs text-zinc-500 mt-2 italic">
-                                            💡 {step.explanation}
-                                        </p>
+                                        <div className="text-xs text-zinc-500 mt-2 italic">💡 <MathRenderer text={step.explanation} /></div>
                                     )}
                                 </div>
                             </div>

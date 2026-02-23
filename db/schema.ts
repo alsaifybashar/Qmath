@@ -163,6 +163,12 @@ export const questions = sqliteTable('questions', {
     aiDifficultyTier: integer('ai_difficulty_tier'),       // AI's estimated difficulty (1-5)
     aiAnalysis: text('ai_analysis', { mode: 'json' }),     // Full AI analysis JSON blob
     aiAnalyzedAt: integer('ai_analyzed_at', { mode: 'timestamp' }),
+    // Admin-authored guidance steps shown to students after a wrong answer
+    // Shape: Array<{ id: string; order: number; content: string }>
+    guidanceSteps: text('guidance_steps', { mode: 'json' }),
+    // Admin-authored sub-questions (interactive checkpoints expecting a specific value/equation)
+    // Shape: Array<{ id: string; order: number; prompt: string; correctAnswer: string }>
+    subQuestions: text('sub_questions', { mode: 'json' }),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 

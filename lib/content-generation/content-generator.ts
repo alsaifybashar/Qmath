@@ -9,7 +9,7 @@ import { db } from '@/db/drizzle';
 import { topics } from '@/db/schema';
 import { generatedContent } from '@/db/content-schema';
 import { eq } from 'drizzle-orm';
-import Anthropic from '@anthropic-ai/sdk';
+import { callOllama } from '@/lib/ollama';
 import type {
     GenerationRequest,
     GenerationResult,
@@ -28,17 +28,9 @@ import {
 
 export class ContentGenerator {
     private aiProvider: string;
-    private anthropic: Anthropic | null = null;
 
-    constructor(aiProvider: string = 'anthropic') {
+    constructor(aiProvider: string = 'ollama') {
         this.aiProvider = aiProvider;
-
-        // Initialize Anthropic client if API key is available
-        if (aiProvider === 'anthropic' && process.env.ANTHROPIC_API_KEY) {
-            this.anthropic = new Anthropic({
-                apiKey: process.env.ANTHROPIC_API_KEY,
-            });
-        }
     }
 
     /**
@@ -131,42 +123,31 @@ TARGET DIFFICULTY: ${request.difficulty ?? 0.5}
             return this.getMockContent(contentType);
         }
 
-        // Anthropic Claude integration
-        if (this.aiProvider === 'anthropic') {
-            if (!this.anthropic) {
-                console.warn('Anthropic API key not configured, falling back to mock');
-                return this.getMockContent(contentType);
-            }
-
+        // Ollama local model integration
+        if (this.aiProvider === 'ollama') {
             try {
-                const response = await this.anthropic.messages.create({
-                    model: 'claude-sonnet-4-20250514',
-                    max_tokens: 2048,
+                const raw = await callOllama({
                     messages: [
+                        {
+                            role: 'system',
+                            content: 'You are an expert mathematics educator creating content for Swedish university engineering students. Always respond with valid JSON only, no markdown code blocks or additional text.',
+                        },
                         {
                             role: 'user',
                             content: prompt + '\n\nRespond with ONLY the JSON object, no additional text or markdown.',
                         },
                     ],
-                    system: 'You are an expert mathematics educator creating content for Swedish university engineering students. Always respond with valid JSON only, no markdown code blocks or additional text.',
+                    maxTokens: 2048,
+                    temperature: 0.3,
+                    timeoutMs: 90_000,
                 });
 
-                // Extract text content from response
-                const textBlock = response.content.find(block => block.type === 'text');
-                if (!textBlock || textBlock.type !== 'text') {
-                    throw new Error('No text response from Claude');
-                }
-
-                // Parse JSON response
-                const jsonText = textBlock.text.trim();
-                // Remove any markdown code blocks if present
-                const cleanJson = jsonText.replace(/^```json\n?|\n?```$/g, '').trim();
-
+                // Strip markdown code fences if the model added them
+                const cleanJson = raw.replace(/^```json\n?|\n?```$/g, '').trim();
                 return JSON.parse(cleanJson);
             } catch (error) {
-                console.error('Anthropic API error:', error);
-                // Fall back to mock content on error
-                console.warn('Falling back to mock content due to API error');
+                console.error('Ollama API error:', error);
+                console.warn('Falling back to mock content due to Ollama error');
                 return this.getMockContent(contentType);
             }
         }
@@ -250,4 +231,4 @@ TARGET DIFFICULTY: ${request.difficulty ?? 0.5}
 }
 
 // Export singleton instance
-export const contentGenerator = new ContentGenerator(process.env.AI_PROVIDER || 'anthropic');
+export const contentGenerator = new ContentGenerator(process.env.AI_PROVIDER || 'ollama');

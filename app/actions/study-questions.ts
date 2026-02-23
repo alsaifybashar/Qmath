@@ -1,5 +1,6 @@
 'use server';
 
+import crypto from 'crypto';
 import { db } from '@/db/drizzle';
 import { questions, topics, courses } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
@@ -20,13 +21,17 @@ function parseExplanationMarkdown(
 ): QuestionWithHelp['helps']['stepBreakdown'] {
     if (!markdown?.trim()) return undefined;
 
-    const steps: Array<{ prompt: string; correctAnswer: string }> = [];
+    const steps: Array<{ prompt: string; correctAnswer: string; hint?: string }> = [];
     const stepRegex = /###\s+(.+?)\n([\s\S]*?)(?=###\s|\s*$)/g;
     let match: RegExpExecArray | null;
 
     while ((match = stepRegex.exec(markdown)) !== null) {
-        const content = match[2].trim();
-        if (content) steps.push({ prompt: match[1].trim(), correctAnswer: content });
+        const rawContent = match[2].trim();
+        const answerMatch = rawContent.match(/^ANSWER:\s*(.+)\n?/);
+        const correctAnswer = answerMatch ? answerMatch[1].trim() : rawContent;
+        // Keep the full explanation (without the ANSWER: line) as hint — shown only in solution view
+        const hint = answerMatch ? rawContent.replace(/^ANSWER:\s*.+\n?/, '').trim() || undefined : undefined;
+        if (correctAnswer) steps.push({ prompt: match[1].trim(), correctAnswer, hint });
     }
 
     // Fallback: no ### headers found — treat entire text as one step
@@ -47,6 +52,7 @@ function mapDbQuestion(q: {
     options: unknown;
     difficultyTier: number | null;
     aiAnalysis: unknown;
+    guidanceSteps: unknown;
 }): QuestionWithHelp {
     const aiAnalysis = (q.aiAnalysis as Record<string, any>) ?? {};
     const hints: string[] = Array.isArray(aiAnalysis.suggestedHints)
@@ -88,6 +94,17 @@ function mapDbQuestion(q: {
         };
     }
 
+    // Parse admin-authored guidance steps (progressive thinking hints, no answers)
+    const rawGuidanceSteps = Array.isArray(q.guidanceSteps) ? q.guidanceSteps : [];
+    const guidanceSteps = rawGuidanceSteps
+        .filter((s: any) => s && typeof s.content === 'string' && s.content.trim())
+        .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+        .map((s: any) => ({
+            id: String(s.id ?? crypto.randomUUID()),
+            order: Number(s.order ?? 0),
+            content: String(s.content),
+        }));
+
     return {
         id: q.id,
         type,
@@ -100,6 +117,7 @@ function mapDbQuestion(q: {
                 hints[0] ?? 'Fundera på vilken metod som passar bäst för den här typen av uppgift.',
             guidedHint:
                 hints[1] ?? 'Titta på definitionen och försök applicera den steg för steg.',
+            guidanceSteps: guidanceSteps.length > 0 ? guidanceSteps : undefined,
             stepBreakdown: parseExplanationMarkdown(q.explanationMarkdown),
             relatedFormulas: [],
             relatedTopics: [],

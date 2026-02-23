@@ -90,15 +90,13 @@ export interface AIExamAnalysisResult {
 
 interface CacheEntry {
     data: StudyPlanResult;
-    expiresAt: number;
 }
 
 interface ExamAnalysisCacheEntry {
     data: AIExamAnalysisResult;
-    expiresAt: number;
 }
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+// No TTL — cache lives until invalidated by a new exam upload
 const studyPlanCache = new Map<string, CacheEntry>();
 const examAnalysisCache = new Map<string, ExamAnalysisCacheEntry>();
 
@@ -203,7 +201,14 @@ export async function invalidateExamAnalysisCache(courseCode: string): Promise<v
             }
         }
 
-        console.log(`[AI] 🗑️  Cache invalidated for ${courseCode} (DB + memory)`);
+        // Clear legacy study plan cache for this course too
+        for (const key of studyPlanCache.keys()) {
+            if (key.startsWith(`study-plan:${courseCode}:`)) {
+                studyPlanCache.delete(key);
+            }
+        }
+
+        console.log(`[AI] 🗑️  Cache invalidated for ${courseCode} (DB + memory + study plans)`);
     } catch (err) {
         console.warn('[AI] Cache invalidation error (non-fatal):', err);
     }
@@ -244,7 +249,7 @@ export async function generateExamAnalysis(
     const fingerprint = computeExamFingerprint(examData);
     const cacheKey = getExamAnalysisCacheKey(courseCode, fingerprint);
     const memCached = examAnalysisCache.get(cacheKey);
-    if (memCached && memCached.expiresAt > Date.now()) {
+    if (memCached) {
         console.log(`[AI] ⚡ L1 memory cache HIT for ${courseCode}`);
         return { ...memCached.data, cached: true };
     }
@@ -256,7 +261,6 @@ export async function generateExamAnalysis(
         // Promote to L1 so subsequent requests in this process are instant
         examAnalysisCache.set(cacheKey, {
             data: dbCached,
-            expiresAt: Date.now() + CACHE_TTL_MS,
         });
         return dbCached;
     }
@@ -409,7 +413,6 @@ Svara alltid på svenska — alla ämnesnamn (topics.name), studyTips, commonMis
         // --- Write to L1 in-memory cache ---
         examAnalysisCache.set(cacheKey, {
             data: result,
-            expiresAt: Date.now() + CACHE_TTL_MS,
         });
         console.log(`[AI] 💾 L1 memory cache written for ${courseCode}`);
 
@@ -444,7 +447,7 @@ export async function generateStudyPlan(
     const cacheKey = getCacheKey(courseCode, fingerprint);
     const cached = studyPlanCache.get(cacheKey);
 
-    if (cached && cached.expiresAt > Date.now()) {
+    if (cached) {
         console.log(`[AI] ⚡ Cache HIT for ${courseCode}`);
         return { ...cached.data, cached: true };
     }
@@ -575,9 +578,8 @@ Return ONLY raw JSON (no markdown, no code fences):
         // --- 7. Cache ---
         studyPlanCache.set(cacheKey, {
             data: result,
-            expiresAt: Date.now() + CACHE_TTL_MS,
         });
-        console.log(`[AI] 💾 Cached for 24h (key: ${cacheKey})`);
+        console.log(`[AI] 💾 Cached until invalidated (key: ${cacheKey})`);
 
         return result;
 

@@ -120,6 +120,7 @@ export async function createQuestion(data: {
     options?: any;
     explanationMarkdown?: string;
     difficultyTier: number;
+    guidanceSteps?: any;
 }) {
     try {
         await checkAdmin();
@@ -132,6 +133,7 @@ export async function createQuestion(data: {
             options: data.options,
             explanationMarkdown: data.explanationMarkdown,
             difficultyTier: data.difficultyTier,
+            guidanceSteps: data.guidanceSteps ?? null,
             status: 'draft',
             isPublished: false,
         });
@@ -153,6 +155,7 @@ export async function updateQuestion(id: string, data: Partial<{
     options: any;
     explanationMarkdown: string;
     difficultyTier: number;
+    guidanceSteps: any;
 }>) {
     try {
         await checkAdmin();
