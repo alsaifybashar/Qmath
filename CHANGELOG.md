@@ -4,7 +4,107 @@ All notable changes to Qmath are documented here.
 
 ---
 
-## [Unreleased] — Admin Questions Wired to Student Study Flow
+## [Unreleased] — Design Principles Implementation (Phase 1)
+
+### Summary
+Implemented the core UX/UI design principles from `design_principer.md`. This phase introduces AI-driven study prioritisation, a stress-conscious exam readiness gauge, an expanded error-reflection system, and enhanced study-habit analytics — all without alarming visual language or social comparison.
+
+---
+
+### What Changed
+
+#### New Component — `components/dashboard/StudyIntelligencePanel.tsx`
+
+A new panel replacing generic "AI recommendations" with a structured, priority-ranked study action list:
+
+- **Smart next action** — dark card highlighting the single highest-impact topic to study now, showing expected % improvement and estimated minutes.
+- **Priority list** — up to 6 topics ranked by urgency (1–5), with colour-coded urgency badges (amber/green, no alarming red for low urgency), course code, and reason.
+- **Plan status banner** — `Du är före planen` / `Du ligger i fas` / `Lite efter planen` with soft gradient backgrounds (no alarm colours).
+- **AI focus recommendation** — collapsible AI-generated text tailored to the student's profile.
+- **Optimised time distribution** — stacked bar showing recommended study minutes per enrolled course.
+
+All data is computed server-side from existing `masteryData` — no extra DB queries required.
+
+#### Rewritten Component — `components/dashboard/ExamReadinessBar.tsx`
+
+Replaced the linear progress bar with a circular ring gauge and a 4-stage progression system:
+
+- **SVG ring gauge** — animated `strokeDashoffset` ring showing readiness % with stage-appropriate colour (slate → amber → blue → green; never alarming red).
+- **Stage progression** (`Grund → God → Stabil → Redo`) — dot-and-line indicator below the ring showing current stage.
+- **Stats grid** — estimated grade, pass probability, and questions this week in 3 tiles.
+- **Expandable topic breakdown** — collapsible section with weakest/strongest topic lists and per-topic mastery mini-bars with trend icons.
+- Pass probability capped at 99% — avoids false certainty.
+
+#### Enhanced Component — `components/dashboard/ErrorAnalysis.tsx`
+
+Added deep-reflection features to the error analysis view:
+
+- **Expandable error-type rows** — clicking any error type reveals:
+  - **3 micro-questions** (e.g. *"Kan du förklara definitionen med egna ord?"*) to prompt active recall.
+  - **Concept sub-tree** — tagged chips linking the error type to specific sub-concepts (e.g. `Definitioner`, `Satser & bevis` for conceptual errors).
+- **Stress-conscious insight card** — warm amber/yellow styling instead of red; constructive phrasing (never "you failed").
+- **Fixed Recharts formatter** — `Tooltip formatter` typed as `(v: number | undefined)` to satisfy `Formatter<number, string>` constraint (lint ID `bbff8c20`).
+
+#### Enhanced Component — `components/dashboard/StreakTracker.tsx`
+
+Extended the stats section with two optional new tiles (rendered only when data is provided):
+
+- **Efficiency score** (`efficiencyScore?: number`) — displays "rätt/min" metric in orange.
+- **Weekday mini heatmap** (`weekdayPerformance?: number[]`) — 7-column bar chart (Mån–Sön) highlighting the best study day.
+- **Fixed pre-existing ESLint violations** — `ConfettiParticle` `Math.random()` calls moved to deterministic props (`colorIndex`, `x`, `yExtra`) to satisfy `react-hooks/purity` rule.
+
+#### Updated Page — `app/(dashboard)/dashboard/page.tsx`
+
+- Imported `StudyIntelligencePanel` and `StudyAction` type.
+- Computed `studyActions`, `avgMasteryGain`, `timeDistribution`, and `planStatus` from existing server-side mastery data.
+- Rendered `StudyIntelligencePanel` between Row 1 (AI recommendation) and Row 2 (active courses).
+
+#### Enhanced Page — `app/(dashboard)/exam-sim/page.tsx`
+
+- **Förhandsprognos banner** added to `ConfigScreen` — shows estimated score range before the student starts (e.g. *"Du skulle få ca 62–74% idag"*) using a soft indigo gradient.
+- **AI action plan** replaces the amber "Improvements" section in `ResultsScreen` — numbered steps on a dark card with a "Implementera planen…" footer note.
+
+---
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `components/dashboard/ExamReadinessBar.tsx` | Full rewrite — circular ring gauge, stage indicator, pass probability |
+| `components/dashboard/ErrorAnalysis.tsx` | Expandable error rows with micro-questions and concept trees |
+| `components/dashboard/StreakTracker.tsx` | Added efficiency score + weekday heatmap tiles; fixed ConfettiParticle purity |
+| `app/(dashboard)/dashboard/page.tsx` | StudyIntelligencePanel integration with server-computed priority data |
+| `app/(dashboard)/exam-sim/page.tsx` | Förhandsprognos banner + dark AI action plan card |
+
+### Files Added
+
+| File | Purpose |
+|---|---|
+| `components/dashboard/StudyIntelligencePanel.tsx` | New AI-driven study prioritisation panel |
+
+---
+
+### Design Principles Applied
+
+| Principle (from `design_principer.md`) | Implementation |
+|---|---|
+| Reduce uncertainty and stress | Circular readiness ring with stage names instead of raw %; no alarming red |
+| Action-based UX | "Din smartaste nästa åtgärd" dark card as primary CTA |
+| Avoid social comparison | No class average, no ranking, no percentile |
+| Stress-aware colouring | Slate/amber/blue/green palette — red reserved only for critical system errors |
+| Minimise cognitive load | Priority list capped at 6 items; collapsible AI recommendation |
+| Save time | Time distribution bar shows optimal minutes per course |
+| Control | Plan status banner tells student exactly where they stand |
+
+---
+
+### Security Notes (Agent B — No new endpoints or auth surface)
+
+All new components are client-side presentational only. Data is derived server-side from existing authenticated queries in `dashboard/page.tsx`. No new API routes, server actions, or DB queries were added in this phase. Pre-existing security posture is unchanged.
+
+---
+
+
 
 ### Summary
 Admin-published questions are now the **sole source** of questions in the student study session. When a student opens `/study?topic=<id>`, the app fetches all questions with `isPublished = true` for that topic from the database and serves them through the existing adaptive-engine session. Hardcoded mock/demo questions have been removed entirely.

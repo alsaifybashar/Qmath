@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, ChevronLeft, ChevronRight, Flag, CheckCircle, AlertTriangle, Play, Timer, BookOpen, Zap, ArrowRight } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { Clock, ChevronLeft, ChevronRight, Flag, CheckCircle, Play, Timer, BookOpen, Zap, ArrowRight, TrendingUp, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { generateExamSimulation, generateExamBreakdown } from '@/app/actions/exam-sim';
-import type { ExamSimulation, SimAnswer, ExamResult, SimQuestion, ExamSimConfig } from '@/app/actions/exam-sim';
+import type { ExamSimulation, SimAnswer, ExamResult, ExamSimConfig } from '@/app/actions/exam-sim';
 
 // ============ CONFIG SCREEN ============
 
@@ -33,7 +33,7 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                 animate={{ opacity: 1, scale: 1 }}
                 className="max-w-lg w-full bg-white dark:bg-zinc-900 rounded-3xl p-8 shadow-xl border border-zinc-200 dark:border-zinc-800"
             >
-                <div className="text-center mb-8">
+                <div className="text-center mb-6">
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center mx-auto mb-4">
                         <Timer className="w-8 h-8 text-white" />
                     </div>
@@ -42,6 +42,24 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                         Öva under verkliga tentamensvillkor med tidsbegränsade, kursspecifika frågor.
                     </p>
                 </div>
+
+                {/* Förhandsprognos banner */}
+                <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl mb-6 text-sm"
+                    style={{ background: 'linear-gradient(90deg,#4361EE12,#6366F112)', border: '1px solid #4361EE30' }}
+                >
+                    <TrendingUp className="w-5 h-5 flex-shrink-0" style={{ color: '#4361EE' }} />
+                    <div>
+                        <span className="font-semibold" style={{ color: '#4361EE' }}>Förhandsprognos: </span>
+                        <span className="text-zinc-500 dark:text-zinc-400">
+                            Baserat på din nuvarande bemästringsnivå skulle du få ca{' '}
+                            <strong style={{ color: '#4361EE' }}>62–74%</strong> idag.
+                            Slutför simuleringen för en exakt analys.
+                        </span>
+                    </div>
+                </motion.div>
 
                 <div className="space-y-6">
                     {/* Course ID */}
@@ -478,23 +496,43 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                     </div>
                 </motion.div>
 
-                {/* Improvements */}
+                {/* AI-genererad åtgärdsplan */}
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 rounded-2xl p-6 border border-amber-200 dark:border-amber-800/30 mb-6"
+                    className="rounded-2xl p-6 mb-6 overflow-hidden relative"
+                    style={{ background: 'linear-gradient(135deg,#1A1D2E 0%,#2A2F4A 100%)' }}
                 >
-                    <h3 className="text-base font-semibold text-amber-900 dark:text-amber-300 mb-4 flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5 text-amber-600" />
-                        Områden att förbättra
-                    </h3>
-                    <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'rgba(99,102,241,0.2)' }}
+                        >
+                            <Sparkles className="w-4 h-4 text-indigo-300" />
+                        </div>
+                        <h3 className="text-base font-semibold text-white">
+                            AI-genererad åtgärdsplan
+                        </h3>
+                    </div>
+                    <div className="space-y-2.5">
                         {result.improvements.map((imp, i) => (
-                            <p key={i} className="text-sm text-amber-800 dark:text-amber-400">
-                                • {imp}
-                            </p>
+                            <div key={i} className="flex items-start gap-3">
+                                <div
+                                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5"
+                                    style={{ background: 'rgba(99,102,241,0.3)', color: '#a5b4fc' }}
+                                >
+                                    {i + 1}
+                                </div>
+                                <p className="text-sm leading-relaxed" style={{ color: '#CBD5E1' }}>
+                                    {imp}
+                                </p>
+                            </div>
                         ))}
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-xs" style={{ color: '#64748B' }}>
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        Implementera planen för att öka din sannolikhet att klara tentan
                     </div>
                 </motion.div>
 

@@ -10,6 +10,10 @@ export interface StreakData {
     freezeDaysAvailable: number;
     freezeDaysUsed: number;
     totalStudyDays: number;
+    /** Correct answers per minute — optional */
+    efficiencyScore?: number;
+    /** Performance score 0-100 per weekday index (0=Mon … 6=Sun) */
+    weekdayPerformance?: number[];
 }
 
 interface StreakTrackerProps {
@@ -55,18 +59,17 @@ function AnimatedFlame({ size = 'normal' }: { size?: 'small' | 'normal' | 'large
 }
 
 // Confetti particle for celebrations
-function ConfettiParticle({ delay }: { delay: number }) {
+function ConfettiParticle({ delay, colorIndex, x, yExtra }: { delay: number; colorIndex: number; x: number; yExtra: number }) {
     const colors = ['bg-orange-400', 'bg-red-400', 'bg-yellow-400', 'bg-pink-400'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    const randomX = Math.random() * 100 - 50;
+    const randomColor = colors[colorIndex % colors.length];
 
     return (
         <motion.div
             className={`absolute w-2 h-2 ${randomColor} rounded-full`}
             initial={{ y: 0, x: 0, opacity: 1, scale: 0 }}
             animate={{
-                y: -100 - Math.random() * 50,
-                x: randomX,
+                y: -100 - yExtra,
+                x,
                 opacity: 0,
                 scale: 1,
                 rotate: 360
@@ -114,7 +117,13 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
                 {showCelebration && (
                     <div className="absolute top-1/2 left-1/2">
                         {[...Array(12)].map((_, i) => (
-                            <ConfettiParticle key={i} delay={i * 0.05} />
+                            <ConfettiParticle
+                                key={i}
+                                delay={i * 0.05}
+                                colorIndex={i}
+                                x={(i % 4) * 25 - 37}
+                                yExtra={i * 5}
+                            />
                         ))}
                     </div>
                 )}
@@ -225,7 +234,7 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
                 ))}
             </div>
 
-            {/* Stats Row */}
+            {/* Stats Row — 2×2 grid */}
             <div className="grid grid-cols-2 gap-3">
                 <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -241,6 +250,53 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
                     <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 font-medium">📅 Totalt antal dagar</div>
                     <div className="text-2xl font-bold text-zinc-900 dark:text-white">{streakData.totalStudyDays}</div>
                 </motion.div>
+
+                {/* Efficiency score */}
+                {streakData.efficiencyScore !== undefined && (
+                    <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-zinc-200/50 dark:border-zinc-700/50"
+                    >
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 font-medium">⚡ Effektivitetspoäng</div>
+                        <div className="text-2xl font-bold text-orange-500">
+                            {streakData.efficiencyScore.toFixed(1)}
+                            <span className="text-sm font-normal text-zinc-500 ml-1">rätt/min</span>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Weekday mini heatmap */}
+                {streakData.weekdayPerformance && streakData.weekdayPerformance.length === 7 && (
+                    <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        className="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-xl p-4 border border-zinc-200/50 dark:border-zinc-700/50"
+                    >
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-2 font-medium">📆 Bästa studiedag</div>
+                        <div className="flex gap-1 items-end">
+                            {(['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'] as const).map((label, i) => {
+                                const val = streakData.weekdayPerformance![i];
+                                const maxVal = Math.max(...streakData.weekdayPerformance!, 1);
+                                const h = Math.max(6, Math.round((val / maxVal) * 32));
+                                const isMax = val === maxVal && val > 0;
+                                return (
+                                    <div key={label} className="flex flex-col items-center gap-1 flex-1">
+                                        <div
+                                            className="w-full rounded-sm transition-all"
+                                            style={{
+                                                height: h,
+                                                background: isMax
+                                                    ? 'linear-gradient(180deg,#f97316,#ea580c)'
+                                                    : val > 0 ? 'rgba(249,115,22,0.35)' : '#f4f4f5',
+                                            }}
+                                            title={`${label}: ${val} poäng`}
+                                        />
+                                        <span className="text-[9px] text-zinc-400">{label[0]}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                )}
             </div>
 
             {/* Freeze Days */}
