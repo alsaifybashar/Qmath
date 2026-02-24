@@ -22,7 +22,6 @@ import { ExpressionBuilderInput } from '@/components/study/ExpressionBuilderInpu
 import { SolutionBuilderInput } from '@/components/study/SolutionBuilderInput';
 import { MinimalHelpPanel } from '@/components/study/MinimalHelpPanel';
 import { HintBubble } from '@/components/study/HintBubble';
-import { GuidancePanel } from '@/components/study/GuidancePanel';
 import { generateHint } from '@/app/actions/hint-engine';
 import type { HintResult } from '@/app/actions/hint-engine';
 import { useStudySession } from '@/lib/hooks/useStudySession';
@@ -39,14 +38,6 @@ const MOTIVATIONAL_MESSAGES = [
     'Lysande!', 'Rätt på pricken!',
 ];
 
-const ERROR_TYPE_LABELS: Record<string, string> = {
-    conceptual: 'Konceptkoll',
-    computational: 'Beräkningsfel',
-    notation: 'Notationsproblem',
-    interpretation: 'Läs uppgiften igen',
-    incomplete: 'Nästan där',
-    time_pressure: 'Ta din tid',
-};
 
 // ── Dynamic imports ────────────────────────────────────────────────────────────
 const BlockMath = dynamic(
@@ -89,10 +80,10 @@ function SimpleNumericInput({
                     disabled={isSubmitted}
                     placeholder="Skriv ditt svar…"
                     className={`flex-1 px-4 py-3.5 text-lg font-mono rounded-xl border-2 transition-all focus:outline-none ${isSubmitted
-                            ? isCorrect
-                                ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                                : 'border-orange-400 bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300'
-                            : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-blue-400 dark:focus:border-blue-500 placeholder:text-zinc-400 dark:placeholder:text-zinc-500'
+                        ? isCorrect
+                            ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                            : 'border-orange-400 bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300'
+                        : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-blue-400 dark:focus:border-blue-500 placeholder:text-zinc-400 dark:placeholder:text-zinc-500'
                         }`}
                 />
                 <button
@@ -375,8 +366,8 @@ function StudyHubContent() {
                         animate={{ scale: 1, rotate: 0 }}
                         transition={{ type: 'spring', delay: 0.15, damping: 10, stiffness: 200 }}
                         className={`w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl ${isPerfect
-                                ? 'bg-gradient-to-br from-amber-400 to-orange-500'
-                                : 'bg-gradient-to-br from-blue-500 to-violet-600'
+                            ? 'bg-gradient-to-br from-amber-400 to-orange-500'
+                            : 'bg-gradient-to-br from-blue-500 to-violet-600'
                             }`}
                     >
                         <Trophy className="w-12 h-12 text-white" />
@@ -488,9 +479,10 @@ function StudyHubContent() {
             xpEarned={sessionProgress.xpEarned}
             streak={streak}
         >
+            {/* ── Full-width single-column stack ───────────────────────────── */}
             <div className="space-y-6">
 
-                {/* ── Question card ─────────────────────────────────────────── */}
+                {/* Question card */}
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={`${currentQuestion?.id}-${attemptKey}`}
@@ -512,25 +504,22 @@ function StudyHubContent() {
                     </motion.div>
                 </AnimatePresence>
 
-                {/* ── Feedback ──────────────────────────────────────────────── */}
-                <AnimatePresence>
+                {/* Feedback */}
+                <AnimatePresence mode="wait">
                     {feedbackState.isShowing && feedbackState.isCorrect && (
                         <CorrectFeedback
+                            key="correct-feedback"
                             message={feedbackState.message}
                             motivationalMessage={motivationalMessage}
                             xpGained={xpForCorrect}
                             streak={streak}
-                            stepBreakdown={currentQuestion?.helps?.stepBreakdown}
                             onContinue={nextQuestion}
                         />
                     )}
                     {feedbackState.isShowing && !feedbackState.isCorrect && (
                         <WrongFeedback
-                            message={feedbackState.message}
-                            errorType={(feedbackState as any).errorType}
+                            key="wrong-feedback"
                             attempts={currentAttempt.attempts}
-                            correctAnswer={currentAttempt.attempts >= 3 ? String(currentQuestion?.correctAnswer ?? '') : undefined}
-                            guidanceSteps={currentQuestion?.helps?.guidanceSteps}
                             stepBreakdown={currentQuestion?.helps?.stepBreakdown}
                             workedExample={currentQuestion?.helps?.workedExample}
                             onTryAgain={handleTryAgain}
@@ -539,7 +528,7 @@ function StudyHubContent() {
                     )}
                 </AnimatePresence>
 
-                {/* ── Auto-hint bubble ──────────────────────────────────────── */}
+                {/* Auto-hint bubble */}
                 {activeHint && !feedbackState.isShowing && (
                     <HintBubble
                         hint={activeHint.hint}
@@ -550,7 +539,7 @@ function StudyHubContent() {
                     />
                 )}
 
-                {/* ── Help nudge (subtle, delayed) ──────────────────────────── */}
+                {/* Help nudge */}
                 {!feedbackState.isShowing && !isHelpOpen && !hintVisible && (
                     <motion.button
                         initial={{ opacity: 0 }}
@@ -569,22 +558,16 @@ function StudyHubContent() {
 }
 
 // ── Correct feedback ──────────────────────────────────────────────────────────
+// Shows a celebration card. The student must click "Nästa fråga" to proceed.
 function CorrectFeedback({
-    message, motivationalMessage, xpGained, streak, stepBreakdown, onContinue,
+    message, motivationalMessage, xpGained, streak, onContinue,
 }: {
     message: string;
     motivationalMessage: string;
     xpGained: number;
     streak: number;
-    stepBreakdown?: {
-        intro: string;
-        steps: Array<{ prompt: string; correctAnswer: string; hint?: string }>;
-        conclusion: string;
-    };
     onContinue: () => void;
 }) {
-    const [showSolution, setShowSolution] = useState(false);
-
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -643,62 +626,40 @@ function CorrectFeedback({
                     </div>
                 </div>
 
-                {/* Action row: solution toggle (left) + next button (right) */}
+                {/* Next button — explicit, no auto-advance */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="mt-4 flex gap-2"
+                    className="mt-4"
                 >
-                    {stepBreakdown && (
-                        <button
-                            onClick={() => setShowSolution(prev => !prev)}
-                            className="flex items-center gap-1.5 px-3 py-2.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white/90 font-medium rounded-xl transition-colors text-sm"
-                        >
-                            <BookOpen className="w-4 h-4" />
-                            {showSolution ? 'Dölj' : 'Visa lösning'}
-                        </button>
-                    )}
                     <button
                         onClick={onContinue}
-                        className="flex-1 py-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
+                        className="w-full py-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
                     >
                         Nästa fråga
                         <ChevronRight className="w-4 h-4" />
                     </button>
                 </motion.div>
             </div>
-
-            {/* ── Expandable solution panel (below green card) ───────────── */}
-            <AnimatePresence>
-                {showSolution && stepBreakdown && (
-                    <motion.div
-                        key="correct-solution"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.28, ease: 'easeInOut' }}
-                        className="overflow-hidden"
-                    >
-                        <div className="mt-2 rounded-2xl border-2 border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-5 pb-5">
-                            <StepBreakdownView breakdown={stepBreakdown} />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </motion.div>
     );
 }
 
 // ── Wrong feedback ────────────────────────────────────────────────────────────
+// Flow:
+//  1. Show sub-questions (WorkShowPanel in checkpoints mode) immediately.
+//  2. Sub-question correct  → moves to next sub-question (WorkShowPanel handles this).
+//  3. Sub-question wrong    → shows correct answer for that sub-question.
+//  4. "Visa steg-för-steg lösning" is always accessible via a button.
 function WrongFeedback({
-    message, errorType, attempts, correctAnswer, guidanceSteps, stepBreakdown, workedExample, onTryAgain, onSkip,
+    attempts,
+    stepBreakdown,
+    workedExample,
+    onTryAgain,
+    onSkip,
 }: {
-    message: string;
-    errorType?: string;
     attempts: number;
-    correctAnswer?: string;
-    guidanceSteps?: Array<{ id: string; order: number; content: string }>;
     stepBreakdown?: {
         intro: string;
         steps: Array<{ prompt: string; correctAnswer: string; hint?: string }>;
@@ -711,16 +672,9 @@ function WrongFeedback({
     onTryAgain: () => void;
     onSkip: () => void;
 }) {
-    // "show work" panel: starts in checkpoint mode so the student can
-    // immediately enter their intermediate steps after getting it wrong.
-    // Falls back to the full passive solution when requested.
     const [showFullSolution, setShowFullSolution] = useState(false);
-    // Whether to bypass guidance and jump straight to solution checkpoints
-    const [skipGuidance, setSkipGuidance] = useState(false);
-    const label = errorType ? (ERROR_TYPE_LABELS[errorType] ?? 'Inte riktigt') : 'Inte riktigt';
-    const hasSteps = !!stepBreakdown?.steps?.length;
-    const hasFallback = !!(stepBreakdown || workedExample);
-    const hasGuidance = !!guidanceSteps?.length && !skipGuidance;
+    const hasSubQuestions = !!stepBreakdown?.steps?.length;
+    const hasSolution = !!(stepBreakdown || workedExample);
 
     return (
         <motion.div
@@ -730,163 +684,138 @@ function WrongFeedback({
             transition={{ type: 'spring', damping: 22, stiffness: 300 }}
         >
             <div className="rounded-2xl border-2 border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 overflow-hidden">
-                {/* ── Feedback content ─────────────────────────────────────── */}
-                <div className="p-5">
-                    <div className="flex items-start gap-3">
-                        {/* Icon */}
-                        <div className="w-10 h-10 bg-orange-100 dark:bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <XCircle className="w-5 h-5 text-orange-500" />
-                        </div>
 
-                        <div className="flex-1 min-w-0">
-                            {/* Label + error-type badge */}
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <span className="font-semibold text-orange-800 dark:text-orange-200">{label}</span>
-                                {errorType && (
-                                    <span className="text-xs px-2 py-0.5 bg-orange-200 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 rounded-full font-medium">
-                                        {errorType.replace(/_/g, ' ')}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* AI-generated explanation — stays visible */}
-                            <p className="text-sm text-orange-700 dark:text-orange-300 leading-relaxed">
-                                {message}
-                            </p>
-
-                            {/* Correct answer revealed after 3 failed attempts */}
-                            {correctAnswer && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    className="mt-3 pt-3 border-t border-orange-200 dark:border-orange-500/20"
-                                >
-                                    <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide mb-1">
-                                        Rätt svar
-                                    </p>
-                                    <p className="text-base font-mono font-bold text-orange-800 dark:text-orange-200">
-                                        {correctAnswer}
-                                    </p>
-                                </motion.div>
-                            )}
-                        </div>
+                {/* ── Header: minimal wrong indicator ──────────────────────── */}
+                <div className="px-5 pt-4 pb-3 flex items-center gap-3">
+                    <div className="w-9 h-9 bg-orange-100 dark:bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <XCircle className="w-5 h-5 text-orange-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-orange-800 dark:text-orange-200 text-sm">
+                            {hasSubQuestions ? 'Inte riktigt — låt oss gå igenom det steg för steg' : 'Inte riktigt — försök igen'}
+                        </p>
                     </div>
                 </div>
 
-                {/* ── Action buttons ───────────────────────────────────────── */}
-                <div className="px-5 pb-4 flex gap-3">
-                    <button
-                        onClick={onTryAgain}
-                        className="flex-1 py-3 bg-white dark:bg-zinc-900 hover:bg-orange-50 dark:hover:bg-orange-500/5 border-2 border-orange-200 dark:border-orange-500/30 text-orange-700 dark:text-orange-300 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2"
-                    >
-                        <RotateCcw className="w-4 h-4" />
-                        Försök igen
-                    </button>
-                    <button
-                        onClick={onSkip}
-                        className="px-5 py-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-xl font-medium text-sm transition-colors flex items-center gap-2"
-                    >
-                        Hoppa över
-                        <ChevronRight className="w-4 h-4" />
-                    </button>
-                </div>
-
-                {/* ── Admin guidance steps (progressive thinking hints) ────── */}
-                {hasGuidance && (
+                {/* ── Sub-questions (WorkShowPanel in checkpoints mode) ──────── */}
+                {hasSubQuestions && !showFullSolution && (
                     <div className="px-5 pb-4">
-                        <GuidancePanel
-                            steps={guidanceSteps!}
-                            onDone={
-                                hasSteps
-                                    ? () => setSkipGuidance(true)          // → show WorkShowPanel
-                                    : hasFallback
-                                        ? () => { setSkipGuidance(true); setShowFullSolution(true); } // → show passive solution
-                                        : undefined
-                            }
-                            doneLabel={hasSteps ? 'Visa lösningssteg' : hasFallback ? 'Visa full lösning' : undefined}
-                        />
-                    </div>
-                )}
-
-                {/* ── Interactive WorkShow panel (replaces the passive toggle) ─ */}
-                {hasSteps && !showFullSolution && (!hasGuidance) && (
-                    <div className="px-5 pb-5">
-                        {/* After the first wrong answer, open directly in checkpoint
-                            mode so the student can immediately enter their work.
-                            On the first attempt (attempts===1) show the softer CTA. */}
                         <WorkShowPanel
                             stepBreakdown={stepBreakdown!}
-                            defaultMode={attempts >= 2 ? 'checkpoints' : 'cta'}
+                            defaultMode="checkpoints"
                             accentColor="orange"
                             onRequestFullSolution={() => setShowFullSolution(true)}
                         />
                     </div>
                 )}
 
-                {/* ── Fallback: full passive solution ──────────────────────── */}
-                {hasFallback && (showFullSolution || (!hasSteps && !hasGuidance)) && (
-                    <>
-                        {/* Show toggle only when WorkShowPanel isn't displayed */}
-                        {!showFullSolution && (
-                            <div className="px-5 pb-5">
-                                <button
-                                    onClick={() => setShowFullSolution(true)}
-                                    className="w-full py-2.5 px-4 rounded-xl border-2 border-dashed font-medium text-sm transition-all flex items-center justify-center gap-2 border-orange-200 dark:border-orange-500/30 text-orange-600 dark:text-orange-400 hover:bg-orange-100/50 dark:hover:bg-orange-500/10"
-                                >
-                                    <BookOpen className="w-4 h-4" />
-                                    Visa steg-för-steg lösning
-                                </button>
+                {/* ── Full passive solution (shown on request) ──────────────── */}
+                <AnimatePresence>
+                    {showFullSolution && hasSolution && (
+                        <motion.div
+                            key="solution-panel"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.28, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                        >
+                            <div className="px-5 pb-6 border-t-2 border-orange-200 dark:border-orange-500/30">
+                                {stepBreakdown
+                                    ? <StepBreakdownView breakdown={stepBreakdown} />
+                                    : workedExample
+                                        ? <WorkedExampleView example={workedExample} />
+                                        : null
+                                }
                             </div>
-                        )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-                        <AnimatePresence>
-                            {showFullSolution && (
-                                <motion.div
-                                    key="solution-panel"
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.28, ease: 'easeInOut' }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="px-5 pb-6 border-t-2 border-orange-200 dark:border-orange-500/30">
-                                        {stepBreakdown
-                                            ? <StepBreakdownView breakdown={stepBreakdown} />
-                                            : workedExample
-                                                ? <WorkedExampleView example={workedExample} />
-                                                : null
-                                        }
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </>
-                )}
+                {/* ── Action row ───────────────────────────────────────────── */}
+                <div className="px-5 pb-4 flex flex-wrap gap-2 border-t border-orange-100 dark:border-orange-500/15 pt-3">
+                    {/* Always-visible solution button */}
+                    {hasSolution && !showFullSolution && (
+                        <button
+                            onClick={() => setShowFullSolution(true)}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-orange-200 dark:border-orange-500/30 text-orange-600 dark:text-orange-400 text-sm font-medium hover:bg-orange-100/60 dark:hover:bg-orange-500/10 transition-colors"
+                        >
+                            <BookOpen className="w-3.5 h-3.5" />
+                            Visa steg-för-steg lösning
+                        </button>
+                    )}
+
+                    <div className="flex gap-2 ml-auto">
+                        <button
+                            onClick={onTryAgain}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-zinc-900 hover:bg-orange-50 dark:hover:bg-orange-500/5 border border-orange-200 dark:border-orange-500/30 text-orange-700 dark:text-orange-300 rounded-xl font-semibold text-sm transition-colors"
+                        >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            Försök igen
+                        </button>
+                        <button
+                            onClick={onSkip}
+                            className="flex items-center gap-1.5 px-4 py-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-xl font-medium text-sm transition-colors"
+                        >
+                            Hoppa över
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
             </div>
         </motion.div>
     );
 }
 
-// ── Render a solution content block (text + optional $$math$$ blocks) ─────────
+// ── Render a solution content block ──────────────────────────────────────────
+// Handles $$...$$ block math, $...$ inline math, and \(...\) inline math.
+const InlineMath = dynamic(
+    () => import('react-katex').then((mod) => mod.InlineMath),
+    { ssr: false }
+);
+
 function SolutionContent({ content }: { content: string }) {
-    // Split on $$...$$ LaTeX blocks and render each segment accordingly
-    const parts = content.split(/(\$\$[\s\S]*?\$\$)/g);
+    // Tokenise — match $$ before $ so double-dollar is not consumed as two singles
+    const parts: string[] = [];
+    const TOKEN_RE = /(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$|\\\([\s\S]*?\\\))/g;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    // eslint-disable-next-line no-cond-assign
+    while ((m = TOKEN_RE.exec(content)) !== null) {
+        if (m.index > last) parts.push(content.slice(last, m.index));
+        parts.push(m[0]);
+        last = m.index + m[0].length;
+    }
+    if (last < content.length) parts.push(content.slice(last));
+
     return (
         <div className="space-y-2">
             {parts.map((part, i) => {
-                const mathMatch = part.match(/^\$\$([\s\S]*?)\$\$$/);
-                if (mathMatch) {
+                // Block math: $$...$$
+                const blockMatch = part.match(/^\$\$([\s\S]*?)\$\$$/);
+                if (blockMatch) {
                     return (
                         <div key={i} className="overflow-x-auto py-1">
-                            <BlockMath math={mathMatch[1].trim()} />
+                            <BlockMath math={blockMatch[1].trim()} />
                         </div>
                     );
                 }
-                if (part.trim()) {
+                // Inline math: $...$
+                const inlineMatch = part.match(/^\$([^\$\n]+?)\$$/);
+                if (inlineMatch) {
+                    return <InlineMath key={i} math={inlineMatch[1].trim()} />;
+                }
+                // Inline math: \(...\)
+                const parenMatch = part.match(/^\\\(([\s\S]*?)\\\)$/);
+                if (parenMatch) {
+                    return <InlineMath key={i} math={parenMatch[1].trim()} />;
+                }
+                // Plain text — preserve whitespace/newlines
+                if (part) {
                     return (
-                        <p key={i} className="text-sm text-orange-800 dark:text-orange-200 leading-relaxed whitespace-pre-wrap">
-                            {part.trim()}
-                        </p>
+                        <span key={i} className="text-sm text-orange-800 dark:text-orange-200 leading-relaxed whitespace-pre-wrap">
+                            {part}
+                        </span>
                     );
                 }
                 return null;
@@ -1082,71 +1011,63 @@ function QuestionCard({
     const difficulty: number = question.difficulty ?? 1;
 
     const renderHeader = () => (
-        <div className="mb-6">
-            {/* Difficulty + type row */}
-            <div className="flex items-center gap-3 mb-4">
+        <div className="mb-7">
+            {/* Difficulty row */}
+            <div className="flex items-center gap-3 mb-5">
                 <div className="flex items-center gap-1" title={`Svårighetsgrad ${difficulty}`}>
                     {[1, 2, 3, 4, 5].map((d) => (
                         <div
                             key={d}
-                            className={`w-2 h-2 rounded-full transition-colors ${d <= difficulty
-                                    ? difficulty <= 2
-                                        ? 'bg-emerald-400'
-                                        : difficulty <= 3
-                                            ? 'bg-amber-400'
-                                            : 'bg-red-400'
-                                    : 'bg-zinc-200 dark:bg-zinc-700'
+                            className={`w-2.5 h-2.5 rounded-full transition-colors ${d <= difficulty
+                                ? difficulty <= 2
+                                    ? 'bg-emerald-400'
+                                    : difficulty <= 3
+                                        ? 'bg-amber-400'
+                                        : 'bg-red-400'
+                                : 'bg-zinc-200 dark:bg-zinc-700'
                                 }`}
                         />
                     ))}
                 </div>
-                <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
                     {difficulty <= 2 ? 'Lätt' : difficulty <= 3 ? 'Medel' : 'Svår'}
                 </span>
             </div>
 
             {/* Question text */}
             {content.question?.text && (
-                <h2 className="text-xl md:text-2xl font-semibold text-zinc-900 dark:text-white leading-relaxed">
+                <h2 className="text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-white leading-snug">
                     {content.question.text}
                 </h2>
             )}
 
             {/* Math block */}
             {content.question?.math && (
-                <div className="mt-4 p-5 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl shadow-sm overflow-x-auto">
+                <div className="mt-5 p-6 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-x-auto">
                     <BlockMath math={content.question.math} />
                 </div>
             )}
         </div>
     );
 
+    // Card shell shared by all question types
+    const card = 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm p-6 lg:p-8';
+
     switch (question.type) {
         case 'numeric_input':
             return (
-                <div>
+                <div className={card}>
                     {renderHeader()}
                     <SimpleNumericInput
                         correctAnswer={question.correctAnswer}
                         onAnswer={(val, isCorrect) => onAnswer(val, isCorrect)}
                     />
-                    {/* Pre-submission work-show CTA — only if the question
-                        has checkpoint data and the student hasn't answered yet */}
-                    {question.helps?.stepBreakdown?.steps?.length > 0 && (
-                        <div className="mt-4">
-                            <WorkShowPanel
-                                stepBreakdown={question.helps.stepBreakdown}
-                                defaultMode="cta"
-                                accentColor="blue"
-                            />
-                        </div>
-                    )}
                 </div>
             );
 
         case 'multiple_choice':
             return (
-                <div>
+                <div className={card}>
                     {renderHeader()}
                     <MultipleChoiceInput
                         question={question}
@@ -1157,16 +1078,18 @@ function QuestionCard({
 
         case 'guided_steps':
             return (
-                <GuidedStepSession
-                    question={question}
-                    onComplete={() => onAnswer('complete', true)}
-                    onExit={() => { }}
-                />
+                <div className={card}>
+                    <GuidedStepSession
+                        question={question}
+                        onComplete={() => onAnswer('complete', true)}
+                        onExit={() => { }}
+                    />
+                </div>
             );
 
         case 'fill_blank':
             return (
-                <div>
+                <div className={card}>
                     {renderHeader()}
                     <FillBlankInput
                         question={question}
@@ -1177,7 +1100,7 @@ function QuestionCard({
 
         case 'drag_drop':
             return (
-                <div>
+                <div className={card}>
                     {renderHeader()}
                     <DragDropInput
                         question={question}
@@ -1188,7 +1111,7 @@ function QuestionCard({
 
         case 'toggle':
             return (
-                <div>
+                <div className={card}>
                     {renderHeader()}
                     <ToggleInput
                         question={question}
@@ -1199,7 +1122,7 @@ function QuestionCard({
 
         case 'expression_builder':
             return (
-                <div>
+                <div className={card}>
                     {renderHeader()}
                     <ExpressionBuilderInput
                         question={question}
@@ -1210,10 +1133,12 @@ function QuestionCard({
 
         case 'solution_builder':
             return (
-                <SolutionBuilderInput
-                    question={question}
-                    onAnswer={(isCorrect) => onAnswer(question.correctAnswer, isCorrect)}
-                />
+                <div className={card}>
+                    <SolutionBuilderInput
+                        question={question}
+                        onAnswer={(isCorrect) => onAnswer(question.correctAnswer, isCorrect)}
+                    />
+                </div>
             );
 
         default:

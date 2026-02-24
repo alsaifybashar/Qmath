@@ -147,21 +147,21 @@ function LatexEditor({
                 <label className="block text-sm font-medium text-zinc-700 mb-1">{label}</label>
             )}
             {hint && <p className="text-xs text-zinc-500 mb-2">{hint}</p>}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-0 border border-zinc-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
                 <textarea
                     value={value}
                     onChange={e => onChange(e.target.value)}
                     rows={rows}
-                    className="w-full p-3 rounded-lg border border-zinc-200 bg-white text-zinc-900 font-mono text-sm resize-y"
+                    className="w-full p-3 bg-white text-zinc-900 font-mono text-sm resize-y focus:outline-none border-b border-zinc-200"
                     placeholder={placeholder}
                 />
                 <div
-                    className="p-3 rounded-lg border border-zinc-200 bg-zinc-50 overflow-y-auto"
-                    style={{ minHeight: `${rows * 1.5}rem` }}
+                    className="p-3 bg-zinc-50 overflow-y-auto max-h-64"
+                    style={{ minHeight: '3rem' }}
                 >
-                    <p className="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Preview</p>
-                    <div className="prose max-w-none text-sm">
-                        <MathRenderer content={value || '*Nothing to preview yet.*'} />
+                    <p className="text-[10px] uppercase tracking-widest text-zinc-400 mb-2 font-semibold">Förhandsgranskning</p>
+                    <div className="prose max-w-none text-sm text-zinc-800">
+                        <MathRenderer content={value || '*Inget att förhandsgranska ännu.*'} />
                     </div>
                 </div>
             </div>
@@ -556,6 +556,8 @@ export default function AdminQuestionsPage() {
 
     // Question form
     const [formData, setFormData] = useState<FormData>(DEFAULT_FORM);
+    const [formSection, setFormSection] = useState<'question' | 'solution' | 'guidance'>('question');
+    const [expandedStepIndex, setExpandedStepIndex] = useState<number | null>(0);
 
     // Loading
     const [loadingCourses, setLoadingCourses] = useState(true);
@@ -663,13 +665,16 @@ export default function AdminQuestionsPage() {
     // ── Question form helpers ────────────────────────────────────────────────
 
     const addStep = () => {
-        setFormData(f => ({
-            ...f,
-            solutionSteps: [
-                ...f.solutionSteps,
-                { label: `Step ${f.solutionSteps.length + 1}`, content: '' },
-            ],
-        }));
+        setFormData(f => {
+            setExpandedStepIndex(f.solutionSteps.length);
+            return {
+                ...f,
+                solutionSteps: [
+                    ...f.solutionSteps,
+                    { label: `Step ${f.solutionSteps.length + 1}`, content: '', expectedAnswer: '' },
+                ],
+            };
+        });
     };
 
     const removeStep = (index: number) => {
@@ -812,7 +817,7 @@ export default function AdminQuestionsPage() {
             ...f,
             solutionSteps: f.solutionSteps.map((s, i) =>
                 i === stepIndex
-                    ? { label: sr.suggestedLabel || s.label, content: sr.suggestion }
+                    ? { label: sr.suggestedLabel || s.label, content: sr.suggestion, expectedAnswer: s.expectedAnswer }
                     : s
             ),
         }));
@@ -835,6 +840,7 @@ export default function AdminQuestionsPage() {
             newSteps.splice(insertAt, 0, {
                 label: additional.label,
                 content: additional.content,
+                expectedAnswer: '',
             });
             return { ...f, solutionSteps: newSteps };
         });
@@ -893,6 +899,7 @@ export default function AdminQuestionsPage() {
         setEditingQuestionId(q.id);
         setIsCreatingQuestion(true);
         setActiveTab('draft');
+        setFormSection('question');
         setAiGuidanceSuggestions(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -956,6 +963,7 @@ export default function AdminQuestionsPage() {
             setFormData(DEFAULT_FORM);
             setSolutionReview(null);
             setAiGuidanceSuggestions(null);
+            setFormSection('question');
             setActiveTab('draft');
         } else {
             alert(`Failed to ${editingQuestionId ? 'update' : 'create'} question.`);
@@ -1205,6 +1213,7 @@ export default function AdminQuestionsPage() {
                                         setIsCreatingQuestion(true);
                                         setEditingQuestionId(null);
                                         setFormData(DEFAULT_FORM);
+                                        setFormSection('question');
                                     }}
                                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
                                 >
@@ -1221,316 +1230,427 @@ export default function AdminQuestionsPage() {
                                         {editingQuestionId ? 'Redigera fråga' : 'Ny fråga'}
                                     </h3>
                                     <button
-                                        onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); }}
+                                        onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); setFormSection('question'); }}
                                         className="text-zinc-400 hover:text-zinc-600"
                                     >
                                         <X className="w-5 h-5" />
                                     </button>
                                 </div>
 
-                                <form onSubmit={handleSubmitQuestion} className="space-y-6">
-                                    <LatexEditor
-                                        label="Frågetext (Markdown + LaTeX)"
-                                        hint="Använd $$...$$ för block-ekvationer och $...$ för inline-matte."
-                                        value={formData.contentMarkdown}
-                                        onChange={v => setFormData(f => ({ ...f, contentMarkdown: v }))}
-                                        placeholder={"Lös ekvationssystemet:\n$$\\begin{cases} 2x + y = 5 \\\\ x - y = 1 \\end{cases}$$"}
-                                        rows={6}
-                                    />
+                                <form onSubmit={handleSubmitQuestion} className="space-y-4">
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-zinc-700 mb-1">Frågetyp</label>
-                                            <select
-                                                value={formData.questionType}
-                                                onChange={e => setFormData(f => ({ ...f, questionType: e.target.value }))}
-                                                className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
-                                            >
-                                                <option value="multiple_choice">Flerval</option>
-                                                <option value="numeric">Numeriskt svar</option>
-                                                <option value="free_response">Fri text</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-zinc-700 mb-1">Korrekt svar</label>
-                                            <input
-                                                type="text"
-                                                value={formData.correctAnswer}
-                                                onChange={e => setFormData(f => ({ ...f, correctAnswer: e.target.value }))}
-                                                required
-                                                placeholder="t.ex. Alternativ A, eller 3.14"
-                                                className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-zinc-700 mb-1">Svårighetsgrad</label>
-                                            <select
-                                                value={formData.difficultyTier}
-                                                onChange={e => setFormData(f => ({ ...f, difficultyTier: Number(e.target.value) }))}
-                                                className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
-                                            >
-                                                <option value={1}>1 – Nybörjare</option>
-                                                <option value={2}>2 – Lätt</option>
-                                                <option value={3}>3 – Medel</option>
-                                                <option value={4}>4 – Svår</option>
-                                                <option value={5}>5 – Expert</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {formData.questionType === 'multiple_choice' && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                Svarsalternativ (JSON-array — LaTeX tillåtet)
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={formData.options}
-                                                onChange={e => setFormData(f => ({ ...f, options: e.target.value }))}
-                                                placeholder='["$x=2$", "$x=3$", "$x=-1$", "$x=0$"]'
-                                                className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 font-mono text-sm"
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Step-by-step solution */}
-                                    <div>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <label className="text-sm font-medium text-zinc-700">
-                                                Steg-för-steg-lösning (Markdown + LaTeX)
-                                            </label>
+                                    {/* ── Section 1: Question ── */}
+                                    <div className={`border rounded-xl overflow-hidden transition-colors ${formSection === 'question' ? 'border-blue-400 ring-1 ring-blue-400' : 'border-zinc-200'}`}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormSection('question')}
+                                            className="w-full flex items-center justify-between p-4 bg-zinc-50 hover:bg-zinc-100 transition-colors"
+                                        >
                                             <div className="flex items-center gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={handleReviewSolution}
-                                                    disabled={reviewingSteps || formData.solutionSteps.every(s => !s.content.trim())}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                                                    title="Låt AI granska lösningsstegen och föreslå förbättringar"
-                                                >
-                                                    {reviewingSteps ? (
-                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                    ) : (
-                                                        <Wand2 className="w-3.5 h-3.5" />
-                                                    )}
-                                                    {reviewingSteps ? 'Granskar...' : 'Granska med AI'}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={addStep}
-                                                    className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                                                >
-                                                    <Plus className="w-3 h-3" /> Lägg till steg
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            {formData.solutionSteps.map((step, index) => (
-                                                <div key={index} className="border border-zinc-200 rounded-xl p-4">
-                                                    <div className="flex items-center gap-3 mb-3">
-                                                        <input
-                                                            type="text"
-                                                            value={step.label}
-                                                            onChange={e => updateStep(index, 'label', e.target.value)}
-                                                            className="w-32 p-1.5 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm font-semibold"
-                                                        />
-                                                        <ArrowRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                                                        <span className="text-xs text-zinc-500 flex-1">Beskriv vad som görs i detta steg</span>
-                                                        {formData.solutionSteps.length > 1 && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeStep(index)}
-                                                                className="text-zinc-400 hover:text-red-500"
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Expected answer for this sub-question */}
-                                                    <div className="mb-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                                                        <label className="block text-xs font-semibold text-emerald-800 mb-1">
-                                                            Förväntat svar (delfråga) <span className="font-normal text-emerald-600">— t.ex. <code className="bg-emerald-100 px-1 rounded">{'(x+1)(x-1)'}</code> eller <code className="bg-emerald-100 px-1 rounded">{'1/2'}</code></span>
-                                                        </label>
-                                                        <p className="text-[10px] text-emerald-600 mb-1.5">
-                                                            Visas för studenten om de svarar fel — kort uttryck eller värde, ej förklaring.
-                                                        </p>
-                                                        <input
-                                                            type="text"
-                                                            value={step.expectedAnswer}
-                                                            onChange={e => updateStep(index, 'expectedAnswer', e.target.value)}
-                                                            placeholder="t.ex. (x+1)(x-1) eller 1/2 eller lim_{t→0}"
-                                                            className="w-full p-2 rounded-lg border border-emerald-300 bg-white text-zinc-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                                                        />
-                                                    </div>
-
-                                                    <LatexEditor
-                                                        label="Full förklaring (visas i lösningspanelen)"
-                                                        value={step.content}
-                                                        onChange={v => updateStep(index, 'content', v)}
-                                                        placeholder={"Multiplicera båda sidor med 2:\n$$2 \\cdot \\frac{x}{2} = 2 \\cdot 3$$\nSå $x = 6$."}
-                                                        rows={4}
-                                                    />
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${formData.contentMarkdown.trim() ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {formData.contentMarkdown.trim() ? <Check className="w-3.5 h-3.5" /> : '1'}
                                                 </div>
-                                            ))}
-                                        </div>
+                                                <h4 className="font-semibold text-zinc-900">Fråga</h4>
+                                            </div>
+                                            {formSection !== 'question' && formData.contentMarkdown.trim() && (
+                                                <div className="hidden sm:block flex-1 mx-4 text-xs text-zinc-500 truncate text-left max-w-md opacity-60">
+                                                    {formData.contentMarkdown.replace(/\n/g, ' ')}
+                                                </div>
+                                            )}
+                                            <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${formSection === 'question' ? 'rotate-180' : ''}`} />
+                                        </button>
 
-                                        {/* AI Solution Review Panel */}
-                                        {solutionReview && (
-                                            <div className="mt-4">
-                                                <AISolutionReviewPanel
-                                                    review={solutionReview}
-                                                    onAcceptStep={handleAcceptStep}
-                                                    onRejectStep={handleRejectStep}
-                                                    onAcceptAdditionalStep={handleAcceptAdditionalStep}
-                                                    acceptedSteps={acceptedSteps}
-                                                    rejectedSteps={rejectedSteps}
-                                                    acceptedAdditionalSteps={acceptedAdditionalSteps}
-                                                    onDismiss={handleDismissReview}
+                                        {formSection === 'question' && (
+                                            <div className="p-5 pt-4 border-t border-zinc-200 bg-white space-y-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                <LatexEditor
+                                                    label="Frågetext (Markdown + LaTeX)"
+                                                    hint="Använd $$...$$ för block-ekvationer och $...$ för inline-matte."
+                                                    value={formData.contentMarkdown}
+                                                    onChange={v => setFormData(f => ({ ...f, contentMarkdown: v }))}
+                                                    placeholder={"Lös ekvationssystemet:\n$$\\begin{cases} 2x + y = 5 \\\\ x - y = 1 \\end{cases}$$"}
+                                                    rows={6}
                                                 />
+
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-zinc-700 mb-1">Frågetyp</label>
+                                                        <select
+                                                            value={formData.questionType}
+                                                            onChange={e => setFormData(f => ({ ...f, questionType: e.target.value }))}
+                                                            className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
+                                                        >
+                                                            <option value="multiple_choice">Flerval</option>
+                                                            <option value="numeric">Numeriskt svar</option>
+                                                            <option value="free_response">Fri text</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-zinc-700 mb-1">Korrekt svar</label>
+                                                        <input
+                                                            type="text"
+                                                            value={formData.correctAnswer}
+                                                            onChange={e => setFormData(f => ({ ...f, correctAnswer: e.target.value }))}
+                                                            required
+                                                            placeholder="t.ex. Alternativ A, eller 3.14"
+                                                            className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-zinc-700 mb-1">Svårighetsgrad</label>
+                                                        <select
+                                                            value={formData.difficultyTier}
+                                                            onChange={e => setFormData(f => ({ ...f, difficultyTier: Number(e.target.value) }))}
+                                                            className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm"
+                                                        >
+                                                            <option value={1}>1 – Nybörjare</option>
+                                                            <option value={2}>2 – Lätt</option>
+                                                            <option value={3}>3 – Medel</option>
+                                                            <option value={4}>4 – Svår</option>
+                                                            <option value={5}>5 – Expert</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                {formData.questionType === 'multiple_choice' && (
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                            Svarsalternativ (JSON-array — LaTeX tillåtet)
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={formData.options}
+                                                            onChange={e => setFormData(f => ({ ...f, options: e.target.value }))}
+                                                            placeholder='["$x=2$", "$x=3$", "$x=-1$", "$x=0$"]'
+                                                            className="w-full p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 font-mono text-sm"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                <div className="flex justify-end pt-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormSection('solution')}
+                                                        className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-sm transition-colors"
+                                                    >
+                                                        Till Lösningssteg →
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* ── Guidance steps (shown to students after wrong answer) ── */}
-                                    <div className="border border-amber-200 bg-amber-50/40 rounded-xl p-5 space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h4 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
-                                                    <Lightbulb className="w-4 h-4 text-amber-600" />
-                                                    Vägledning vid fel svar
-                                                </h4>
-                                                <p className="text-xs text-amber-700 mt-0.5">
-                                                    Progressiva ledtrådar som hjälper studenten tänka rätt — utan att avslöja svaret.
-                                                </p>
+                                    {/* ── Section 2: Solution Steps ── */}
+                                    <div className={`border rounded-xl overflow-hidden transition-colors ${formSection === 'solution' ? 'border-blue-400 ring-1 ring-blue-400' : 'border-zinc-200'}`}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormSection('solution')}
+                                            className="w-full flex items-center justify-between p-4 bg-zinc-50 hover:bg-zinc-100 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${formData.solutionSteps.some(s => s.content.trim()) ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {formData.solutionSteps.some(s => s.content.trim()) ? <Check className="w-3.5 h-3.5" /> : '2'}
+                                                </div>
+                                                <h4 className="font-semibold text-zinc-900">Lösningssteg</h4>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={handleSuggestGuidance}
-                                                    disabled={generatingGuidance || !formData.contentMarkdown.trim()}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                                                    title="Låt AI föreslå vägledningssteg baserat på frågan"
-                                                >
-                                                    {generatingGuidance ? (
-                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                    ) : (
-                                                        <Sparkles className="w-3.5 h-3.5" />
-                                                    )}
-                                                    {generatingGuidance ? 'Genererar...' : 'AI-föreslå'}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={addGuidanceStep}
-                                                    className="flex items-center gap-1 text-xs text-amber-700 hover:underline"
-                                                >
-                                                    <Plus className="w-3 h-3" /> Lägg till steg
-                                                </button>
-                                            </div>
-                                        </div>
+                                            {formSection !== 'solution' && (
+                                                <div className="hidden sm:block flex-1 mx-4 text-xs text-zinc-500 text-left">
+                                                    {formData.solutionSteps.filter(s => s.content.trim()).length} steg tillagda
+                                                </div>
+                                            )}
+                                            <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${formSection === 'solution' ? 'rotate-180' : ''}`} />
+                                        </button>
 
-                                        {/* Current guidance steps */}
-                                        {formData.guidanceSteps.length > 0 ? (
-                                            <div className="space-y-2.5">
-                                                {formData.guidanceSteps.map((step, index) => (
-                                                    <div key={step.id} className="flex items-start gap-2.5">
-                                                        <div className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-2.5">
-                                                            {index + 1}
-                                                        </div>
-                                                        <textarea
-                                                            value={step.content}
-                                                            onChange={e => updateGuidanceStep(step.id, e.target.value)}
-                                                            rows={2}
-                                                            placeholder="T.ex. Titta på täljaren — kan you faktorisera den? Vilka faktorer delar du med nämnaren?"
-                                                            className="flex-1 p-2.5 rounded-lg border border-amber-200 bg-white text-zinc-900 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-amber-300"
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeGuidanceStep(step.id)}
-                                                            className="text-zinc-300 hover:text-red-400 mt-2.5 flex-shrink-0"
-                                                            title="Ta bort detta steg"
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs text-amber-600 italic text-center py-2">
-                                                Inga vägledningssteg ännu. Klicka "AI-föreslå" eller "Lägg till steg".
-                                            </p>
-                                        )}
-
-                                        {/* AI Guidance Suggestions Panel */}
-                                        {aiGuidanceSuggestions && aiGuidanceSuggestions.length > 0 && (
-                                            <div className="border border-amber-300 bg-white rounded-xl p-4 space-y-3 mt-3">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <Sparkles className="w-4 h-4 text-amber-600" />
-                                                        <span className="text-sm font-semibold text-amber-900">
-                                                            AI-förslag ({aiGuidanceSuggestions.length} steg)
-                                                        </span>
+                                        {formSection === 'solution' && (
+                                            <div className="p-5 pt-4 border-t border-zinc-200 bg-white space-y-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                                                    <div>
+                                                        <h5 className="text-sm font-medium text-blue-900">Steg-för-steg-lösning</h5>
+                                                        <p className="text-xs text-blue-700 mt-0.5">Dela upp lösningen i logiska delsteg för studenten.</p>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <button
                                                             type="button"
-                                                            onClick={handleAcceptAllGuidance}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                                            onClick={handleReviewSolution}
+                                                            disabled={reviewingSteps || formData.solutionSteps.every(s => !s.content.trim())}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            title="Låt AI granska lösningsstegen"
                                                         >
-                                                            <Check className="w-3 h-3" />
-                                                            Acceptera alla
+                                                            {reviewingSteps ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                                                            {reviewingSteps ? 'Granskar...' : 'Granska med AI'}
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            onClick={handleDismissGuidanceSuggestions}
-                                                            className="text-zinc-400 hover:text-zinc-600"
-                                                            title="Avvisa förslag"
+                                                            onClick={addStep}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 rounded-lg text-xs font-medium transition-colors"
                                                         >
-                                                            <X className="w-4 h-4" />
+                                                            <Plus className="w-3 h-3" /> Nytt steg
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-2">
-                                                    {aiGuidanceSuggestions.map((step, i) => (
-                                                        <div key={step.id} className="flex items-start gap-2.5 p-3 bg-amber-50 rounded-lg border border-amber-100">
-                                                            <div className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">
-                                                                {i + 1}
+                                                <div className="space-y-4">
+                                                    {formData.solutionSteps.map((step, index) => {
+                                                        const isExpanded = expandedStepIndex === index;
+                                                        return (
+                                                            <div key={index} className={`border rounded-xl overflow-hidden shadow-sm transition-colors ${isExpanded ? 'border-blue-300 ring-1 ring-blue-300' : 'border-zinc-200 bg-white'}`}>
+                                                                {/* Header Row (Summary or Top Section) */}
+                                                                <div
+                                                                    className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${isExpanded ? 'bg-blue-50/30 border-b border-zinc-200' : 'hover:bg-zinc-50'}`}
+                                                                    onClick={() => setExpandedStepIndex(isExpanded ? null : index)}
+                                                                >
+                                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${step.content.trim() ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-500'}`}>
+                                                                            {step.content.trim() ? <Check className="w-4 h-4" /> : index + 1}
+                                                                        </div>
+                                                                        {!isExpanded && (
+                                                                            <div className="flex flex-col min-w-0">
+                                                                                <span className="text-sm font-semibold text-zinc-800 truncate">{step.label || `Steg ${index + 1}`}</span>
+                                                                                {step.expectedAnswer && (
+                                                                                    <span className="text-xs text-zinc-500 font-mono mt-0.5 truncate" title="Förväntat svar">
+                                                                                        Svar: {step.expectedAnswer}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                        {isExpanded && (
+                                                                            <span className="text-sm font-semibold text-zinc-800">Redigerar steg {index + 1}</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-3 shrink-0 ml-4">
+                                                                        {!isExpanded && step.content && (
+                                                                            <span className="hidden sm:block text-xs text-zinc-400 max-w-[200px] truncate">
+                                                                                {step.content}
+                                                                            </span>
+                                                                        )}
+                                                                        {formData.solutionSteps.length > 1 && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    removeStep(index);
+                                                                                }}
+                                                                                className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                                                title="Ta bort steg"
+                                                                            >
+                                                                                <Trash2 className="w-5 h-5" />
+                                                                            </button>
+                                                                        )}
+                                                                        <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Expanded Form */}
+                                                                {isExpanded && (
+                                                                    <div className="p-5 bg-white space-y-5 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                                        <div className="flex flex-col md:flex-row md:items-center gap-3">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={step.label}
+                                                                                    onChange={e => updateStep(index, 'label', e.target.value)}
+                                                                                    placeholder="Rätt etikettdel, t.ex. 'Faktorisera täljaren'"
+                                                                                    className="w-48 p-2 rounded-lg border border-zinc-200 bg-white text-zinc-900 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                                                />
+                                                                            </div>
+                                                                            <ArrowRight className="hidden md:block w-4 h-4 text-zinc-300 flex-shrink-0" />
+                                                                            <div className="flex-1 flex items-center gap-2">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={step.expectedAnswer}
+                                                                                    onChange={e => updateStep(index, 'expectedAnswer', e.target.value)}
+                                                                                    placeholder="Förväntat svar (t.ex. x=2) — visas om fel"
+                                                                                    className="w-full p-2 pl-3 rounded-lg border border-emerald-300 bg-emerald-50 text-zinc-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <LatexEditor
+                                                                            label="Förklaring av steget"
+                                                                            value={step.content}
+                                                                            onChange={v => updateStep(index, 'content', v)}
+                                                                            placeholder={"T.ex.\nVi delar båda sidor med 2 för att lösa ut x."}
+                                                                            rows={4}
+                                                                        />
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <p className="flex-1 text-sm text-zinc-700 leading-relaxed">{step.content}</p>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleAcceptGuidanceStep(step)}
-                                                                className="flex-shrink-0 p-1 rounded text-amber-600 hover:bg-amber-100 transition-colors"
-                                                                title="Lägg till detta steg"
-                                                            >
-                                                                <Plus className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                    ))}
+                                                        )
+                                                    })}
                                                 </div>
-                                                <p className="text-[10px] text-amber-600">
-                                                    Klicka + för att lägga till enstaka steg, eller "Acceptera alla" för att ersätta befintliga.
-                                                </p>
+
+                                                {solutionReview && (
+                                                    <div className="mt-4">
+                                                        <AISolutionReviewPanel
+                                                            review={solutionReview}
+                                                            onAcceptStep={handleAcceptStep}
+                                                            onRejectStep={handleRejectStep}
+                                                            onAcceptAdditionalStep={handleAcceptAdditionalStep}
+                                                            acceptedSteps={acceptedSteps}
+                                                            rejectedSteps={rejectedSteps}
+                                                            acceptedAdditionalSteps={acceptedAdditionalSteps}
+                                                            onDismiss={handleDismissReview}
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                <div className="flex justify-end pt-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormSection('guidance')}
+                                                        className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-sm transition-colors"
+                                                    >
+                                                        Till Vägledning →
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* ── Section 3: Guidance ── */}
+                                    <div className={`border rounded-xl overflow-hidden transition-colors ${formSection === 'guidance' ? 'border-blue-400 ring-1 ring-blue-400' : 'border-zinc-200'}`}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormSection('guidance')}
+                                            className="w-full flex items-center justify-between p-4 bg-zinc-50 hover:bg-zinc-100 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${formData.guidanceSteps.length > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {formData.guidanceSteps.length > 0 ? <Check className="w-3.5 h-3.5" /> : '3'}
+                                                </div>
+                                                <h4 className="font-semibold text-zinc-900">Vägledning</h4>
+                                            </div>
+                                            {formSection !== 'guidance' && (
+                                                <div className="hidden sm:block flex-1 mx-4 text-xs text-zinc-500 text-left">
+                                                    {formData.guidanceSteps.length > 0 ? `${formData.guidanceSteps.length} ledtrådar` : 'Ingen vägledning tillagd'}
+                                                </div>
+                                            )}
+                                            <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${formSection === 'guidance' ? 'rotate-180' : ''}`} />
+                                        </button>
+
+                                        {formSection === 'guidance' && (
+                                            <div className="p-5 pt-4 border-t border-zinc-200 bg-white space-y-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50/50 p-4 rounded-xl border border-amber-100">
+                                                    <div>
+                                                        <h5 className="text-sm font-medium text-amber-900 flex items-center gap-1.5">
+                                                            <Lightbulb className="w-4 h-4 text-amber-600" />
+                                                            Vägledning vid fel svar
+                                                        </h5>
+                                                        <p className="text-xs text-amber-700 mt-0.5">Progressiva ledtrådar som hjälper studenten (utan att ge bort svaret).</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleSuggestGuidance}
+                                                            disabled={generatingGuidance || !formData.contentMarkdown.trim()}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        >
+                                                            {generatingGuidance ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                                                            {generatingGuidance ? 'Genererar...' : 'AI-föreslå'}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={addGuidanceStep}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 rounded-lg text-xs font-medium transition-colors"
+                                                        >
+                                                            <Plus className="w-3 h-3" /> Lägg till ledtråd
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {formData.guidanceSteps.length > 0 ? (
+                                                    <div className="space-y-3">
+                                                        {formData.guidanceSteps.map((step, index) => (
+                                                            <div key={step.id} className="flex items-start gap-3 bg-white border border-zinc-200 p-3 rounded-xl shadow-sm">
+                                                                <div className="w-6 h-6 rounded bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-bold shrink-0 mt-2">{index + 1}</div>
+                                                                <textarea
+                                                                    value={step.content}
+                                                                    onChange={e => updateGuidanceStep(step.id, e.target.value)}
+                                                                    rows={2}
+                                                                    placeholder="T.ex. Titta på täljaren — kan du faktorisera den?"
+                                                                    className="flex-1 p-2.5 rounded-lg border border-transparent bg-zinc-50 text-zinc-900 text-sm resize-y focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 transition-colors"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeGuidanceStep(step.id)}
+                                                                    className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors mt-1 shrink-0"
+                                                                    title="Ta bort detta steg"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="py-6 text-center border-2 border-dashed border-zinc-200 rounded-xl bg-zinc-50">
+                                                        <p className="text-sm text-zinc-500">Inga ledtrådar inlagda. Studenterna får inga tips om de svarar fel.</p>
+                                                    </div>
+                                                )}
+
+                                                {aiGuidanceSuggestions && aiGuidanceSuggestions.length > 0 && (
+                                                    <div className="border border-amber-300 bg-white rounded-xl p-4 space-y-3 mt-3 shadow-md">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <Sparkles className="w-4 h-4 text-amber-600" />
+                                                                <span className="text-sm font-semibold text-amber-900">
+                                                                    AI-förslag ({aiGuidanceSuggestions.length} steg)
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleAcceptAllGuidance}
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                                                >
+                                                                    <Check className="w-3 h-3" /> Acceptera alla
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleDismissGuidanceSuggestions}
+                                                                    className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+                                                                    title="Avvisa förslag"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-2">
+                                                            {aiGuidanceSuggestions.map((step, i) => (
+                                                                <div key={step.id} className="flex items-start gap-2.5 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                                                    <div className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</div>
+                                                                    <p className="flex-1 text-sm text-zinc-700 leading-relaxed">{step.content}</p>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleAcceptGuidanceStep(step)}
+                                                                        className="shrink-0 p-1.5 rounded-lg text-amber-600 hover:bg-amber-100 transition-colors bg-white border border-amber-200"
+                                                                        title="Lägg till detta steg"
+                                                                    >
+                                                                        <Plus className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Submit */}
-                                    <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">
+                                    <div className="flex justify-end gap-3 pt-6">
                                         <button
                                             type="button"
-                                            onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); setAiGuidanceSuggestions(null); }}
-                                            className="px-4 py-2 rounded-lg text-zinc-600 hover:bg-zinc-100 text-sm"
+                                            onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); setAiGuidanceSuggestions(null); setFormSection('question'); }}
+                                            className="px-5 py-2.5 rounded-xl text-zinc-600 font-medium hover:bg-zinc-100 text-sm transition-colors"
                                         >
                                             Avbryt
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={submittingQuestion}
-                                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50 transition-colors"
+                                            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm disabled:opacity-50 transition-colors shadow-sm"
                                         >
                                             {submittingQuestion ? 'Sparar...' : (editingQuestionId ? 'Uppdatera fråga' : 'Spara som utkast')}
                                         </button>

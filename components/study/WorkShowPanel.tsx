@@ -30,6 +30,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Sparkles, ChevronDown, Check, X, SkipForward, BookOpen,
 } from 'lucide-react';
+import { MathRenderer } from './MathRenderer';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -183,7 +184,8 @@ function StepRow({
                                 : status === 'wrong' || status === 'advancing' ? 'text-red-700 dark:text-red-300'
                                     : 'text-zinc-600 dark:text-zinc-400',
                         ].join(' ')}>
-                            Steg {index + 1}: {step.prompt}
+                            Steg {index + 1}:{' '}
+                            <MathRenderer text={step.prompt} />
                         </span>
                     </div>
 
@@ -251,9 +253,9 @@ function StepRow({
                                     <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide">
                                         Rätt svar:
                                     </span>
-                                    <code className="text-xs font-mono font-bold text-zinc-800 dark:text-zinc-100 bg-white/90 dark:bg-zinc-900/90 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
-                                        {step.correctAnswer}
-                                    </code>
+                                    <span className="text-xs font-bold text-zinc-800 dark:text-zinc-100">
+                                        <MathRenderer text={step.correctAnswer} />
+                                    </span>
                                     {status === 'advancing' && (
                                         <span className="text-[10px] text-zinc-400 ml-auto animate-pulse">Fortsätter…</span>
                                     )}

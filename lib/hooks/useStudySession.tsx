@@ -524,13 +524,7 @@ export function useStudySession(topicId?: string) {
             });
         }
 
-        // If correct, auto-advance after delay (2200ms gives celebration time to show)
-        if (isCorrect) {
-            setTimeout(() => {
-                dispatch({ type: 'CLEAR_FEEDBACK' });
-                dispatch({ type: 'NEXT_QUESTION' });
-            }, 2200);
-        }
+        // Correct answers no longer auto-advance — the user must click "Nästa fråga".
     }, []);
 
     const revealHint = useCallback((level: number) => {

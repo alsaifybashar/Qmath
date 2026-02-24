@@ -102,11 +102,10 @@ export function FocusedStudyLayout({
                         {/* Help — desktop */}
                         <button
                             onClick={handleHelpToggle}
-                            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                                isHelpOpen
-                                    ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300'
-                                    : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                            }`}
+                            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isHelpOpen
+                                ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                                : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                                }`}
                         >
                             <Lightbulb className="w-4 h-4" />
                             <span>Hjälp</span>
@@ -135,10 +134,9 @@ export function FocusedStudyLayout({
 
             {/* ── Main content (offset 60px = 56px header + 4px bar) ─────────── */}
             <div className="pt-[60px] min-h-screen flex">
-                <main className={`flex-1 transition-all duration-300 ${
-                    isHelpOpen && helpPanel ? 'lg:mr-96' : ''
-                }`}>
-                    <div className="max-w-2xl mx-auto px-4 py-8 lg:py-12">
+                <main className={`flex-1 transition-all duration-300 ${isHelpOpen && helpPanel ? 'lg:mr-[420px]' : ''
+                    }`}>
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
                         {children}
                     </div>
                 </main>
@@ -151,7 +149,7 @@ export function FocusedStudyLayout({
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: '100%', opacity: 0 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="hidden lg:block fixed right-0 top-[60px] bottom-0 w-96 bg-white dark:bg-zinc-900 border-l border-zinc-100 dark:border-zinc-800 overflow-y-auto"
+                            className="hidden lg:block fixed right-0 top-[60px] bottom-0 w-[420px] bg-white dark:bg-zinc-900 border-l border-zinc-100 dark:border-zinc-800 overflow-y-auto"
                         >
                             <div className="sticky top-0 bg-white dark:bg-zinc-900 p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                                 <h3 className="font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
