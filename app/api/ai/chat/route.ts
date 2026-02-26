@@ -20,24 +20,22 @@ interface AIContext {
         recentPerformance: 'struggling' | 'learning' | 'proficient';
     };
     conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+    uiState?: {
+        activeWidget?: string;
+        currentInputValue?: string;
+        isVisible: boolean;
+    };
+    recentConcepts?: string[];
 }
 
-// Build AI System Prompt
-function buildAISystemPrompt(context: AIContext): string {
+// Build AI System Prompt Context Part
+function buildAIContextPrompt(context: AIContext): string {
     const topicInfo = context.question?.topic ? `helping a student with ${context.question.topic}` : 'helping a student learn mathematics';
 
-    let prompt = `You are a helpful, encouraging math tutor ${topicInfo}.
-
-IMPORTANT GUIDELINES:
-- Use the Socratic method: ask guiding questions instead of giving direct answers
-- Be encouraging and supportive, never condescending
-- Keep responses concise (2-3 sentences usually)
-- If the student is really stuck (3+ attempts), you may give more direct hints
-- NEVER directly reveal the answer unless explicitly asked and the student has really tried`;
+    let prompt = `You are a helpful, encouraging math tutor ${topicInfo}.\n`;
 
     if (context.question) {
         prompt += `
-
 CURRENT QUESTION:
 ${context.question.content}
 
@@ -57,68 +55,28 @@ STUDENT ATTEMPTS:
 
 STUDENT LEVEL:
 - Current mastery: ${Math.round(context.student.masteryLevel * 100)}%
-- Recent performance: ${context.student.recentPerformance}
-
-RESPONSE STYLE:
-- Be warm and supportive
-- Use simple language
-- Ask one question at a time
-- Celebrate small wins`;
+- Recent performance: ${context.student.recentPerformance}`;
 
     return prompt;
 }
 
-// Mock AI Response Generator (for demo - replace with actual API call in production)
-function generateMockAIResponse(message: string, context: AIContext): string {
-    const msgLower = message.toLowerCase();
-    const attempts = context.attempts?.count || 0;
+import Anthropic from '@anthropic-ai/sdk';
+import { SOCRATIC_SYSTEM_PROMPT, getMathValidationTool, getPlotTool, getVisualWidgetTool } from '@/lib/ai/prompts/socratic';
+import { symbolicValidator } from '@/lib/content-generation/symbolic-validator';
+import { auth } from '@/auth';
+import { retrieveContext } from '@/lib/ai/rag';
 
-    // If student says they don't know where to start
-    if (msgLower.includes("don't know") || msgLower.includes("start") || msgLower.includes("help")) {
-        if (attempts < 2) {
-            return "Let's break this down together! 🤔\n\nLook at the problem - what type of mathematical operation or concept do you think applies here? Take your time and tell me your first thought.";
-        } else {
-            return "I can see you're working hard on this! Let me give you a nudge:\n\nLook at the structure of the expression. What mathematical rules or formulas have you learned that might apply to this type of problem?";
-        }
-    }
-
-    // If asking about formulas or rules
-    if (msgLower.includes("formula") || msgLower.includes("rule") || msgLower.includes("method")) {
-        return "Great question! Knowing which formula to use is half the battle. 📚\n\nHint: Check the 'Quick Reference' panel on the right side - I've highlighted the relevant formulas there. Which one do you think matches what we're trying to do?";
-    }
-
-    // If asking for explanation
-    if (msgLower.includes("explain") || msgLower.includes("how") || msgLower.includes("why")) {
-        return "I'd love to explain! Let's think about it step by step:\n\n" +
-            (context.question?.topic ?
-                `In ${context.question.topic}, we're essentially asking: how does the output change when the input changes? ` :
-                "The key concept here is understanding the relationship between the parts. ") +
-            "\n\nWhat part of this concept would you like me to clarify first?";
-    }
-
-    // If student seems stuck
-    if (msgLower.includes("stuck") || msgLower.includes("confused") || msgLower.includes("lost")) {
-        if (attempts >= 3) {
-            return "I can see you've been working really hard on this! 💪\n\nLet me give you a more direct hint: Try breaking the problem into smaller pieces. What if you handled each term separately?\n\nWould you like me to show you a similar worked example?";
-        }
-        return "That's okay - getting stuck is part of learning! Let's approach this differently.\n\nInstead of solving the whole problem, let's focus on just the first part. Can you identify what the first step would be?";
-    }
-
-    // If giving an answer/attempt
-    if (msgLower.includes("is it") || msgLower.includes("my answer") || msgLower.includes("i got") || msgLower.includes("i think")) {
-        return "Interesting approach! 🤔\n\nBefore I confirm, let's make sure your reasoning is solid: Can you walk me through how you got that answer? Understanding the 'why' is more important than the 'what'.";
-    }
-
-    // Default thoughtful response
-    return "That's a thoughtful question! 💡\n\nTo help guide you, think about what we know from the problem and what we're trying to find. Sometimes restating the problem in your own words can help clarify the path forward.\n\nWhat aspect would you like to explore next?";
-}
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY || '', // defaults to process.env.ANTHROPIC_API_KEY
+});
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { message, context } = body as {
+        const { message, context, provider = 'anthropic' } = body as {
             message: string;
-            context: AIContext
+            context: AIContext;
+            provider?: 'anthropic' | 'ollama';
         };
 
         if (!message || !context) {
@@ -128,22 +86,251 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // In production, you would:
-        // 1. Build the system prompt
-        // 2. Call OpenAI/Anthropic API with streaming
-        // 3. Return the streamed response
+        // Security Audit: Check Auth
+        const session = await auth();
+        if (!session || !session.user) {
+            if (process.env.NODE_ENV !== 'development') {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+        }
 
-        // For now, use mock response
-        const systemPrompt = buildAISystemPrompt(context);
-        const response = generateMockAIResponse(message, context);
+        // Security Audit: Limit message length
+        if (message.length > 2000) {
+            return NextResponse.json({ error: 'Message payload too large' }, { status: 413 });
+        }
 
-        // Simulate some processing time
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // RAG Context Injection
+        // We look up definitions/theorems related to the student's message or the current topic
+        const searchQuery = `${context.question?.topic || ''} ${message}`;
+        const ragContexts = await retrieveContext(searchQuery);
+
+        let contextPrompt = buildAIContextPrompt(context);
+
+        if (context.recentConcepts && context.recentConcepts.length > 0) {
+            contextPrompt += `\n\nRECENT CONCEPTS VIEWED BY STUDENT:\n- ${context.recentConcepts.join('\n- ')}`;
+        }
+
+        if (context.uiState && context.uiState.activeWidget) {
+            contextPrompt += `\n\nCURRENT UI STATE:\n- The student is currently interacting with the '${context.uiState.activeWidget}' widget.`;
+        }
+
+        if (ragContexts.length > 0) {
+            contextPrompt += `\n\nCOURSE RELEVANT KNOWLEDGE (STRICT INSTRUCTION: You MUST use this context strictly. If the student asks something outside this theoretical context, do NOT invent theorems. Stick to the provided definitions to ensure they match the university syllabus):\n`;
+            for (const rag of ragContexts) {
+                contextPrompt += `- [From ${rag.source === 'article' ? 'Course Article' : 'Syllabus Topic'}]: ${rag.content}\n`;
+            }
+        }
+
+        const systemPrompt = `${SOCRATIC_SYSTEM_PROMPT}\n\n${contextPrompt}`;
+
+        const messages: Anthropic.MessageParam[] = context.conversationHistory
+            ? context.conversationHistory.map(m => ({
+                role: m.role as 'user' | 'assistant',
+                content: m.content
+            }))
+            : [];
+
+        messages.push({ role: 'user', content: message });
+
+        const validationTool = getMathValidationTool();
+        const plotTool = getPlotTool();
+        const visualWidgetTool = getVisualWidgetTool();
+
+        if (provider === 'ollama') {
+            const ollamaMessages = [
+                { role: 'system', content: systemPrompt },
+                ...(context.conversationHistory || []).map(m => ({ role: m.role, content: m.content })),
+                { role: 'user', content: message }
+            ];
+
+            const ollamaTools = [
+                { type: "function", function: { name: validationTool.name, description: validationTool.description, parameters: validationTool.input_schema } },
+                { type: "function", function: { name: plotTool.name, description: plotTool.description, parameters: plotTool.input_schema } },
+                { type: "function", function: { name: visualWidgetTool.name, description: visualWidgetTool.description, parameters: visualWidgetTool.input_schema } }
+            ];
+
+            const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'qwen3:8b', // Updated to use the available local model
+                    messages: ollamaMessages,
+                    tools: ollamaTools,
+                    stream: false,
+                    options: { num_ctx: 4096 }
+                })
+            });
+
+            if (!ollamaResponse.ok) {
+                const errText = await ollamaResponse.text();
+                throw new Error(`Ollama API Error: ${errText}`);
+            }
+
+            const ollamaData = await ollamaResponse.json();
+            let msgObj = ollamaData.message;
+            let plotData: any = null;
+            let visualWidgetData: any = null;
+
+            if (msgObj.tool_calls && msgObj.tool_calls.length > 0) {
+                const toolCall = msgObj.tool_calls[0].function;
+                const args = toolCall.arguments;
+
+                if (toolCall.name === 'plot_function') {
+                    plotData = args;
+                    ollamaMessages.push(msgObj);
+                    ollamaMessages.push({ role: 'tool', content: "Plot rendered correctly in the UI." });
+                } else if (toolCall.name === 'render_visual_widget') {
+                    visualWidgetData = { type: args.type, props: args.props };
+                    ollamaMessages.push(msgObj);
+                    ollamaMessages.push({ role: 'tool', content: "Interactive widget launched in the UI." });
+                } else if (toolCall.name === 'validate_math') {
+                    const validationResult = await symbolicValidator.validate({
+                        studentAnswer: args.student_expression,
+                        expectedAnswer: args.expected_expression,
+                    });
+                    ollamaMessages.push(msgObj);
+                    ollamaMessages.push({ role: 'tool', content: JSON.stringify(validationResult) });
+                }
+
+                if (ollamaMessages[ollamaMessages.length - 1].role === 'tool') {
+                    const secondRes = await fetch('http://localhost:11434/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: 'qwen3:8b',
+                            messages: ollamaMessages,
+                            stream: false,
+                            options: { num_ctx: 4096 }
+                        })
+                    });
+                    const secondData = await secondRes.json();
+                    msgObj = secondData.message;
+                }
+            }
+
+            return NextResponse.json({
+                success: true,
+                response: msgObj.content || "Processed your request using local Ollama model.",
+                plot: plotData,
+                visualWidget: visualWidgetData
+            });
+        }
+
+        // Anthropic Flow follows
+        let response = await anthropic.messages.create({
+            model: 'claude-3-haiku-20240307',
+            max_tokens: 500,
+            system: systemPrompt,
+            messages: messages,
+            tools: [validationTool, plotTool, visualWidgetTool],
+        });
+
+        let plotData: any = null;
+        let visualWidgetData: any = null;
+
+        // Handle tool calls
+        if (response.stop_reason === 'tool_use') {
+            const toolCall = response.content.find(
+                (c) => c.type === 'tool_use'
+            ) as Anthropic.ToolUseBlock;
+
+            if (toolCall && toolCall.name === 'validate_math') {
+                const args = toolCall.input as { student_expression: string; expected_expression: string };
+                const validationResult = await symbolicValidator.validate({
+                    studentAnswer: args.student_expression,
+                    expectedAnswer: args.expected_expression,
+                });
+
+                const toolMessage: Anthropic.MessageParam = {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'tool_result',
+                            tool_use_id: toolCall.id,
+                            content: JSON.stringify(validationResult)
+                        }
+                    ]
+                };
+
+                // Add assistant tool use message & user tool result to conversation
+                messages.push({ role: 'assistant', content: response.content });
+                messages.push(toolMessage);
+
+                // Call Anthropic again to generate response based on tool result
+                response = await anthropic.messages.create({
+                    model: 'claude-3-haiku-20240307',
+                    max_tokens: 500,
+                    system: systemPrompt,
+                    messages: messages,
+                    tools: [validationTool, plotTool, visualWidgetTool],
+                });
+            } else if (toolCall && toolCall.name === 'plot_function') {
+                const args = toolCall.input as { expression: string; title: string; x_range?: [number, number]; y_range?: [number, number] };
+                plotData = args;
+
+                const toolMessage: Anthropic.MessageParam = {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'tool_result',
+                            tool_use_id: toolCall.id,
+                            content: JSON.stringify({ success: true, message: "Plot rendered correctly in the UI." })
+                        }
+                    ]
+                };
+
+                messages.push({ role: 'assistant', content: response.content });
+                messages.push(toolMessage);
+
+                response = await anthropic.messages.create({
+                    model: 'claude-3-haiku-20240307',
+                    max_tokens: 500,
+                    system: systemPrompt,
+                    messages: messages,
+                    tools: [validationTool, plotTool, visualWidgetTool],
+                });
+            } else if (toolCall && toolCall.name === 'render_visual_widget') {
+                const args = toolCall.input as { type: string; props: any };
+                visualWidgetData = {
+                    type: args.type,
+                    props: args.props
+                };
+
+                const toolMessage: Anthropic.MessageParam = {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'tool_result',
+                            tool_use_id: toolCall.id,
+                            content: JSON.stringify({ success: true, message: "Interactive widget launched in the UI." })
+                        }
+                    ]
+                };
+
+                messages.push({ role: 'assistant', content: response.content });
+                messages.push(toolMessage);
+
+                response = await anthropic.messages.create({
+                    model: 'claude-3-haiku-20240307',
+                    max_tokens: 500,
+                    system: systemPrompt,
+                    messages: messages,
+                    tools: [validationTool, plotTool, visualWidgetTool],
+                });
+            }
+        }
+
+        // Extract the final text response
+        const textContent = response.content.find(c => c.type === 'text');
+        const finalResponseText = textContent && textContent.type === 'text'
+            ? textContent.text
+            : "I'm having trouble formulating a response. What are your thoughts on the problem?";
 
         return NextResponse.json({
             success: true,
-            response: response,
-            systemPromptUsed: systemPrompt, // For debugging - remove in production
+            response: finalResponseText,
+            plot: plotData,
+            visualWidget: visualWidgetData
         });
 
     } catch (error) {

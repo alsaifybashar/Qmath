@@ -4,6 +4,62 @@ All notable changes to Qmath are documented here.
 
 ---
 
+## [Unreleased] — Interactive AI Tutor & Math Validation
+
+### Summary
+Introduced an Interactive AI Tutor into the study experience that utilizes strict Socratic pedagogy. The AI acts as a gentle guide and does not give direct answers, instead scaffolding student learning. It also integrates a symbolic math tool (`validate_math`) to correctly compute algebraic equivalence, ensuring accurate feedback.
+
+---
+
+### Problem Solved
+Previously, students lacked real-time, personalized guidance when struggling with mathematical problems. General LLMs without strict prompting often simply gave away the answers, and often hallucinated when comparing complex algebraic expressions.
+
+---
+
+### What Changed
+
+#### Socratic Prompting & Context Pipeline
+- **Strict Pedagogy:** Introduced `socratic.ts` defining `SOCRATIC_SYSTEM_PROMPT` which enforces hinting over answering.
+- **Dynamic Context:** The `AIContext` object tracks the user's current question, topic, attempts, elapsed time, and mastery level, tailoring the AI's guidance depth.
+
+#### Tool-Assisted Math Validation
+- **`validate_math` Tool:** Given to Claude to algebraically compare the student's expression against the correct answer.
+- **SymbolicValidator Integration:** The `/api/ai/chat` route captures the model's tool calls, invokes SymPy/algebraic validation logic, and feeds the boolean equivalence back into the conversation automatically.
+
+#### User Experience
+- **Seamless Chat UI:** Embedded `AIPanel` component into the `FocusedStudyLayout`. It maintains conversational history and floats within the study environment.
+- **Interactive Trigger:** Students can click "Fråga AI-handledare" to open the tutor contextually during any question.
+
+---
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `app/api/ai/chat/route.ts` | Complete rewrite using `@anthropic-ai/sdk`, added tool execution loop |
+| `components/ai/AIPanel.tsx` | Enhanced context passing and persistent conversation history |
+| `app/study/page.tsx` | Embedded the AI Tutor seamlessly into the help panel |
+
+### Files Added
+
+| File | Purpose |
+|---|---|
+| `lib/ai/prompts/socratic.ts` | Socratic system prompt and `validate_math` tool schema definition |
+| `tests/unit/ai-chat.test.ts` | Comprehensive unit/security test suite for the AI API route |
+
+---
+
+### Security Notes (Agent B Audit — 4/4 tests passed)
+
+| Risk | Mitigation |
+|---|---|
+| **Unauthorized AI Access (IDOR)** | Added `const session = await auth()` to `route.ts`. Unauthenticated POST requests are rejected with 401 Unauthorized. |
+| **Payload Size DoS** | Included a strict 2000 character limit on the incoming `message` string to prevent massive API token exhaustion. |
+| **XSS / Injection** | `message` values are passed as standard text to the Anthropic API. Tool responses (`validate_math`) are locally verified boolean outputs. Next.js natively mitigates XSS during chat rendering. |
+| **Budget Exhaustion** | Strict `max_tokens: 500` imposed per API request. |
+
+---
+
 ## [Unreleased] — Design Principles Implementation (Phase 1)
 
 ### Summary

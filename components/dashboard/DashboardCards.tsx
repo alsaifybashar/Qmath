@@ -3,7 +3,8 @@
 import {
     ArrowRight, Play, Brain, RefreshCw, FileText, Sparkles, Calendar,
     BookOpen, GraduationCap, User, Settings, Library, HelpCircle,
-    Layers, CreditCard, School, Info, MessageSquare, Zap
+    Layers, CreditCard, School, Info, MessageSquare, Zap, BarChart, UploadCloud,
+    LayoutDashboard, History, FileUp, FlaskConical
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -343,7 +344,35 @@ export function QuickActions({ reviewCount }: QuickActionsProps) {
             label: 'Tentamenssimulering',
             desc: 'Öva under tentamensvillkor',
             color: C.purple,
-            href: '/exams',
+            href: '/exam-sim',
+        },
+        {
+            icon: <MessageSquare size={20} />,
+            label: 'AI-handledare',
+            desc: 'Ställ frågor till din tutor',
+            color: C.green,
+            href: '/ai',
+        },
+        {
+            icon: <BarChart size={20} />,
+            label: 'Din Analys',
+            desc: 'Se din utveckling',
+            color: C.blue,
+            href: '/analytics',
+        },
+        {
+            icon: <FileUp size={20} />,
+            label: 'Ladda upp frågor',
+            desc: 'Få hjälp med egna PDFer',
+            color: C.orange,
+            href: '/upload-exam',
+        },
+        {
+            icon: <FlaskConical size={20} />,
+            label: 'Test AI Panel',
+            desc: 'Sandbox för AI-utveckling',
+            color: '#10B981',
+            href: '/test-ai-panel',
         },
     ];
 
@@ -488,7 +517,9 @@ const navigationItems = [
             { icon: <BookOpen size={18} />, label: 'Kurser', href: '/courses', color: '#667EEA' },
             { icon: <Brain size={18} />, label: 'Övning', href: '/practice', color: '#4361EE' },
             { icon: <Zap size={18} />, label: 'Flashcards', href: '/flashcards', color: '#7C5CFC' },
-            { icon: <Library size={18} />, label: 'Tenta-arkiv', href: '/exams', color: '#11998E' },
+            { icon: <History size={18} />, label: 'Tenta-arkiv', href: '/archive', color: '#11998E' },
+            { icon: <MessageSquare size={18} />, label: 'AI-handledare', href: '/ai', color: '#10B981' },
+            { icon: <FlaskConical size={18} />, label: 'Tentamen-sim', href: '/exam-sim', color: '#8B5CF6' },
         ],
     },
     // Resources section

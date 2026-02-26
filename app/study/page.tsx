@@ -26,6 +26,7 @@ import { generateHint } from '@/app/actions/hint-engine';
 import type { HintResult } from '@/app/actions/hint-engine';
 import { useStudySession } from '@/lib/hooks/useStudySession';
 import { useGamification } from '@/components/gamification';
+import { AIPanel } from '@/components/ai/AIPanel';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const HINT_LEVEL_1_DELAY_MS = 45_000;
@@ -134,6 +135,7 @@ function StudyHubContent() {
         toggleAI,
         nextQuestion,
         clearFeedback,
+        aiState,
     } = useStudySession(topicId);
 
     // ── Local state ──────────────────────────────────────────────────────────
@@ -459,13 +461,57 @@ function StudyHubContent() {
 
     // ── ACTIVE SESSION ────────────────────────────────────────────────────────
     const helpPanelContent = (
-        <MinimalHelpPanel
-            nudgeHint={currentQuestion?.helps?.nudgeHint}
-            guidedHint={currentQuestion?.helps?.guidedHint}
-            relatedFormulas={currentQuestion?.helps?.relatedFormulas}
-            onRequestAI={toggleAI}
-            onHintUsed={handleHintUsed}
-        />
+        <div className="flex flex-col h-full space-y-4">
+            <MinimalHelpPanel
+                nudgeHint={currentQuestion?.helps?.nudgeHint}
+                guidedHint={currentQuestion?.helps?.guidedHint}
+                relatedFormulas={currentQuestion?.helps?.relatedFormulas}
+                onRequestAI={toggleAI}
+                onHintUsed={handleHintUsed}
+            />
+            {aiState.isOpen && (
+                <AIPanel
+                    isOpen={aiState.isOpen}
+                    onToggle={toggleAI}
+                    context={{
+                        currentPage: 'study',
+                        question: currentQuestion ? {
+                            id: currentQuestion.id,
+                            content: currentQuestion.content?.question?.text || '',
+                            topic: topicName || 'Mathematics',
+                            difficulty: currentQuestion.difficulty || 1,
+                            correctAnswer: typeof currentQuestion.correctAnswer === 'string' ? currentQuestion.correctAnswer : JSON.stringify(currentQuestion.correctAnswer),
+                        } : undefined,
+                        attempts: {
+                            count: currentAttempt.attempts,
+                            lastAnswer: currentAttempt.answer || undefined,
+                            timeSpent: sessionTime,
+                        },
+                        student: {
+                            masteryLevel: 0.5,
+                            recentPerformance: 'learning'
+                        }
+                    }}
+                    onSendMessage={async (message, context, messages) => {
+                        const response = await fetch('/api/ai/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ message, context })
+                        });
+                        if (!response.ok) {
+                            let detailedError = 'Failed to communicate with AI Tutor';
+                            try {
+                                const errData = await response.json();
+                                detailedError = errData.details || errData.error || detailedError;
+                            } catch { }
+                            throw new Error(detailedError);
+                        }
+                        const data = await response.json();
+                        return data; // returns { response, plot, success }
+                    }}
+                />
+            )}
+        </div>
     );
 
     return (

@@ -62,30 +62,50 @@ export default function AIChatPage() {
         setInput('');
         setIsLoading(true);
 
-        // Simulate AI response
-        setTimeout(() => {
+        try {
+            const response = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: userMessage.content,
+                    context: {
+                        currentPage: 'review',
+                        student: { masteryLevel: 0.5, recentPerformance: 'learning' },
+                        conversationHistory: messages.map(m => ({ role: m.role, content: m.content }))
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                let errStr = "Failed to communicate with AI Tutor";
+                try {
+                    const errObj = await response.json();
+                    errStr = errObj.details || errObj.error || errStr;
+                } catch (e) { }
+                throw new Error(errStr);
+            }
+
+            const data = await response.json();
+
             const aiResponse: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: generateMockResponse(input),
+                content: data.response,
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, aiResponse]);
+        } catch (error: any) {
+            console.error('Chat error:', error);
+            const errorMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: `Sorry, I encountered an error: ${error?.message || "Please try again."}`,
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMsg]);
+        } finally {
             setIsLoading(false);
-        }, 1500);
-    };
-
-    const generateMockResponse = (question: string): string => {
-        if (question.toLowerCase().includes('eigenvalue')) {
-            return "Great question! To find eigenvalues of a matrix A, you need to solve the characteristic equation:\n\n$$\\det(A - \\lambda I) = 0$$\n\nHere's the step-by-step process:\n\n1. **Subtract λI from A**: Create the matrix $(A - \\lambda I)$\n2. **Calculate the determinant**: Set $\\det(A - \\lambda I) = 0$\n3. **Solve for λ**: Find the roots of the characteristic polynomial\n\nWould you like me to work through a specific example?";
         }
-        if (question.toLowerCase().includes('chain rule')) {
-            return "The **Chain Rule** is used when you need to differentiate a composite function.\n\nIf $y = f(g(x))$, then:\n\n$$\\frac{dy}{dx} = f'(g(x)) \\cdot g'(x)$$\n\nThink of it as \"derivative of the outside times derivative of the inside.\"\n\n**Example**: If $y = \\sin(x^2)$\n- Outside function: $\\sin(u)$ with derivative $\\cos(u)$\n- Inside function: $x^2$ with derivative $2x$\n\n$$\\frac{dy}{dx} = \\cos(x^2) \\cdot 2x = 2x\\cos(x^2)$$\n\nWant me to explain more examples?";
-        }
-        if (question.toLowerCase().includes('integral') || question.toLowerCase().includes('∫')) {
-            return "I'd be happy to help with integration! For $\\int x^2 e^x dx$, we use **Integration by Parts** multiple times.\n\nRecall: $\\int u\\,dv = uv - \\int v\\,du$\n\n**Step 1**: Let $u = x^2$ and $dv = e^x dx$\n- Then $du = 2x\\,dx$ and $v = e^x$\n\n$$\\int x^2 e^x dx = x^2 e^x - 2\\int x e^x dx$$\n\n**Step 2**: Apply integration by parts again to $\\int x e^x dx$\n\n**Final Answer**:\n$$\\int x^2 e^x dx = x^2 e^x - 2x e^x + 2e^x + C = e^x(x^2 - 2x + 2) + C$$\n\nWould you like me to explain any step in more detail?";
-        }
-        return "That's an interesting question! Let me help you understand this concept.\n\nTo give you the best explanation, could you tell me:\n1. Which specific part is confusing?\n2. What course or topic is this from?\n\nI'm here to help you learn step-by-step! 📚";
     };
 
     const handleSuggestion = (question: string) => {

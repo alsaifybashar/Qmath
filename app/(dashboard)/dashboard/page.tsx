@@ -18,6 +18,7 @@ import {
     MasteryTopicCard,
     QuickActions,
     AIRecommendationCard,
+    QuickNavigation,
 } from '@/components/dashboard/DashboardCards';
 import StudyIntelligencePanel from '@/components/dashboard/StudyIntelligencePanel';
 import type { StudyAction } from '@/components/dashboard/StudyIntelligencePanel';
@@ -435,6 +436,11 @@ export default async function DashboardPage() {
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* ── Row 6: All Tools & Navigation ── */}
+            <div className="mt-8">
+                <QuickNavigation />
             </div>
         </div>
     );
