@@ -129,7 +129,7 @@ export function ColumnAddition({
                             key={`ans-${colIdx}`}
                             animate={{
                                 scale: isSolved ? [1, 1.1, 1] : 1,
-                                borderColor: isSolved ? '#22c55e' : 'transparent'
+                                borderColor: isSolved ? '#22c55e' : 'rgba(0, 0, 0, 0)'
                             }}
                             className={cn(
                                 "w-12 h-14 mx-1 rounded bg-slate-100 dark:bg-slate-800 border-2 overflow-hidden",

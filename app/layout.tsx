@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Providers } from './providers';
 import { GamificationProvider } from '@/components/gamification/GamificationProvider';
+import { GlobalErrorLogger } from '@/components/GlobalErrorLogger';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="sv" suppressHydrationWarning>
       <body className={inter.className}>
+        <GlobalErrorLogger />
         <Providers>
           <ThemeProvider
             attribute="class"

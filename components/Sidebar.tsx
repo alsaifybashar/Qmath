@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 import {
     LayoutDashboard, BookOpen, Brain, Target, Layers,
     Settings, HelpCircle, ChevronLeft,
-    GraduationCap, Sparkles, User, Home, FlaskConical, Archive, FileText
+    GraduationCap, Sparkles, User, Home, FlaskConical, Archive, FileText, MonitorPlay
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const studyItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'blue' },
+    { href: '/test-interactive', label: 'Interaktiv Lab', icon: MonitorPlay, color: 'purple' },
     { href: '/courses', label: 'Kurser', icon: BookOpen, color: 'emerald' },
     { href: '/articles', label: 'Artiklar', icon: FileText, color: 'indigo' },
     { href: '/practice', label: 'Öva', icon: Target, color: 'orange' },
@@ -123,7 +124,7 @@ export function Sidebar() {
                                         className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${active
                                             ? `${colors.bg} ${colors.text} shadow-lg ${colors.glow}`
                                             : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                                        }`}
+                                            }`}
                                     >
                                         {active && (
                                             <motion.div
@@ -200,7 +201,7 @@ export function Sidebar() {
                                         className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${active
                                             ? `${colors.bg} ${colors.text} shadow-lg ${colors.glow}`
                                             : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                                        }`}
+                                            }`}
                                     >
                                         {active && (
                                             <motion.div
@@ -263,8 +264,8 @@ export function Sidebar() {
                                 onMouseEnter={() => setHoveredItem(item.href)}
                                 onMouseLeave={() => setHoveredItem(null)}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${active
-                                        ? 'bg-zinc-800 text-white'
-                                        : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'
+                                    ? 'bg-zinc-800 text-white'
+                                    : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'
                                     }`}
                             >
                                 <motion.div

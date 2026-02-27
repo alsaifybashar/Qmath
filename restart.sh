@@ -11,12 +11,14 @@ export NVM_DIR="$HOME/.nvm"
 nvm use 22 || nvm install 22
 echo "✅ Using Node $(node -v)"
 
-# Kill any node/next processes
+# Kill any node/next processes and python math engine
 echo "📦 Stopping existing processes..."
 pkill -f "next dev" 2>/dev/null || true
 pkill -f "node.*qmath" 2>/dev/null || true
+pkill -f "uvicorn" 2>/dev/null || true
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 lsof -ti:3001 | xargs kill -9 2>/dev/null || true
+lsof -ti:8000 | xargs kill -9 2>/dev/null || true
 sleep 1
 
 # Clear Next.js cache
@@ -27,5 +29,12 @@ rm -rf .next
 echo "🔨 Ensuring better-sqlite3 is built for $(node -v)..."
 npm rebuild better-sqlite3
 
-echo "🚀 Starting development server on port 3000..."
+echo "🧮 Starting Python math-engine on port 8000..."
+(cd math-engine && source venv/bin/activate && uvicorn main:app --reload) &
+MATH_PID=$!
+
+# Ensure the Python process is cleaned up when Next.js stops
+trap "echo '🛑 Stopping math-engine...'; kill $MATH_PID 2>/dev/null" EXIT INT TERM
+
+echo "🚀 Starting Next.js development server on port 3000..."
 npm run dev

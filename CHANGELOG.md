@@ -2,7 +2,91 @@
 
 All notable changes to Qmath are documented here.
 
+## [Unreleased] — Core Curriculum Interactive Templates (JSXGraph)
+
+### Summary
+Built out 12 new modular JSXGraph rendering components wrapping mathematical geometries spanning Prerequisite Mathematics, Linear Algebra (TATA24), and Single-Variable Calculus. 
+
 ---
+
+### What Changed
+
+#### New React UI Components Added (components/interactive/templates/)
+**1. Prerequisites:**
+- \PolynomialRootFinder\: Interactive roots for factored form string evaluation.
+- \InteractiveUnitCircle\: Draggable point translating unit circle angles into unrolled sine/cosine wave projections.
+- \InequalitiesVisualizer\: Graphical mapping for dashed/solid regions for 2-point lines.
+
+**2. Linear Algebra (TATA24 focus):**
+- \VectorOperationsBoard\: Interactive arrows demonstrating scaled parallelogram rules and resulting dot products.
+- \MatrixDeformationBoard\: Dynamic area calculation and lattice grid distortion using two basis vector 'hats'.
+- \LinearSpanExplorer\: Visual detection mapping the rank span of a target vector.
+- \EigenvectorVisualizer\: Check mapping using determinant limits evaluating when an interactive $ parallel $ holds true over a  \times 2$ transform.
+- \IntersectingPlanes3D\: Interactive 3D z-axis clipping mapping the line of intersection across  = x - y + k$.
+
+**3. Single-Variable Calculus:**
+- \DerivativeDefinitionBoard\: Moving secant evaluating converging to tangent with $.
+- \CurveSketchingBoard\: Dual stacked UI splitting cubic polynomials (x)$ with interactive sweeping bounds over '(x)$ and ''(x)$.
+- \RiemannSumsVisualizer\: Slider-based midpoint block rendering calculating approximated area boundaries.
+- \TaylorSeriesApproximation\: Slider-based integer loops generating arbitrary degree $ polynomials projecting around a center $.
+
+---
+
+### UI Routes Updated
+- \/test-interactive\: Injected massive scale testing wrappers containing all 12 modules side-by-side.
+
+---
+## [Unreleased] — Interactive Learning Integration (JSXGraph + AI)
+
+### Summary
+Built Phase 1 of the Interactive Learning Architecture. Introduced real-time geometry boards linked via WebSockets to a dedicated Python SymPy math engine.
+
+---
+
+### Problem Solved
+Previously, Qmath lacked a highly interactive mathematical visualization component where AI could monitor and evaluate steps geometrically without generating conversational text.
+ 
+---
+
+### What Changed
+
+#### Frontend Architecture
+- **JSXGraph Integration**: Created the \JSXGraphBoard\ component wrapping the JSXGraph library cleanly for React Server Components.
+- **WebSocket Streaming**: Created the \useGraphStream\ hook for duplex communication of interactions back to a math evaluation server.
+- **Testing Interface**: Built an interactive preview demo at \/test-interactive\ that demonstrates dynamic edge-case gradient rendering based on spatial proximity.
+
+#### Backend Architecture
+- **Microservice Setup**: Initialize a standalone FastAPI application (\math-engine\) utilizing \sympy\ and \websockets\.
+
+---
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| \pp/test-interactive/page.tsx\ | Added \JSXGraphDemo\ showcasing realtime WebSockets |
+| \package.json\ | Installed \jsxgraph\ dependencies |
+
+### Files Added
+
+| File | Purpose |
+|---|---|
+| \components/interactive/JSXGraphBoard.tsx\ | Next.js wrapper for JSXGraph interactive environments |
+| \lib/hooks/useGraphStream.ts\ | React hook for managing math-engine WebSocket connections |
+| \math-engine/main.py\ | Python FastAPI SymPy websocket server |
+| \docs/features/*\ | Additional documentation outlining the new learning features |
+
+---
+
+### Security Notes (Agent B Audit)
+
+| Risk | Mitigation |
+|---|---|
+| **Python Code Evaluation** | Math Engine strictly parses payloads utilizing \sp.sympify\ instead of raw \eval()\ preventing RCE attacks over the interactive geometry WebSocket. |
+| **Invalid Messages** | Try-catch JSON blocks integrated across Next.js and FastAPI to drop ill-formed network interactions seamlessly. |
+
+---
+
 
 ## [Unreleased] — Interactive AI Tutor & Math Validation
 
