@@ -20,7 +20,6 @@ import { DragDropInput } from '@/components/study/DragDropInput';
 import { ToggleInput } from '@/components/study/ToggleInput';
 import { ExpressionBuilderInput } from '@/components/study/ExpressionBuilderInput';
 import { SolutionBuilderInput } from '@/components/study/SolutionBuilderInput';
-import { MinimalHelpPanel } from '@/components/study/MinimalHelpPanel';
 import { HintBubble } from '@/components/study/HintBubble';
 import { generateHint } from '@/app/actions/hint-engine';
 import type { HintResult } from '@/app/actions/hint-engine';
@@ -132,10 +131,8 @@ function StudyHubContent() {
         questionsError,
         submitAnswer,
         revealHint,
-        toggleAI,
         nextQuestion,
         clearFeedback,
-        aiState,
     } = useStudySession(topicId);
 
     // ── Local state ──────────────────────────────────────────────────────────
@@ -460,59 +457,35 @@ function StudyHubContent() {
     }
 
     // ── ACTIVE SESSION ────────────────────────────────────────────────────────
-    const helpPanelContent = (
-        <div className="flex flex-col h-full space-y-4">
-            <MinimalHelpPanel
-                nudgeHint={currentQuestion?.helps?.nudgeHint}
-                guidedHint={currentQuestion?.helps?.guidedHint}
-                relatedFormulas={currentQuestion?.helps?.relatedFormulas}
-                onRequestAI={toggleAI}
-                onHintUsed={handleHintUsed}
-            />
-            {aiState.isOpen && (
-                <AIPanel
-                    isOpen={aiState.isOpen}
-                    onToggle={toggleAI}
-                    context={{
-                        currentPage: 'study',
-                        question: currentQuestion ? {
-                            id: currentQuestion.id,
-                            content: currentQuestion.content?.question?.text || '',
-                            topic: topicName || 'Mathematics',
-                            difficulty: currentQuestion.difficulty || 1,
-                            correctAnswer: typeof currentQuestion.correctAnswer === 'string' ? currentQuestion.correctAnswer : JSON.stringify(currentQuestion.correctAnswer),
-                        } : undefined,
-                        attempts: {
-                            count: currentAttempt.attempts,
-                            lastAnswer: currentAttempt.answer || undefined,
-                            timeSpent: sessionTime,
-                        },
-                        student: {
-                            masteryLevel: 0.5,
-                            recentPerformance: 'learning'
-                        }
-                    }}
-                    onSendMessage={async (message, context, messages) => {
-                        const response = await fetch('/api/ai/chat', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ message, context })
-                        });
-                        if (!response.ok) {
-                            let detailedError = 'Failed to communicate with AI Tutor';
-                            try {
-                                const errData = await response.json();
-                                detailedError = errData.details || errData.error || detailedError;
-                            } catch { }
-                            throw new Error(detailedError);
-                        }
-                        const data = await response.json();
-                        return data; // returns { response, plot, success }
-                    }}
-                />
-            )}
-        </div>
-    );
+    // AI-handledare: fills the right panel in guided Socratic mode.
+    // key={currentQuestion.id} resets the conversation for each new question.
+    const helpPanelContent = currentQuestion ? (
+        <AIPanel
+            key={currentQuestion.id}
+            isOpen={isHelpOpen}
+            onToggle={() => setIsHelpOpen(false)}
+            position="panel"
+            context={{
+                currentPage: 'study',
+                mode: 'guided',
+                question: {
+                    id: currentQuestion.id,
+                    content: currentQuestion.content?.question?.text || '',
+                    topic: topicName || 'Matematik',
+                    difficulty: currentQuestion.difficulty || 1,
+                    correctAnswer: typeof currentQuestion.correctAnswer === 'string'
+                        ? currentQuestion.correctAnswer
+                        : JSON.stringify(currentQuestion.correctAnswer),
+                },
+                attempts: {
+                    count: currentAttempt.attempts,
+                    lastAnswer: currentAttempt.answer || undefined,
+                    timeSpent: sessionTime,
+                },
+                student: { masteryLevel: 0.5, recentPerformance: 'learning' },
+            }}
+        />
+    ) : null;
 
     return (
         <FocusedStudyLayout

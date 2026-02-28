@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 // AI Context Interface
 interface AIContext {
     currentPage: 'study' | 'review' | 'exam' | 'progress';
+    /** 'explore' = free learning assistant; 'guided' = Socratic tutoring on a specific question */
+    mode?: 'explore' | 'guided';
     question?: {
         id: string;
         content: string;
@@ -28,46 +30,65 @@ interface AIContext {
     recentConcepts?: string[];
 }
 
-// Build AI System Prompt Context Part
+// Build context section appended after the base system prompt
 function buildAIContextPrompt(context: AIContext): string {
-    const topicInfo = context.question?.topic ? `helping a student with ${context.question.topic}` : 'helping a student learn mathematics';
+    const isExplore = context.mode === 'explore';
 
-    let prompt = `You are a helpful, encouraging math tutor ${topicInfo}.\n`;
+    let prompt = '';
 
-    if (context.question) {
-        prompt += `
-CURRENT QUESTION:
-${context.question.content}
+    if (isExplore) {
+        // Exploration mode: share student context without question-specific focus
+        prompt += `\nSTUDENT CONTEXT:\n`;
+        prompt += `- Mastery level: ${Math.round(context.student.masteryLevel * 100)}%\n`;
+        prompt += `- Recent performance: ${context.student.recentPerformance}\n`;
 
-${context.question.correctAnswer ? `The correct answer is: ${context.question.correctAnswer} (DO NOT reveal this directly!)` : ''}`;
+        if (context.recentConcepts && context.recentConcepts.length > 0) {
+            prompt += `- Topics the student has recently studied: ${context.recentConcepts.join(', ')}\n`;
+            prompt += `  (Use these to make connections and tailor depth of explanation.)\n`;
+        }
+    } else {
+        // Guided mode: full question context for Socratic tutoring
+        const topicInfo = context.question?.topic ? `helping a student with ${context.question.topic}` : 'helping a student learn mathematics';
+        prompt += `You are currently ${topicInfo}.\n`;
+
+        if (context.question) {
+            prompt += `\nCURRENT QUESTION:\n${context.question.content}\n`;
+            if (context.question.correctAnswer) {
+                prompt += `\nThe correct answer is: ${context.question.correctAnswer} (DO NOT reveal this directly!)\n`;
+            }
+        }
+
+        if (context.attempts && context.attempts.count > 0) {
+            prompt += `\nSTUDENT ATTEMPTS:\n`;
+            prompt += `- Number of attempts: ${context.attempts.count}\n`;
+            prompt += `- Last answer tried: ${context.attempts.lastAnswer || 'Unknown'}\n`;
+            prompt += `- Time spent: ${Math.round(context.attempts.timeSpent / 60)} minutes\n`;
+        }
+
+        prompt += `\nSTUDENT LEVEL:\n`;
+        prompt += `- Current mastery: ${Math.round(context.student.masteryLevel * 100)}%\n`;
+        prompt += `- Recent performance: ${context.student.recentPerformance}\n`;
+
+        if (context.recentConcepts && context.recentConcepts.length > 0) {
+            prompt += `\nRECENT CONCEPTS VIEWED:\n- ${context.recentConcepts.join('\n- ')}\n`;
+        }
     }
 
-    if (context.attempts && context.attempts.count > 0) {
-        prompt += `
-
-STUDENT ATTEMPTS:
-- Number of attempts: ${context.attempts.count}
-- Last answer tried: ${context.attempts.lastAnswer || 'Unknown'}
-- Time spent: ${Math.round(context.attempts.timeSpent / 60)} minutes`;
+    if (context.uiState && context.uiState.activeWidget) {
+        prompt += `\nCURRENT UI STATE:\n- The student is currently interacting with the '${context.uiState.activeWidget}' widget.\n`;
     }
-
-    prompt += `
-
-STUDENT LEVEL:
-- Current mastery: ${Math.round(context.student.masteryLevel * 100)}%
-- Recent performance: ${context.student.recentPerformance}`;
 
     return prompt;
 }
 
 import Anthropic from '@anthropic-ai/sdk';
-import { SOCRATIC_SYSTEM_PROMPT, getMathValidationTool, getPlotTool, getVisualWidgetTool } from '@/lib/ai/prompts/socratic';
+import { SOCRATIC_SYSTEM_PROMPT, EXPLORER_SYSTEM_PROMPT, getMathValidationTool, getPlotTool, getVisualWidgetTool } from '@/lib/ai/prompts/socratic';
 import { symbolicValidator } from '@/lib/content-generation/symbolic-validator';
 import { auth } from '@/auth';
 import { retrieveContext } from '@/lib/ai/rag';
 
 const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || '', // defaults to process.env.ANTHROPIC_API_KEY
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
 export async function POST(request: NextRequest) {
@@ -99,29 +120,29 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Message payload too large' }, { status: 413 });
         }
 
+        // Determine mode: explicit 'explore' mode OR no question context → exploration
+        const isExploreMode = context.mode === 'explore' || !context.question?.correctAnswer;
+        const baseSystemPrompt = isExploreMode ? EXPLORER_SYSTEM_PROMPT : SOCRATIC_SYSTEM_PROMPT;
+        // Exploration mode allows longer responses for richer explanations
+        const maxTokens = isExploreMode ? 800 : 500;
+
         // RAG Context Injection
-        // We look up definitions/theorems related to the student's message or the current topic
         const searchQuery = `${context.question?.topic || ''} ${message}`;
         const ragContexts = await retrieveContext(searchQuery);
 
         let contextPrompt = buildAIContextPrompt(context);
 
-        if (context.recentConcepts && context.recentConcepts.length > 0) {
-            contextPrompt += `\n\nRECENT CONCEPTS VIEWED BY STUDENT:\n- ${context.recentConcepts.join('\n- ')}`;
-        }
-
-        if (context.uiState && context.uiState.activeWidget) {
-            contextPrompt += `\n\nCURRENT UI STATE:\n- The student is currently interacting with the '${context.uiState.activeWidget}' widget.`;
-        }
-
         if (ragContexts.length > 0) {
-            contextPrompt += `\n\nCOURSE RELEVANT KNOWLEDGE (STRICT INSTRUCTION: You MUST use this context strictly. If the student asks something outside this theoretical context, do NOT invent theorems. Stick to the provided definitions to ensure they match the university syllabus):\n`;
+            const ragInstruction = isExploreMode
+                ? '\n\nCOURSE KNOWLEDGE (use this to align explanations with the university syllabus):\n'
+                : '\n\nCOURSE RELEVANT KNOWLEDGE (STRICT INSTRUCTION: You MUST use this context strictly. Stick to provided definitions to ensure they match the university syllabus):\n';
+            contextPrompt += ragInstruction;
             for (const rag of ragContexts) {
                 contextPrompt += `- [From ${rag.source === 'article' ? 'Course Article' : 'Syllabus Topic'}]: ${rag.content}\n`;
             }
         }
 
-        const systemPrompt = `${SOCRATIC_SYSTEM_PROMPT}\n\n${contextPrompt}`;
+        const systemPrompt = `${baseSystemPrompt}\n\n${contextPrompt}`;
 
         const messages: Anthropic.MessageParam[] = context.conversationHistory
             ? context.conversationHistory.map(m => ({
@@ -143,8 +164,9 @@ export async function POST(request: NextRequest) {
                 { role: 'user', content: message }
             ];
 
+            // In explore mode, exclude validate_math tool (no specific question to validate against)
             const ollamaTools = [
-                { type: "function", function: { name: validationTool.name, description: validationTool.description, parameters: validationTool.input_schema } },
+                ...(!isExploreMode ? [{ type: "function", function: { name: validationTool.name, description: validationTool.description, parameters: validationTool.input_schema } }] : []),
                 { type: "function", function: { name: plotTool.name, description: plotTool.description, parameters: plotTool.input_schema } },
                 { type: "function", function: { name: visualWidgetTool.name, description: visualWidgetTool.description, parameters: visualWidgetTool.input_schema } }
             ];
@@ -153,7 +175,7 @@ export async function POST(request: NextRequest) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'qwen3:8b', // Updated to use the available local model
+                    model: 'qwen3:8b',
                     messages: ollamaMessages,
                     tools: ollamaTools,
                     stream: false,
@@ -220,13 +242,19 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // Anthropic Flow follows
+        // Anthropic Flow
+        const anthropicTools: Anthropic.Tool[] = [
+            ...(!isExploreMode ? [validationTool] : []),
+            plotTool,
+            visualWidgetTool,
+        ];
+
         let response = await anthropic.messages.create({
             model: 'claude-3-haiku-20240307',
-            max_tokens: 500,
+            max_tokens: maxTokens,
             system: systemPrompt,
             messages: messages,
-            tools: [validationTool, plotTool, visualWidgetTool],
+            tools: anthropicTools,
         });
 
         let plotData: any = null;
@@ -247,26 +275,18 @@ export async function POST(request: NextRequest) {
 
                 const toolMessage: Anthropic.MessageParam = {
                     role: 'user',
-                    content: [
-                        {
-                            type: 'tool_result',
-                            tool_use_id: toolCall.id,
-                            content: JSON.stringify(validationResult)
-                        }
-                    ]
+                    content: [{ type: 'tool_result', tool_use_id: toolCall.id, content: JSON.stringify(validationResult) }]
                 };
 
-                // Add assistant tool use message & user tool result to conversation
                 messages.push({ role: 'assistant', content: response.content });
                 messages.push(toolMessage);
 
-                // Call Anthropic again to generate response based on tool result
                 response = await anthropic.messages.create({
                     model: 'claude-3-haiku-20240307',
-                    max_tokens: 500,
+                    max_tokens: maxTokens,
                     system: systemPrompt,
                     messages: messages,
-                    tools: [validationTool, plotTool, visualWidgetTool],
+                    tools: anthropicTools,
                 });
             } else if (toolCall && toolCall.name === 'plot_function') {
                 const args = toolCall.input as { expression: string; title: string; x_range?: [number, number]; y_range?: [number, number] };
@@ -274,13 +294,7 @@ export async function POST(request: NextRequest) {
 
                 const toolMessage: Anthropic.MessageParam = {
                     role: 'user',
-                    content: [
-                        {
-                            type: 'tool_result',
-                            tool_use_id: toolCall.id,
-                            content: JSON.stringify({ success: true, message: "Plot rendered correctly in the UI." })
-                        }
-                    ]
+                    content: [{ type: 'tool_result', tool_use_id: toolCall.id, content: JSON.stringify({ success: true, message: "Plot rendered correctly in the UI." }) }]
                 };
 
                 messages.push({ role: 'assistant', content: response.content });
@@ -288,10 +302,10 @@ export async function POST(request: NextRequest) {
 
                 response = await anthropic.messages.create({
                     model: 'claude-3-haiku-20240307',
-                    max_tokens: 500,
+                    max_tokens: maxTokens,
                     system: systemPrompt,
                     messages: messages,
-                    tools: [validationTool, plotTool, visualWidgetTool],
+                    tools: anthropicTools,
                 });
             } else if (toolCall && toolCall.name === 'render_visual_widget') {
                 const args = toolCall.input as { widget_type?: string; type?: string; config?: any; props?: any };
@@ -301,13 +315,7 @@ export async function POST(request: NextRequest) {
 
                 const toolMessage: Anthropic.MessageParam = {
                     role: 'user',
-                    content: [
-                        {
-                            type: 'tool_result',
-                            tool_use_id: toolCall.id,
-                            content: JSON.stringify({ success: true, message: "Interactive widget launched in the UI." })
-                        }
-                    ]
+                    content: [{ type: 'tool_result', tool_use_id: toolCall.id, content: JSON.stringify({ success: true, message: "Interactive widget launched in the UI." }) }]
                 };
 
                 messages.push({ role: 'assistant', content: response.content });
@@ -315,10 +323,10 @@ export async function POST(request: NextRequest) {
 
                 response = await anthropic.messages.create({
                     model: 'claude-3-haiku-20240307',
-                    max_tokens: 500,
+                    max_tokens: maxTokens,
                     system: systemPrompt,
                     messages: messages,
-                    tools: [validationTool, plotTool, visualWidgetTool],
+                    tools: anthropicTools,
                 });
             }
         }

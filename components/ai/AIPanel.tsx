@@ -23,6 +23,7 @@ import { RiemannSumsVisualizer } from '../interactive/templates/RiemannSumsVisua
 import { TaylorSeriesApproximation } from '../interactive/templates/TaylorSeriesApproximation';
 import { useBoardNarration } from '@/lib/hooks/useBoardNarration';
 import type { AnyWidgetType, BoardStateSnapshot } from '@/types/jsxgraph-widgets';
+import { MarkdownMessage } from '@/components/ui/MarkdownMessage';
 
 interface AIMessage {
     id: string;
@@ -44,6 +45,8 @@ interface AIMessage {
 
 interface AIContext {
     currentPage: 'study' | 'review' | 'exam' | 'progress';
+    /** 'explore' = free learning assistant; 'guided' = Socratic tutoring on a specific question */
+    mode?: 'explore' | 'guided';
     question?: {
         id: string;
         content: string;
@@ -72,7 +75,7 @@ interface AIPanelProps {
     isOpen: boolean;
     onToggle: () => void;
     context: AIContext;
-    position?: 'sidebar' | 'floating' | 'bottom-sheet' | 'fullscreen';
+    position?: 'sidebar' | 'floating' | 'bottom-sheet' | 'fullscreen' | 'panel';
     onSendMessage?: (message: string, context: AIContext, messages: AIMessage[]) => Promise<{ response: string; plot?: any }>;
 }
 
@@ -166,6 +169,47 @@ export function AIPanel({
             setTimeout(() => inputRef.current?.focus(), 100);
         }
     }, [isOpen, isMinimized]);
+
+    // Auto-greeting for 'panel' (question-view guided mode): AI opens the conversation
+    const hasGreetedRef = useRef(false);
+    useEffect(() => {
+        if (position !== 'panel') return;
+        if (hasGreetedRef.current) return;
+        if (!isOpen || !context.question) return;
+        hasGreetedRef.current = true;
+
+        (async () => {
+            setIsLoading(true);
+            try {
+                const resp = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: '__OPEN__',
+                        context: { ...context, conversationHistory: [] },
+                        provider,
+                    }),
+                });
+                const data = await resp.json();
+                if (data.response) {
+                    setMessages([{
+                        id: `greeting_${Date.now()}`,
+                        role: 'assistant',
+                        content: data.response,
+                        timestamp: new Date(),
+                        plot: data.plot || undefined,
+                        visualWidget: data.visualWidget || undefined,
+                    }]);
+                }
+            } catch {
+                // silent — student can still type
+            } finally {
+                setIsLoading(false);
+                setTimeout(() => inputRef.current?.focus(), 150);
+            }
+        })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, position, context.question?.id]);
 
     const handleSendMessage = async (textOverride?: string) => {
         const textToSend = textOverride || inputValue;
@@ -266,6 +310,155 @@ export function AIPanel({
         }, 3000);
     };
 
+    // ── PANEL MODE (right-side split in question view) ──────────────────────────
+    if (position === 'panel') {
+        const QUICK_REPLIES = ['Jag förstår inte', 'Kan du förklara mer?', 'Vad är nästa steg?', 'Ge mig en ledtråd'];
+        return (
+            <div className="flex flex-col h-full bg-white dark:bg-zinc-950">
+                {/* Header */}
+                <div className="flex-none px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3 bg-white dark:bg-zinc-900/80">
+                    <div className="w-8 h-8 bg-violet-100 dark:bg-violet-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm text-zinc-900 dark:text-white leading-none">AI-handledare</h3>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
+                            {context.question?.topic || 'Vägledning'}
+                        </p>
+                    </div>
+                    {/* Provider toggle */}
+                    <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 gap-0.5 flex-shrink-0">
+                        <button
+                            onClick={() => setProvider('anthropic')}
+                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${provider === 'anthropic' ? 'bg-violet-600 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+                        >Claude</button>
+                        <button
+                            onClick={() => setProvider('ollama')}
+                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${provider === 'ollama' ? 'bg-emerald-600 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+                        >Lokal</button>
+                    </div>
+                    <button
+                        onClick={onToggle}
+                        className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-white rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex-shrink-0"
+                        title="Stäng handledaren"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Messages — scrollable */}
+                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scroll-smooth">
+                    {/* Loading greeting */}
+                    {messages.length === 0 && isLoading && (
+                        <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 bg-violet-100 dark:bg-violet-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                            </div>
+                            <div className="flex items-center gap-2 text-zinc-400 text-sm">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                Handledaren analyserar uppgiften...
+                            </div>
+                        </div>
+                    )}
+                    {messages.map((message) => (
+                        <motion.div
+                            key={message.id}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                            {message.role === 'assistant' && (
+                                <div className="w-7 h-7 bg-violet-100 dark:bg-violet-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                    <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                                </div>
+                            )}
+                            <div className={`max-w-[82%] text-sm leading-relaxed ${
+                                message.role === 'user'
+                                    ? 'bg-blue-600 text-white rounded-2xl rounded-br-sm px-4 py-2.5'
+                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-2xl rounded-bl-sm px-4 py-2.5'
+                            }`}>
+                                {message.role === 'assistant'
+                                    ? <MarkdownMessage content={message.content} className="text-sm" />
+                                    : <p className="whitespace-pre-wrap">{message.content}</p>
+                                }
+                                {message.plot && (
+                                    <div className="mt-3">
+                                        <AIGraph
+                                            expression={message.plot.expression}
+                                            title={message.plot.title}
+                                            x_range={message.plot.x_range}
+                                            y_range={message.plot.y_range}
+                                        />
+                                    </div>
+                                )}
+                                {message.visualWidget && (
+                                    <div className="mt-3 -mx-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 overflow-hidden">
+                                        <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-2 flex items-center gap-1.5">
+                                            <LayoutGrid className="w-3 h-3" /> Interaktiv visualisering
+                                        </div>
+                                        <div className="overflow-x-auto flex justify-center transform scale-[0.85] origin-top">
+                                            {renderJSXWidget(message.visualWidget, false)}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    ))}
+                    {isLoading && messages.length > 0 && (
+                        <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 bg-violet-100 dark:bg-violet-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                            </div>
+                            <div className="flex items-center gap-1.5 text-zinc-400 text-sm">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                Tänker...
+                            </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Quick replies — shown when AI has responded */}
+                {messages.length > 0 && !isLoading && (
+                    <div className="flex-none px-4 pb-2 flex flex-wrap gap-1.5">
+                        {QUICK_REPLIES.map((reply) => (
+                            <button
+                                key={reply}
+                                onClick={() => { setInputValue(reply); setTimeout(() => inputRef.current?.focus(), 0); }}
+                                className="px-3 py-1 text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300 rounded-full transition-colors border border-transparent hover:border-violet-200 dark:hover:border-violet-500/30"
+                            >
+                                {reply}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Input */}
+                <div className="flex-none px-4 pb-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                    <div className="flex gap-2 items-center">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Skriv ditt svar eller fråga..."
+                            disabled={isLoading}
+                            className="flex-1 px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder:text-zinc-400 text-sm rounded-xl border-2 border-transparent focus:border-violet-400 dark:focus:border-violet-500 focus:outline-none disabled:opacity-50 transition-colors"
+                        />
+                        <button
+                            onClick={() => handleSendMessage()}
+                            disabled={!inputValue.trim() || isLoading}
+                            className="p-2.5 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-200 dark:disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-xl transition-colors disabled:cursor-not-allowed flex-shrink-0"
+                        >
+                            <Send className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Collapsed state
     if (!isOpen) {
         return (
@@ -319,6 +512,9 @@ export function AIPanel({
             </motion.div>
         );
     }
+
+    // Mode helpers
+    const isExploreMode = context.mode === 'explore' || !context.question?.correctAnswer;
 
     // Expanded state
     const isFullScreen = position === 'fullscreen';
@@ -415,14 +611,38 @@ export function AIPanel({
                                     <Bot className="w-8 h-8 text-violet-500" />
                                 </div>
                                 <h4 className="font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
-                                    How can I help?
+                                    {isExploreMode ? 'Explore Mathematics' : 'How can I help?'}
                                 </h4>
-                                <p className="text-sm text-zinc-500 max-w-[200px]">
-                                    I'm here to guide you through this problem without giving away the answer.
+                                <p className="text-sm text-zinc-500 max-w-[220px]">
+                                    {isExploreMode
+                                        ? 'Ask me anything — concepts, visualizations, proofs, or how topics connect.'
+                                        : "I'm here to guide you through this problem without giving away the answer."}
                                 </p>
 
                                 {/* Quick prompts */}
-                                {!isFullScreen && (
+                                {isExploreMode && isFullScreen && (
+                                    <div className="mt-6 flex flex-wrap gap-2 justify-center max-w-lg">
+                                        {[
+                                            'Explain derivatives visually',
+                                            'Show me how eigenvectors work',
+                                            'What is the intuition behind integrals?',
+                                            'How do Taylor series approximate functions?',
+                                        ].map((prompt, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => {
+                                                    setInputValue(prompt);
+                                                    inputRef.current?.focus();
+                                                }}
+                                                className="px-4 py-2 text-sm text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-violet-500/50 rounded-full transition-all"
+                                            >
+                                                {prompt}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {!isExploreMode && !isFullScreen && (
                                     <div className="mt-4 space-y-2 w-full">
                                         {[
                                             "I don't know where to start",
@@ -468,7 +688,10 @@ export function AIPanel({
                                                                 <Bot className="w-5 h-5 text-white" />
                                                             </div>
                                                             <div className={`flex-1 leading-relaxed pt-1 ${message.isNarration ? 'text-slate-400 text-sm italic border-l-2 border-violet-500/30 pl-3' : 'text-slate-200 text-[15px]'}`}>
-                                                                {message.content}
+                                                                {message.isNarration
+                                                                    ? message.content
+                                                                    : <MarkdownMessage content={message.content} className="text-[15px]" />
+                                                                }
                                                             </div>
                                                         </div>
 
@@ -590,7 +813,7 @@ export function AIPanel({
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Ask about this problem..."
+                                placeholder={isExploreMode ? "Ask anything — concepts, proofs, visualizations..." : "Ask about this problem..."}
                                 disabled={isLoading}
                                 className="flex-1 px-4 py-3 bg-transparent text-white text-base focus:outline-none disabled:opacity-50"
                             />

@@ -38,15 +38,16 @@ export function FocusedStudyLayout({
         ? Math.round((questionNumber / totalQuestions) * 100)
         : 0;
 
+    const splitActive = isHelpOpen && !!helpPanel;
+
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors">
 
-            {/* ── Header ─────────────────────────────────────────────────────── */}
+            {/* ── Fixed Header ──────────────────────────────────────────────── */}
             <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-100 dark:border-zinc-900">
-                {/* Main header row */}
                 <div className="h-14 px-4 flex items-center gap-4">
 
-                    {/* Left: back link */}
+                    {/* Left: back */}
                     <Link
                         href="/practice"
                         className="flex items-center gap-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors flex-shrink-0"
@@ -69,7 +70,6 @@ export function FocusedStudyLayout({
 
                     {/* Right: XP + streak + help */}
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* XP counter — animates on change */}
                         {xpEarned > 0 && (
                             <motion.div
                                 key={xpEarned}
@@ -79,13 +79,9 @@ export function FocusedStudyLayout({
                                 className="flex items-center gap-1 px-2 py-1 bg-violet-50 dark:bg-violet-500/10 rounded-lg"
                             >
                                 <Zap className="w-3 h-3 text-violet-500" />
-                                <span className="text-xs font-bold text-violet-600 dark:text-violet-400">
-                                    {xpEarned}
-                                </span>
+                                <span className="text-xs font-bold text-violet-600 dark:text-violet-400">{xpEarned}</span>
                             </motion.div>
                         )}
-
-                        {/* Streak badge (shows at 2+) */}
                         {streak >= 2 && (
                             <motion.div
                                 initial={{ scale: 0.8, opacity: 0 }}
@@ -93,22 +89,21 @@ export function FocusedStudyLayout({
                                 className="flex items-center gap-1 px-2 py-1 bg-orange-50 dark:bg-orange-500/10 rounded-lg"
                             >
                                 <Flame className="w-3 h-3 text-orange-500" />
-                                <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
-                                    {streak}
-                                </span>
+                                <span className="text-xs font-bold text-orange-600 dark:text-orange-400">{streak}</span>
                             </motion.div>
                         )}
 
-                        {/* Help — desktop */}
+                        {/* Help toggle — desktop */}
                         <button
                             onClick={handleHelpToggle}
-                            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isHelpOpen
-                                ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300'
-                                : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                                }`}
+                            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                                splitActive
+                                    ? 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300'
+                                    : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                            }`}
                         >
                             <Lightbulb className="w-4 h-4" />
-                            <span>Hjälp</span>
+                            <span>{splitActive ? 'Dölj handledare' : 'Hjälp'}</span>
                         </button>
 
                         {/* Help — mobile */}
@@ -121,7 +116,7 @@ export function FocusedStudyLayout({
                     </div>
                 </div>
 
-                {/* Colored progress bar */}
+                {/* Progress bar */}
                 <div className="h-1 bg-zinc-100 dark:bg-zinc-800">
                     <motion.div
                         className="h-full bg-emerald-500"
@@ -132,45 +127,37 @@ export function FocusedStudyLayout({
                 </div>
             </header>
 
-            {/* ── Main content (offset 60px = 56px header + 4px bar) ─────────── */}
+            {/* ── Body below fixed header ───────────────────────────────────── */}
             <div className="pt-[60px] min-h-screen flex">
-                <main className={`flex-1 transition-all duration-300 ${isHelpOpen && helpPanel ? 'lg:mr-[420px]' : ''
-                    }`}>
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+
+                {/* ── LEFT: Question content ──────────────────────────────── */}
+                <main
+                    className={`transition-all duration-300 ease-in-out overflow-y-auto ${
+                        splitActive ? 'lg:w-1/2 flex-none' : 'flex-1'
+                    }`}
+                >
+                    <div className={`py-8 lg:py-12 px-4 sm:px-6 ${splitActive ? 'max-w-xl mx-auto lg:px-8' : 'max-w-4xl mx-auto lg:px-8'}`}>
                         {children}
                     </div>
                 </main>
 
-                {/* Help panel — desktop (slide in from right) */}
+                {/* ── RIGHT: AI Tutor panel — desktop only ────────────────── */}
                 <AnimatePresence>
-                    {isHelpOpen && helpPanel && (
+                    {splitActive && (
                         <motion.aside
+                            key="ai-panel-right"
                             initial={{ x: '100%', opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: '100%', opacity: 0 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="hidden lg:block fixed right-0 top-[60px] bottom-0 w-[420px] bg-white dark:bg-zinc-900 border-l border-zinc-100 dark:border-zinc-800 overflow-y-auto"
+                            transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+                            className="hidden lg:flex fixed right-0 top-[60px] bottom-0 w-1/2 flex-col border-l border-zinc-200 dark:border-zinc-800 shadow-[-12px_0_30px_-8px_rgba(0,0,0,0.08)] dark:shadow-[-12px_0_30px_-8px_rgba(0,0,0,0.4)] z-40"
                         >
-                            <div className="sticky top-0 bg-white dark:bg-zinc-900 p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                                <h3 className="font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                                    <Lightbulb className="w-4 h-4 text-amber-500" />
-                                    Hjälp & resurser
-                                </h3>
-                                <button
-                                    onClick={handleHelpToggle}
-                                    className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                            <div className="p-4">
-                                {helpPanel}
-                            </div>
+                            {helpPanel}
                         </motion.aside>
                     )}
                 </AnimatePresence>
 
-                {/* Help panel — mobile (bottom sheet) */}
+                {/* ── Mobile bottom sheet ─────────────────────────────────── */}
                 <AnimatePresence>
                     {isMobileHelpOpen && helpPanel && (
                         <>
@@ -186,24 +173,25 @@ export function FocusedStudyLayout({
                                 animate={{ y: 0 }}
                                 exit={{ y: '100%' }}
                                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                                className="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-zinc-900 rounded-t-2xl max-h-[80vh] overflow-y-auto lg:hidden"
+                                className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl h-[85vh] overflow-hidden lg:hidden flex flex-col bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800"
                             >
-                                <div className="sticky top-0 bg-white dark:bg-zinc-900 p-4 border-b border-zinc-100 dark:border-zinc-800">
-                                    <div className="w-10 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full mx-auto mb-3" />
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="font-semibold flex items-center gap-2">
-                                            <Lightbulb className="w-4 h-4 text-amber-500" />
-                                            Hjälp & resurser
-                                        </h3>
+                                {/* Drag handle + close */}
+                                <div className="flex-none pt-3 pb-2 px-4 flex flex-col items-center border-b border-zinc-200 dark:border-zinc-800">
+                                    <div className="w-10 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full mb-3" />
+                                    <div className="flex items-center justify-between w-full">
+                                        <span className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                                            <Lightbulb className="w-4 h-4 text-violet-500" />
+                                            AI-handledare
+                                        </span>
                                         <button
                                             onClick={() => setIsMobileHelpOpen(false)}
-                                            className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-lg"
+                                            className="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white rounded-lg"
                                         >
-                                            <X className="w-5 h-5" />
+                                            <X className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
-                                <div className="p-4 pb-8">
+                                <div className="flex-1 overflow-hidden">
                                     {helpPanel}
                                 </div>
                             </motion.div>
