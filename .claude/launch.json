@@ -5,7 +5,8 @@
       "name": "qmath-dev",
       "runtimeExecutable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
       "runtimeArgs": ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "D:\\start-qmath-ps.ps1"],
-      "port": 3003
+      "port": 3003,
+      "autoPort": false
     }
   ]
 }

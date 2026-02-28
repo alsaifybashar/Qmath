@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { DerivativeDefinitionBoardProps } from '@/types/jsxgraph-widgets';
 
-export function DerivativeDefinitionBoard() {
-    const [hVal, setHVal] = useState('1.5');
+export function DerivativeDefinitionBoard({
+    initialH = 1.5,
+    onStateChange,
+}: DerivativeDefinitionBoardProps) {
+    const [hVal, setHVal] = useState(initialH.toFixed(2));
     const [secantSlope, setSecantSlope] = useState('0');
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
 
     const initBoard = (JXG: any, boardId: string) => {
         const board = JXG.JSXGraph.initBoard(boardId, {
@@ -20,8 +26,7 @@ export function DerivativeDefinitionBoard() {
         const ptX = board.create('glider', [2, f(2), board.defaultAxes.x], { name: 'x', size: 4, visible: false });
         const ptF = board.create('point', [() => ptX.X(), () => f(ptX.X())], { name: 'f(x)', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb', fixed: true });
 
-        // Draggable point x+h
-        const ptH = board.create('glider', [4, 0, board.defaultAxes.x], { name: 'x+h', size: 5, fillColor: '#ef4444', strokeColor: '#dc2626' });
+        const ptH = board.create('glider', [2 + initialH, 0, board.defaultAxes.x], { name: 'x+h', size: 5, fillColor: '#ef4444', strokeColor: '#dc2626' });
         const ptFH = board.create('point', [() => ptH.X(), () => f(ptH.X())], { name: 'f(x+h)', size: 4, fillColor: '#ef4444', strokeColor: '#dc2626' });
 
         // Construction lines
@@ -52,6 +57,10 @@ export function DerivativeDefinitionBoard() {
             const slope = (f(ptH.X()) - f(ptX.X())) / h;
             setHVal(h.toFixed(2));
             setSecantSlope(slope.toFixed(2));
+            onStateChangeRef.current?.({
+                hVal: parseFloat(h.toFixed(2)),
+                secantSlope: parseFloat(slope.toFixed(2)),
+            });
         };
 
         ptH.on('drag', updateMath);

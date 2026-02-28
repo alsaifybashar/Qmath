@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, X, Minimize2, Maximize2, Loader2, Sparkles, LayoutGrid, Mic } from 'lucide-react';
 import { AIGraph } from './AIGraph';
@@ -9,12 +9,27 @@ import { ColumnAddition } from '../interactive/ColumnAddition';
 import { CalculusTangent } from '../interactive/CalculusTangent';
 import { VectorSpace } from '../interactive/VectorSpace';
 import { ConversationalMode } from './ConversationalMode';
+import { PolynomialRootFinder } from '../interactive/templates/PolynomialRootFinder';
+import { InteractiveUnitCircle } from '../interactive/templates/InteractiveUnitCircle';
+import { InequalitiesVisualizer } from '../interactive/templates/InequalitiesVisualizer';
+import { VectorOperationsBoard } from '../interactive/templates/VectorOperationsBoard';
+import { MatrixDeformationBoard } from '../interactive/templates/MatrixDeformationBoard';
+import { LinearSpanExplorer } from '../interactive/templates/LinearSpanExplorer';
+import { EigenvectorVisualizer } from '../interactive/templates/EigenvectorVisualizer';
+import { IntersectingPlanes3D } from '../interactive/templates/IntersectingPlanes3D';
+import { DerivativeDefinitionBoard } from '../interactive/templates/DerivativeDefinitionBoard';
+import { CurveSketchingBoard } from '../interactive/templates/CurveSketchingBoard';
+import { RiemannSumsVisualizer } from '../interactive/templates/RiemannSumsVisualizer';
+import { TaylorSeriesApproximation } from '../interactive/templates/TaylorSeriesApproximation';
+import { useBoardNarration } from '@/lib/hooks/useBoardNarration';
+import type { AnyWidgetType, BoardStateSnapshot } from '@/types/jsxgraph-widgets';
 
 interface AIMessage {
     id: string;
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
+    isNarration?: boolean;
     plot?: {
         expression: string;
         title: string;
@@ -22,7 +37,7 @@ interface AIMessage {
         y_range?: [number, number];
     };
     visualWidget?: {
-        type: 'GridMultiplier' | 'ColumnAddition' | 'CalculusTangent' | 'VectorSpace';
+        type: AnyWidgetType;
         props: any;
     };
 }
@@ -78,6 +93,56 @@ export function AIPanel({
     const [provider, setProvider] = useState<'anthropic' | 'ollama'>('anthropic');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const { reportBoardState, lastNarration } = useBoardNarration({
+        debounceMs: 1500,
+        provider,
+        onNarration: (text) => {
+            setMessages(prev => [...prev, {
+                id: `narration_${Date.now()}`,
+                role: 'assistant',
+                content: text,
+                timestamp: new Date(),
+                isNarration: true,
+            }]);
+        },
+    });
+
+    const renderJSXWidget = useCallback((widgetData: { type: string; props: any }, withStateChange = true) => {
+        const stateChangeHandler = withStateChange
+            ? (state: Record<string, any>) => {
+                const lastWidgetMsg = [...messages].reverse().find(m => m.visualWidget);
+                const widgetType = lastWidgetMsg?.visualWidget?.type || widgetData.type;
+                reportBoardState({
+                    widgetType: widgetType as AnyWidgetType,
+                    timestamp: Date.now(),
+                    data: state as BoardStateSnapshot['data'],
+                });
+            }
+            : undefined;
+
+        const sharedProps = { ...widgetData.props, onStateChange: stateChangeHandler };
+
+        switch (widgetData.type) {
+            case 'PolynomialRootFinder':    return <PolynomialRootFinder {...sharedProps} />;
+            case 'InteractiveUnitCircle':   return <InteractiveUnitCircle {...sharedProps} />;
+            case 'InequalitiesVisualizer':  return <InequalitiesVisualizer {...sharedProps} />;
+            case 'VectorOperationsBoard':   return <VectorOperationsBoard {...sharedProps} />;
+            case 'MatrixDeformationBoard':  return <MatrixDeformationBoard {...sharedProps} />;
+            case 'LinearSpanExplorer':      return <LinearSpanExplorer {...sharedProps} />;
+            case 'EigenvectorVisualizer':   return <EigenvectorVisualizer {...sharedProps} />;
+            case 'IntersectingPlanes3D':    return <IntersectingPlanes3D {...sharedProps} />;
+            case 'DerivativeDefinitionBoard': return <DerivativeDefinitionBoard {...sharedProps} />;
+            case 'CurveSketchingBoard':     return <CurveSketchingBoard {...sharedProps} />;
+            case 'RiemannSumsVisualizer':   return <RiemannSumsVisualizer {...sharedProps} />;
+            case 'TaylorSeriesApproximation': return <TaylorSeriesApproximation {...sharedProps} />;
+            case 'GridMultiplier':  return <GridMultiplier {...widgetData.props} />;
+            case 'ColumnAddition':  return <ColumnAddition {...widgetData.props} />;
+            case 'CalculusTangent': return <CalculusTangent {...widgetData.props} />;
+            case 'VectorSpace':     return <VectorSpace {...widgetData.props} />;
+            default: return null;
+        }
+    }, [messages, reportBoardState]);
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
@@ -285,11 +350,14 @@ export function AIPanel({
                     <div className="flex-1 w-full h-full flex items-center justify-center p-8 overflow-y-auto overflow-x-hidden relative">
                         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:30px_30px] pointer-events-none" />
                         <div className="w-full max-w-4xl relative z-10 transform transition-transform duration-500 scale-100 origin-center flex justify-center">
-                            {activeWidgetData.type === 'GridMultiplier' && <GridMultiplier {...activeWidgetData.props} />}
-                            {activeWidgetData.type === 'ColumnAddition' && <ColumnAddition {...activeWidgetData.props} />}
-                            {activeWidgetData.type === 'CalculusTangent' && <CalculusTangent {...activeWidgetData.props} />}
-                            {activeWidgetData.type === 'VectorSpace' && <VectorSpace {...activeWidgetData.props} />}
+                            {renderJSXWidget(activeWidgetData, true)}
                         </div>
+                        {lastNarration && (
+                            <div className="absolute bottom-6 left-6 right-6 z-50 p-3 bg-slate-900/90 backdrop-blur border border-violet-500/30 rounded-xl text-sm text-slate-300 italic pointer-events-none">
+                                <Bot className="w-4 h-4 text-violet-400 inline mr-2" />
+                                {lastNarration}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -396,10 +464,10 @@ export function AIPanel({
                                                 ) : (
                                                     <div className="self-start w-full flex flex-col">
                                                         <div className="flex items-start gap-4">
-                                                            <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20 mt-1">
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${message.isNarration ? 'bg-violet-500/30 shadow-none' : 'bg-violet-600 shadow-lg shadow-violet-500/20'}`}>
                                                                 <Bot className="w-5 h-5 text-white" />
                                                             </div>
-                                                            <div className="flex-1 text-slate-200 text-[15px] leading-relaxed pt-1">
+                                                            <div className={`flex-1 leading-relaxed pt-1 ${message.isNarration ? 'text-slate-400 text-sm italic border-l-2 border-violet-500/30 pl-3' : 'text-slate-200 text-[15px]'}`}>
                                                                 {message.content}
                                                             </div>
                                                         </div>
@@ -409,10 +477,7 @@ export function AIPanel({
                                                                 {(!isSplitScreen && message.visualWidget === activeWidgetData) || (!isFullScreen) ? (
                                                                     <div className="w-full flex flex-col">
                                                                         <div className="w-full max-w-5xl flex justify-center overflow-x-auto">
-                                                                            {message.visualWidget.type === 'GridMultiplier' && <GridMultiplier {...message.visualWidget.props} />}
-                                                                            {message.visualWidget.type === 'ColumnAddition' && <ColumnAddition {...message.visualWidget.props} />}
-                                                                            {message.visualWidget.type === 'CalculusTangent' && <CalculusTangent {...message.visualWidget.props} />}
-                                                                            {message.visualWidget.type === 'VectorSpace' && <VectorSpace {...message.visualWidget.props} />}
+                                                                            {renderJSXWidget(message.visualWidget, false)}
                                                                         </div>
                                                                         {!isSplitScreen && isFullScreen && message.visualWidget === activeWidgetData && (
                                                                             <button onClick={() => setIsWidgetMinimized(false)} className="mt-4 px-4 py-2 text-sm bg-violet-600/10 hover:bg-violet-600/20 text-violet-400 hover:text-violet-300 rounded-xl transition-colors flex items-center gap-2 border border-violet-500/20 w-fit self-center">
@@ -423,7 +488,7 @@ export function AIPanel({
                                                                 ) : (
                                                                     <div className="flex items-center gap-3 p-3 bg-slate-900 border border-violet-500/20 rounded-xl text-slate-300 text-sm shadow-inner max-w-md">
                                                                         <div className="p-2 bg-violet-500/20 rounded-lg"><LayoutGrid className="w-4 h-4 text-violet-400" /></div>
-                                                                        <div className="flex-1">Interactive Widget</div>
+                                                                        <div className="flex-1">Interactive Widget: {message.visualWidget.type}</div>
                                                                         {message.visualWidget === activeWidgetData && (
                                                                             <button onClick={() => setIsWidgetMinimized(false)} className="px-3 py-1.5 text-xs bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors flex items-center gap-1 shadow-md hover:shadow-lg focus:outline-none">
                                                                                 <Maximize2 className="w-3 h-3" /> Expand
@@ -460,18 +525,7 @@ export function AIPanel({
                                                             <div className="flex items-center gap-1.5"><LayoutGrid className="w-3.5 h-3.5" /> Interactive Concept</div>
                                                         </div>
                                                         <div className="w-full overflow-hidden flex justify-center origin-top transform scale-75 md:scale-100">
-                                                            {message.visualWidget.type === 'GridMultiplier' && (
-                                                                <GridMultiplier {...message.visualWidget.props} />
-                                                            )}
-                                                            {message.visualWidget.type === 'ColumnAddition' && (
-                                                                <ColumnAddition {...message.visualWidget.props} />
-                                                            )}
-                                                            {message.visualWidget.type === 'CalculusTangent' && (
-                                                                <CalculusTangent {...message.visualWidget.props} />
-                                                            )}
-                                                            {message.visualWidget.type === 'VectorSpace' && (
-                                                                <VectorSpace {...message.visualWidget.props} />
-                                                            )}
+                                                            {renderJSXWidget(message.visualWidget, false)}
                                                         </div>
                                                     </div>
                                                 )}

@@ -68,7 +68,8 @@
       "Bash(powershell.exe -Command \"if \\(Test-Path ''C:\\\\Users\\\\basha\\\\.wslconfig''\\) { Get-Content ''C:\\\\Users\\\\basha\\\\.wslconfig'' } else { ''FILE_NOT_FOUND'' }\")",
       "Bash(powershell.exe -Command \"wsl --shutdown; Start-Sleep -Seconds 3; echo ''WSL2 shutdown complete''\")",
       "Bash(powershell.exe -Command \"Start-Process -NoNewWindow -FilePath ''ollama'' -ArgumentList ''pull'',''llama3.2''; echo ''Pull started''\")",
-      "Bash(powershell.exe -Command \"ollama pull llama3.2 2>&1\")"
+      "Bash(powershell.exe -Command \"ollama pull llama3.2 2>&1\")",
+      "Bash(powershell.exe -NoProfile -Command \"for \\($i=0; $i -lt 15; $i++\\) { Start-Sleep 2; $r = \\(Invoke-WebRequest -Uri ''http://localhost:3003'' -UseBasicParsing -ErrorAction SilentlyContinue\\).StatusCode; if \\($r -eq 200\\) { Write-Output ''UP''; break } else { Write-Output \"\"Waiting... $i\"\" } }\")"
     ]
   }
 }

@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { CurveSketchingBoardProps } from '@/types/jsxgraph-widgets';
 
-export function CurveSketchingBoard() {
+export function CurveSketchingBoard({
+    initialA = 0.5,
+    onStateChange,
+}: CurveSketchingBoardProps) {
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
+
     const initBoard = (JXG: any, boardId: string) => {
         // We will create two boards horizontally or vertically stacked.
         // For simplicity in the Next.js wrapper, we will do one large bounding box and draw separated axes.
@@ -23,7 +30,10 @@ export function CurveSketchingBoard() {
         // We scale it and shift it for visual separation
 
         // P1, P2, P3 control points for a smooth spline or bezier, but let's use gliders to define a cubic
-        const a = board.create('slider', [[-4, 10], [-2, 10], [-1, 0.5, 1]], { name: 'a' });
+        const a = board.create('slider', [[-4, 10], [-2, 10], [-1, Math.max(-1, Math.min(1, initialA)), 1]], { name: 'a' });
+        a.on('drag', () => {
+            onStateChangeRef.current?.({ aValue: parseFloat(a.Value().toFixed(2)) });
+        });
 
         const f = (x: number) => a.Value() * (Math.pow(x, 3) - 4 * x) + 6; // +6 shifts to top graph
         const fPrime = (x: number) => a.Value() * (3 * Math.pow(x, 2) - 4) - 6; // -6 shifts to bottom graph

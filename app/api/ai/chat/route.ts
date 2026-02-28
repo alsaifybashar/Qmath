@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
 
         const validationTool = getMathValidationTool();
         const plotTool = getPlotTool();
-        const visualWidgetTool = getVisualWidgetTool();
+        const visualWidgetTool = getVisualWidgetTool(provider);
 
         if (provider === 'ollama') {
             const ollamaMessages = [
@@ -180,7 +180,11 @@ export async function POST(request: NextRequest) {
                     ollamaMessages.push(msgObj);
                     ollamaMessages.push({ role: 'tool', content: "Plot rendered correctly in the UI." });
                 } else if (toolCall.name === 'render_visual_widget') {
-                    visualWidgetData = { type: args.type, props: args.props };
+                    // Normalize: new schema uses widget_type, legacy uses type
+                    const rawArgs = typeof args === 'string' ? JSON.parse(args) : args;
+                    const widgetType = rawArgs.widget_type || rawArgs.type;
+                    const widgetConfig = rawArgs.config || rawArgs.props || {};
+                    visualWidgetData = { type: widgetType, props: widgetConfig };
                     ollamaMessages.push(msgObj);
                     ollamaMessages.push({ role: 'tool', content: "Interactive widget launched in the UI." });
                 } else if (toolCall.name === 'validate_math') {
@@ -290,11 +294,10 @@ export async function POST(request: NextRequest) {
                     tools: [validationTool, plotTool, visualWidgetTool],
                 });
             } else if (toolCall && toolCall.name === 'render_visual_widget') {
-                const args = toolCall.input as { type: string; props: any };
-                visualWidgetData = {
-                    type: args.type,
-                    props: args.props
-                };
+                const args = toolCall.input as { widget_type?: string; type?: string; config?: any; props?: any };
+                const widgetType = args.widget_type || args.type;
+                const widgetConfig = args.config || args.props || {};
+                visualWidgetData = { type: widgetType, props: widgetConfig };
 
                 const toolMessage: Anthropic.MessageParam = {
                     role: 'user',

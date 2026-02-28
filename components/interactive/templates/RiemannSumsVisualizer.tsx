@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { RiemannSumsVisualizerProps } from '@/types/jsxgraph-widgets';
 
-export function RiemannSumsVisualizer() {
+export function RiemannSumsVisualizer({
+    initialN = 5,
+    method = 'middle',
+    onStateChange,
+}: RiemannSumsVisualizerProps) {
     const [area, setArea] = useState('0');
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
 
     const initBoard = (JXG: any, boardId: string) => {
         const board = JXG.JSXGraph.initBoard(boardId, {
@@ -14,21 +21,24 @@ export function RiemannSumsVisualizer() {
         const f = (x: number) => -0.5 * Math.pow(x - 3, 2) + 8;
         board.create('functiongraph', [f, 0, 5], { strokeColor: '#3b82f6', strokeWidth: 3 });
 
-        // Slider for n partitions
-        const nSlider = board.create('slider', [[1, -1], [4, -1], [1, 5, 20]], { name: 'n', snapWidth: 1 });
+        const clampedN = Math.max(1, Math.min(20, initialN));
+        const nSlider = board.create('slider', [[1, -1], [4, -1], [1, clampedN, 20]], { name: 'n', snapWidth: 1 });
 
-        // Riemann sum: board.create('riemannsum', [f, n, type, x0, x1])
-        // type: 'left', 'right', 'middle'
         const rsum = board.create('riemannsum', [
             f,
             () => nSlider.Value(),
-            'middle',
+            method,
             0,
             5
         ], { fillColor: '#10b981', fillOpacity: 0.3 });
 
         const updateMath = () => {
-            setArea(rsum.Value().toFixed(3));
+            const areaVal = rsum.Value();
+            setArea(areaVal.toFixed(3));
+            onStateChangeRef.current?.({
+                n: Math.round(nSlider.Value()),
+                approximatedArea: parseFloat(areaVal.toFixed(3)),
+            });
         };
 
         nSlider.on('drag', updateMath);

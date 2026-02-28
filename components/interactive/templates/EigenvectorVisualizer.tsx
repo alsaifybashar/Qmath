@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { EigenvectorVisualizerProps } from '@/types/jsxgraph-widgets';
 
-export function EigenvectorVisualizer() {
+export function EigenvectorVisualizer({
+    initialVectorAngleDeg = 0,
+    onStateChange,
+}: EigenvectorVisualizerProps) {
     const [isEigen, setIsEigen] = useState(false);
     const [factor, setFactor] = useState('');
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
 
     const initBoard = (JXG: any, boardId: string) => {
         const board = JXG.JSXGraph.initBoard(boardId, {
@@ -18,8 +24,8 @@ export function EigenvectorVisualizer() {
         // Eigenvalues: 3 (vector [1,1]) and 1 (vector [-1,1])
         const A = [[2, 1], [1, 2]];
 
-        // Draggable vector x
-        const ptX = board.create('point', [1, 0], { name: 'x', size: 5, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        const initRad = (initialVectorAngleDeg * Math.PI) / 180;
+        const ptX = board.create('point', [Math.cos(initRad), Math.sin(initRad)], { name: 'x', size: 5, fillColor: '#3b82f6', strokeColor: '#2563eb' });
         board.create('arrow', [origin, ptX], { strokeColor: '#3b82f6', strokeWidth: 3 });
 
         // Transformed vector Ax
@@ -40,8 +46,6 @@ export function EigenvectorVisualizer() {
 
             if (Math.abs(det) < 0.1 && (Math.abs(ptX.X()) > 0.1 || Math.abs(ptX.Y()) > 0.1)) {
                 setIsEigen(true);
-                // Calculate lambda (eigenvalue) = |Ax| / |x|
-                // handle sign based on dot product
                 const dot = (ptX.X() * ptAx.X()) + (ptX.Y() * ptAx.Y());
                 const magX = Math.sqrt(ptX.X() ** 2 + ptX.Y() ** 2);
                 const magAx = Math.sqrt(ptAx.X() ** 2 + ptAx.Y() ** 2);
@@ -49,10 +53,22 @@ export function EigenvectorVisualizer() {
 
                 setFactor(`\u03BB \u2248 ${lambda.toFixed(1)}`);
                 ptX.setAttribute({ fillColor: '#10b981', strokeColor: '#059669' });
+                onStateChangeRef.current?.({
+                    vx: parseFloat(ptX.X().toFixed(2)),
+                    vy: parseFloat(ptX.Y().toFixed(2)),
+                    isEigenvector: true,
+                    eigenvalue: parseFloat(lambda.toFixed(2)),
+                });
             } else {
                 setIsEigen(false);
                 setFactor('');
                 ptX.setAttribute({ fillColor: '#3b82f6', strokeColor: '#2563eb' });
+                onStateChangeRef.current?.({
+                    vx: parseFloat(ptX.X().toFixed(2)),
+                    vy: parseFloat(ptX.Y().toFixed(2)),
+                    isEigenvector: false,
+                    eigenvalue: 0,
+                });
             }
         };
 

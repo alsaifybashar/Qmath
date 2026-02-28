@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { LinearSpanExplorerProps } from '@/types/jsxgraph-widgets';
 
-export function LinearSpanExplorer() {
-    const [status, setStatus] = useState('Linearly Independent (Spans R2)');
+export function LinearSpanExplorer({
+    initialV1 = [2, 1],
+    initialV2 = [-1, 2],
+    onStateChange,
+}: LinearSpanExplorerProps) {
+    const [status, setStatus] = useState('Linearly Independent (Spans \u211D\u00B2)');
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
 
     const initBoard = (JXG: any, boardId: string) => {
         const board = JXG.JSXGraph.initBoard(boardId, {
@@ -13,22 +20,24 @@ export function LinearSpanExplorer() {
 
         const origin = board.create('point', [0, 0], { visible: false });
 
-        // Basis vectors
-        const b1 = board.create('point', [2, 1], { name: 'v_1', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
-        const b2 = board.create('point', [-1, 2], { name: 'v_2', size: 4, fillColor: '#10b981', strokeColor: '#059669' });
+        const b1 = board.create('point', [initialV1[0], initialV1[1]], { name: 'v_1', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        const b2 = board.create('point', [initialV2[0], initialV2[1]], { name: 'v_2', size: 4, fillColor: '#10b981', strokeColor: '#059669' });
 
         board.create('arrow', [origin, b1], { strokeColor: '#3b82f6', strokeWidth: 2 });
         board.create('arrow', [origin, b2], { strokeColor: '#10b981', strokeWidth: 2 });
 
-        // Span checking
         const checkSpan = () => {
-            // Determine if b1 and b2 are collinear by checking determinant of matrix [b1 b2]
             const det = (b1.X() * b2.Y()) - (b2.X() * b1.Y());
-            if (Math.abs(det) < 0.2) { // Close to zero threshold for snap/visual
-                setStatus('Linearly Dependent (Spans a Line)');
-            } else {
-                setStatus('Linearly Independent (Spans \u211D\u00B2)');
-            }
+            const isDependent = Math.abs(det) < 0.2;
+            const newStatus = isDependent ? 'Linearly Dependent (Spans a Line)' : 'Linearly Independent (Spans \u211D\u00B2)';
+            setStatus(newStatus);
+            onStateChangeRef.current?.({
+                v1x: parseFloat(b1.X().toFixed(2)),
+                v1y: parseFloat(b1.Y().toFixed(2)),
+                v2x: parseFloat(b2.X().toFixed(2)),
+                v2y: parseFloat(b2.Y().toFixed(2)),
+                status: newStatus,
+            });
         };
 
         // Create span shaded region dynamically (only valid if det != 0)

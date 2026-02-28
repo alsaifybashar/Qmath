@@ -1,26 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { InteractiveUnitCircleProps } from '@/types/jsxgraph-widgets';
 
-export function InteractiveUnitCircle() {
-    const [angle, setAngle] = useState('45°');
-    const [sinVal, setSinVal] = useState('0.71');
-    const [cosVal, setCosVal] = useState('0.71');
+export function InteractiveUnitCircle({
+    initialAngleDeg = 45,
+    onStateChange,
+}: InteractiveUnitCircleProps) {
+    const initRad = (initialAngleDeg * Math.PI) / 180;
+    const [angle, setAngle] = useState(`${initialAngleDeg}°`);
+    const [sinVal, setSinVal] = useState(Math.sin(initRad).toFixed(2));
+    const [cosVal, setCosVal] = useState(Math.cos(initRad).toFixed(2));
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
 
     const initBoard = (JXG: any, boardId: string) => {
         const board = JXG.JSXGraph.initBoard(boardId, {
-            boundingbox: [-1.5, 2, 5, -2], // Show unrolled wave to the right
+            boundingbox: [-1.5, 2, 5, -2],
             axis: true,
             showCopyright: false,
         });
 
-        // Unit circle
         const circle = board.create('circle', [[0, 0], 1], { strokeColor: '#slate-600', strokeWidth: 2, dash: 2 });
-
-        // Origin
         const origin = board.create('point', [0, 0], { visible: false });
 
-        // Draggable point on the unit circle
-        const p = board.create('glider', [0.707, 0.707, circle], { name: 'P', size: 5, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        const startX = Math.cos(initRad);
+        const startY = Math.sin(initRad);
+        const p = board.create('glider', [startX, startY, circle], { name: 'P', size: 5, fillColor: '#3b82f6', strokeColor: '#2563eb' });
 
         // Line from origin to P
         board.create('segment', [origin, p], { strokeColor: '#94a3b8', strokeWidth: 2 });
@@ -67,6 +72,11 @@ export function InteractiveUnitCircle() {
             setAngle(`${deg}°`);
             setSinVal(p.Y().toFixed(2));
             setCosVal(p.X().toFixed(2));
+            onStateChangeRef.current?.({
+                angleDeg: parseFloat(deg),
+                sinVal: parseFloat(p.Y().toFixed(2)),
+                cosVal: parseFloat(p.X().toFixed(2)),
+            });
         });
 
         return board;

@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { IntersectingPlanes3DProps } from '@/types/jsxgraph-widgets';
 
-export function IntersectingPlanes3D() {
+export function IntersectingPlanes3D({
+    initialK = 0,
+    onStateChange,
+}: IntersectingPlanes3DProps) {
     const [status, setStatus] = useState('Line of Intersection');
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
 
     const initBoard = (JXG: any, boardId: string) => {
         const board = JXG.JSXGraph.initBoard(boardId, {
@@ -33,9 +39,11 @@ export function IntersectingPlanes3D() {
             [-3, 3], [-3, 3]
         ], { strokeWidth: 0, fillColor: '#3b82f6', fillOpacity: 0.6 });
 
-        // Plane 2: z = x - y + k (draggable point to adjust k)
         const kLine = board.create('line', [[-5, -6], [5, -6]], { visible: true, strokeColor: '#475569', strokeWidth: 4 });
-        const pk = board.create('glider', [0, -6, kLine], { name: 'Shift k', size: 5, fillColor: '#f59e0b' });
+        const pk = board.create('glider', [initialK, -6, kLine], { name: 'Shift k', size: 5, fillColor: '#f59e0b' });
+        pk.on('drag', () => {
+            onStateChangeRef.current?.({ kValue: parseFloat(pk.X().toFixed(2)) });
+        });
 
         const plane2 = view.create('parametricsurface3d', [
             (u: number, v: number) => u,

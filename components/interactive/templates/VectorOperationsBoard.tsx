@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { VectorOperationsBoardProps } from '@/types/jsxgraph-widgets';
 
-export function VectorOperationsBoard() {
+export function VectorOperationsBoard({
+    initialU = [3, 2],
+    initialV = [1, 5],
+    onStateChange,
+}: VectorOperationsBoardProps) {
     const [dotProduct, setDotProduct] = useState('0');
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
 
     const initBoard = (JXG: any, boardId: string) => {
         const board = JXG.JSXGraph.initBoard(boardId, {
@@ -14,13 +21,11 @@ export function VectorOperationsBoard() {
 
         const origin = board.create('point', [0, 0], { visible: false });
 
-        // Vector u
-        const ptU = board.create('point', [3, 2], { name: 'u', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
-        const vecU = board.create('arrow', [origin, ptU], { strokeColor: '#3b82f6', strokeWidth: 3 });
+        const ptU = board.create('point', [initialU[0], initialU[1]], { name: 'u', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        board.create('arrow', [origin, ptU], { strokeColor: '#3b82f6', strokeWidth: 3 });
 
-        // Vector v
-        const ptV = board.create('point', [1, 5], { name: 'v', size: 4, fillColor: '#ef4444', strokeColor: '#dc2626' });
-        const vecV = board.create('arrow', [origin, ptV], { strokeColor: '#ef4444', strokeWidth: 3 });
+        const ptV = board.create('point', [initialV[0], initialV[1]], { name: 'v', size: 4, fillColor: '#ef4444', strokeColor: '#dc2626' });
+        board.create('arrow', [origin, ptV], { strokeColor: '#ef4444', strokeWidth: 3 });
 
         // Parallelogram rule: Vector w = u + v
         const ptW = board.create('point', [
@@ -34,10 +39,16 @@ export function VectorOperationsBoard() {
         board.create('segment', [ptU, ptW], { strokeColor: '#94a3b8', strokeWidth: 1, dash: 2 });
         board.create('segment', [ptV, ptW], { strokeColor: '#94a3b8', strokeWidth: 1, dash: 2 });
 
-        // Dot product calculation
         const updateMath = () => {
             const dot = (ptU.X() * ptV.X()) + (ptU.Y() * ptV.Y());
             setDotProduct(dot.toFixed(1));
+            onStateChangeRef.current?.({
+                ux: parseFloat(ptU.X().toFixed(2)),
+                uy: parseFloat(ptU.Y().toFixed(2)),
+                vx: parseFloat(ptV.X().toFixed(2)),
+                vy: parseFloat(ptV.Y().toFixed(2)),
+                dotProduct: parseFloat(dot.toFixed(2)),
+            });
         };
 
         ptU.on('drag', updateMath);

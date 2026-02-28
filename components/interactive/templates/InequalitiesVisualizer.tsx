@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { InequalitiesVisualizerProps } from '@/types/jsxgraph-widgets';
 
-export function InequalitiesVisualizer() {
-    const [inequality, setInequality] = useState('y > 2x + 1');
+export function InequalitiesVisualizer({
+    initialSlope = 2,
+    initialIntercept = 1,
+    onStateChange,
+}: InequalitiesVisualizerProps) {
+    const [inequality, setInequality] = useState(`y > ${initialSlope}x + ${initialIntercept}`);
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
 
     const initBoard = (JXG: any, boardId: string) => {
         const board = JXG.JSXGraph.initBoard(boardId, {
@@ -11,9 +18,13 @@ export function InequalitiesVisualizer() {
             showCopyright: false,
         });
 
-        // Two points to define a line
-        const p1 = board.create('point', [-1, -1], { name: 'A', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
-        const p2 = board.create('point', [1, 3], { name: 'B', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        // Derive two points from initial slope and intercept
+        const initP1x = -1;
+        const initP1y = initialSlope * initP1x + initialIntercept;
+        const initP2x = 1;
+        const initP2y = initialSlope * initP2x + initialIntercept;
+        const p1 = board.create('point', [initP1x, initP1y], { name: 'A', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        const p2 = board.create('point', [initP2x, initP2y], { name: 'B', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
 
         const line = board.create('line', [p1, p2], { strokeColor: '#3b82f6', strokeWidth: 2, dash: 2 }); // dashed for strictly greater/less
 
@@ -32,6 +43,11 @@ export function InequalitiesVisualizer() {
             const bStr = b > 0 ? `+ ${b.toFixed(1)}` : `- ${Math.abs(b).toFixed(1)}`;
 
             setInequality(`y > ${mStr}x ${bStr}`);
+            onStateChangeRef.current?.({
+                slope: parseFloat(m.toFixed(2)),
+                intercept: parseFloat(b.toFixed(2)),
+                inequality: `y > ${mStr}x ${bStr}`,
+            });
         };
 
         p1.on('drag', updateEquation);

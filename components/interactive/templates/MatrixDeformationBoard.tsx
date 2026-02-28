@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import JSXGraphBoard from '../JSXGraphBoard';
+import type { MatrixDeformationBoardProps } from '@/types/jsxgraph-widgets';
 
-export function MatrixDeformationBoard() {
-    // Identity matrix default
-    const [matrix, setMatrix] = useState({ iX: 1, iY: 0, jX: 0, jY: 1 });
+export function MatrixDeformationBoard({
+    initialMatrix = [1, 0, 0, 1],
+    onStateChange,
+}: MatrixDeformationBoardProps) {
+    const [iX0, iY0, jX0, jY0] = initialMatrix;
+    const [matrix, setMatrix] = useState({ iX: iX0, iY: iY0, jX: jX0, jY: jY0 });
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; }, [onStateChange]);
 
     const initBoard = (JXG: any, boardId: string) => {
         const board = JXG.JSXGraph.initBoard(boardId, {
@@ -14,9 +20,8 @@ export function MatrixDeformationBoard() {
 
         const origin = board.create('point', [0, 0], { visible: false });
 
-        // Basis vectors (i-hat and j-hat equivalent) mapped onto interactive points
-        const iHat = board.create('point', [1, 0], { name: 'i', size: 5, fillColor: '#10b981', strokeColor: '#059669' });
-        const jHat = board.create('point', [0, 1], { name: 'j', size: 5, fillColor: '#f59e0b', strokeColor: '#d97706' });
+        const iHat = board.create('point', [iX0, iY0], { name: 'i', size: 5, fillColor: '#10b981', strokeColor: '#059669' });
+        const jHat = board.create('point', [jX0, jY0], { name: 'j', size: 5, fillColor: '#f59e0b', strokeColor: '#d97706' });
 
         board.create('arrow', [origin, iHat], { strokeColor: '#10b981', strokeWidth: 3 });
         board.create('arrow', [origin, jHat], { strokeColor: '#f59e0b', strokeWidth: 3 });
@@ -32,13 +37,16 @@ export function MatrixDeformationBoard() {
             fillColor: '#3b82f6', fillOpacity: 0.2, borders: { strokeColor: '#3b82f6', strokeWidth: 2 }
         });
 
-        // Determinant area calculation
         const updateMatrix = () => {
-            setMatrix({
-                iX: parseFloat(iHat.X().toFixed(1)),
-                iY: parseFloat(iHat.Y().toFixed(1)),
-                jX: parseFloat(jHat.X().toFixed(1)),
-                jY: parseFloat(jHat.Y().toFixed(1))
+            const iXv = parseFloat(iHat.X().toFixed(1));
+            const iYv = parseFloat(iHat.Y().toFixed(1));
+            const jXv = parseFloat(jHat.X().toFixed(1));
+            const jYv = parseFloat(jHat.Y().toFixed(1));
+            setMatrix({ iX: iXv, iY: iYv, jX: jXv, jY: jYv });
+            const det = iXv * jYv - jXv * iYv;
+            onStateChangeRef.current?.({
+                iX: iXv, iY: iYv, jX: jXv, jY: jYv,
+                determinant: parseFloat(det.toFixed(2)),
             });
         };
 
