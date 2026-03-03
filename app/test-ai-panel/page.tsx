@@ -29,7 +29,7 @@ export default function TestAIPanelPage() {
             </header>
 
             {/* Main Workspace */}
-            <main className="flex-1 w-full bg-slate-950 relative">
+            <main className="flex-1 w-full h-full bg-slate-950 relative overflow-hidden">
                 <AIPanel
                     isOpen={isOpen}
                     onToggle={() => setIsOpen(!isOpen)}

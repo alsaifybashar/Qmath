@@ -24,6 +24,7 @@ import { TaylorSeriesApproximation } from '../interactive/templates/TaylorSeries
 import { useBoardNarration } from '@/lib/hooks/useBoardNarration';
 import type { AnyWidgetType, BoardStateSnapshot } from '@/types/jsxgraph-widgets';
 import { MarkdownMessage } from '@/components/ui/MarkdownMessage';
+import { JSXTemplate } from '../interactive/JSXTemplate';
 
 interface AIMessage {
     id: string;
@@ -93,6 +94,13 @@ export function AIPanel({
     const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isWidgetMinimized, setIsWidgetMinimized] = useState(false);
+    /**
+     * ID of the message whose widget is currently "active" in the split-screen
+     * panel. Null before any widget has arrived; updated automatically when a
+     * new widget arrives, and manually when the user clicks Expand on any old
+     * widget in the chat history.
+     */
+    const [activeWidgetMessageId, setActiveWidgetMessageId] = useState<string | null>(null);
     const [provider, setProvider] = useState<'anthropic' | 'ollama'>('anthropic');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -143,7 +151,15 @@ export function AIPanel({
             case 'ColumnAddition':  return <ColumnAddition {...widgetData.props} />;
             case 'CalculusTangent': return <CalculusTangent {...widgetData.props} />;
             case 'VectorSpace':     return <VectorSpace {...widgetData.props} />;
-            default: return null;
+            default:
+                // Route all new template IDs (kebab-case) to the generic JSXTemplate renderer
+                return (
+                    <JSXTemplate
+                        templateId={widgetData.type}
+                        config={widgetData.props ?? {}}
+                        onStateChange={stateChangeHandler}
+                    />
+                );
         }
     }, [messages, reportBoardState]);
 
@@ -152,10 +168,12 @@ export function AIPanel({
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Auto-expand widget when a new visual representation bounds
+    // When a new widget arrives: make it the active one and auto-expand split-screen.
+    // This also handles the "new figure should override the expanded one" requirement.
     useEffect(() => {
         const lastMsg = messages[messages.length - 1];
         if (lastMsg?.visualWidget) {
+            setActiveWidgetMessageId(lastMsg.id);
             setIsWidgetMinimized(false);
         }
     }, [messages]);
@@ -265,7 +283,15 @@ export function AIPanel({
                 });
 
                 if (!response.ok) {
-                    throw new Error("Failed to post message to AI.");
+                    // Surface the server's human-readable details when available
+                    // (e.g. Ollama timeout message), otherwise use a generic fallback.
+                    let detail = 'Failed to get a response. Please try again.';
+                    try {
+                        const errBody = await response.json();
+                        if (errBody?.details) detail = errBody.details;
+                        else if (errBody?.error) detail = errBody.error;
+                    } catch { /* ignore parse errors */ }
+                    throw new Error(detail);
                 }
 
                 const data = await response.json();
@@ -519,8 +545,12 @@ export function AIPanel({
     // Expanded state
     const isFullScreen = position === 'fullscreen';
 
-    const lastVisualMessage = [...messages].reverse().find(m => m.visualWidget);
-    const activeWidgetData = lastVisualMessage?.visualWidget;
+    // Prefer the explicitly-selected message; fall back to the latest widget message
+    // so the panel shows something even before the user has interacted.
+    const activeWidgetMessage = activeWidgetMessageId
+        ? messages.find(m => m.id === activeWidgetMessageId)
+        : [...messages].reverse().find(m => m.visualWidget);
+    const activeWidgetData = activeWidgetMessage?.visualWidget;
     const isSplitScreen = isFullScreen && activeWidgetData && !isWidgetMinimized;
 
     return (
@@ -534,32 +564,87 @@ export function AIPanel({
             }
             style={isFullScreen ? {} : { height: position === 'sidebar' ? '400px' : '500px' }}
         >
-            {/* Split Screen Left Panel */}
+            {/* ── VISUALIZATION PANEL (left, 62%) ─────────────────────────────
+                Widget fills the panel at maximum size from the start.
+                NO panel-level scroll — JSXGraph handles native zoom/pan
+                via scroll wheel and drag inside the board itself.
+            ─────────────────────────────────────────────────────────────── */}
             {isSplitScreen && activeWidgetData && (
-                <div className="w-1/2 lg:w-[55%] border-r border-white/5 flex flex-col relative h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 flex-shrink-0">
-                    <button
-                        onClick={() => setIsWidgetMinimized(true)}
-                        className="absolute top-6 right-6 z-[100] p-2 bg-slate-800/80 backdrop-blur hover:bg-slate-700 text-slate-300 rounded-xl transition-all hover:scale-105 border border-white/10 flex items-center gap-2 text-sm shadow-2xl"
-                    >
-                        <Minimize2 className="w-4 h-4 text-cyan-400" /> Minimize Widget
-                    </button>
-                    <div className="flex-1 w-full h-full flex items-center justify-center p-8 overflow-y-auto overflow-x-hidden relative">
-                        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:30px_30px] pointer-events-none" />
-                        <div className="w-full max-w-4xl relative z-10 transform transition-transform duration-500 scale-100 origin-center flex justify-center">
+                <div
+                    className="border-r border-white/5 flex flex-col h-full flex-shrink-0 relative"
+                    style={{ width: '62%', background: 'radial-gradient(ellipse at 50% 60%, #0f1729 0%, #020617 100%)' }}
+                >
+                    {/* Thin top bar: widget name (left) + hint + minimize (right) */}
+                    <div className="flex-none flex items-center justify-between px-5 py-2.5 border-b border-white/[0.06] bg-slate-950/50">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-violet-500/80" />
+                            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                                {activeWidgetData.type.replace(/([A-Z])/g, ' $1').trim()}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-[11px] text-slate-600 select-none">
+                                Scroll inside to zoom · drag to pan
+                            </span>
+                            <button
+                                onClick={() => setIsWidgetMinimized(true)}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all"
+                            >
+                                <Minimize2 className="w-3 h-3" />
+                                Minimize
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* ── Widget area: fills remaining space, NO overflow/scroll ────
+                        CSS min() constrains the board to the smaller of panel width
+                        or panel height, so it always fits without clipping.
+                    ──────────────────────────────────────────────────────────── */}
+                    <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center relative">
+                        {/* Subtle grid background */}
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+                        {/*
+                            Size the board to the largest square that fits the panel.
+                            - 62vw  = panel width  (matches the 62% above)
+                            - 100vh - 64px header - 44px top bar - 24px padding = ~100vh - 8.5rem
+                            The widget itself uses w-full, so it fills this wrapper.
+                        */}
+                        {/* key forces a full unmount+remount when the active widget
+                            changes, so JSXGraph always reinitialises cleanly. */}
+                        <div
+                            key={activeWidgetMessageId ?? 'widget'}
+                            className="relative z-10"
+                            style={{
+                                width: 'min(calc(62vw - 2rem), calc(100vh - 8.5rem))',
+                                aspectRatio: '1 / 1',
+                            }}
+                        >
                             {renderJSXWidget(activeWidgetData, true)}
                         </div>
+
+                        {/* AI narration overlay — bottom of the viz area */}
                         {lastNarration && (
-                            <div className="absolute bottom-6 left-6 right-6 z-50 p-3 bg-slate-900/90 backdrop-blur border border-violet-500/30 rounded-xl text-sm text-slate-300 italic pointer-events-none">
-                                <Bot className="w-4 h-4 text-violet-400 inline mr-2" />
-                                {lastNarration}
+                            <div className="absolute bottom-4 left-4 right-4 z-50 px-4 py-2.5 bg-slate-950/90 backdrop-blur-md border border-violet-500/25 rounded-xl text-[12px] text-slate-300 italic pointer-events-none flex items-start gap-2 shadow-xl">
+                                <Bot className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 mt-0.5" />
+                                <span>{lastNarration}</span>
                             </div>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* Chat Container */}
-            <div className={`flex flex-col relative h-full ${isSplitScreen ? 'w-1/2 lg:w-[45%] bg-slate-950 shadow-[-20px_0_40px_-5px_rgba(0,0,0,0.3)] z-20 flex-shrink-0' : 'w-full'}`}>
+            {/* ── CHAT PANEL ──────────────────────────────────────────────────
+                h-full + flex flex-col + min-h-0 gives the messages div a
+                defined height so overflow-y-auto triggers properly.
+            ─────────────────────────────────────────────────────────────── */}
+            <div
+                className={`flex flex-col relative h-full min-h-0 ${
+                    isSplitScreen
+                        ? 'bg-slate-950 border-l border-white/[0.04] z-20 flex-shrink-0'
+                        : 'w-full'
+                }`}
+                style={isSplitScreen ? { width: '38%' } : undefined}
+            >
 
                 {/* Header */}
                 {!isFullScreen && (
@@ -602,8 +687,8 @@ export function AIPanel({
                     </div>
                 )}
 
-                {/* Messages */}
-                <div className={isFullScreen ? "flex-1 overflow-y-auto w-full relative pb-40 pt-10 px-4 scroll-smooth" : "flex-1 overflow-y-auto p-4 space-y-4"}>
+                {/* Messages — min-h-0 ensures flex-1 respects overflow-y-auto in flex columns */}
+                <div className={isFullScreen ? "flex-1 min-h-0 overflow-y-auto w-full relative pb-40 pt-10 px-4 scroll-smooth" : "flex-1 min-h-0 overflow-y-auto p-4 space-y-4"}>
                     <div className={isFullScreen ? "max-w-4xl mx-auto space-y-12 flex flex-col" : "space-y-4"}>
                         {messages.length === 0 ? (
                             <div className={isFullScreen ? "h-full flex flex-col items-center justify-center text-center p-4 mt-20" : "h-full flex flex-col items-center justify-center text-center p-4"}>
@@ -697,28 +782,52 @@ export function AIPanel({
 
                                                         {message.visualWidget && (
                                                             <div className="w-full mt-6 mb-2 pl-4 md:pl-12 pr-4 overflow-visible">
-                                                                {(!isSplitScreen && message.visualWidget === activeWidgetData) || (!isFullScreen) ? (
-                                                                    <div className="w-full flex flex-col">
-                                                                        <div className="w-full max-w-5xl flex justify-center overflow-x-auto">
-                                                                            {renderJSXWidget(message.visualWidget, false)}
-                                                                        </div>
-                                                                        {!isSplitScreen && isFullScreen && message.visualWidget === activeWidgetData && (
-                                                                            <button onClick={() => setIsWidgetMinimized(false)} className="mt-4 px-4 py-2 text-sm bg-violet-600/10 hover:bg-violet-600/20 text-violet-400 hover:text-violet-300 rounded-xl transition-colors flex items-center gap-2 border border-violet-500/20 w-fit self-center">
-                                                                                <LayoutGrid className="w-4 h-4" /> Expand to Split Screen
-                                                                            </button>
-                                                                        )}
-                                                                    </div>
-                                                                ) : (
+                                                                {/* isActiveWidget: this message is the currently-selected one */}
+                                                                {(() => {
+                                                                    const isActiveWidget = message.id === activeWidgetMessageId;
+                                                                    // Show inline board when this is the active widget AND it's minimized (not in split-screen),
+                                                                    // or when we're not in fullscreen mode.
+                                                                    const showInlineBoard = (!isSplitScreen && isActiveWidget) || !isFullScreen;
+                                                                    if (showInlineBoard) {
+                                                                        return (
+                                                                            <div className="w-full flex flex-col">
+                                                                                {/* Max-width capped so aspect-square height fits in the viewport */}
+                                                                                <div className="w-full flex justify-center overflow-x-auto">
+                                                                                    <div style={{ width: '100%', maxWidth: '520px' }}>
+                                                                                        {renderJSXWidget(message.visualWidget, isActiveWidget)}
+                                                                                    </div>
+                                                                                </div>
+                                                                                {!isSplitScreen && isFullScreen && isActiveWidget && (
+                                                                                    <button onClick={() => setIsWidgetMinimized(false)} className="mt-4 px-4 py-2 text-sm bg-violet-600/10 hover:bg-violet-600/20 text-violet-400 hover:text-violet-300 rounded-xl transition-colors flex items-center gap-2 border border-violet-500/20 w-fit self-center">
+                                                                                        <LayoutGrid className="w-4 h-4" /> Expand to Split Screen
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    }
+                                                                    // Badge shown when split-screen is active OR this is a historical (non-active) widget.
+                                                                    // All badges now have an Expand button so any historical figure can be re-opened.
+                                                                    const isCurrentlyExpanded = isActiveWidget && isSplitScreen;
+                                                                    return (
                                                                     <div className="flex items-center gap-3 p-3 bg-slate-900 border border-violet-500/20 rounded-xl text-slate-300 text-sm shadow-inner max-w-md">
                                                                         <div className="p-2 bg-violet-500/20 rounded-lg"><LayoutGrid className="w-4 h-4 text-violet-400" /></div>
-                                                                        <div className="flex-1">Interactive Widget: {message.visualWidget.type}</div>
-                                                                        {message.visualWidget === activeWidgetData && (
-                                                                            <button onClick={() => setIsWidgetMinimized(false)} className="px-3 py-1.5 text-xs bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors flex items-center gap-1 shadow-md hover:shadow-lg focus:outline-none">
+                                                                        <div className="flex-1 truncate">
+                                                                            Interactive Widget: <span className="font-mono text-violet-300 text-xs">{message.visualWidget.type}</span>
+                                                                        </div>
+                                                                        {isCurrentlyExpanded ? (
+                                                                            // Already in split-screen — offer to minimize
+                                                                            <button onClick={() => setIsWidgetMinimized(true)} className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors flex items-center gap-1 focus:outline-none">
+                                                                                <Minimize2 className="w-3 h-3" /> Minimize
+                                                                            </button>
+                                                                        ) : (
+                                                                            // Not expanded — clicking Expand switches to this widget
+                                                                            <button onClick={() => { setActiveWidgetMessageId(message.id); setIsWidgetMinimized(false); }} className="px-3 py-1.5 text-xs bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors flex items-center gap-1 shadow-md hover:shadow-lg focus:outline-none">
                                                                                 <Maximize2 className="w-3 h-3" /> Expand
                                                                             </button>
                                                                         )}
                                                                     </div>
-                                                                )}
+                                                                );
+                                                                })()}
                                                             </div>
                                                         )}
                                                     </div>

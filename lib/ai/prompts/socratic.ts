@@ -18,8 +18,11 @@ KÄRNREGLER FÖR PEDAGOGIK:
 4. Håll svaren kortfattade (2–4 meningar max). Varje mening ska bekräfta framsteg, identifiera en feltyp eller ställa en vägledningsfråga.
 5. Varmt, uppmuntrande tonfall. Fira framsteg explicit: "Ja, precis! Det var den viktigaste insikten."
 6. Innan du bekräftar om ett matematiskt uttryck är korrekt, ANVÄND ALLTID verktyget 'validate_math'. Evaluera inte komplex algebra själv.
-7. Använd 'render_visual_widget' proaktivt när en visualisering hjälper studenten att förstå.
-8. Tillgängliga widgets: PolynomialRootFinder (rötter/faktorisering), InteractiveUnitCircle (trig/sinus/cosinus), InequalitiesVisualizer (olikheter), VectorOperationsBoard (vektorer/skalärprodukt), MatrixDeformationBoard (linjära avbildningar/determinant), LinearSpanExplorer (linjärt oberoende/spann), EigenvectorVisualizer (egenvektorer/egenvärden), IntersectingPlanes3D (system i 3D), DerivativeDefinitionBoard (derivatans definition/sekantlinjer), CurveSketchingBoard (f/f'/f'' samband), RiemannSumsVisualizer (bestämd integral/area), TaylorSeriesApproximation (Taylorserier).
+7. Använd 'render_visual_widget' proaktivt när en visualisering hjälper studenten att förstå. När du startar ett widget MÅSTE du alltid också ge en förklaring i text — beskriv vad studenten ser, vad de ska titta efter och ställ en vägledningsfråga. Låt aldrig widgeten ersätta din textförklaring.
+8. Tillgängliga visualiseringar (välj den som passar bäst):
+   Specialiserade widgets: PolynomialRootFinder, InteractiveUnitCircle, InequalitiesVisualizer, VectorOperationsBoard, MatrixDeformationBoard, LinearSpanExplorer, EigenvectorVisualizer, IntersectingPlanes3D, DerivativeDefinitionBoard, CurveSketchingBoard, RiemannSumsVisualizer, TaylorSeriesApproximation.
+   Generella mallar: function-plotter (rita f(x) med expression), secant-tangent, mean-value-theorem, antiderivative, differentiability, continuity-epsilon-delta, taylor-series-sine, power-series-exp, convergence-sequence, convergence-series, differential-equations (riktningsfält), logistic-process, complex-arithmetic, lagrange-interpolation, binomial-distribution, bezier-curves, polar-grid, 3d-function-graph (expression i x och y), 3d-curve, 3d-vector-field.
+   Ange ALLTID config-parametrar som matchar studentens specifika problem — t.ex. om polynomet (x-3)(x+1) ges sätt initialRoot1=3, initialRoot2=-1; om vektorn u=(2,3) nämns sätt initialU=[2,3]; om problemet handlar om f(x)=sin(x)+x² sätt expression="sin(x)+x^2".
 9. OSÄKERHET: Om studentens meddelande är vagt, ställ EN fokuserad klargörande fråga.
 
 PROGRESSIONSSTRATEGI:
@@ -48,21 +51,48 @@ YOUR ROLE:
 7. UNCERTAINTY: If the student's request is vague (e.g., "explain calculus"), ask ONE focused clarifying question: "Which aspect are you most curious about — limits, derivatives, or integrals?"
 8. Stay accurate and aligned with university-level mathematics. Use course-relevant knowledge when provided.
 
-AVAILABLE INTERACTIVE BOARDS (use 'render_visual_widget' proactively):
-- PolynomialRootFinder: roots, factoring, zeros
-- InteractiveUnitCircle: trig, sine/cosine, angles
-- InequalitiesVisualizer: linear inequalities, feasible regions
-- VectorOperationsBoard: vector addition, dot product
-- MatrixDeformationBoard: linear transformations, determinant
-- LinearSpanExplorer: linear independence, span, basis
-- EigenvectorVisualizer: eigenvectors, eigenvalues
-- IntersectingPlanes3D: systems in 3D, plane intersections
-- DerivativeDefinitionBoard: limit definition of derivative, secant lines
-- CurveSketchingBoard: f(x), f'(x), f''(x) relationships
-- RiemannSumsVisualizer: integral approximation, area under curve
-- TaylorSeriesApproximation: Taylor/Maclaurin series
+AVAILABLE VISUALIZATIONS — call 'render_visual_widget' proactively:
 
-These boards make abstract math tangible — use them freely.`;
+Specialized interactive widgets: PolynomialRootFinder, InteractiveUnitCircle, InequalitiesVisualizer, VectorOperationsBoard, MatrixDeformationBoard, LinearSpanExplorer, EigenvectorVisualizer, IntersectingPlanes3D, DerivativeDefinitionBoard, CurveSketchingBoard, RiemannSumsVisualizer, TaylorSeriesApproximation.
+
+General-purpose templates (use for any other topic):
+- function-plotter: plot any f(x) — set expression e.g. "sin(x)", "x^2", "1/x"
+- secant-tangent: secant→tangent limit — set expression, x0
+- mean-value-theorem: MVT — set expression, a, b
+- antiderivative: accumulation F(x) — set expression
+- differentiability: left/right slopes — set expression, x0
+- continuity-epsilon-delta: ε-δ bands — set expression, a
+- taylor-series-sine: sin(x) Taylor with degree slider — set degree, center
+- power-series-exp: eˣ Taylor — set degree
+- convergence-sequence: a_n scatter — set expression (in n), nTerms, limit
+- convergence-series: partial sums — set expression (in n), nTerms
+- differential-equations: slope field dy/dx=f(x,y) — set expression, x0, y0
+- logistic-process: logistic growth — set r, K, P0
+- projectile-motion: trajectory — set v0, angleDeg
+- complex-arithmetic: Argand plane — set re1,im1,re2,im2
+- lagrange-interpolation: polynomial through points — set points array
+- binomial-distribution: B(n,p) bars — set n, p
+- bezier-curves: cubic Bézier — set p0,p1,p2,p3
+- polar-grid: r(θ) curve — set expression (in t)
+- 3d-function-graph: surface z=f(x,y) — set expression e.g. "x^2+y^2"
+- 3d-curve: parametric 3D — set xExpr,yExpr,zExpr
+- 3d-vector-field: 3D arrows — set fxExpr,fyExpr,fzExpr
+(+ more: sine-cosine-functions, exploring-functions, step-function, shade-bounded-curves, power-series-sine-cosine, approximate-arc-length, approximate-pi-montecarlo, linear-function-params, power-functions, function-composer)
+
+PERSONALIZATION RULE: Always set config parameters using values from the student's specific question. Examples:
+- Student asks about polynomial (x-3)(x+1) → initialRoot1=3, initialRoot2=-1
+- Student mentions vector u=(2,3) and v=(1,-1) → initialU=[2,3], initialV=[1,-1]
+- Student works with matrix [[2,1],[1,2]] → initialMatrix=[2,1,1,2]
+- Student asks to plot sin(x)+cos(2x) → function-plotter, expression="sin(x)+cos(2*x)"
+- Student asks about convergence of 1/n → convergence-sequence, expression="1/n"
+- Student wants 3D surface z=x²+y² → 3d-function-graph, expression="x^2+y^2"
+
+EXPLANATION RULE (critical): When you call render_visual_widget you MUST ALSO provide a rich text explanation in the same response. The widget is a supplement — not a replacement — for your explanation. Your text must:
+1. Directly answer the student's question in words.
+2. Explain the underlying mathematical concept with intuition and, where relevant, a worked example.
+3. Describe what the student will see in the widget and what to look for or interact with.
+4. Invite the student to explore further ("Try dragging the slider to…", "Notice how the curve changes when…").
+A response that launches a widget but says nothing else is never acceptable.`;
 
 export const getMathValidationTool = () => {
     return {
@@ -121,10 +151,27 @@ export const getPlotTool = () => {
 };
 
 const JSXGRAPH_WIDGET_ENUM = [
+    // ── Rich interactive widgets (original 12) ──────────────────────────────
     "PolynomialRootFinder", "InteractiveUnitCircle", "InequalitiesVisualizer",
     "VectorOperationsBoard", "MatrixDeformationBoard", "LinearSpanExplorer",
     "EigenvectorVisualizer", "IntersectingPlanes3D", "DerivativeDefinitionBoard",
     "CurveSketchingBoard", "RiemannSumsVisualizer", "TaylorSeriesApproximation",
+    // ── Generic JSXTemplate-based visualizations (new) ─────────────────────
+    // Functions
+    "function-plotter", "function-composer", "linear-function-params",
+    "power-functions", "sine-cosine-functions", "exploring-functions", "step-function",
+    // Calculus
+    "secant-tangent", "mean-value-theorem", "antiderivative", "differentiability",
+    "continuity-epsilon-delta", "approximate-arc-length", "shade-bounded-curves",
+    // Series
+    "taylor-series-sine", "power-series-exp", "power-series-sine-cosine",
+    "convergence-sequence", "convergence-series",
+    // Analysis / ODE / Physics
+    "differential-equations", "logistic-process", "projectile-motion",
+    "complex-arithmetic", "lagrange-interpolation", "binomial-distribution",
+    "bezier-curves", "polar-grid", "approximate-pi-montecarlo",
+    // 3D
+    "3d-function-graph", "3d-curve", "3d-vector-field",
     // Legacy widgets
     "GridMultiplier", "ColumnAddition", "CalculusTangent", "VectorSpace",
 ] as const;
@@ -134,25 +181,72 @@ export const getVisualWidgetTool = (provider: 'anthropic' | 'ollama' = 'anthropi
 
     return {
         name: "render_visual_widget",
-        description: isOllama
-            ? `Launch an interactive math visualization board. Use when a student needs to SEE and INTERACT with a concept.
+        description: `Launch an interactive JSXGraph math visualization. Use this proactively whenever the student would benefit from seeing or interacting with a concept.
 
-WHEN TO USE EACH WIDGET:
-- PolynomialRootFinder: polynomial roots, factoring, zeros of functions
-- InteractiveUnitCircle: trigonometry, sine/cosine values, angle on unit circle
-- InequalitiesVisualizer: linear inequalities, feasible regions
-- VectorOperationsBoard: vector addition, dot product, parallelogram law
-- MatrixDeformationBoard: linear transformations, determinant, basis vectors
-- LinearSpanExplorer: linear independence, span, basis in R2
-- EigenvectorVisualizer: eigenvectors, eigenvalues (matrix A=[[2,1],[1,2]])
-- IntersectingPlanes3D: systems of equations in 3D, plane intersections
-- DerivativeDefinitionBoard: limit definition of derivative, secant lines h→0
-- CurveSketchingBoard: relationship between f(x), f'(x), f''(x)
-- RiemannSumsVisualizer: definite integral approximation, area under curve
-- TaylorSeriesApproximation: Taylor/Maclaurin series for sin(x)
-- GridMultiplier: basic matrix multiplication visualization
-- ColumnAddition: multi-digit addition column method`
-            : "Renders an interactive JSXGraph educational board within the chat to help the student visualize and explore mathematical concepts. Choose the widget_type that matches the topic the student is working on.",
+WIDGET SELECTION GUIDE — pick the best match:
+
+RICH INTERACTIVE WIDGETS (specialized controls):
+- PolynomialRootFinder → polynomial roots, factoring, zeros
+- InteractiveUnitCircle → trig, sine/cosine, angles on unit circle
+- InequalitiesVisualizer → linear inequalities, feasible regions
+- VectorOperationsBoard → vector addition, dot product, parallelogram law
+- MatrixDeformationBoard → linear transformations, determinant, basis vectors
+- LinearSpanExplorer → linear independence, span, basis in R²
+- EigenvectorVisualizer → eigenvectors, eigenvalues
+- IntersectingPlanes3D → 3D systems of equations, plane intersections
+- DerivativeDefinitionBoard → limit definition of derivative, secant h→0
+- CurveSketchingBoard → f(x) / f'(x) / f''(x) relationships
+- RiemannSumsVisualizer → definite integral, area under curve
+- TaylorSeriesApproximation → Taylor/Maclaurin for any function
+
+GENERAL-PURPOSE TEMPLATES (configurable via expression/params):
+Functions:
+- function-plotter → plot any f(x); set expression, optional expression2; good for: hyperbola(1/x), exponential(exp(x)), logarithm(log(x)), parabola(x^2)
+- function-composer → show f(x), g(x) and f(g(x)); set fExpression, gExpression
+- linear-function-params → y=mx+b with m/b sliders; set m, b
+- power-functions → x^n family; set n
+- sine-cosine-functions → A·sin(ωx) and cos; set amplitude, omega; good for: waveforms, sawtooth, trigonometric functions
+- exploring-functions → plot f(x) with live x/f(x)/f'(x) readout; set expression; good for: sketch polynomial, trace curve
+- step-function → floor function ⌊x⌋ visualization
+
+Calculus:
+- secant-tangent → secant converging to tangent; set expression, x0; good for: secant on function graph
+- mean-value-theorem → MVT with draggable a,b; set expression, a, b
+- antiderivative → F(x)=∫f(t)dt accumulation; set expression, a
+- differentiability → left/right slopes at a point; set expression, x0; good for: discontinuous derivative
+- continuity-epsilon-delta → ε-δ bands; set expression, a; good for: non-uniform continuous, ε-δ criterium
+- approximate-arc-length → chord sum → arc length; set expression, a, b, n
+- shade-bounded-curves → area between two curves; set fExpression, gExpression, a, b
+
+Series & Sequences:
+- taylor-series-sine → Taylor polynomial for sin(x); set degree, center
+- power-series-exp → Taylor for eˣ; set degree; good for: approximation of e, pointwise convergence
+- power-series-sine-cosine → simultaneous sin/cos Taylor; set degree
+- convergence-sequence → scatter plot of a_n terms; set expression (in n), nTerms, limit
+- convergence-series → partial sums S_n; set expression (in n), nTerms
+
+Analysis / ODE / Physics / Statistics:
+- differential-equations → slope field + Euler curve; set expression (dy/dx = f(x,y)), x0, y0; good for: oscillator, autocatalytic, systems of DE
+- logistic-process → logistic growth P(t); set r, K, P0; good for: population growth, epidemiology
+- projectile-motion → trajectory with angle/speed sliders; set v0, angleDeg
+- complex-arithmetic → Argand plane z₁+z₂; set re1,im1,re2,im2; good for: complex roots
+- lagrange-interpolation → polynomial through draggable points; set points array
+- binomial-distribution → B(n,p) bar chart; set n, p
+- bezier-curves → cubic Bézier; set p0,p1,p2,p3; good for: approximate circular arc, B-splines
+- polar-grid → polar grid + r(θ) curve; set expression (in t), tMax; good for: Archimedean spiral
+
+3D:
+- 3d-function-graph → z=f(x,y) surface; set expression (in x and y), range; good for: surface plot, gradient, tangent plane
+- 3d-curve → parametric 3D curve; set xExpr,yExpr,zExpr,tMin,tMax; good for: helix, 3D Curve
+- 3d-vector-field → 3D vector field arrows; set fxExpr,fyExpr,fzExpr
+
+PERSONALIZATION RULE: Always extract values from the student's question.
+- "(x-3)(x+1)" → PolynomialRootFinder, initialRoot1=3, initialRoot2=-1
+- "vector u=(2,3)" → VectorOperationsBoard, initialU=[2,3]
+- "plot sin(x)+cos(2x)" → function-plotter, expression="sin(x)+cos(2*x)"
+- "Taylor series degree 5" → taylor-series-sine, degree=5
+- "dy/dx = -y" → differential-equations, expression="-y"
+- "3D surface z=x²+y²" → 3d-function-graph, expression="x^2+y^2"`,
         input_schema: {
             type: "object" as const,
             properties: {
@@ -165,8 +259,73 @@ WHEN TO USE EACH WIDGET:
                 },
                 config: {
                     type: "object" as const,
-                    description: "Optional starting configuration. Common keys by widget: initialRoot1/initialRoot2 (PolynomialRootFinder), initialAngleDeg (InteractiveUnitCircle), initialSlope/initialIntercept (InequalitiesVisualizer), initialU/initialV as [x,y] arrays (VectorOperationsBoard), initialMatrix as [iX,iY,jX,jY] (MatrixDeformationBoard), initialV1/initialV2 as [x,y] (LinearSpanExplorer), initialVectorAngleDeg (EigenvectorVisualizer), initialK (IntersectingPlanes3D), initialH (DerivativeDefinitionBoard), initialA (CurveSketchingBoard), initialN/method (RiemannSumsVisualizer), initialDegree/centerPoint (TaylorSeriesApproximation).",
-                    additionalProperties: true,
+                    description: "Initial configuration for the widget. Use values from the student's specific problem to personalize the visualization.",
+                    properties: {
+                        initialRoot1: { type: "number" as const, description: "First root for PolynomialRootFinder. Use the actual root from the student's polynomial (e.g. for (x-3)(x+1) use 3)." },
+                        initialRoot2: { type: "number" as const, description: "Second root for PolynomialRootFinder (e.g. for (x-3)(x+1) use -1)." },
+                        initialAngleDeg: { type: "number" as const, description: "Starting angle in degrees for InteractiveUnitCircle (e.g. 45, 90, 135)." },
+                        initialSlope: { type: "number" as const, description: "Slope of the inequality line for InequalitiesVisualizer." },
+                        initialIntercept: { type: "number" as const, description: "Y-intercept of the inequality line for InequalitiesVisualizer." },
+                        initialU: { type: "array" as const, items: { type: "number" as const }, description: "[x, y] for vector u in VectorOperationsBoard. Use the actual vector from the question (e.g. [2, 3])." },
+                        initialV: { type: "array" as const, items: { type: "number" as const }, description: "[x, y] for vector v in VectorOperationsBoard (e.g. [1, -1])." },
+                        initialMatrix: { type: "array" as const, items: { type: "number" as const }, description: "[iX, iY, jX, jY] — the 2×2 matrix columns for MatrixDeformationBoard. For matrix [[a,b],[c,d]] pass [a,c,b,d]. E.g. [[2,1],[1,2]] → [2,1,1,2]." },
+                        initialV1: { type: "array" as const, items: { type: "number" as const }, description: "[x, y] first spanning vector for LinearSpanExplorer." },
+                        initialV2: { type: "array" as const, items: { type: "number" as const }, description: "[x, y] second spanning vector for LinearSpanExplorer." },
+                        initialVectorAngleDeg: { type: "number" as const, description: "Starting angle in degrees of the input vector for EigenvectorVisualizer." },
+                        initialK: { type: "number" as const, description: "Plane parameter k for IntersectingPlanes3D." },
+                        initialH: { type: "number" as const, description: "Starting h distance for secant line in DerivativeDefinitionBoard (default 1.5; smaller = closer to tangent)." },
+                        initialA: { type: "number" as const, description: "Coefficient a in f(x)=ax³ for CurveSketchingBoard (default 1)." },
+                        initialN: { type: "number" as const, description: "Number of rectangles for RiemannSumsVisualizer (e.g. 4, 8, 16)." },
+                        method: { type: "string" as const, enum: ["left", "right", "middle"] as const, description: "Riemann sum method for RiemannSumsVisualizer." },
+                        initialDegree: { type: "number" as const, description: "Starting polynomial degree for TaylorSeriesApproximation (e.g. 1, 3, 5)." },
+                        centerPoint: { type: "number" as const, description: "Center point a for TaylorSeriesApproximation (0 = Maclaurin series)." },
+                        // ── New template config params ────────────────────────────────────────
+                        expression: { type: "string" as const, description: "Math expression string. For 1-var templates (function-plotter, exploring-functions, etc.) use x as variable (e.g. 'x^2 + 2*x', 'sin(x)', 'exp(-x^2)'). For differential-equations use x and y (e.g. '-y', 'x - y'). For 3d-function-graph use x and y. For polar-grid use t. For sequences use n." },
+                        expression2: { type: "string" as const, description: "Optional second expression for function-plotter overlay (e.g. 'cos(x)')." },
+                        fExpression: { type: "string" as const, description: "Outer function f(x) for function-composer or first curve for shade-bounded-curves." },
+                        gExpression: { type: "string" as const, description: "Inner function g(x) for function-composer or second curve for shade-bounded-curves." },
+                        xExpr: { type: "string" as const, description: "x(t) parametric expression for 3d-curve." },
+                        yExpr: { type: "string" as const, description: "y(t) parametric expression for 3d-curve." },
+                        zExpr: { type: "string" as const, description: "z(t) parametric expression for 3d-curve." },
+                        fxExpr: { type: "string" as const, description: "Fx(x,y,z) for 3d-vector-field." },
+                        fyExpr: { type: "string" as const, description: "Fy(x,y,z) for 3d-vector-field." },
+                        fzExpr: { type: "string" as const, description: "Fz(x,y,z) for 3d-vector-field." },
+                        xMin: { type: "number" as const, description: "Left x bound for function-plotter." },
+                        xMax: { type: "number" as const, description: "Right x bound for function-plotter." },
+                        yMin: { type: "number" as const, description: "Bottom y bound for function-plotter." },
+                        yMax: { type: "number" as const, description: "Top y bound for function-plotter." },
+                        a: { type: "number" as const, description: "Left endpoint a for shade-bounded-curves, mean-value-theorem, antiderivative, continuity-epsilon-delta, approximate-arc-length." },
+                        b: { type: "number" as const, description: "Right endpoint b for shade-bounded-curves, mean-value-theorem, approximate-arc-length." },
+                        x0: { type: "number" as const, description: "Point x₀ for secant-tangent and differentiability." },
+                        m: { type: "number" as const, description: "Slope for linear-function-params." },
+                        n: { type: "number" as const, description: "Exponent for power-functions, number of chords for approximate-arc-length, trials for binomial-distribution." },
+                        amplitude: { type: "number" as const, description: "Amplitude A for sine-cosine-functions." },
+                        omega: { type: "number" as const, description: "Angular frequency ω for sine-cosine-functions." },
+                        degree: { type: "number" as const, description: "Taylor polynomial degree for taylor-series-sine, power-series-exp, power-series-sine-cosine." },
+                        center: { type: "number" as const, description: "Taylor expansion center a for taylor-series-sine (0 = Maclaurin)." },
+                        nTerms: { type: "number" as const, description: "Number of terms to show for convergence-sequence and convergence-series." },
+                        limit: { type: "number" as const, description: "Known limit L to draw as a dashed line in convergence-sequence." },
+                        y0: { type: "number" as const, description: "Initial y value for differential-equations." },
+                        r: { type: "number" as const, description: "Growth rate r for logistic-process." },
+                        K: { type: "number" as const, description: "Carrying capacity K for logistic-process." },
+                        P0: { type: "number" as const, description: "Initial population P₀ for logistic-process." },
+                        tMax: { type: "number" as const, description: "Maximum time t for logistic-process or parameter bound for polar-grid and 3d-curve." },
+                        v0: { type: "number" as const, description: "Initial speed m/s for projectile-motion." },
+                        angleDeg: { type: "number" as const, description: "Launch angle in degrees for projectile-motion." },
+                        re1: { type: "number" as const, description: "Real part of z₁ for complex-arithmetic." },
+                        im1: { type: "number" as const, description: "Imaginary part of z₁ for complex-arithmetic." },
+                        re2: { type: "number" as const, description: "Real part of z₂ for complex-arithmetic." },
+                        im2: { type: "number" as const, description: "Imaginary part of z₂ for complex-arithmetic." },
+                        points: { type: "array" as const, items: { type: "array" as const, items: { type: "number" as const } }, description: "Array of [x,y] pairs for lagrange-interpolation (e.g. [[-2,1],[0,3],[2,1]])." },
+                        p: { type: "number" as const, description: "Success probability 0<p<1 for binomial-distribution." },
+                        p0: { type: "array" as const, items: { type: "number" as const }, description: "[x,y] control point P₀ for bezier-curves." },
+                        p1: { type: "array" as const, items: { type: "number" as const }, description: "[x,y] control point P₁ for bezier-curves." },
+                        p2: { type: "array" as const, items: { type: "number" as const }, description: "[x,y] control point P₂ for bezier-curves." },
+                        p3: { type: "array" as const, items: { type: "number" as const }, description: "[x,y] control point P₃ for bezier-curves." },
+                        range: { type: "number" as const, description: "Axis range ±range for 3d-function-graph (default 3)." },
+                        tMin: { type: "number" as const, description: "Start parameter t for 3d-curve." },
+                    },
+                    additionalProperties: false,
                 },
             },
             required: ["widget_type"],

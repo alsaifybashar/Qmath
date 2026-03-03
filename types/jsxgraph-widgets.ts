@@ -12,7 +12,28 @@ export type JSXGraphWidgetType =
     | 'RiemannSumsVisualizer'
     | 'TaylorSeriesApproximation';
 
-export type AnyWidgetType = JSXGraphWidgetType | 'GridMultiplier' | 'ColumnAddition' | 'CalculusTangent' | 'VectorSpace';
+/** IDs for the new generic JSXTemplate-based visualizations. */
+export type JSXTemplateWidgetType =
+    // Functions
+    | 'function-plotter' | 'function-composer' | 'linear-function-params'
+    | 'power-functions' | 'sine-cosine-functions' | 'exploring-functions' | 'step-function'
+    // Calculus
+    | 'secant-tangent' | 'mean-value-theorem' | 'antiderivative' | 'differentiability'
+    | 'continuity-epsilon-delta' | 'approximate-arc-length' | 'shade-bounded-curves'
+    // Series
+    | 'taylor-series-sine' | 'power-series-exp' | 'power-series-sine-cosine'
+    | 'convergence-sequence' | 'convergence-series'
+    // Analysis / ODE / Physics
+    | 'differential-equations' | 'logistic-process' | 'projectile-motion'
+    | 'complex-arithmetic' | 'lagrange-interpolation' | 'binomial-distribution'
+    | 'bezier-curves' | 'polar-grid' | 'approximate-pi-montecarlo'
+    // 3D
+    | '3d-function-graph' | '3d-curve' | '3d-vector-field';
+
+export type AnyWidgetType =
+    | JSXGraphWidgetType
+    | JSXTemplateWidgetType
+    | 'GridMultiplier' | 'ColumnAddition' | 'CalculusTangent' | 'VectorSpace';
 
 export interface PolynomialRootFinderProps {
     initialRoot1?: number;

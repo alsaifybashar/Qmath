@@ -91,6 +91,28 @@ const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
+/** How long to wait for Ollama before aborting (ms). */
+const OLLAMA_TIMEOUT_MS = 55_000; // 55 s — well under undici's 300 s default
+
+/**
+ * Fetch from the local Ollama server with an automatic timeout.
+ * Throws an AbortError (name === 'AbortError') when the timeout fires.
+ */
+async function fetchOllama(body: object): Promise<Response> {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), OLLAMA_TIMEOUT_MS);
+    try {
+        return await fetch('http://localhost:11434/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+            signal: ctrl.signal,
+        });
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
@@ -123,8 +145,9 @@ export async function POST(request: NextRequest) {
         // Determine mode: explicit 'explore' mode OR no question context → exploration
         const isExploreMode = context.mode === 'explore' || !context.question?.correctAnswer;
         const baseSystemPrompt = isExploreMode ? EXPLORER_SYSTEM_PROMPT : SOCRATIC_SYSTEM_PROMPT;
-        // Exploration mode allows longer responses for richer explanations
-        const maxTokens = isExploreMode ? 800 : 500;
+        // Exploration mode allows longer responses for richer explanations.
+        // 1200 gives Claude room to explain + launch a widget in the same reply.
+        const maxTokens = isExploreMode ? 1200 : 600;
 
         // RAG Context Injection
         const searchQuery = `${context.question?.topic || ''} ${message}`;
@@ -171,16 +194,12 @@ export async function POST(request: NextRequest) {
                 { type: "function", function: { name: visualWidgetTool.name, description: visualWidgetTool.description, parameters: visualWidgetTool.input_schema } }
             ];
 
-            const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: 'qwen3:8b',
-                    messages: ollamaMessages,
-                    tools: ollamaTools,
-                    stream: false,
-                    options: { num_ctx: 4096 }
-                })
+            const ollamaResponse = await fetchOllama({
+                model: 'qwen3:8b',
+                messages: ollamaMessages,
+                tools: ollamaTools,
+                stream: false,
+                options: { num_ctx: 4096 },
             });
 
             if (!ollamaResponse.ok) {
@@ -219,15 +238,11 @@ export async function POST(request: NextRequest) {
                 }
 
                 if (ollamaMessages[ollamaMessages.length - 1].role === 'tool') {
-                    const secondRes = await fetch('http://localhost:11434/api/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: 'qwen3:8b',
-                            messages: ollamaMessages,
-                            stream: false,
-                            options: { num_ctx: 4096 }
-                        })
+                    const secondRes = await fetchOllama({
+                        model: 'qwen3:8b',
+                        messages: ollamaMessages,
+                        stream: false,
+                        options: { num_ctx: 4096 },
                     });
                     const secondData = await secondRes.json();
                     msgObj = secondData.message;
@@ -250,7 +265,7 @@ export async function POST(request: NextRequest) {
         ];
 
         let response = await anthropic.messages.create({
-            model: 'claude-3-haiku-20240307',
+            model: 'claude-haiku-4-5-20251001',
             max_tokens: maxTokens,
             system: systemPrompt,
             messages: messages,
@@ -282,7 +297,7 @@ export async function POST(request: NextRequest) {
                 messages.push(toolMessage);
 
                 response = await anthropic.messages.create({
-                    model: 'claude-3-haiku-20240307',
+                    model: 'claude-haiku-4-5-20251001',
                     max_tokens: maxTokens,
                     system: systemPrompt,
                     messages: messages,
@@ -301,7 +316,7 @@ export async function POST(request: NextRequest) {
                 messages.push(toolMessage);
 
                 response = await anthropic.messages.create({
-                    model: 'claude-3-haiku-20240307',
+                    model: 'claude-haiku-4-5-20251001',
                     max_tokens: maxTokens,
                     system: systemPrompt,
                     messages: messages,
@@ -322,7 +337,7 @@ export async function POST(request: NextRequest) {
                 messages.push(toolMessage);
 
                 response = await anthropic.messages.create({
-                    model: 'claude-3-haiku-20240307',
+                    model: 'claude-haiku-4-5-20251001',
                     max_tokens: maxTokens,
                     system: systemPrompt,
                     messages: messages,
@@ -345,11 +360,29 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
+        // Distinguish an Ollama timeout from other errors so the client can show
+        // a more helpful message (e.g. "switch to Claude").
+        const isAbort =
+            error instanceof Error &&
+            (error.name === 'AbortError' || (error as any).code === 'UND_ERR_HEADERS_TIMEOUT');
+
+        if (isAbort) {
+            return NextResponse.json(
+                {
+                    error: 'Local AI timed out',
+                    details: `Ollama did not respond within ${OLLAMA_TIMEOUT_MS / 1000} seconds. ` +
+                        'The model may still be loading or your prompt is too long. ' +
+                        'Try a shorter message, wait a moment, or switch to Claude.',
+                },
+                { status: 503 }
+            );
+        }
+
         console.error('AI Chat Error:', error);
         return NextResponse.json(
             {
                 error: 'Failed to process AI request',
-                details: error instanceof Error ? error.message : 'Unknown error'
+                details: error instanceof Error ? error.message : 'Unknown error',
             },
             { status: 500 }
         );

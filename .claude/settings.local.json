@@ -71,7 +71,9 @@
       "Bash(powershell.exe -Command \"ollama pull llama3.2 2>&1\")",
       "Bash(powershell.exe -NoProfile -Command \"for \\($i=0; $i -lt 15; $i++\\) { Start-Sleep 2; $r = \\(Invoke-WebRequest -Uri ''http://localhost:3003'' -UseBasicParsing -ErrorAction SilentlyContinue\\).StatusCode; if \\($r -eq 200\\) { Write-Output ''UP''; break } else { Write-Output \"\"Waiting... $i\"\" } }\")",
       "Bash(netstat -ano)",
-      "Bash(findstr \":3000\")"
+      "Bash(findstr \":3000\")",
+      "Bash(powershell -Command \"Get-Process | Where-Object { $_MainWindowTitle -like ''*3000*'' -or $_Name -like ''*node*'' } | Select-Object Id, Name, MainWindowTitle | Format-Table -AutoSize\")",
+      "Bash(powershell.exe -Command \"netstat -ano | Select-String '':3000 ''\")"
     ]
   }
 }
