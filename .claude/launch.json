@@ -3,10 +3,9 @@
   "configurations": [
     {
       "name": "qmath-dev",
-      "runtimeExecutable": "wsl.exe",
-      "runtimeArgs": ["-e", "bash", "-c", "source /home/wsl-bashar/.nvm/nvm.sh && nvm use v22.22.0 && cd /home/wsl-bashar/Qmath && npm run dev"],
-      "port": 3000,
-      "autoPort": false
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
     }
   ]
 }

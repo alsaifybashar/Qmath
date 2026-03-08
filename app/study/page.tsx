@@ -702,7 +702,7 @@ function WrongFeedback({
             exit={{ opacity: 0, y: -6 }}
             transition={{ type: 'spring', damping: 22, stiffness: 300 }}
         >
-            <div className="rounded-2xl border-2 border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 overflow-hidden">
+            <div className="rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-orange-50/80 dark:bg-orange-500/5 overflow-hidden">
 
                 {/* ── Header: minimal wrong indicator ──────────────────────── */}
                 <div className="px-5 pt-4 pb-3 flex items-center gap-3">
@@ -718,7 +718,7 @@ function WrongFeedback({
 
                 {/* ── Sub-questions (WorkShowPanel in checkpoints mode) ──────── */}
                 {hasSubQuestions && !showFullSolution && (
-                    <div className="px-5 pb-4">
+                    <div className="px-4 sm:px-5 pb-4">
                         <WorkShowPanel
                             stepBreakdown={stepBreakdown!}
                             defaultMode="checkpoints"
