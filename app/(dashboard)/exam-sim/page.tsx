@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, ChevronLeft, ChevronRight, Flag, CheckCircle, Play, Timer, BookOpen, Zap, ArrowRight, TrendingUp, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { generateExamSimulation, generateExamBreakdown } from '@/app/actions/exam-sim';
+import { generateExamSimulation, generateExamBreakdown, generateAIExamSimulation } from '@/app/actions/exam-sim';
+import { getUserCoursesForAnalysis, getExamAnalysis } from '@/app/actions/exam-analysis';
+import type { ExamTopicNode } from '@/app/actions/exam-analysis';
 import type { ExamSimulation, SimAnswer, ExamResult, ExamSimConfig } from '@/app/actions/exam-sim';
 
 // ============ CONFIG SCREEN ============
@@ -17,11 +19,46 @@ const difficultyLabels: Record<string, string> = {
 };
 
 function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void }) {
+    const [coursesList, setCoursesList] = useState<{ id: string; name: string; code: string }[]>([]);
+    const [topicMap, setTopicMap] = useState<ExamTopicNode[]>([]);
+
     const [courseId, setCourseId] = useState('');
     const [duration, setDuration] = useState(90);
     const [questionCount, setQuestionCount] = useState(25);
     const [difficulty, setDifficulty] = useState<'adaptive' | 'easy' | 'medium' | 'hard'>('adaptive');
     const [focusWeak, setFocusWeak] = useState(true);
+
+    const [aiMode, setAiMode] = useState(false);
+    const [selectedTopicId, setSelectedTopicId] = useState<string>('all');
+    const [pointsSettings, setPointsSettings] = useState<number | 'mix'>('mix');
+
+    useEffect(() => {
+        let mounted = true;
+        getUserCoursesForAnalysis().then(courses => {
+            if (mounted) {
+                setCoursesList(courses);
+                if (courses.length > 0) setCourseId(courses[0].id);
+            }
+        });
+        return () => { mounted = false; };
+    }, []);
+
+    useEffect(() => {
+        if (!courseId) {
+            setTopicMap([]);
+            return;
+        }
+        let mounted = true;
+        getExamAnalysis(courseId).then(res => {
+            if (!mounted) return;
+            if ('error' in res) {
+                setTopicMap([]);
+            } else {
+                setTopicMap(res.examTopicMap || []);
+            }
+        });
+        return () => { mounted = false; };
+    }, [courseId]);
 
     const durations = [60, 90, 120, 180];
     const counts = [15, 25, 40];
@@ -65,16 +102,86 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
                     {/* Course ID */}
                     <div>
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 block mb-2">
-                            Kurskod
+                            Kurs
                         </label>
-                        <input
-                            type="text"
+                        <select
                             value={courseId}
                             onChange={e => setCourseId(e.target.value)}
-                            placeholder="Ange din kurskod..."
-                            className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                        />
+                            className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        >
+                            <option value="">Välj en kurs...</option>
+                            {coursesList.map(c => (
+                                <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
+                            ))}
+                        </select>
                     </div>
+
+                    {/* AI Mode Toggle */}
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
+                        <div>
+                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-indigo-500" />
+                                AI-genererad tenta
+                            </h3>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                                Skapa helt nya, unika frågor baserat på tidigare tentor.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setAiMode(!aiMode)}
+                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${aiMode ? 'bg-indigo-500' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                            role="switch"
+                            aria-checked={aiMode}
+                        >
+                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${aiMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+
+                    {aiMode && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="space-y-6 pt-4 border-t border-zinc-100 dark:border-zinc-800"
+                        >
+                            {/* Specific Topic */}
+                            <div>
+                                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 block mb-2">
+                                    Specifikt område (frivilligt)
+                                </label>
+                                <select
+                                    value={selectedTopicId}
+                                    onChange={e => setSelectedTopicId(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                                >
+                                    <option value="all">Blandade områden</option>
+                                    {topicMap.map(t => (
+                                        <option key={t.topicId} value={t.topicId}>{t.topicName}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Points */}
+                            <div>
+                                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 block mb-2">
+                                    Poäng per fråga
+                                </label>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {(['mix', 1, 2, 3] as const).map(p => (
+                                        <button
+                                            key={p}
+                                            onClick={() => setPointsSettings(p as any)}
+                                            className={`py-2.5 rounded-xl text-sm font-medium transition-all ${pointsSettings === p
+                                                ? 'bg-indigo-500 text-white shadow-md'
+                                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                                                }`}
+                                        >
+                                            {p === 'mix' ? 'Blandat' : `${p} p`}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
 
                     {/* Duration */}
                     <div>
@@ -154,12 +261,21 @@ function ConfigScreen({ onStart }: { onStart: (config: ExamSimConfig) => void })
 
                     {/* Start button */}
                     <button
-                        onClick={() => onStart({ courseId, duration, questionCount, difficulty, focusWeakTopics: focusWeak })}
+                        onClick={() => onStart({ 
+                            courseId, 
+                            duration, 
+                            questionCount, 
+                            difficulty, 
+                            focusWeakTopics: focusWeak,
+                            aiMode,
+                            topicId: selectedTopicId,
+                            pointsPerQuestion: pointsSettings
+                        })}
                         disabled={!courseId}
                         className="w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-blue-500 to-violet-600 hover:from-blue-600 hover:to-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                     >
                         <Play className="w-5 h-5" />
-                        Starta simulering
+                        {aiMode ? 'Generera & Starta AI Tenta' : 'Starta simulering'}
                     </button>
                 </div>
             </motion.div>
@@ -568,7 +684,10 @@ export default function ExamSimPage() {
         setPhase('loading');
         setError(null);
 
-        const sim = await generateExamSimulation(config);
+        const sim = config.aiMode 
+            ? await generateAIExamSimulation(config)
+            : await generateExamSimulation(config);
+
         if ('error' in sim) {
             setError(sim.error);
             setPhase('config');

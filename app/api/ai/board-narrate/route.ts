@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'qwen3:8b',
+                    model: process.env.OLLAMA_MODEL || 'kimi-k2.5:cloud',
                     messages: [
                         { role: 'system', content: 'You are a concise, encouraging math tutor. Respond in 1-2 sentences only.' },
                         { role: 'user', content: narrationPrompt },

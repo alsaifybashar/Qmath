@@ -124,6 +124,27 @@ function renderTextBlock(text: string): ReactNode {
             continue;
         }
 
+        // Markdown headings  (# / ## / ### / ####)
+        const headingMatch = line.match(/^(#{1,4})\s+(.+)$/);
+        if (headingMatch) {
+            const level = headingMatch[1].length;
+            const text = headingMatch[2];
+            const headingStyles: Record<number, string> = {
+                1: 'text-2xl font-bold text-zinc-900 dark:text-zinc-100 mt-4 mb-1.5 leading-tight',
+                2: 'text-xl font-bold text-zinc-900 dark:text-zinc-100 mt-3 mb-1 leading-tight',
+                3: 'text-lg font-semibold text-zinc-800 dark:text-zinc-200 mt-2.5 mb-0.5 leading-snug',
+                4: 'text-base font-semibold text-zinc-800 dark:text-zinc-200 mt-2 mb-0.5 leading-snug',
+            };
+            const Tag = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4';
+            elements.push(
+                <Tag key={`h${level}_${key++}`} className={headingStyles[level]}>
+                    {renderInline(text)}
+                </Tag>
+            );
+            i++;
+            continue;
+        }
+
         // Numbered list  (1. / 1) )
         if (/^\d+[\.\)]\s/.test(line)) {
             const items: string[] = [];
@@ -162,11 +183,12 @@ function renderTextBlock(text: string): ReactNode {
         const nextLine = lines[i + 1];
         const nextIsBlank = !nextLine || nextLine.trim() === '';
         const nextIsList = nextLine && (/^\d+[\.\)]\s/.test(nextLine) || /^[-*•]\s/.test(nextLine));
+        const nextIsHeading = nextLine && /^#{1,4}\s/.test(nextLine);
 
         elements.push(
             <span key={`ln_${key++}`}>
                 {renderInline(line)}
-                {!nextIsBlank && !nextIsList && i < lines.length - 1 && <br />}
+                {!nextIsBlank && !nextIsList && !nextIsHeading && i < lines.length - 1 && <br />}
             </span>
         );
         i++;

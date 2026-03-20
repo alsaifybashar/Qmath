@@ -146,8 +146,8 @@ export async function POST(request: NextRequest) {
         const isExploreMode = context.mode === 'explore' || !context.question?.correctAnswer;
         const baseSystemPrompt = isExploreMode ? EXPLORER_SYSTEM_PROMPT : SOCRATIC_SYSTEM_PROMPT;
         // Exploration mode allows longer responses for richer explanations.
-        // 1200 gives Claude room to explain + launch a widget in the same reply.
-        const maxTokens = isExploreMode ? 1200 : 600;
+        // 2000 gives Claude room for a full structured explanation + widget in the same reply.
+        const maxTokens = isExploreMode ? 2000 : 600;
 
         // RAG Context Injection
         const searchQuery = `${context.question?.topic || ''} ${message}`;
@@ -195,11 +195,11 @@ export async function POST(request: NextRequest) {
             ];
 
             const ollamaResponse = await fetchOllama({
-                model: 'qwen3:8b',
+                model: process.env.OLLAMA_MODEL || 'kimi-k2.5:cloud',
                 messages: ollamaMessages,
                 tools: ollamaTools,
                 stream: false,
-                options: { num_ctx: 4096 },
+                options: { num_ctx: 8192 },
             });
 
             if (!ollamaResponse.ok) {
@@ -239,10 +239,10 @@ export async function POST(request: NextRequest) {
 
                 if (ollamaMessages[ollamaMessages.length - 1].role === 'tool') {
                     const secondRes = await fetchOllama({
-                        model: 'qwen3:8b',
+                        model: process.env.OLLAMA_MODEL || 'kimi-k2.5:cloud',
                         messages: ollamaMessages,
                         stream: false,
-                        options: { num_ctx: 4096 },
+                        options: { num_ctx: 8192 },
                     });
                     const secondData = await secondRes.json();
                     msgObj = secondData.message;

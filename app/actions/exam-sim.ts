@@ -15,6 +15,9 @@ export interface ExamSimConfig {
     questionCount: number; // 15, 25, 40
     difficulty: 'adaptive' | 'easy' | 'medium' | 'hard';
     focusWeakTopics: boolean; // Over-sample weak topics
+    aiMode?: boolean;         // Use AI to generate novel questions
+    topicId?: string;         // 'all' or specific topic id
+    pointsPerQuestion?: number | 'mix'; // Points setting
 }
 
 export interface SimQuestion {
@@ -141,13 +144,174 @@ export async function generateExamSimulation(config: ExamSimConfig): Promise<Exa
     return {
         id: simId,
         courseId: config.courseId,
-        courseName: course.name,
+        courseName: course.name || 'Unknown',
         courseCode: course.code || 'N/A',
         questions: selectedQuestions,
         totalPoints,
         duration: config.duration,
         createdAt: new Date(),
     };
+}
+
+import { getExamAnalysis } from './exam-analysis';
+import Anthropic from '@anthropic-ai/sdk';
+import { callOllama } from '@/lib/ollama';
+
+/**
+ * Generate a novel exam simulation using AI (based on past exam analysis).
+ */
+export async function generateAIExamSimulation(config: ExamSimConfig): Promise<ExamSimulation | { error: string }> {
+    const session = await auth();
+    if (!session?.user?.id) return { error: 'Not authenticated' };
+
+    const [course] = await db.select()
+        .from(courses)
+        .where(eq(courses.id, config.courseId))
+        .limit(1);
+
+    if (!course) return { error: 'Course not found' };
+
+    // Get exam analysis to inform AI
+    const analysis = await getExamAnalysis(config.courseId);
+    if ('error' in analysis) return { error: 'Exam analysis unavailable for this course.' };
+
+    const topicMap = analysis.examTopicMap;
+    const selectedTopic = config.topicId && config.topicId !== 'all' 
+        ? topicMap.find(t => t.topicId === config.topicId) 
+        : null;
+
+    const topicPrompt = selectedTopic 
+        ? `Focus EXCLUSIVELY on the topic: "${selectedTopic.topicName}". Context: ${selectedTopic.description}`
+        : `Include a balanced mix of these topics: ${topicMap.map(t => t.topicName).join(', ')}.`;
+
+    const pointsPrompt = config.pointsPerQuestion && config.pointsPerQuestion !== 'mix'
+        ? `Make every question worth exactly ${config.pointsPerQuestion} points.`
+        : `Assign appropriate points (1-10) based on question difficulty.`;
+
+    const useAnthropic = !!process.env.ANTHROPIC_API_KEY;
+    const simQuestions: SimQuestion[] = [];
+    const chunkSize = 3;
+    const totalNeeded = config.questionCount;
+
+    for (let i = 0; i < totalNeeded; i += chunkSize) {
+        const amountToGenerate = Math.min(chunkSize, totalNeeded - i);
+        const batchPrompt = `You are an expert Math Professor creating an exam for a university course: ${course.name} (${course.code}).
+Your task is to generate EXACTLY ${amountToGenerate} novel, original exam questions based on the course syllabus and past exam structures.
+
+Requirements:
+- Difficulty Level: ${config.difficulty}
+- ${topicPrompt}
+- ${pointsPrompt}
+
+Return ONLY raw JSON in exactly this format (no markdown, no backticks, no explanatory text):
+{
+  "questions": [
+    {
+      "topicName": "topic name from the list",
+      "questionText": "The text of the question. Include inline LaTeX using $$ or \\\\( \\\\)",
+      "correctAnswer": "The exact expected final numerical or algebraic answer (e.g., '4', 'x^2+2x', 'pi/2')",
+      "difficulty": 1-5,
+      "points": number
+    }
+  ]
+}`;
+
+        let questionsJson = '';
+        try {
+            if (!useAnthropic) {
+                questionsJson = await callOllama({
+                    messages: [
+                        { role: 'system', content: 'You are a precise JSON-generating math tutor AI.' },
+                        { role: 'user', content: batchPrompt + '\n\nPlease output ONLY valid JSON. Make sure you close all arrays and objects. No conversational text.' }
+                    ],
+                    maxTokens: 4000,
+                    timeoutMs: 120_000,
+                    temperature: 0.7,
+                });
+            } else {
+                const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+                const message = await anthropic.messages.create({
+                    model: 'claude-3-5-sonnet-20241022',
+                    max_tokens: 2000,
+                    temperature: 0.7,
+                    system: 'You are a precise JSON-generating math tutor AI. Return ONLY JSON without markdown.',
+                    messages: [{ role: 'user', content: batchPrompt }]
+                });
+                questionsJson = message.content[0].type === 'text' ? message.content[0].text : '';
+            }
+
+            if (!questionsJson || questionsJson.trim() === '') {
+                throw new Error('AI returned an empty response.');
+            }
+
+            let cleaned = questionsJson.trim();
+            if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json/i, '').replace(/```$/, '').trim();
+            else if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```/, '').replace(/```$/, '').trim();
+
+            const start = cleaned.indexOf('{');
+            const end = cleaned.lastIndexOf('}');
+            if (start !== -1 && end !== -1) {
+                cleaned = cleaned.substring(start, end + 1);
+            }
+
+            let parsed: any;
+            try {
+                parsed = JSON.parse(cleaned);
+            } catch (e: any) {
+                try {
+                    parsed = JSON.parse(cleaned + ']}');
+                } catch (e2) {
+                    try {
+                        parsed = JSON.parse(cleaned + '}');
+                    } catch (e3) {
+                        console.error('Raw AI Output:', questionsJson);
+                        throw new Error('AI returned malformed JSON.');
+                    }
+                }
+            }
+
+            if (!parsed.questions || !Array.isArray(parsed.questions)) {
+                throw new Error('Invalid JSON structure returned by AI (missing questions array)');
+            }
+
+            parsed.questions.forEach((q: any, j: number) => {
+                simQuestions.push({
+                    id: `ai_q_${Date.now()}_${i}_${j}`,
+                    topicId: selectedTopic ? selectedTopic.topicId : 'ai_generated',
+                    topicName: q.topicName || (selectedTopic ? selectedTopic.topicName : 'Mixed Topics'),
+                    questionText: q.questionText || 'Generated question',
+                    correctAnswer: q.correctAnswer || '',
+                    difficulty: q.difficulty || (config.difficulty === 'hard' ? 4 : config.difficulty === 'easy' ? 2 : 3),
+                    points: q.points || 3,
+                    questionType: 'numeric',
+                });
+            });
+
+            console.log(`[AI Exam Gen] Generated ${simQuestions.length}/${totalNeeded} questions...`);
+
+        } catch (e: any) {
+            console.error('AI Exam Gen Error in chunk:', e.message || e);
+            if (simQuestions.length === 0) {
+                return { error: 'Misslyckades att generera tenta via AI. Försök igen.' };
+            }
+            console.log(`[AI Exam Gen] Stopped early due to error. Returning ${simQuestions.length} questions already processed.`);
+            break;
+        }
+    }
+
+    const totalPoints = simQuestions.reduce((sum, q) => sum + q.points, 0);
+    const simId = `sim_ai_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+        return {
+            id: simId,
+            courseId: config.courseId,
+            courseName: course.name || 'Unknown',
+            courseCode: course.code || 'N/A',
+            questions: simQuestions,
+            totalPoints,
+            duration: config.duration,
+            createdAt: new Date(),
+        };
 }
 
 // ============ EXAM BREAKDOWN ============

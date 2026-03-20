@@ -10,7 +10,7 @@
  */
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'llama3.2';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'kimi-k2.5:cloud';
 
 export interface OllamaMessage {
     role: 'system' | 'user' | 'assistant';
@@ -25,6 +25,7 @@ export interface OllamaCallOptions {
     timeoutMs?: number;
     /** Context window size. Default: 4096. Keep low to avoid OOM on large-ctx models. */
     numCtx?: number;
+    format?: 'json';
 }
 
 /**
@@ -33,7 +34,7 @@ export interface OllamaCallOptions {
  * Throws on network error, timeout, or non-2xx HTTP status.
  */
 export async function callOllama(options: OllamaCallOptions): Promise<string> {
-    const { messages, maxTokens = 500, temperature = 0.2, timeoutMs = 30_000, numCtx = 4096 } = options;
+    const { messages, maxTokens = 500, temperature = 0.2, timeoutMs = 30_000, numCtx = 4096, format } = options;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -47,6 +48,7 @@ export async function callOllama(options: OllamaCallOptions): Promise<string> {
                 model: OLLAMA_MODEL,
                 messages,
                 stream: false,
+                ...(format ? { format } : {}),
                 options: {
                     num_ctx: numCtx,
                     num_predict: maxTokens,
@@ -60,9 +62,8 @@ export async function callOllama(options: OllamaCallOptions): Promise<string> {
             throw new Error(`Ollama HTTP ${response.status}: ${response.statusText}${body ? ` — ${body}` : ''}`);
         }
 
-        const data = await response.json() as {
-            message: { content: string };
-        };
+        const data = await response.json() as any;
+        if (data.error) throw new Error(`Ollama API Error: ${data.error}`);
 
         return data.message?.content ?? '';
     } finally {
