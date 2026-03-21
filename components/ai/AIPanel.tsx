@@ -102,6 +102,10 @@ export function AIPanel({
      */
     const [activeWidgetMessageId, setActiveWidgetMessageId] = useState<string | null>(null);
     const [provider, setProvider] = useState<'anthropic' | 'ollama'>('anthropic');
+    /** Fraction of total width occupied by the visualization panel (0.18–0.82) */
+    const [splitRatio, setSplitRatio] = useState(0.62);
+    const isDraggingRef = useRef(false);
+    const containerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -336,6 +340,30 @@ export function AIPanel({
         }, 3000);
     };
 
+    // ── RESIZABLE SPLITTER ────────────────────────────────────────────────────────
+    const onSplitterMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        isDraggingRef.current = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        const onMouseMove = (ev: MouseEvent) => {
+            if (!isDraggingRef.current || !containerRef.current) return;
+            const rect = containerRef.current.getBoundingClientRect();
+            const ratio = (ev.clientX - rect.left) / rect.width;
+            setSplitRatio(Math.min(0.82, Math.max(0.18, ratio)));
+        };
+        const onMouseUp = () => {
+            isDraggingRef.current = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }, []);
+
     // ── PANEL MODE (right-side split in question view) ──────────────────────────
     if (position === 'panel') {
         const QUICK_REPLIES = ['Jag förstår inte', 'Kan du förklara mer?', 'Vad är nästa steg?', 'Ge mig en ledtråd'];
@@ -555,11 +583,12 @@ export function AIPanel({
 
     return (
         <motion.div
+            ref={containerRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             className={isFullScreen
-                ? "flex flex-row relative w-full h-full bg-slate-950 overflow-hidden"
+                ? "flex flex-row relative w-full h-full bg-transparent overflow-hidden"
                 : "bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden flex flex-col"
             }
             style={isFullScreen ? {} : { height: position === 'sidebar' ? '400px' : '500px' }}
@@ -571,24 +600,24 @@ export function AIPanel({
             ─────────────────────────────────────────────────────────────── */}
             {isSplitScreen && activeWidgetData && (
                 <div
-                    className="border-r border-white/5 flex flex-col h-full flex-shrink-0 relative"
-                    style={{ width: '62%', background: 'radial-gradient(ellipse at 50% 60%, #0f1729 0%, #020617 100%)' }}
+                    className="flex flex-col h-full flex-shrink-0 relative bg-[var(--background)]"
+                    style={{ width: `${splitRatio * 100}%` }}
                 >
                     {/* Thin top bar: widget name (left) + hint + minimize (right) */}
-                    <div className="flex-none flex items-center justify-between px-5 py-2.5 border-b border-white/[0.06] bg-slate-950/50">
+                    <div className="flex-none flex items-center justify-between px-5 py-2.5 border-b border-[var(--glass-border)] bg-[var(--surface)]/50">
                         <div className="flex items-center gap-2.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-violet-500/80" />
-                            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                            <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                            <span className="text-[11px] font-semibold text-[var(--foreground-muted)] uppercase tracking-widest">
                                 {activeWidgetData.type.replace(/([A-Z])/g, ' $1').trim()}
                             </span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="text-[11px] text-slate-600 select-none">
+                            <span className="text-[11px] text-[var(--foreground-subtle)] select-none">
                                 Scroll inside to zoom · drag to pan
                             </span>
                             <button
                                 onClick={() => setIsWidgetMinimized(true)}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-[var(--foreground-muted)] hover:text-[var(--foreground)] bg-[var(--surface-hover)] hover:bg-[var(--surface-elevated)] rounded-lg border border-[var(--glass-border)] transition-all"
                             >
                                 <Minimize2 className="w-3 h-3" />
                                 Minimize
@@ -600,24 +629,14 @@ export function AIPanel({
                         CSS min() constrains the board to the smaller of panel width
                         or panel height, so it always fits without clipping.
                     ──────────────────────────────────────────────────────────── */}
-                    <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center relative">
+                    <div className="flex-1 min-h-0 overflow-hidden flex items-stretch justify-stretch relative p-3">
                         {/* Subtle grid background */}
-                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-                        {/*
-                            Size the board to the largest square that fits the panel.
-                            - 62vw  = panel width  (matches the 62% above)
-                            - 100vh - 64px header - 44px top bar - 24px padding = ~100vh - 8.5rem
-                            The widget itself uses w-full, so it fills this wrapper.
-                        */}
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
                         {/* key forces a full unmount+remount when the active widget
                             changes, so JSXGraph always reinitialises cleanly. */}
                         <div
                             key={activeWidgetMessageId ?? 'widget'}
-                            className="relative z-10"
-                            style={{
-                                width: 'min(calc(62vw - 2rem), calc(100vh - 8.5rem))',
-                                aspectRatio: '1 / 1',
-                            }}
+                            className="relative z-10 w-full h-full jxg-fullscreen-wrapper"
                         >
                             {renderJSXWidget(activeWidgetData, true)}
                         </div>
@@ -633,6 +652,22 @@ export function AIPanel({
                 </div>
             )}
 
+            {/* ── DRAGGABLE SPLITTER ──────────────────────────────────────── */}
+            {isSplitScreen && (
+                <div
+                    onMouseDown={onSplitterMouseDown}
+                    className="flex-shrink-0 w-1.5 h-full cursor-col-resize relative z-30 group"
+                    title="Drag to resize panels"
+                >
+                    {/* Resting state: very subtle */}
+                    <div className="absolute inset-0 bg-white/[0.04] group-hover:bg-violet-500/30 transition-colors duration-150" />
+                    {/* Centre grip dots */}
+                    <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-0.5 h-6 rounded-full bg-violet-400/70" />
+                    </div>
+                </div>
+            )}
+
             {/* ── CHAT PANEL ──────────────────────────────────────────────────
                 h-full + flex flex-col + min-h-0 gives the messages div a
                 defined height so overflow-y-auto triggers properly.
@@ -640,10 +675,9 @@ export function AIPanel({
             <div
                 className={`flex flex-col relative h-full min-h-0 ${
                     isSplitScreen
-                        ? 'bg-slate-950 border-l border-white/[0.04] z-20 flex-shrink-0'
+                        ? 'bg-transparent z-20 flex-1 min-w-0'
                         : 'w-full'
                 }`}
-                style={isSplitScreen ? { width: '38%' } : undefined}
             >
 
                 {/* Header */}
@@ -692,13 +726,13 @@ export function AIPanel({
                     <div className={isFullScreen ? "max-w-4xl mx-auto space-y-12 flex flex-col" : "space-y-4"}>
                         {messages.length === 0 ? (
                             <div className={isFullScreen ? "h-full flex flex-col items-center justify-center text-center p-4 mt-20" : "h-full flex flex-col items-center justify-center text-center p-4"}>
-                                <div className="w-16 h-16 bg-violet-100 dark:bg-violet-500/20 rounded-2xl flex items-center justify-center mb-4">
-                                    <Bot className="w-8 h-8 text-violet-500" />
+                                <div className="w-16 h-16 bg-gradient-to-br from-violet-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mb-4 shadow-[var(--shadow-glow)]">
+                                    <Bot className="w-8 h-8 text-violet-600 dark:text-violet-400" />
                                 </div>
-                                <h4 className="font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+                                <h4 className="font-semibold text-[var(--foreground)] mb-2 text-xl">
                                     {isExploreMode ? 'Explore Mathematics' : 'How can I help?'}
                                 </h4>
-                                <p className="text-sm text-zinc-500 max-w-[220px]">
+                                <p className="text-sm text-[var(--foreground-muted)] max-w-[280px] leading-relaxed">
                                     {isExploreMode
                                         ? 'Ask me anything — concepts, visualizations, proofs, or how topics connect.'
                                         : "I'm here to guide you through this problem without giving away the answer."}
@@ -719,7 +753,7 @@ export function AIPanel({
                                                     setInputValue(prompt);
                                                     inputRef.current?.focus();
                                                 }}
-                                                className="px-4 py-2 text-sm text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-violet-500/50 rounded-full transition-all"
+                                                className="px-4 py-2 text-sm text-[var(--foreground)] bg-[var(--surface)] border border-[var(--glass-border)] hover:border-violet-500/50 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 rounded-full transition-all"
                                             >
                                                 {prompt}
                                             </button>
@@ -763,19 +797,19 @@ export function AIPanel({
                                         {isFullScreen ? (
                                             <div className="w-full flex flex-col">
                                                 {message.role === 'user' ? (
-                                                    <div className="self-end max-w-[85%] bg-zinc-800 border border-zinc-700 text-white px-5 py-3 rounded-3xl rounded-br-sm text-[15px] shadow-sm mb-4">
+                                                    <div className="self-end max-w-[85%] bg-[var(--surface-elevated)] border border-[var(--glass-border)] text-[var(--foreground)] px-5 py-3 rounded-3xl rounded-br-sm text-[15px] shadow-[var(--shadow-md)] mb-4">
                                                         {message.content}
                                                     </div>
                                                 ) : (
                                                     <div className="self-start w-full flex flex-col">
-                                                        <div className="flex items-start gap-4">
-                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${message.isNarration ? 'bg-violet-500/30 shadow-none' : 'bg-violet-600 shadow-lg shadow-violet-500/20'}`}>
+                                                        <div className="flex items-start gap-4 inline-flex">
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${message.isNarration ? 'bg-violet-500/10 shadow-none' : 'bg-gradient-to-br from-blue-500 to-violet-500 shadow-[var(--shadow-glow)]'}`}>
                                                                 <Bot className="w-5 h-5 text-white" />
                                                             </div>
-                                                            <div className={`flex-1 leading-relaxed pt-1 ${message.isNarration ? 'text-slate-400 text-sm italic border-l-2 border-violet-500/30 pl-3' : 'text-slate-200 text-[15px]'}`}>
+                                                            <div className={`flex-1 leading-relaxed pt-1 w-full max-w-full overflow-hidden ${message.isNarration ? 'text-[var(--foreground-subtle)] text-sm italic border-l-2 border-violet-500/30 pl-3' : 'text-[var(--foreground)] text-[15px]'}`}>
                                                                 {message.isNarration
                                                                     ? message.content
-                                                                    : <MarkdownMessage content={message.content} className="text-[15px]" />
+                                                                    : <MarkdownMessage content={message.content} className="text-[15px] prose-headings:text-zinc-900 dark:prose-headings:text-zinc-100 prose-p:text-zinc-800 dark:prose-p:text-zinc-300 prose-strong:text-zinc-900 dark:prose-strong:text-zinc-100 w-full" />
                                                                 }
                                                             </div>
                                                         </div>
@@ -809,19 +843,19 @@ export function AIPanel({
                                                                     // All badges now have an Expand button so any historical figure can be re-opened.
                                                                     const isCurrentlyExpanded = isActiveWidget && isSplitScreen;
                                                                     return (
-                                                                    <div className="flex items-center gap-3 p-3 bg-slate-900 border border-violet-500/20 rounded-xl text-slate-300 text-sm shadow-inner max-w-md">
-                                                                        <div className="p-2 bg-violet-500/20 rounded-lg"><LayoutGrid className="w-4 h-4 text-violet-400" /></div>
+                                                                    <div className="flex items-center gap-3 p-3 bg-[var(--surface)] border border-[var(--glass-border-strong)] rounded-xl text-[var(--foreground)] text-sm shadow-[var(--shadow-sm)] max-w-md">
+                                                                        <div className="p-2 bg-violet-500/10 rounded-lg"><LayoutGrid className="w-4 h-4 text-violet-600 dark:text-violet-400" /></div>
                                                                         <div className="flex-1 truncate">
-                                                                            Interactive Widget: <span className="font-mono text-violet-300 text-xs">{message.visualWidget.type}</span>
+                                                                            Interactive Widget: <span className="font-mono text-violet-600 dark:text-violet-300 text-xs">{message.visualWidget.type}</span>
                                                                         </div>
                                                                         {isCurrentlyExpanded ? (
                                                                             // Already in split-screen — offer to minimize
-                                                                            <button onClick={() => setIsWidgetMinimized(true)} className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors flex items-center gap-1 focus:outline-none">
+                                                                            <button onClick={() => setIsWidgetMinimized(true)} className="px-3 py-1.5 text-xs bg-[var(--surface-hover)] hover:bg-[var(--border-medium)] text-[var(--foreground)] rounded-lg transition-all flex items-center gap-1 focus:outline-none shadow-[var(--shadow-sm)]">
                                                                                 <Minimize2 className="w-3 h-3" /> Minimize
                                                                             </button>
                                                                         ) : (
                                                                             // Not expanded — clicking Expand switches to this widget
-                                                                            <button onClick={() => { setActiveWidgetMessageId(message.id); setIsWidgetMinimized(false); }} className="px-3 py-1.5 text-xs bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors flex items-center gap-1 shadow-md hover:shadow-lg focus:outline-none">
+                                                                            <button onClick={() => { setActiveWidgetMessageId(message.id); setIsWidgetMinimized(false); }} className="px-3 py-1.5 text-xs bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-all flex items-center gap-1 shadow-md hover:shadow-lg focus:outline-none">
                                                                                 <Maximize2 className="w-3 h-3" /> Expand
                                                                             </button>
                                                                         )}
@@ -852,8 +886,8 @@ export function AIPanel({
                                                     </div>
                                                 )}
                                                 {message.visualWidget && (
-                                                    <div className="mt-3 bg-zinc-950/40 p-4 rounded-xl border border-violet-500/20 shadow-inner overflow-hidden flex flex-col items-center w-full">
-                                                        <div className="w-full flex items-center justify-between mb-3 text-xs text-violet-300 font-medium">
+                                                    <div className="mt-3 bg-white/50 dark:bg-zinc-950/40 p-4 rounded-xl border border-violet-500/20 shadow-inner overflow-hidden flex flex-col items-center w-full">
+                                                        <div className="w-full flex items-center justify-between mb-3 text-xs text-violet-700 dark:text-violet-300 font-medium">
                                                             <div className="flex items-center gap-1.5"><LayoutGrid className="w-3.5 h-3.5" /> Interactive Concept</div>
                                                         </div>
                                                         <div className="w-full overflow-hidden flex justify-center origin-top transform scale-75 md:scale-100">
@@ -883,25 +917,25 @@ export function AIPanel({
 
                 {/* Input */}
                 <div className={isFullScreen
-                    ? "absolute bottom-0 left-0 right-0 p-6 pt-16 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent flex flex-col items-center pointer-events-none"
+                    ? "absolute bottom-0 left-0 right-0 p-6 pt-16 bg-gradient-to-t from-zinc-50 via-zinc-50/90 dark:from-slate-950 dark:via-slate-950/90 to-transparent flex flex-col items-center pointer-events-none"
                     : "p-3 border-t border-zinc-200 dark:border-zinc-800"
                 }>
                     <div className={isFullScreen
-                        ? "w-full max-w-3xl pointer-events-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-2 flex flex-col"
+                        ? "w-full max-w-3xl pointer-events-auto bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-zinc-200 dark:border-slate-700/50 rounded-2xl shadow-xl dark:shadow-2xl p-2 flex flex-col"
                         : "w-full flex flex-col"
                     }>
                         <div className="flex justify-between items-center px-4 pt-1 mb-2">
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">AI Engine</span>
-                            <div className="flex bg-slate-900/50 rounded-lg p-1 border border-white/5">
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--foreground-subtle)]">AI Engine</span>
+                            <div className="flex bg-[var(--surface-hover)] rounded-lg p-1 border border-[var(--glass-border)]">
                                 <button
                                     onClick={() => setProvider('anthropic')}
-                                    className={`px-3 py-1 text-xs rounded-md transition-colors ${provider === 'anthropic' ? 'bg-violet-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                                    className={`px-3 py-1 text-xs rounded-md transition-all ${provider === 'anthropic' ? 'bg-gradient-to-r from-blue-500 to-violet-500 text-white shadow-md' : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'}`}
                                 >
                                     Claude 3.5
                                 </button>
                                 <button
                                     onClick={() => setProvider('ollama')}
-                                    className={`px-3 py-1 text-xs rounded-md transition-colors gap-1 flex items-center ${provider === 'ollama' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                                    className={`px-3 py-1 text-xs rounded-md transition-all gap-1 flex items-center ${provider === 'ollama' ? 'bg-emerald-600 text-white shadow-md' : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'}`}
                                 >
                                     Local Ollama
                                 </button>
@@ -911,7 +945,7 @@ export function AIPanel({
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setIsVoiceModeOpen(true)}
-                                className="p-3 text-zinc-400 hover:text-white rounded-xl transition-colors"
+                                className="p-3 text-[var(--foreground-subtle)] hover:text-[var(--foreground)] rounded-xl transition-all hover:bg-[var(--surface-hover)]"
                                 title="Voice Mode"
                             >
                                 <Mic className="w-5 h-5" />
@@ -924,12 +958,12 @@ export function AIPanel({
                                 onKeyDown={handleKeyDown}
                                 placeholder={isExploreMode ? "Ask anything — concepts, proofs, visualizations..." : "Ask about this problem..."}
                                 disabled={isLoading}
-                                className="flex-1 px-4 py-3 bg-transparent text-white text-base focus:outline-none disabled:opacity-50"
+                                className="flex-1 px-4 py-3 bg-transparent text-[var(--foreground)] text-base focus:outline-none disabled:opacity-50 placeholder:text-[var(--foreground-subtle)]"
                             />
                             <button
                                 onClick={() => handleSendMessage()}
                                 disabled={!inputValue.trim() || isLoading}
-                                className="p-3 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-800 text-white rounded-xl transition-colors disabled:cursor-not-allowed"
+                                className="p-3 bg-violet-600 hover:bg-violet-500 disabled:bg-[var(--surface-hover)] text-white rounded-xl transition-all disabled:cursor-not-allowed shadow-[var(--shadow-md)]"
                             >
                                 <Send className="w-5 h-5" />
                             </button>

@@ -74,7 +74,8 @@
       "Bash(findstr \":3000\")",
       "Bash(powershell -Command \"Get-Process | Where-Object { $_MainWindowTitle -like ''*3000*'' -or $_Name -like ''*node*'' } | Select-Object Id, Name, MainWindowTitle | Format-Table -AutoSize\")",
       "Bash(powershell.exe -Command \"netstat -ano | Select-String '':3000 ''\")",
-      "Bash(fuser 3000/tcp)"
+      "Bash(fuser 3000/tcp)",
+      "Bash(kill 14937 14938 14950)"
     ]
   }
 }

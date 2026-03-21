@@ -3,15 +3,18 @@
 @tailwind utilities;
 
 /* =========================================
-   QMATH DESIGN SYSTEM - PREMIUM UI
+   QMATH DESIGN SYSTEM - GEMINI INSPIRED
    ========================================= */
 
 :root {
-  /* Core Colors */
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core Colors - Clean & Readable */
+  --background: #fafafa;
+  --background-alt: #f5f5f5;
+  --foreground: #1a1a1a;
+  --foreground-muted: #525252;
+  --foreground-subtle: #737373;
 
-  /* Primary Palette - Rich Blue */
+  /* Primary Palette - Soft Blue (Gemini-inspired) */
   --primary-50: #eff6ff;
   --primary-100: #dbeafe;
   --primary-200: #bfdbfe;
@@ -23,43 +26,57 @@
   --primary-800: #1e40af;
   --primary-900: #1e3a8a;
 
-  /* Accent Palette - Purple/Violet */
+  /* Accent Palette - Soft Violet/Purple */
   --accent-400: #a78bfa;
   --accent-500: #8b5cf6;
   --accent-600: #7c3aed;
 
-  /* Success - Emerald */
+  /* Success - Soft Emerald */
   --success-400: #34d399;
   --success-500: #10b981;
   --success-600: #059669;
 
-  /* Warning - Amber */
+  /* Warning - Soft Amber */
   --warning-400: #fbbf24;
   --warning-500: #f59e0b;
   --warning-600: #d97706;
 
-  /* Error - Rose */
+  /* Error - Soft Rose */
   --error-400: #fb7185;
   --error-500: #f43f5e;
   --error-600: #e11d48;
 
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.3);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  /* Surface Colors - For cards, panels */
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-hover: #f5f5f5;
 
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-500) 100%);
+  /* Border Colors */
+  --border-light: rgba(0, 0, 0, 0.06);
+  --border-medium: rgba(0, 0, 0, 0.1);
+  --border-focus: rgba(59, 130, 246, 0.4);
+
+  /* Glassmorphism - Light Mode */
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-strong: rgba(0, 0, 0, 0.12);
+  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --glass-shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+
+  /* Gemini-style Gradients */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-  --gradient-subtle: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  --gradient-subtle: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+  --gradient-ambient: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(236, 72, 153, 0.08) 100%);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.3);
-  --shadow-glow-accent: 0 0 40px rgba(139, 92, 246, 0.3);
+  /* Soft Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.2);
+  --shadow-glow-accent: 0 0 40px rgba(139, 92, 246, 0.2);
 
   /* Animation Timings */
   --transition-fast: 150ms;
@@ -69,30 +86,164 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Code Colors - Light Mode */
+  --code-bg: #1e1e2e;
+  --code-bg-light: #f4f4f5;
+  --code-text: #e4e4e7;
+  --code-text-light: #3f3f46;
+  --code-border: rgba(0, 0, 0, 0.08);
 }
 
-/* Dark Mode Design Tokens */
+/* Dark Mode Design Tokens - Gemini Inspired */
 .dark {
-  --background: #09090b;
+  --background: #0f0f12;
+  --background-alt: #18181b;
   --foreground: #fafafa;
+  --foreground-muted: #a1a1aa;
+  --foreground-subtle: #71717a;
 
-  /* Glass in dark mode */
-  --glass-bg: rgba(24, 24, 27, 0.8);
-  --glass-border: rgba(63, 63, 70, 0.5);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  /* Surface Colors - Dark */
+  --surface: #18181b;
+  --surface-elevated: #27272a;
+  --surface-hover: #3f3f46;
+
+  /* Border Colors - Dark */
+  --border-light: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.1);
+  --border-focus: rgba(139, 92, 246, 0.4);
+
+  /* Glassmorphism - Dark Mode */
+  --glass-bg: rgba(24, 24, 27, 0.7);
+  --glass-bg-elevated: rgba(39, 39, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --glass-shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
 
   /* Adjusted gradients for dark */
-  --gradient-subtle: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+  --gradient-subtle: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
+  --gradient-ambient: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(236, 72, 153, 0.1) 100%);
 
-  /* Stronger glow in dark mode */
-  --shadow-glow: 0 0 60px rgba(59, 130, 246, 0.4);
-  --shadow-glow-accent: 0 0 60px rgba(139, 92, 246, 0.4);
+  /* Softer glow in dark mode */
+  --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.25);
+  --shadow-glow-accent: 0 0 40px rgba(139, 92, 246, 0.25);
+
+  /* Code Colors - Dark Mode */
+  --code-bg: #0d0d10;
+  --code-bg-light: #27272a;
+  --code-text: #e4e4e7;
+  --code-text-light: #d4d4d8;
+  --code-border: rgba(255, 255, 255, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #fafafa;
+/* =========================================
+   GEMINI-INSPIRED ANIMATIONS
+   ========================================= */
+
+/* Ambient background movement */
+@keyframes ambient-drift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(2%, -2%) scale(1.02);
+  }
+  50% {
+    transform: translate(-1%, 1%) scale(0.98);
+  }
+  75% {
+    transform: translate(1%, 2%) scale(1.01);
+  }
+}
+
+/* Soft pulse for active elements */
+@keyframes soft-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer-gemini {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Float with rotation */
+@keyframes float-rotate {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+}
+
+/* Gentle gradient shift */
+@keyframes gradient-shift-soft {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Breathing animation for focus states */
+@keyframes breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Smooth fade in with slide */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Typing cursor blink */
+@keyframes cursor-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Orb float - for decorative elements */
+@keyframes orb-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+    opacity: 0.7;
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+    opacity: 0.4;
   }
 }
 
@@ -383,126 +534,7 @@ body {
   }
 }
 
-/* =========================================
-   ALIEN / GAMIFICATION ANIMATIONS
-   ========================================= */
 
-/* Alien Glow Pulse - green bioluminescent glow */
-@keyframes alien-glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 15px rgba(34, 197, 94, 0.3), 0 0 30px rgba(34, 197, 94, 0.15);
-    filter: brightness(1);
-  }
-
-  50% {
-    box-shadow: 0 0 25px rgba(34, 197, 94, 0.5), 0 0 50px rgba(34, 197, 94, 0.25);
-    filter: brightness(1.05);
-  }
-}
-
-/* Bioluminescent throb */
-@keyframes bioluminescence {
-
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* Antenna sway */
-@keyframes antenna-sway {
-
-  0%,
-  100% {
-    transform: rotate(-5deg);
-  }
-
-  50% {
-    transform: rotate(5deg);
-  }
-}
-
-/* XP counter pop-in */
-@keyframes xp-pop {
-  0% {
-    transform: scale(0.6) translateY(10px);
-    opacity: 0;
-  }
-
-  60% {
-    transform: scale(1.1) translateY(-2px);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Level up burst */
-@keyframes level-up-burst {
-  0% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-
-  50% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* Star sparkle */
-@keyframes star-sparkle {
-
-  0%,
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 0.7;
-  }
-
-  25% {
-    transform: scale(1.3) rotate(15deg);
-    opacity: 1;
-  }
-
-  75% {
-    transform: scale(0.8) rotate(-10deg);
-    opacity: 0.5;
-  }
-}
-
-/* Streak fire */
-@keyframes streak-fire {
-
-  0%,
-  100% {
-    transform: scaleY(1);
-    filter: hue-rotate(0deg);
-  }
-
-  33% {
-    transform: scaleY(1.1);
-    filter: hue-rotate(10deg);
-  }
-
-  66% {
-    transform: scaleY(0.95);
-    filter: hue-rotate(-5deg);
-  }
-}
 
 /* =========================================
    UTILITY CLASSES
@@ -626,42 +658,52 @@ body {
     animation: gradient-shift 4s ease infinite;
   }
 
+  /* Gemini-inspired animations */
+  .animate-ambient {
+    animation: ambient-drift 20s ease-in-out infinite;
+  }
+
+  .animate-soft-pulse {
+    animation: soft-pulse 3s ease-in-out infinite;
+  }
+
+  .animate-shimmer-gemini {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer-gemini 2s ease-in-out infinite;
+  }
+
+  .animate-float-rotate {
+    animation: float-rotate 6s ease-in-out infinite;
+  }
+
+  .animate-gradient-soft {
+    background-size: 200% 200%;
+    animation: gradient-shift-soft 8s ease infinite;
+  }
+
+  .animate-breathe {
+    animation: breathe 2s ease-in-out infinite;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s var(--ease-out-expo) forwards;
+  }
+
+  .animate-orb {
+    animation: orb-float 15s ease-in-out infinite;
+  }
+
   /* Flame */
   .animate-flame {
     animation: flame-flicker 0.5s ease-in-out infinite;
     transform-origin: bottom center;
   }
 
-  /* Alien Gamification */
-  .animate-alien-glow {
-    animation: alien-glow 3s ease-in-out infinite;
-  }
 
-  .animate-bioluminescence {
-    animation: bioluminescence 2s ease-in-out infinite;
-  }
-
-  .animate-antenna-sway {
-    animation: antenna-sway 2.5s ease-in-out infinite;
-    transform-origin: bottom center;
-  }
-
-  .animate-xp-pop {
-    animation: xp-pop 0.5s var(--ease-spring) forwards;
-  }
-
-  .animate-level-up {
-    animation: level-up-burst 0.6s var(--ease-spring) forwards;
-  }
-
-  .animate-star-sparkle {
-    animation: star-sparkle 2s ease-in-out infinite;
-  }
-
-  .animate-streak-fire {
-    animation: streak-fire 0.6s ease-in-out infinite;
-    transform-origin: bottom center;
-  }
 
   /* Glassmorphism */
   .glass {
@@ -760,6 +802,53 @@ body {
   .transition-smooth-slow {
     transition: all var(--transition-slow) var(--ease-out-expo);
   }
+
+  /* Gemini Glass Panels */
+  .glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-panel-elevated {
+    background: var(--glass-bg-elevated);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: var(--glass-shadow-lg);
+  }
+
+  /* Surface utilities */
+  .surface {
+    background: var(--surface);
+  }
+
+  .surface-elevated {
+    background: var(--surface-elevated);
+  }
+
+  .text-primary {
+    color: var(--foreground);
+  }
+
+  .text-secondary {
+    color: var(--foreground-muted);
+  }
+
+  .text-tertiary {
+    color: var(--foreground-subtle);
+  }
+
+  /* Border utilities */
+  .border-glass {
+    border-color: var(--glass-border);
+  }
+
+  .border-glass-strong {
+    border-color: var(--glass-border-strong);
+  }
 }
 
 /* =========================================
@@ -778,7 +867,7 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-background-clip: text;
-  -webkit-text-fill-color: #171717;
+  -webkit-text-fill-color: var(--foreground);
   transition: background-color 5000s ease-in-out 0s;
   box-shadow: inset 0 0 20px 20px transparent;
 }
@@ -787,7 +876,33 @@ input:-webkit-autofill:active {
 .dark input:-webkit-autofill:hover,
 .dark input:-webkit-autofill:focus,
 .dark input:-webkit-autofill:active {
-  -webkit-text-fill-color: #ffffff;
+  -webkit-text-fill-color: var(--foreground);
+}
+
+/* Code block improvements */
+pre, code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+}
+
+/* Better focus states */
+*:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Improved selection colors */
+::selection {
+  background: rgba(59, 130, 246, 0.25);
+  color: inherit;
+}
+
+.dark ::selection {
+  background: rgba(139, 92, 246, 0.3);
 }
 
 /* =========================================
@@ -821,14 +936,86 @@ input:-webkit-autofill:active {
 }
 
 /* =========================================
-   SELECTION STYLING
+   AMBIENT BACKGROUND EFFECTS
    ========================================= */
 
-::selection {
-  background: rgba(59, 130, 246, 0.3);
-  color: inherit;
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
 }
 
-.dark ::selection {
-  background: rgba(59, 130, 246, 0.4);
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: orb-float 20s ease-in-out infinite;
+}
+
+.ambient-orb-1 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.2));
+  top: -100px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.ambient-orb-2 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(236, 72, 153, 0.15));
+  bottom: -50px;
+  right: -50px;
+  animation-delay: -7s;
+}
+
+.ambient-orb-3 {
+  width: 250px;
+  height: 250px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.15));
+  top: 50%;
+  left: 50%;
+  animation-delay: -14s;
+}
+
+.dark .ambient-orb {
+  opacity: 0.25;
+  filter: blur(100px);
+}
+
+/* =========================================
+   JSXGraph Fullscreen Panel Layout
+   Makes boards fill the visualization panel instead of a fixed square.
+   Applied via the .jxg-fullscreen-wrapper class in AIPanel.
+   ========================================= */
+
+/* Force the template's root div to fill panel height with flex column */
+.jxg-fullscreen-wrapper > div:first-child {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Stats bar (first child of template) stays at natural height */
+.jxg-fullscreen-wrapper > div:first-child > div:first-child {
+  flex-shrink: 0;
+}
+
+/* Board container (last child of template) fills remaining space */
+.jxg-fullscreen-wrapper > div:first-child > div:last-child {
+  flex: 1 !important;
+  min-height: 0 !important;
+  aspect-ratio: unset !important;
+  width: 100% !important;
+}
+
+/* The jxgbox div inside JSXGraphBoard always fills its container */
+.jxg-fullscreen-wrapper .jxgbox {
+  width: 100% !important;
+  height: 100% !important;
 }

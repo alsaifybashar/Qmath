@@ -24,7 +24,7 @@ import { HintBubble } from '@/components/study/HintBubble';
 import { generateHint } from '@/app/actions/hint-engine';
 import type { HintResult } from '@/app/actions/hint-engine';
 import { useStudySession } from '@/lib/hooks/useStudySession';
-import { useGamification } from '@/components/gamification';
+
 import { AIPanel } from '@/components/ai/AIPanel';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -141,8 +141,7 @@ function StudyHubContent() {
     const [streak, setStreak] = useState(0);
     const [maxStreak, setMaxStreak] = useState(0);
 
-    // ── Gamification ─────────────────────────────────────────────────────────
-    const { onCorrectAnswer, onWrongAnswer, onSessionComplete, notifyXP } = useGamification();
+
 
     // ── Progressive hint system ──────────────────────────────────────────────
     const [activeHint, setActiveHint] = useState<HintResult | null>(null);
@@ -161,25 +160,18 @@ function StudyHubContent() {
                 setStreak(prev => {
                     const next = prev + 1;
                     setMaxStreak(cur => Math.max(cur, next));
-                    // Trigger Qlix alien reaction
-                    onCorrectAnswer(next);
+
                     return next;
                 });
             } else if (feedbackState.isCorrect === false) {
                 setStreak(0);
-                // Trigger Qlix alien encouragement
-                onWrongAnswer();
+
             }
         }
         prevFeedbackShowingRef.current = nowShowing;
     }, [feedbackState.isShowing, feedbackState.isCorrect]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // ── Session complete → alien celebration ──────────────────────────────────
-    useEffect(() => {
-        if (isSessionComplete) {
-            onSessionComplete(sessionProgress.correct, totalQuestions);
-        }
-    }, [isSessionComplete]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     // XP for this question
     const xpForCorrect = currentQuestion

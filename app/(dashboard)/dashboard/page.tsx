@@ -23,7 +23,7 @@ import {
 import StudyIntelligencePanel from '@/components/dashboard/StudyIntelligencePanel';
 import type { StudyAction } from '@/components/dashboard/StudyIntelligencePanel';
 import { ExamReadinessBar } from '@/components/dashboard/ExamReadinessBar';
-import { DashboardGamificationHeader } from '@/components/gamification/DashboardGamificationHeader';
+
 
 export const metadata = {
     title: 'Dashboard | Qmath',
@@ -256,14 +256,17 @@ export default async function DashboardPage() {
     return (
         <div className="p-7 max-w-[1060px] min-w-0 mx-auto">
 
-            {/* ── Header + XP bar with Qlix ── */}
-            <DashboardGamificationHeader
-                greeting={greeting}
-                userName={user.name || 'Student'}
-                reviewCount={reviewCount}
-                totalXP={totalXP}
-                currentStreak={currentStreak}
-            />
+            {/* ── Header ── */}
+            <div className="mb-6">
+                <h1 className="text-2xl font-semibold" style={{ color: C.text }}>
+                    {greeting}, {user.name || 'Student'}
+                </h1>
+                <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>
+                    {reviewCount > 0
+                        ? <><strong style={{ color: C.blue }}>{reviewCount} områden</strong> behöver din uppmärksamhet</>
+                        : 'Allt är uppdaterat — bra jobbat!'}
+                </p>
+            </div>
 
             {/* ── Row 1: Today's Focus (primary CTA) + Quick Actions ── */}
             <div className="grid grid-cols-[1fr_300px] gap-4 mb-6">
