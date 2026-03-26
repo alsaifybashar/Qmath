@@ -1,10 +1,10 @@
 'use client';
 
 import {
-    ArrowRight, Play, Brain, RefreshCw, FileText, Sparkles, Calendar,
+    ArrowRight, Play, Brain, FileText, Sparkles, Calendar,
     BookOpen, GraduationCap, User, Settings, Library, HelpCircle,
     Layers, CreditCard, School, Info, MessageSquare, Zap, BarChart, UploadCloud,
-    LayoutDashboard, History, FileUp, FlaskConical
+    LayoutDashboard, History, FlaskConical
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -201,7 +201,6 @@ interface CourseCardProps {
     topicsMastered: number;
     topicsTotal: number;
     gradient: string;
-    reviewCount?: number;
 }
 
 export function CourseCard({
@@ -211,7 +210,6 @@ export function CourseCard({
     topicsMastered,
     topicsTotal,
     gradient,
-    reviewCount = 0,
 }: CourseCardProps) {
     const progressColor = progress >= 60 ? '#fff' : progress >= 35 ? 'rgba(255,255,255,0.9)' : 'rgba(255,200,200,1)';
 
@@ -224,19 +222,6 @@ export function CourseCard({
                 className="p-6 relative min-h-[180px] flex flex-col justify-between"
                 style={{ background: gradient }}
             >
-                {reviewCount > 0 && (
-                    <div
-                        className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold text-white"
-                        style={{
-                            background: C.red,
-                            boxShadow: '0 3px 10px rgba(239,68,68,0.4)',
-                            border: '2px solid rgba(255,255,255,0.3)',
-                        }}
-                    >
-                        {reviewCount}
-                    </div>
-                )}
-
                 <div className="relative z-10">
                     <div className="text-xl font-extrabold text-white tracking-tight">{code}</div>
                     <div className="text-sm text-white/75 mt-0.5">{name}</div>
@@ -317,11 +302,8 @@ export function MasteryTopicCard({ name, course, mastery }: MasteryTopicProps) {
 }
 
 // ========== Quick Actions ==========
-interface QuickActionsProps {
-    reviewCount: number;
-}
 
-export function QuickActions({ reviewCount }: QuickActionsProps) {
+export function QuickActions() {
     const actions = [
         {
             icon: <Brain size={20} />,
@@ -332,14 +314,6 @@ export function QuickActions({ reviewCount }: QuickActionsProps) {
             href: '/practice',
         },
         {
-            icon: <RefreshCw size={20} />,
-            label: `Repetera (${reviewCount})`,
-            desc: 'Upprepad repetition',
-            color: C.orange,
-            badge: reviewCount,
-            href: '/review',
-        },
-        {
             icon: <FileText size={20} />,
             label: 'Tentamenssimulering',
             desc: 'Öva under tentamensvillkor',
@@ -347,25 +321,11 @@ export function QuickActions({ reviewCount }: QuickActionsProps) {
             href: '/exam-sim',
         },
         {
-            icon: <MessageSquare size={20} />,
-            label: 'AI-handledare',
-            desc: 'Ställ frågor till din tutor',
-            color: C.green,
-            href: '/ai',
-        },
-        {
             icon: <BarChart size={20} />,
             label: 'Din Analys',
             desc: 'Se din utveckling',
             color: C.blue,
             href: '/analytics',
-        },
-        {
-            icon: <FileUp size={20} />,
-            label: 'Ladda upp frågor',
-            desc: 'Få hjälp med egna PDFer',
-            color: C.orange,
-            href: '/upload-exam',
         },
         {
             icon: <FlaskConical size={20} />,
@@ -518,7 +478,6 @@ const navigationItems = [
             { icon: <Brain size={18} />, label: 'Övning', href: '/practice', color: '#4361EE' },
             { icon: <Zap size={18} />, label: 'Flashcards', href: '/flashcards', color: '#7C5CFC' },
             { icon: <History size={18} />, label: 'Tenta-arkiv', href: '/archive', color: '#11998E' },
-            { icon: <MessageSquare size={18} />, label: 'AI-handledare', href: '/ai', color: '#10B981' },
             { icon: <FlaskConical size={18} />, label: 'Tentamen-sim', href: '/exam-sim', color: '#8B5CF6' },
         ],
     },

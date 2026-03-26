@@ -35,7 +35,6 @@ export default async function ExamViewerPage({ params }: PageProps) {
     const { courseCode, examId } = await params;
     const code = courseCode.toUpperCase();
 
-    // Fetch the exam
     const exam = await db.query.exams.findFirst({
         where: and(
             eq(exams.id, examId),

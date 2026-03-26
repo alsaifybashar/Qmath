@@ -1,6 +1,7 @@
 import { getCourseById, getCourseByCode } from '@/app/actions/courses';
 import { getExamAnalysis } from '@/app/actions/exam-analysis';
 import { getCourseOverview } from '@/app/actions/course-overview';
+import { getCourseExams } from '@/app/actions/course-exams';
 import CourseHub from '@/components/courses/CourseHub';
 import { notFound } from 'next/navigation';
 
@@ -34,10 +35,11 @@ export default async function CoursePage({ params }: { params: Promise<{ code: s
     const course = courseResult.data;
     console.log(`[CoursePage] Found course: ${course.code} (${course.name}), id: ${course.id}`);
 
-    // Fetch analysis + overview data in parallel (overview reuses cached analysis)
-    const [analysisData, overviewData] = await Promise.all([
+    // Fetch all course data in parallel
+    const [analysisData, overviewData, courseExams] = await Promise.all([
         getExamAnalysis(course.id),
         getCourseOverview(course.id),
+        getCourseExams(course.code),
     ]);
 
     return (
@@ -51,6 +53,7 @@ export default async function CoursePage({ params }: { params: Promise<{ code: s
             }}
             analysisData={analysisData}
             overviewData={overviewData}
+            courseExams={courseExams}
         />
     );
 }

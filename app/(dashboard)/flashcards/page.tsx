@@ -48,7 +48,6 @@ const stats = {
 };
 
 export default function FlashcardsPage() {
-    const totalDue = decks.reduce((sum, deck) => sum + deck.cardsDue, 0);
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
@@ -65,21 +64,12 @@ export default function FlashcardsPage() {
                 </div>
                 <div className="flex gap-3 mt-4 md:mt-0">
                     <Link
-                        href="/flashcards/review"
+                        href="/flashcards"
                         className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 rounded-xl transition-all"
                     >
                         <Plus className="w-4 h-4" />
                         Skapa kort
                     </Link>
-                    {totalDue > 0 && (
-                        <Link
-                            href="/flashcards/review"
-                            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/20"
-                        >
-                            <Play className="w-4 h-4" />
-                            Repetera ({totalDue} att göra)
-                        </Link>
-                    )}
                 </div>
             </motion.div>
 
@@ -112,35 +102,6 @@ export default function FlashcardsPage() {
                 </div>
             </motion.div>
 
-            {/* Review CTA */}
-            {totalDue > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="mb-8"
-                >
-                    <Link
-                        href="/flashcards/review"
-                        className="block bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-500/20 dark:to-pink-500/20 border border-purple-200 dark:border-purple-500/30 rounded-2xl p-6 hover:border-purple-300 dark:hover:border-purple-500/50 transition-all group"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-purple-200 dark:bg-purple-500/20 rounded-xl">
-                                    <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold">Kort att repetera</h3>
-                                    <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-                                        {totalDue} kort är redo att repeteras i {decks.filter(d => d.cardsDue > 0).length} kortlekar
-                                    </p>
-                                </div>
-                            </div>
-                            <ArrowRight className="w-6 h-6 text-purple-600 dark:text-purple-400 group-hover:translate-x-2 transition-transform" />
-                        </div>
-                    </Link>
-                </motion.div>
-            )}
 
             {/* Decks */}
             <motion.div
@@ -151,7 +112,7 @@ export default function FlashcardsPage() {
             >
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold">Mina kortlekar</h2>
-                    <Link href="/flashcards/review" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                    <Link href="/flashcards" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
                         Skapa kortlek
                     </Link>
                 </div>

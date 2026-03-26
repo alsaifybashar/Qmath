@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
     Home, BookOpen, Zap, GraduationCap, Settings,
-    User, FlaskConical, MessageSquare, Archive, FileText, BarChart
+    User, FlaskConical, Archive, FileText, BarChart
 } from 'lucide-react';
 
 const C = {
@@ -45,7 +45,6 @@ const navSections: { title: string; items: NavItem[] }[] = [
         items: [
             { icon: <Archive size={18} />, label: 'Gamla tentor', href: '/archive' },
             { icon: <FlaskConical size={18} />, label: 'Tentamen', href: '/exam-sim' },
-            { icon: <MessageSquare size={18} />, label: 'AI-handledare', href: '/ai' },
         ],
     },
     {

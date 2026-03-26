@@ -4,13 +4,15 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BarChart3, BookOpen, Clock, Target, ArrowLeft, Play,
-    ChevronRight, Layers, FileText
+    ChevronRight, Layers, FileText, ScrollText
 } from 'lucide-react';
 import Link from 'next/link';
 import CourseAnalysisView from './CourseAnalysisView';
 import CourseOverview from './CourseOverview';
+import CourseExamsTab from './CourseExamsTab';
 import type { ExamAnalysisData } from '@/app/actions/exam-analysis';
 import type { CourseOverviewData } from '@/app/actions/course-overview';
+import type { CourseExam } from '@/app/actions/course-exams';
 
 interface CourseHubProps {
     course: {
@@ -22,15 +24,17 @@ interface CourseHubProps {
     };
     analysisData: ExamAnalysisData | { error: string };
     overviewData: CourseOverviewData | { error: string };
+    courseExams: CourseExam[];
 }
 
-export default function CourseHub({ course, analysisData, overviewData }: CourseHubProps) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'study'>('overview');
+export default function CourseHub({ course, analysisData, overviewData, courseExams }: CourseHubProps) {
+    const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'study' | 'exams'>('overview');
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: BookOpen },
         { id: 'analysis', label: 'Exam Analysis', icon: BarChart3 },
         { id: 'study', label: 'Study Plan', icon: Target },
+        { id: 'exams', label: 'Gamla tentor', icon: ScrollText },
     ];
 
     return (
@@ -155,6 +159,20 @@ export default function CourseHub({ course, analysisData, overviewData }: Course
                                 <button className="px-6 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-medium">
                                     Generate Plan
                                 </button>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'exams' && (
+                            <motion.div
+                                key="exams"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                            >
+                                <CourseExamsTab
+                                    exams={courseExams}
+                                    courseCode={course.code}
+                                />
                             </motion.div>
                         )}
                     </AnimatePresence>

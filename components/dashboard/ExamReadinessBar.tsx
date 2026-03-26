@@ -289,22 +289,6 @@ export function ExamReadinessBar({
                         className="overflow-hidden"
                     >
                         <div className="px-5 pb-5 border-t" style={{ borderColor: C.border }}>
-                            {/* Weakest / strongest summary */}
-                            <div className="grid grid-cols-2 gap-4 py-4">
-                                <div>
-                                    <p className="text-xs font-semibold mb-2" style={{ color: '#EAB308' }}>Svagaste områden</p>
-                                    {weakestTopics.map((t, i) => (
-                                        <p key={i} className="text-xs py-0.5" style={{ color: C.text }}>• {t}</p>
-                                    ))}
-                                </div>
-                                <div>
-                                    <p className="text-xs font-semibold mb-2 text-green-600">Starkaste områden</p>
-                                    {strongestTopics.map((t, i) => (
-                                        <p key={i} className="text-xs py-0.5" style={{ color: C.text }}>• {t}</p>
-                                    ))}
-                                </div>
-                            </div>
-
                             {/* Topic list */}
                             <div className="space-y-2">
                                 {topicBreakdown.slice(0, 10).map(topic => (

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
     LayoutDashboard, BookOpen, Brain, Layers,
     Settings, HelpCircle, ChevronLeft,
-    GraduationCap, Sparkles, User, Home, FlaskConical, Archive, FileText
+    GraduationCap, User, Home, FlaskConical, Archive, FileText
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,7 +20,6 @@ const studyItems = [
 const examPrepItems = [
     { href: '/exams', label: 'Gamla tentor', icon: Archive, color: 'cyan' },
     { href: '/exam-sim', label: 'Tentasimulator', icon: FlaskConical, color: 'purple' },
-    { href: '/ai', label: 'AI-handledare', icon: Sparkles, color: 'yellow' },
 ];
 
 const secondaryNavItems = [

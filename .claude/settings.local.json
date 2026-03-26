@@ -75,7 +75,17 @@
       "Bash(powershell -Command \"Get-Process | Where-Object { $_MainWindowTitle -like ''*3000*'' -or $_Name -like ''*node*'' } | Select-Object Id, Name, MainWindowTitle | Format-Table -AutoSize\")",
       "Bash(powershell.exe -Command \"netstat -ano | Select-String '':3000 ''\")",
       "Bash(fuser 3000/tcp)",
-      "Bash(kill 14937 14938 14950)"
+      "Bash(kill 14937 14938 14950)",
+      "Bash(find /home/ubnutu/github/Qmath/app -path \"*/\\(dashboard\\)/*\" -type f -name \"page.tsx\")",
+      "Bash(ls -la /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/)",
+      "Bash(ls /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/ai)",
+      "Bash(ls /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/upload-exam)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(grep -n \"old exam\\\\|tentor\\\\|exam\\\\|archive\" /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/courses/[code]/page.tsx -i)",
+      "Bash(git -C /home/ubnutu/github/Qmath diff --name-status)",
+      "Bash(ls /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/archive/)",
+      "Bash(rm /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/archive/[courseCode]/[examId]/page.tsx)",
+      "Bash(rmdir /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/archive/[courseCode]/[examId])"
     ]
   }
 }

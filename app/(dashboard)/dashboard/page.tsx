@@ -16,8 +16,6 @@ import {
     StreakCard,
     CourseCard,
     MasteryTopicCard,
-    QuickActions,
-    AIRecommendationCard,
     QuickNavigation,
 } from '@/components/dashboard/DashboardCards';
 import StudyIntelligencePanel from '@/components/dashboard/StudyIntelligencePanel';
@@ -181,18 +179,6 @@ export default async function DashboardPage() {
         .sort((a, b) => b.mastery - a.mastery)
         .slice(0, 12);
 
-    // Find weakest topic for AI recommendation
-    const weakestTopic = masteryData
-        .map((m) => {
-            const topic = topicsData.find((t) => t.id === m.topicId);
-            const course = userCourses.find((c) => topic?.courseId === c.id);
-            return {
-                name: topic?.title || 'Okänt område',
-                course: course?.name || 'din kurs',
-                mastery: (m.masteryLevel || 0) / 5,
-            };
-        })
-        .sort((a, b) => a.mastery - b.mastery)[0];
 
     // Build Study Intelligence actions from mastery data (sorted by urgency)
     const studyActions: StudyAction[] = masteryData
@@ -250,9 +236,6 @@ export default async function DashboardPage() {
     const hour = now.getHours();
     const greeting = hour < 12 ? 'God morgon' : hour < 18 ? 'God eftermiddag' : 'God kväll';
 
-    // Calculate review count (topics needing review)
-    const reviewCount = masteryData.filter((m) => (m.masteryLevel || 0) < 3).length;
-
     return (
         <div className="p-7 max-w-[1060px] min-w-0 mx-auto">
 
@@ -262,30 +245,10 @@ export default async function DashboardPage() {
                     {greeting}, {user.name || 'Student'}
                 </h1>
                 <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>
-                    {reviewCount > 0
-                        ? <><strong style={{ color: C.blue }}>{reviewCount} områden</strong> behöver din uppmärksamhet</>
-                        : 'Allt är uppdaterat — bra jobbat!'}
+                    Välkommen tillbaka — fortsätt studera!
                 </p>
             </div>
 
-            {/* ── Row 1: Today's Focus (primary CTA) + Quick Actions ── */}
-            <div className="grid grid-cols-[1fr_300px] gap-4 mb-6">
-                {weakestTopic ? (
-                    <AIRecommendationCard
-                        topicName={weakestTopic.name}
-                        mastery={weakestTopic.mastery}
-                        courseName={weakestTopic.course}
-                        daysUntilExam={30}
-                    />
-                ) : (
-                    <AIRecommendationCard
-                        topicName="ett nytt område"
-                        mastery={0}
-                        courseName="dina studier"
-                    />
-                )}
-                <QuickActions reviewCount={reviewCount} />
-            </div>
 
             {/* ── Study Intelligence Panel ── */}
             {studyActions.length > 0 && (
@@ -332,7 +295,6 @@ export default async function DashboardPage() {
                                 topicsMastered={masteredCount}
                                 topicsTotal={topicsCount || 1}
                                 gradient={courseGradients[idx % courseGradients.length]}
-                                reviewCount={courseMastery.filter((m) => (m.masteryLevel || 0) < 3).length}
                             />
                         );
                     })}
