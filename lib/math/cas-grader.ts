@@ -1,82 +1,151 @@
 /**
- * CAS-based answer grader.
+ * CAS-based answer grader — Two-Tier Architecture.
  *
- * Uses math.js to compare the student's answer and the correct answer
- * symbolically. Instead of string matching, we evaluate the difference
- * student_answer − correct_answer at multiple random points.
- * If the difference is ≈ 0 at all test points, the answers are equivalent.
+ * Tier 1 (fast, < 50 ms): mathjs numeric probe — evaluates student − correct
+ *   at multiple random points. If diff ≈ 0 → correct.
  *
- * This handles: x²+C, C+x², 2x²/2+C, (x+1)²-1+x etc.
+ * Tier 2 (symbolic, ~200 ms): SymPy FastAPI sidecar — simplify(student − correct).
+ *   Only triggered when Tier 1 fails but might be a symbolic equivalence.
+ *
+ * Handles: x²+C, C+x², sin²x+cos²x vs 1, (x+1)²-1+x, etc.
  */
 
 import { preParseInput } from './pre-parser';
 
-type GradeResult = {
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+export type GradeOptions = {
+    /** Treat answers as equal if they differ only by an additive constant (indefinite integrals) */
+    ignoreConstant?: boolean;
+    /** The variable names to probe (default: ["x"]) */
+    variables?: string[];
+    /** Numeric tolerance for comparison (default 1e-6) */
+    tolerance?: number;
+    /** Domain restriction hint — passed to SymPy sidecar (default: "real") */
+    domain?: 'real' | 'positive' | 'complex';
+    /** Skip SymPy sidecar (e.g. for quick client-side-like grading) */
+    fastOnly?: boolean;
+};
+
+export type GradeResult = {
     isCorrect: boolean;
-    /** Raw numeric error at test points (useful for debugging) */
+    /** Partial score 0.0–1.0 (1.0 = fully correct, 0.5 = nearly correct, 0.0 = wrong) */
+    partialScore: number;
+    /** Raw numeric max error at test points */
     maxError: number;
     /** Parsed student expression (after pre-parsing) */
     parsedStudent: string;
+    /** Whether the SymPy sidecar was consulted */
+    symbolicallyChecked: boolean;
 };
 
-// Test variable values to probe equivalence
-const TEST_POINTS = [
-    { x: 1 },
-    { x: 2 },
-    { x: -1 },
-    { x: 0.5 },
-    { x: Math.PI / 4 },
-    { x: 3 },
-];
+// ── Constants ──────────────────────────────────────────────────────────────────
 
-const TOLERANCE = 1e-6;
+const DEFAULT_TOLERANCE = 1e-6;
+const SYMPY_SIDECAR_URL = process.env.SYMPY_SIDECAR_URL ?? 'http://localhost:8001';
+const SYMPY_TIMEOUT_MS = 4000; // SymPy call budget
+
+/** Default multi-point probe for single-variable (x) questions */
+function buildTestPoints(variables: string[]): Record<string, number>[] {
+    if (variables.length === 1 && variables[0] === 'x') {
+        return [
+            { x: 1 }, { x: 2 }, { x: -1 }, { x: 0.5 },
+            { x: Math.PI / 4 }, { x: 3 }, { x: -0.7 },
+        ];
+    }
+    // Multi-variable: build a small grid
+    const vals = [0.5, 1.5, 2.7];
+    const points: Record<string, number>[] = [];
+    for (const a of vals) {
+        const pt: Record<string, number> = {};
+        variables.forEach((v, i) => { pt[v] = vals[(i + (vals.indexOf(a))) % vals.length]; });
+        points.push(pt);
+    }
+    return points;
+}
+
+// ── Main grader ────────────────────────────────────────────────────────────────
 
 /**
  * Grade a student's math answer against the correct answer.
- *
- * @param studentInput - Raw student input (e.g. "2x", "x^2+C", "(x+1)^2-1")
- * @param correctAnswer - The reference answer (e.g. "x^2", "2*x")
- * @param options.ignoreConstant - If true, treat answers as equal if they differ
- *   only by an additive constant (for indefinite integrals).
- * @param options.variable - The variable name (default: "x")
  */
 export async function gradeAnswer(
     studentInput: string,
     correctAnswer: string,
-    options: {
-        ignoreConstant?: boolean;
-        variable?: string;
-    } = {}
+    options: GradeOptions = {}
 ): Promise<GradeResult> {
-    const { ignoreConstant = false, variable = 'x' } = options;
+    const {
+        ignoreConstant = false,
+        variables = ['x'],
+        tolerance = DEFAULT_TOLERANCE,
+        domain = 'real',
+        fastOnly = false,
+    } = options;
 
     const parsedStudent = preParseInput(studentInput);
     const parsedCorrect = preParseInput(correctAnswer);
+    const testPoints = buildTestPoints(variables);
 
+    // ── Tier 1: mathjs numeric probe ──────────────────────────────────
+    const tier1 = await numericProbe(parsedStudent, parsedCorrect, testPoints, tolerance, ignoreConstant);
+
+    if (tier1.isCorrect) {
+        return { ...tier1, parsedStudent, symbolicallyChecked: false };
+    }
+
+    // Tier 1 says wrong — but check if SymPy might disagree (symbolic equivalence)
+    // Only call SymPy if the error is finite (not a parse failure)
+    const mightBeSymbolicallyEqual = tier1.maxError !== Infinity && !fastOnly;
+
+    if (mightBeSymbolicallyEqual) {
+        const tier2 = await sympyCheck(parsedStudent, parsedCorrect, { domain, ignoreConstant });
+        if (tier2 !== null) {
+            return {
+                isCorrect: tier2.isCorrect,
+                partialScore: tier2.isCorrect ? 1.0 : tier1.partialScore,
+                maxError: tier1.maxError,
+                parsedStudent,
+                symbolicallyChecked: true,
+            };
+        }
+    }
+
+    return { ...tier1, parsedStudent, symbolicallyChecked: mightBeSymbolicallyEqual };
+}
+
+// ── Tier 1: mathjs numeric probe ──────────────────────────────────────────────
+
+async function numericProbe(
+    parsedStudent: string,
+    parsedCorrect: string,
+    testPoints: Record<string, number>[],
+    tolerance: number,
+    ignoreConstant: boolean,
+): Promise<Omit<GradeResult, 'parsedStudent' | 'symbolicallyChecked'>> {
     try {
-        // Dynamic import so this only loads on server or in a worker
         const math = await import('mathjs');
 
-        // Compile both expressions
         const studentExpr = math.compile(parsedStudent);
         const correctExpr = math.compile(parsedCorrect);
 
         let maxError = 0;
+        const diffs: number[] = [];
         let allValid = true;
 
-        for (const scope of TEST_POINTS) {
+        for (const scope of testPoints) {
             try {
-                const sv = studentExpr.evaluate({ ...scope, C: 0 });
-                const cv = correctExpr.evaluate({ ...scope, C: 0 });
+                const sv = studentExpr.evaluate({ ...scope, C: 0, i: math.complex(0, 1) });
+                const cv = correctExpr.evaluate({ ...scope, C: 0, i: math.complex(0, 1) });
 
-                if (typeof sv !== 'number' || typeof cv !== 'number') {
-                    allValid = false;
-                    break;
-                }
-                if (!isFinite(sv) || !isFinite(cv)) continue; // skip poles
+                const svNum = extractNumber(sv);
+                const cvNum = extractNumber(cv);
 
-                const diff = Math.abs(sv - cv);
+                if (svNum === null || cvNum === null) { allValid = false; break; }
+                if (!isFinite(svNum) || !isFinite(cvNum)) continue; // skip poles
+
+                const diff = Math.abs(svNum - cvNum);
                 maxError = Math.max(maxError, diff);
+                diffs.push(svNum - cvNum);
             } catch {
                 allValid = false;
                 break;
@@ -84,54 +153,97 @@ export async function gradeAnswer(
         }
 
         if (!allValid) {
-            return { isCorrect: false, maxError: Infinity, parsedStudent };
+            return { isCorrect: false, partialScore: 0, maxError: Infinity };
         }
 
-        if (maxError < TOLERANCE) {
-            return { isCorrect: true, maxError, parsedStudent };
+        if (maxError < tolerance) {
+            return { isCorrect: true, partialScore: 1.0, maxError };
         }
 
-        // If ignoreConstant: check if the difference is a constant across all points
-        if (ignoreConstant) {
-            const diffs: number[] = [];
-            let constantDiff = true;
-
-            for (const scope of TEST_POINTS) {
-                try {
-                    const sv = studentExpr.evaluate({ ...scope, C: 0 });
-                    const cv = correctExpr.evaluate({ ...scope, C: 0 });
-                    if (typeof sv !== 'number' || typeof cv !== 'number') {
-                        constantDiff = false;
-                        break;
-                    }
-                    if (!isFinite(sv) || !isFinite(cv)) continue;
-                    diffs.push(sv - cv);
-                } catch {
-                    constantDiff = false;
-                    break;
-                }
-            }
-
-            if (constantDiff && diffs.length >= 2) {
-                const spread = Math.max(...diffs) - Math.min(...diffs);
-                if (spread < TOLERANCE) {
-                    return { isCorrect: true, maxError, parsedStudent };
-                }
+        // ignoreConstant: check if difference is constant across all points
+        if (ignoreConstant && diffs.length >= 3) {
+            const spread = Math.max(...diffs) - Math.min(...diffs);
+            if (spread < tolerance) {
+                return { isCorrect: true, partialScore: 1.0, maxError };
             }
         }
 
-        return { isCorrect: false, maxError, parsedStudent };
+        // Estimate partial score based on how close the answer is
+        const partialScore = computePartialScore(maxError);
+
+        return { isCorrect: false, partialScore, maxError };
     } catch {
-        // Parse error — fall back to string comparison
+        // Compilation failure — fall back to string comparison
         const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
         const isCorrect = norm(parsedStudent) === norm(parsedCorrect);
-        return { isCorrect, maxError: isCorrect ? 0 : Infinity, parsedStudent };
+        return { isCorrect, partialScore: isCorrect ? 1.0 : 0, maxError: isCorrect ? 0 : Infinity };
     }
 }
 
+function extractNumber(v: unknown): number | null {
+    if (typeof v === 'number') return v;
+    // mathjs Complex type
+    if (v && typeof v === 'object' && 'im' in v && 're' in v) {
+        const c = v as { re: number; im: number };
+        if (Math.abs(c.im) < 1e-10) return c.re;
+        return null; // genuinely complex result
+    }
+    return null;
+}
+
+function computePartialScore(maxError: number): number {
+    if (maxError === Infinity) return 0;
+    if (maxError < 0.01) return 0.8;  // very close — sign/constant error
+    if (maxError < 1) return 0.5;     // factor error
+    if (maxError < 10) return 0.2;    // direction error
+    return 0;
+}
+
+// ── Tier 2: SymPy sidecar ──────────────────────────────────────────────────────
+
+interface SympyResponse {
+    isEquivalent: boolean;
+    simplifiedDiff?: string; // simplified form of (student - correct)
+    error?: string;
+}
+
+async function sympyCheck(
+    parsedStudent: string,
+    parsedCorrect: string,
+    options: { domain: string; ignoreConstant: boolean }
+): Promise<{ isCorrect: boolean } | null> {
+    try {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), SYMPY_TIMEOUT_MS);
+
+        const res = await fetch(`${SYMPY_SIDECAR_URL}/sympy/check-equivalence`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                student: parsedStudent,
+                correct: parsedCorrect,
+                ignore_constant: options.ignoreConstant,
+                domain: options.domain,
+            }),
+            signal: controller.signal,
+        });
+
+        clearTimeout(tid);
+        if (!res.ok) return null;
+
+        const data: SympyResponse = await res.json();
+        return { isCorrect: data.isEquivalent };
+    } catch {
+        // Sidecar unavailable — degrade gracefully to Tier 1 result
+        return null;
+    }
+}
+
+// ── Lightweight sync check ─────────────────────────────────────────────────────
+
 /**
- * Lightweight synchronous check using pre-parsing + numeric eval.
- * Use this for client-side immediate feedback before the full CAS result.
+ * Lightweight synchronous check using pre-parsing + basic numeric eval.
+ * Use for immediate client-side feedback before the full async CAS result.
  */
 export function quickGrade(
     studentInput: string,
@@ -142,10 +254,8 @@ export function quickGrade(
         const parsedStudent = preParseInput(studentInput);
         const parsedCorrect = preParseInput(correctAnswer);
 
-        // Only works for pure numeric expressions (no variables)
         const evalSimple = (expr: string): number | null => {
             try {
-                // Use Function constructor safely for numeric-only expressions
                 if (/[a-zA-Z]/.test(expr)) return null;
                 // eslint-disable-next-line no-new-func
                 const result = new Function(`"use strict"; return (${expr})`)();

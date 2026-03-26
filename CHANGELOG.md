@@ -2,6 +2,226 @@
 
 All notable changes to Qmath are documented here.
 
+## [Unreleased] — CAS Equation Input System (Ekvationsinmatning med CAS-granskning)
+
+### Summary
+Introduced a full five-layer CAS (Computer Algebra System) equation-input pipeline that replaces the previous basic text input. The system goes beyond simple correct/incorrect grading — it identifies *why* a student's answer is wrong and delivers targeted, Socratic feedback in Swedish to guide them toward mastery.
+
+---
+
+### Problem Solved
+Previously, math answers were graded by simple numeric comparison using a single mathjs call. This meant:
+1. Algebraically equivalent expressions (e.g. `sin²x + cos²x` vs `1`) could be marked wrong.
+2. The system had no vocabulary to explain *why* the answer was wrong — just "Incorrect."
+3. Students who differentiated instead of integrated received the same unhelpful feedback as those who just had a sign error.
+4. There was no way for the system to handle multi-variable expressions, log with base, absolute values, or degree-to-radian conversion.
+
+---
+
+### What Changed
+
+#### Layer 1 — Frontend (`components/study/EquationInput/`)
+
+New component directory replacing the old single-file `MathCASInput.tsx`:
+
+| Component | Purpose |
+|---|---|
+| `index.tsx` | Main `MathCASInput` component — orchestrates all sub-components |
+| `VirtualKeyboard.tsx` | 5-tab grouped symbol palette (Grundläggande / Algebra / Kalkyl / Trig / Övrigt) with 40+ keys |
+| `FeedbackRenderer.tsx` | Tiered animated feedback: correct (green) / partially correct (amber) / wrong (red) |
+
+**Key UX additions:**
+- **Live KaTeX preview** — renders the student's input as formatted math in real time (debounced 120ms)
+- **Confidence slider** — students rate certainty 1–5 before final submission (feeds `calibration_logs` for metacognition analytics)
+- **Two-step submit** — first click reveals confidence slider, second click sends the answer
+- **Collapsible hints** — "Visa tips" expands the remediation hint without revealing the full answer
+- **Remediation link** — wrong answers with a known misconception link to the relevant prerequisite topic (`/study?topic=<slug>`)
+
+`MathCASInput.tsx` is now a thin re-export shim so all existing imports continue to work unchanged.
+
+#### Layer 2 — Pre-parser (`lib/math/pre-parser.ts`)
+
+Significantly expanded notation support:
+
+| Addition | Example input | Parsed as |
+|---|---|---|
+| Multi-variable implicit multiply | `3xy` | `3*x*y` |
+| Log with base (LaTeX + unicode subscript) | `log_2(x)`, `log₂(x)` | `log(x,2)` |
+| Degree-to-radian | `sin(30°)` | `sin(30*pi/180)` |
+| Absolute value bars | `\|x+1\|` | `abs(x+1)` |
+| Ceiling/floor | `⌈x⌉` / `⌊x⌋` | `ceil(x)` / `floor(x)` |
+| Complex literal | `3+2i` | `3+2*i` |
+| Nested `\frac` | `\frac{x^2+1}{x}` | `(x^2+1)/(x)` |
+
+All inputs capped at 512 characters for DoS protection. A separate `toDisplayLatex()` function converts parsed expressions back to LaTeX for the live preview bar.
+
+#### Layer 3 — CAS Motor (`lib/math/cas-grader.ts` + `math-engine/main.py`)
+
+Upgraded to a **two-tier architecture**:
+
+```
+Student input → Pre-parser → mathjs numeric probe (< 50ms)
+                                   │
+                    maxError < 1e-6 → CORRECT (fast path)
+                                   │
+                    maxError ≥ 1e-6 → SymPy sidecar (symbolic check, ~200ms)
+                                            │
+                            simplify(student − correct) = 0 → CORRECT
+                            otherwise → WRONG + symbolic diff returned
+```
+
+- **partialScore** (0.0–1.0) now returned on every request, enabling nuanced analytics
+- **`ignoreConstant`** option: treats `x²` and `x² + C` as equivalent for indefinite integrals
+- **Multi-variable** test-point grid for expressions in x, y, z, t
+- **Graceful degradation**: SymPy sidecar timeout (4s) falls back silently to Tier 1 result
+
+Three new REST endpoints added to `math-engine/main.py`:
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /sympy/check-equivalence` | Full symbolic equivalence (core grading path) |
+| `POST /sympy/simplify-diff` | Returns `simplify(student − correct)` for debugging |
+| `POST /sympy/classify-error` | Categorises the symbolic distance (sign flip, off-by-factor, etc.) |
+
+The legacy `/ws/math-engine` WebSocket endpoint is preserved for backward compatibility.
+
+**Security:** All SymPy evaluation runs in a restricted namespace with no builtins, no `exec`/`eval`, no `import`. Expressions matching a danger regex pattern are rejected before parsing.
+
+#### Layer 4 — Response Tree (`lib/math/feedback-tree.ts`)
+
+Expanded from 8 to **40+ FeedbackCodes** across 6 categories:
+
+| Category | Code examples |
+|---|---|
+| Integration (9) | `forgot_integration_constant`, `differentiated_instead_of_integrated`, `sign_error_integration`, `wrong_chain_rule_integral` |
+| Differentiation (7) | `integrated_instead_of_differentiated`, `missing_chain_rule`, `wrong_product_rule`, `wrong_quotient_rule` |
+| Algebra (12) | `sign_error`, `off_by_factor`, `binomial_expansion_error`, `wrong_log_rule` |
+| Trigonometry (5) | `degrees_vs_radians`, `wrong_trig_identity`, `wrong_inverse_trig` |
+| Limits/Series (4) | `wrong_lhopital`, `wrong_series_coefficient` |
+| Structural (3) | `syntax_error`, `correct_up_to_constant` |
+
+Every code carries:
+- A **Swedish feedback message** (primary language)
+- An optional **hint** (shown on student demand — reduces anxiety)
+- A **partial score** (0.0–1.0)
+- An optional **remediationTopicSlug** (triggers scaffolding link in the UI)
+
+Pattern detection includes: sign flip, off-by-factor, differentiation vs. integration confusion, forgot integration constant, and degrees vs. radians mismatch.
+
+#### Layer 5 — API (`app/api/grade-math/route.ts`)
+
+| Addition | Detail |
+|---|---|
+| New request fields | `questionId`, `topicId`, `userId`, `variables`, `domain`, `confidenceRating`, `timeTakenMs` |
+| Response schema | `isCorrect`, `partialScore`, `parsedStudent`, `symbolicallyChecked`, `feedback { code, message, hint, remediationTopicSlug }`, `newMastery`, `isMastered` |
+| In-memory cache | SHA-256 keyed, 5-minute TTL — identical submissions answered instantly without recomputation |
+| BKT update | Mastery updated via `BayesianKnowledgeTracing.updateMastery()` on every attempt |
+| Non-blocking telemetry | Fire-and-forget `db.insert(attemptLogs)` — grading response never blocked by analytics write |
+
+#### Database (`db/schema.ts`)
+
+Five new columns on `attempt_logs`:
+
+| Column | Type | Purpose |
+|---|---|---|
+| `student_answer_raw` | TEXT | Raw student input before pre-parsing |
+| `feedback_code` | TEXT | FeedbackCode from the response tree |
+| `partial_score` | REAL | 0.0–1.0 CAS partial score |
+| `confidence_rating` | INTEGER | 1–5 metacognition self-assessment |
+| `symbolically_checked` | BOOLEAN | Whether SymPy Tier 2 was consulted |
+
+These columns enable the analytics dashboard to show **per-misconception breakdowns**, correlate **confidence vs. accuracy** (metacognition), and track how often symbolic grading was required.
+
+---
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `lib/math/pre-parser.ts` | Full rewrite — extended notation, multi-var, degrees, ceil/floor, complex i |
+| `lib/math/cas-grader.ts` | Two-tier grading, partialScore, SymPy sidecar call, quickGrade utility |
+| `lib/math/feedback-tree.ts` | Expanded to 40+ FeedbackCodes with Swedish messages |
+| `app/api/grade-math/route.ts` | Full rewrite — cache, BKT, telemetry, extended request schema |
+| `math-engine/main.py` | Added `/sympy/check-equivalence`, `/simplify-diff`, `/classify-error` REST endpoints |
+| `db/schema.ts` | 5 new CAS telemetry columns on `attempt_logs` |
+| `components/study/MathCASInput.tsx` | Converted to re-export shim (backward compatibility) |
+
+### Files Added
+
+| File | Purpose |
+|---|---|
+| `components/study/EquationInput/index.tsx` | Main MathCASInput component with full UX |
+| `components/study/EquationInput/VirtualKeyboard.tsx` | 5-tab symbol palette |
+| `components/study/EquationInput/FeedbackRenderer.tsx` | Animated tiered feedback component |
+
+---
+
+### Security Notes (Agent B Audit — All tests passed ✅)
+
+| Risk | Mitigation |
+|---|---|
+| **Python code injection via student input** | Pre-parser converts `__import__` patterns to multiplication syntax; SymPy namespace has no builtins and no `exec`/`eval`; danger regex blocks any matching expression before parsing |
+| **XSS in student input** | Input is parsed as a math expression — never rendered as HTML; `<script>alert(1)</script>` is caught as a syntax error and returns `isCorrect: false` with `code: syntax_error` |
+| **DoS via large input** | Input capped to 512 characters in pre-parser; SymPy sidecar hard-kills after 8s timeout; empty input returns HTTP 400 |
+| **Cache poisoning** | Cache keyed by SHA-256 of `(studentInput + correctAnswer + options)` — deterministic and collision-resistant |
+| **Telemetry data leakage** | `writeTelemetry()` skips writes for anonymous attempts (no `userId`); telemetry failure is caught and logged, never exposed to the API response |
+
+---
+
+### How to Use
+
+#### Running the SymPy sidecar (optional — Tier 2 CAS)
+
+```bash
+cd math-engine
+source venv/bin/activate
+uvicorn main:app --reload --port 8001
+```
+
+Set the environment variable so Next.js can reach it:
+```
+SYMPY_SIDECAR_URL=http://localhost:8001
+```
+
+If the sidecar is not running, the system degrades gracefully to Tier 1 (mathjs) grading only.
+
+#### Applying the database migration
+
+```bash
+npm run db:push
+```
+
+This adds the five new columns to `attempt_logs`. Safe to run on existing data — all new columns are nullable.
+
+#### Using the component in a question page
+
+```tsx
+import MathCASInput from '@/components/study/MathCASInput';
+
+<MathCASInput
+  correctAnswer="x^2/2 + C"
+  questionId={question.id}
+  topicId={topic.id}
+  ignoreConstant={true}
+  questionType="integral"
+  onAnswer={(input, isCorrect) => handleAnswer(input, isCorrect)}
+/>
+```
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `correctAnswer` | string | required | The correct answer in mathjs notation |
+| `questionId` | string | — | Enables DB telemetry logging |
+| `topicId` | string | — | Enables BKT mastery update + misconception matching |
+| `ignoreConstant` | boolean | `false` | Accept answers differing by additive constant (e.g. `x²` ≈ `x² + C`) |
+| `questionType` | string | `'other'` | `integral` \| `derivative` \| `algebra` \| `trigonometry` \| `limit` \| `series` |
+| `showKeyboard` | boolean | `true` | Show virtual keyboard panel by default |
+| `onAnswer` | function | required | Called with `(studentInput, isCorrect)` on submission |
+
+---
+
 ## [Unreleased] — Core Curriculum Interactive Templates (JSXGraph)
 
 ### Summary

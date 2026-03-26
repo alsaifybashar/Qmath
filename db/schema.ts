@@ -208,6 +208,17 @@ export const attemptLogs = sqliteTable('attempt_logs', {
     isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
     timeTakenMs: integer('time_taken_ms'),
     timestamp: integer('timestamp', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    // ── CAS telemetry fields ──────────────────────────────────────────────────
+    /** Raw student input string as typed (before pre-parsing) */
+    studentAnswerRaw: text('student_answer_raw'),
+    /** FeedbackCode from the response tree — enables per-misconception analytics */
+    feedbackCode: text('feedback_code'),
+    /** Partial score 0.0–1.0 for CAS questions (1.0 = fully correct) */
+    partialScore: real('partial_score'),
+    /** Student's confidence rating 1–5 before submitting (metacognition tracking) */
+    confidenceRating: integer('confidence_rating'),
+    /** Whether the SymPy sidecar was needed (Tier 2 CAS) */
+    symbolicallyChecked: integer('symbolically_checked', { mode: 'boolean' }),
 });
 
 export const attemptLogsRelations = relations(attemptLogs, ({ one }) => ({
