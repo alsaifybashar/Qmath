@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
-import { MathRenderer } from '@/components/MathRenderer';
+import { MarkdownMessage } from '@/components/ui/MarkdownMessage';
 import {
     getAdminCourses,
     getAdminTopics,
@@ -161,7 +161,7 @@ function LatexEditor({
                 >
                     <p className="text-[10px] uppercase tracking-widest text-zinc-400 mb-2 font-semibold">Förhandsgranskning</p>
                     <div className="prose max-w-none text-sm text-zinc-800">
-                        <MathRenderer content={value || '*Inget att förhandsgranska ännu.*'} />
+                        <MarkdownMessage content={value || '*Inget att förhandsgranska ännu.*'} />
                     </div>
                 </div>
             </div>
@@ -439,7 +439,7 @@ function AISolutionReviewPanel({
                                                 </p>
                                             )}
                                             <div className="prose max-w-none text-sm">
-                                                <MathRenderer content={sr.suggestion || '*Inget förslag*'} />
+                                                <MarkdownMessage content={sr.suggestion || '*Inget förslag*'} />
                                             </div>
                                         </div>
 
@@ -504,7 +504,7 @@ function AISolutionReviewPanel({
                                 </p>
                                 <div className="bg-white rounded-lg border border-blue-100 p-3 mb-3">
                                     <div className="prose max-w-none text-sm">
-                                        <MathRenderer content={as.content} />
+                                        <MarkdownMessage content={as.content} />
                                     </div>
                                 </div>
 
@@ -1764,7 +1764,7 @@ export default function AdminQuestionsPage() {
                                                     )}
                                                 </div>
                                                 <div className="prose max-w-none text-sm text-zinc-800 line-clamp-2">
-                                                    <MathRenderer content={q.contentMarkdown} />
+                                                    <MarkdownMessage content={q.contentMarkdown} />
                                                 </div>
                                             </div>
 
@@ -1871,7 +1871,7 @@ export default function AdminQuestionsPage() {
                                                     Steg-för-steg-lösning
                                                 </p>
                                                 <div className="prose max-w-none text-sm">
-                                                    <MathRenderer content={q.explanationMarkdown} />
+                                                    <MarkdownMessage content={q.explanationMarkdown} />
                                                 </div>
                                             </div>
                                         )}

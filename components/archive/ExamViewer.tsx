@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-    ArrowLeft, Download, Eye, EyeOff, FileText, ExternalLink,
+    ArrowLeft, Eye, EyeOff, FileText, ExternalLink,
 } from 'lucide-react';
 import PdfViewer from './PdfViewer';
 
@@ -65,26 +65,7 @@ export default function ExamViewer({ exam }: ExamViewerProps) {
                     </button>
                 )}
                 
-                <a
-                    href={examUrlRaw}
-                    download={exam.fileName}
-                    className="flex items-center justify-center w-10 h-10 bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all shadow-xl"
-                    title="Ladda ner tenta"
-                >
-                    <Download size={16} />
-                </a>
 
-                {/* Solution Download */}
-                {exam.hasSolution && (
-                    <a
-                        href={solutionUrlRaw}
-                        download={exam.solutionFileName || `solution-${exam.fileName}`}
-                        className="flex items-center justify-center w-10 h-10 bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-full text-emerald-500 hover:text-emerald-400 hover:bg-zinc-800 transition-all shadow-xl"
-                        title="Ladda ner lösning"
-                    >
-                        <Download size={16} />
-                    </a>
-                )}
             </div>
 
             {/* ── Content Area ── */}

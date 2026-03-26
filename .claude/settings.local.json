@@ -85,7 +85,9 @@
       "Bash(git -C /home/ubnutu/github/Qmath diff --name-status)",
       "Bash(ls /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/archive/)",
       "Bash(rm /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/archive/[courseCode]/[examId]/page.tsx)",
-      "Bash(rmdir /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/archive/[courseCode]/[examId])"
+      "Bash(rmdir /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/archive/[courseCode]/[examId])",
+      "Bash(ls -la \"/home/ubnutu/github/Qmath/app/\\(dashboard\\)/courses/[code]/\")",
+      "Bash(npm install:*)"
     ]
   }
 }

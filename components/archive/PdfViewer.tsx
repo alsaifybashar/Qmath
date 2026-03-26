@@ -8,26 +8,27 @@ import {
     ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Loader2, AlertTriangle,
 } from 'lucide-react';
 
-// Use the bundled worker from pdfjs-dist (avoids CDN flakiness)
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PdfViewerProps {
-    /** The URL of the PDF to render (proxied through your API is fine) */
     url: string;
-    /** Accent color class for spinner / page badge */
     accent?: 'blue' | 'emerald';
 }
 
 const SCALE_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5];
 const DEFAULT_SCALE_IDX = 2; // 1.0
+// How many pages above/below the visible viewport to keep rendered
+const RENDER_BUFFER = 1;
 
 export default function PdfViewer({ url, accent = 'blue' }: PdfViewerProps) {
-    const [numPages, setNumPages] = useState<number>(0);
+    const [numPages, setNumPages] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [scaleIdx, setScaleIdx] = useState(DEFAULT_SCALE_IDX);
     const [containerWidth, setContainerWidth] = useState(800);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+    // Which pages are currently "visible" (within buffer)
+    const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set([1, 2]));
 
     const containerRef = useRef<HTMLDivElement>(null);
     const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -36,36 +37,61 @@ export default function PdfViewer({ url, accent = 'blue' }: PdfViewerProps) {
     const scale = SCALE_STEPS[scaleIdx];
     const accentColor = accent === 'emerald' ? '#10B981' : '#3B82F6';
 
-    // Track container width for responsive page rendering
+    // Track container width
     useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
         const ro = new ResizeObserver(([entry]) => {
-            setContainerWidth(entry.contentRect.width - 48); // subtract padding
+            setContainerWidth(entry.contentRect.width - 48);
         });
         ro.observe(el);
         setContainerWidth(el.clientWidth - 48);
         return () => ro.disconnect();
     }, []);
 
-    // Intersection observer to track current visible page
+    // Intersection observer — tracks visible pages and updates render set
     useEffect(() => {
         if (!numPages) return;
         observerRef.current?.disconnect();
 
         observerRef.current = new IntersectionObserver(
             (entries) => {
-                const visible = entries
+                // Find which page indices are intersecting
+                const intersecting = new Set<number>();
+                entries.forEach((e) => {
+                    if (e.isIntersecting) {
+                        const idx = pageRefs.current.indexOf(e.target as HTMLDivElement);
+                        if (idx !== -1) intersecting.add(idx + 1);
+                    }
+                });
+
+                if (intersecting.size === 0) return;
+
+                // Current page = highest-ratio visible page
+                const visibleEntries = entries
                     .filter((e) => e.isIntersecting)
                     .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-                if (visible.length > 0) {
-                    const idx = pageRefs.current.indexOf(visible[0].target as HTMLDivElement);
+                if (visibleEntries.length > 0) {
+                    const idx = pageRefs.current.indexOf(visibleEntries[0].target as HTMLDivElement);
                     if (idx !== -1) setCurrentPage(idx + 1);
                 }
+
+                // Expand to buffer pages
+                setVisiblePages((prev) => {
+                    const next = new Set(prev);
+                    intersecting.forEach((p) => {
+                        for (let i = Math.max(1, p - RENDER_BUFFER); i <= Math.min(numPages, p + RENDER_BUFFER); i++) {
+                            next.add(i);
+                        }
+                    });
+                    return next;
+                });
             },
             {
                 root: containerRef.current,
-                threshold: [0.1, 0.5, 1],
+                threshold: [0, 0.1, 0.5],
+                // Expand detection root margin so adjacent pages pre-render
+                rootMargin: '200px 0px 200px 0px',
             }
         );
 
@@ -75,9 +101,23 @@ export default function PdfViewer({ url, accent = 'blue' }: PdfViewerProps) {
         return () => observerRef.current?.disconnect();
     }, [numPages]);
 
-    const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
-        setNumPages(numPages);
-        pageRefs.current = new Array(numPages).fill(null);
+    // On zoom change, keep the current page visible (don't re-render everything at once)
+    // Reset visible set to current page ± buffer so pages re-render at new scale lazily
+    useEffect(() => {
+        if (!numPages) return;
+        setVisiblePages(new Set(
+            Array.from({ length: RENDER_BUFFER * 2 + 1 }, (_, i) =>
+                Math.max(1, Math.min(numPages, currentPage - RENDER_BUFFER + i))
+            )
+        ));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [scaleIdx]);
+
+    const onDocumentLoadSuccess = useCallback(({ numPages: n }: { numPages: number }) => {
+        setNumPages(n);
+        pageRefs.current = new Array(n).fill(null);
+        // Initially render first few pages
+        setVisiblePages(new Set(Array.from({ length: Math.min(n, RENDER_BUFFER + 2) }, (_, i) => i + 1)));
         setLoading(false);
         setError(false);
     }, []);
@@ -94,8 +134,10 @@ export default function PdfViewer({ url, accent = 'blue' }: PdfViewerProps) {
     const zoomIn = () => setScaleIdx((i) => Math.min(i + 1, SCALE_STEPS.length - 1));
     const zoomOut = () => setScaleIdx((i) => Math.max(i - 1, 0));
 
-    // Responsive width: use container width at scale 1, capped so it's never tiny
     const pageWidth = Math.max(300, Math.min(containerWidth, 900)) * scale;
+
+    // Estimated page height placeholder (A4 ratio ≈ 1.414)
+    const placeholderHeight = Math.round(pageWidth * 1.414);
 
     return (
         <div className="flex flex-col h-full bg-zinc-950 relative group/pdf">
@@ -150,21 +192,15 @@ export default function PdfViewer({ url, accent = 'blue' }: PdfViewerProps) {
             <div
                 ref={containerRef}
                 className="flex-1 overflow-y-auto overflow-x-auto"
-                style={{ scrollbarGutter: 'stable' }}
+                style={{ scrollbarGutter: 'stable', scrollBehavior: 'auto' }}
             >
-                {/* Loading */}
                 {loading && (
                     <div className="flex flex-col items-center justify-center h-full gap-3">
-                        <Loader2
-                            size={32}
-                            className="animate-spin"
-                            style={{ color: accentColor }}
-                        />
+                        <Loader2 size={32} className="animate-spin" style={{ color: accentColor }} />
                         <span className="text-sm text-zinc-500">Laddar dokument…</span>
                     </div>
                 )}
 
-                {/* Error */}
                 {error && !loading && (
                     <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
                         <AlertTriangle size={32} className="text-red-400" />
@@ -185,20 +221,44 @@ export default function PdfViewer({ url, accent = 'blue' }: PdfViewerProps) {
                         <div
                             key={pageNum}
                             ref={(el) => { pageRefs.current[pageNum - 1] = el; }}
-                            className="relative shadow-2xl rounded-sm overflow-hidden"
-                            style={{ lineHeight: 0 }}
+                            className="relative shadow-2xl rounded-sm overflow-hidden bg-zinc-800"
+                            style={{
+                                width: pageWidth,
+                                // Hold space for unrendered pages so scroll position stays stable
+                                minHeight: visiblePages.has(pageNum) ? undefined : placeholderHeight,
+                                lineHeight: 0,
+                            }}
                         >
-                            <Page
-                                pageNumber={pageNum}
-                                width={pageWidth}
-                                renderAnnotationLayer={true}
-                                renderTextLayer={true}
-                                className="block"
-                            />
-                            {/* Page number badge */}
-                            <div className="absolute bottom-2 right-3 text-[10px] font-mono text-white/40 select-none pointer-events-none">
-                                {pageNum}
-                            </div>
+                            {visiblePages.has(pageNum) ? (
+                                <>
+                                    <Page
+                                        pageNumber={pageNum}
+                                        width={pageWidth}
+                                        renderAnnotationLayer={true}
+                                        renderTextLayer={true}
+                                        className="block"
+                                        loading={
+                                            <div
+                                                className="bg-zinc-800 animate-pulse"
+                                                style={{ width: pageWidth, height: placeholderHeight }}
+                                            />
+                                        }
+                                    />
+                                    <div className="absolute bottom-2 right-3 text-[10px] font-mono text-white/40 select-none pointer-events-none">
+                                        {pageNum}
+                                    </div>
+                                </>
+                            ) : (
+                                // Placeholder — keeps scroll stable, page renders when it enters viewport
+                                <div
+                                    className="bg-zinc-900 flex items-center justify-center"
+                                    style={{ width: pageWidth, height: placeholderHeight }}
+                                >
+                                    <div className="w-6 h-6 rounded-full border border-zinc-700 flex items-center justify-center">
+                                        <span className="text-[10px] font-mono text-zinc-600">{pageNum}</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </Document>

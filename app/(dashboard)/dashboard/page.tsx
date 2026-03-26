@@ -18,8 +18,6 @@ import {
     MasteryTopicCard,
     QuickNavigation,
 } from '@/components/dashboard/DashboardCards';
-import StudyIntelligencePanel from '@/components/dashboard/StudyIntelligencePanel';
-import type { StudyAction } from '@/components/dashboard/StudyIntelligencePanel';
 import { ExamReadinessBar } from '@/components/dashboard/ExamReadinessBar';
 
 
@@ -180,58 +178,6 @@ export default async function DashboardPage() {
         .slice(0, 12);
 
 
-    // Build Study Intelligence actions from mastery data (sorted by urgency)
-    const studyActions: StudyAction[] = masteryData
-        .map((m) => {
-            const topic = topicsData.find((t) => t.id === m.topicId);
-            const course = userCourses.find((c) => topic?.courseId === c.id);
-            const mastery = (m.masteryLevel || 0) / 5;
-            const urgency = Math.max(1, Math.min(5, Math.round((1 - mastery) * 5))) as 1 | 2 | 3 | 4 | 5;
-            return {
-                topicId: m.topicId,
-                topicName: topic?.title || 'Okänt område',
-                courseCode: course?.code || '—',
-                expectedImprovement: Math.round((1 - mastery) * 15),
-                urgency,
-                estimatedMinutes: Math.round((1 - mastery) * 30 + 10),
-                reason: mastery < 0.4
-                    ? 'Låg bemästringsnivå — hög prioritet'
-                    : mastery < 0.7
-                        ? 'Behöver mer övning'
-                        : 'Nära bemästring',
-            };
-        })
-        .filter((a) => a.expectedImprovement > 0)
-        .sort((a, b) => b.urgency - a.urgency)
-        .slice(0, 6);
-
-    // Session effect estimate
-    const avgMasteryGain = studyActions.length > 0
-        ? Math.round(studyActions.slice(0, 2).reduce((s, a) => s + a.expectedImprovement, 0) / 2)
-        : 0;
-
-    // Time distribution across enrolled courses
-    const courseColors = ['#4361EE', '#22C55E', '#EAB308', '#8B5CF6', '#F97316'];
-    const timeDistribution = userCourses.slice(0, 5).map((c, i) => {
-        const cMastery = masteryData.filter((m) => {
-            const t = topicsData.find((tp) => tp.id === m.topicId);
-            return t?.courseId === c.id;
-        });
-        const avgM = cMastery.length > 0
-            ? cMastery.reduce((s, m) => s + (m.masteryLevel || 0), 0) / cMastery.length / 5
-            : 0;
-        const minutes = Math.round((1 - avgM) * 40 + 10);
-        return { label: c.code || c.name, minutes, color: courseColors[i % courseColors.length] };
-    });
-
-    // Plan status (simple heuristic)
-    const weeklyQuestions = last7dAttempts.length;
-    const planStatus: 'on-track' | 'ahead' | 'behind' | null =
-        weeklyQuestions >= 30 ? 'ahead'
-            : weeklyQuestions >= 15 ? 'on-track'
-                : weeklyQuestions > 0 ? 'behind'
-                    : null;
-
     // Get greeting based on time
     const hour = now.getHours();
     const greeting = hour < 12 ? 'God morgon' : hour < 18 ? 'God eftermiddag' : 'God kväll';
@@ -249,23 +195,6 @@ export default async function DashboardPage() {
                 </p>
             </div>
 
-
-            {/* ── Study Intelligence Panel ── */}
-            {studyActions.length > 0 && (
-                <div className="mb-6">
-                    <StudyIntelligencePanel
-                        actions={studyActions}
-                        sessionEffect={avgMasteryGain}
-                        focusRecommendation={
-                            studyActions[0]
-                                ? `Baserat på din nuvarande prestationsprofil rekommenderar vi att du börjar med "${studyActions[0].topicName}" i ${studyActions[0].courseCode}. Det här området har störst potential att förbättra ditt resultat på kommande tentamen. Planera ett fokusstudiepas på ${studyActions[0].estimatedMinutes} minuter.`
-                                : ''
-                        }
-                        timeDistribution={timeDistribution}
-                        planStatus={planStatus}
-                    />
-                </div>
-            )}
 
             {/* ── Row 2: Active Courses ── */}
             <div className="mb-6">

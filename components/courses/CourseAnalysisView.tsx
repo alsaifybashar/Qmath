@@ -111,9 +111,7 @@ function ImportanceBar({ value, color }: { value: number; color: string }) {
 // ============================================================================
 
 function AIHeroBanner({ data }: { data: ExamAnalysisData }) {
-    const { aiAnalysis, courseCode, courseName, totalExamsAnalyzed, totalTopics } = data;
-    const criticalCount = data.examTopicMap.filter(n => n.priority === 'critical').length;
-    const highCount     = data.examTopicMap.filter(n => n.priority === 'high').length;
+    const { aiAnalysis, courseCode, courseName } = data;
 
     return (
         <motion.div
@@ -150,37 +148,9 @@ function AIHeroBanner({ data }: { data: ExamAnalysisData }) {
                     <p className="text-sm text-white/85 leading-relaxed">{aiAnalysis.strategy}</p>
                 </div>
 
-                {/* Stats row */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[
-                        { label: 'Tentamen analyserade', value: totalExamsAnalyzed, icon: '📄' },
-                        { label: 'Ämnen identifierade', value: totalTopics, icon: '🧩' },
-                        { label: 'Kritiska ämnen', value: criticalCount, icon: '⚡' },
-                        { label: 'Höga prio-ämnen', value: highCount, icon: '🎯' },
-                    ].map((s, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 + i * 0.07 }}
-                            className="px-3.5 py-3 rounded-xl bg-white/10 backdrop-blur-sm"
-                        >
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <span className="text-base leading-none">{s.icon}</span>
-                                <span className="text-[10px] text-white/70 leading-none">{s.label}</span>
-                            </div>
-                            <span className="text-xl font-bold text-white">{s.value}</span>
-                        </motion.div>
-                    ))}
-                </div>
 
-                {/* Grading info strip (if AI detected it) */}
-                {data.courseProfile.gradingInfo && (
-                    <div className="mt-5 px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm inline-flex items-center gap-2">
-                        <Target className="w-3.5 h-3.5 text-white/70 flex-shrink-0" />
-                        <span className="text-xs text-white/85 font-medium">{data.courseProfile.gradingInfo}</span>
-                    </div>
-                )}
+
+
             </div>
         </motion.div>
     );
@@ -210,13 +180,7 @@ function ExamStructurePanel({ aiAnalysis, profile }: { aiAnalysis: AIAnalysisSum
                 subtitle={`AI-identifierade ${sections.length > 0 ? sections.length : displaySections.length} delar i tentamen — ${aiAnalysis.examStructure.totalPoints > 0 ? aiAnalysis.examStructure.totalPoints + 'p totalt' : 'se nedan'}`}
             />
 
-            {/* Grading info bar */}
-            {aiAnalysis.examStructure.gradingInfo && (
-                <div className="mb-5 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-800/30">
-                    <Target className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                    <span className="text-xs font-medium text-amber-700 dark:text-amber-300">{aiAnalysis.examStructure.gradingInfo}</span>
-                </div>
-            )}
+
 
             {/* Section cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
