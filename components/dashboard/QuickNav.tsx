@@ -12,17 +12,13 @@ import {
     HelpCircle,
     ChevronLeft,
     ChevronRight,
-    Menu,
-    Gamepad2,
-    MonitorPlay
+    Menu
 } from 'lucide-react';
 
 const NAV_ITEMS = [
     { href: '/exams', label: 'Tentor', icon: GraduationCap, color: 'text-blue-500' },
     { href: '/flashcards', label: 'Flashcards', icon: BookOpen, color: 'text-emerald-500' },
     { href: '/courses', label: 'Mina Kurser', icon: LayoutGrid, color: 'text-purple-500' },
-    { href: '/practice', label: 'Övningsarena', icon: Gamepad2, color: 'text-pink-500' },
-    { href: '/test-interactive', label: 'Interaktiv Lab', icon: MonitorPlay, color: 'text-indigo-500' },
     { href: '/profile', label: 'Profil', icon: User, color: 'text-orange-500' },
     { href: '/settings', label: 'Inställningar', icon: Settings, color: 'text-zinc-500' },
     { href: '/help', label: 'Hjälp & Support', icon: HelpCircle, color: 'text-cyan-500' },
