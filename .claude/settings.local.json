@@ -87,7 +87,13 @@
       "Bash(rm /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/archive/[courseCode]/[examId]/page.tsx)",
       "Bash(rmdir /home/ubnutu/github/Qmath/app/\\\\\\(dashboard\\\\\\)/archive/[courseCode]/[examId])",
       "Bash(ls -la \"/home/ubnutu/github/Qmath/app/\\(dashboard\\)/courses/[code]/\")",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(node_modules/.bin/vitest run:*)",
+      "Read(//home/ubnutu/github/Qmath/**)",
+      "Bash(chmod +x /tmp/verify_docs.sh)",
+      "Bash(/tmp/verify_docs.sh)",
+      "Bash(/tmp/docs_summary.txt:*)",
+      "Read(//tmp/**)"
     ]
   }
 }

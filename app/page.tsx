@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, BarChart3, BookOpen, BrainCircuit, Building2, ChevronRight, GraduationCap, LayoutDashboard, Mail, Terminal, Users, Sparkles, Zap, Shield, Play } from "lucide-react";
 import dynamic from 'next/dynamic';
-import { ParticleBackground } from "@/components/ParticleBackground";
+
 import 'katex/dist/katex.min.css';
 
 const BlockMath = dynamic(() => import('react-katex').then((mod) => mod.BlockMath), { ssr: false });
@@ -89,7 +89,7 @@ export default function Home() {
 
                 {/* Background Grid */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]" />
-                <ParticleBackground />
+
 
                 {/* Floating Math Cards with enhanced styling */}
                 <FloatingMathCard

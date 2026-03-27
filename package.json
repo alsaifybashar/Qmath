@@ -16,7 +16,9 @@
     "db:seed:admin": "tsx db/seeds/seed-admin.ts",
     "db:seed:exams": "tsx db/seeds/seed-exams.ts",
     "db:reset": "tsx db/seeds/reset.ts",
-    "test:ai": "tsx tests/integration/ai-feature.test.ts"
+    "test:ai": "tsx tests/integration/ai-feature.test.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
@@ -51,6 +53,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-katex": "^3.0.4",
+    "@vitest/coverage-v8": "^4.1.2",
     "autoprefixer": "^10.4.24",
     "drizzle-kit": "^0.31.9",
     "eslint": "^9.39.2",
@@ -58,6 +61,7 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.2"
   }
 }

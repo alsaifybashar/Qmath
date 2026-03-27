@@ -2,8 +2,9 @@
 
 import crypto from 'crypto';
 import { db } from '@/db/drizzle';
-import { questions, topics, courses } from '@/db/schema';
+import { questions, topics, courses, questionSteps, userMastery } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { getRevealedSteps } from '@/lib/math/fade-logic';
 import type { QuestionWithHelp } from '@/lib/hooks/useStudySession';
 
 // ============================================================================
@@ -206,4 +207,38 @@ export async function getStudyQuestions(topicId: string): Promise<QuestionWithHe
         );
 
     return rows.map(mapDbQuestion);
+}
+
+// ============================================================================
+// FADING STEPS — question steps with mastery-based reveal
+// ============================================================================
+
+/**
+ * Fetch question steps for a given question, applying fading-steps logic
+ * based on the user's current mastery for the topic.
+ *
+ * IMPORTANT: correctAnswer is never included in the returned data.
+ */
+export async function getQuestionWithSteps(questionId: string, userId: string, topicId: string) {
+    // Fetch steps WITHOUT correctAnswer
+    const steps = await db.select({
+        id: questionSteps.id,
+        stepNumber: questionSteps.stepNumber,
+        instruction: questionSteps.instruction,
+        displayLatex: questionSteps.displayLatex,
+        hint: questionSteps.hint,
+        questionType: questionSteps.questionType,
+    }).from(questionSteps).where(eq(questionSteps.questionId, questionId));
+
+    // Get current mastery
+    const mastery = await db.select()
+        .from(userMastery)
+        .where(and(eq(userMastery.userId, userId), eq(userMastery.topicId, topicId)))
+        .get();
+    const masteryProbability = mastery?.masteryProbability ?? 0.1;
+
+    const sorted = steps.sort((a, b) => a.stepNumber - b.stepNumber);
+    const revealedSteps = getRevealedSteps(sorted, masteryProbability);
+
+    return { revealedSteps, mastery: masteryProbability };
 }

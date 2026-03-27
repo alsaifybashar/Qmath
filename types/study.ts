@@ -6,7 +6,8 @@ export type QuestionType =
     | 'guided_steps'
     | 'drag_drop'
     | 'toggle'
-    | 'expression_builder';
+    | 'expression_builder'
+    | 'cas_steps';
 
 // ============================================================================
 // SHARED
@@ -150,6 +151,15 @@ export interface ExpressionBuilderQuestion extends QuestionBase {
     }[];
     correctExpression: string; // LaTeX or value string to match
     validationType: 'exact_match' | 'mathematical_equivalence'; // Latter requires advanced parsing engine, we'll stick to exact/string for now
+}
+
+// ============================================================================
+// METHOD 8: CAS STEPS (Tonande Lösningssteg / Fading Steps)
+// ============================================================================
+
+export interface CasStepsQuestion extends QuestionBase {
+    type: 'cas_steps';
+    question: { text: string; math?: string };
 }
 
 export interface GuidedStepQuestion extends QuestionBase {

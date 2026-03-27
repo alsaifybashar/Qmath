@@ -233,6 +233,12 @@ export function AIPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, position, context.question?.id]);
 
+    function parseVisualizeCommand(text: string): { isVisualize: boolean; topic: string } {
+        const match = text.trim().match(/^\/visualize\s+(.+)$/i);
+        if (match) return { isVisualize: true, topic: match[1].trim() };
+        return { isVisualize: false, topic: '' };
+    }
+
     const handleSendMessage = async (textOverride?: string) => {
         const textToSend = textOverride || inputValue;
         if (!textToSend.trim() || isLoading) return;
@@ -276,13 +282,15 @@ export function AIPanel({
                 setMessages(prev => [...prev, assistantMessage]);
             } else {
                 // Call actual AI backend
+                const { isVisualize, topic } = parseVisualizeCommand(userMessage.content);
                 const response = await fetch('/api/ai/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: userMessage.content,
                         context: contextWithHistory,
-                        provider: provider
+                        provider: provider,
+                        ...(isVisualize && { visualizeCommand: { topic } }),
                     })
                 });
 
@@ -742,6 +750,8 @@ export function AIPanel({
                                 {isExploreMode && isFullScreen && (
                                     <div className="mt-6 flex flex-wrap gap-2 justify-center max-w-lg">
                                         {[
+                                            '/visualize sin(x) + cos(2x)',
+                                            '/visualize 3D surface z=x^2+y^2',
                                             'Explain derivatives visually',
                                             'Show me how eigenvectors work',
                                             'What is the intuition behind integrals?',
@@ -956,7 +966,7 @@ export function AIPanel({
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder={isExploreMode ? "Ask anything — concepts, proofs, visualizations..." : "Ask about this problem..."}
+                                placeholder={isExploreMode ? "Ask anything, or type /visualize [topic] for an instant graph..." : "Ask about this problem..."}
                                 disabled={isLoading}
                                 className="flex-1 px-4 py-3 bg-transparent text-[var(--foreground)] text-base focus:outline-none disabled:opacity-50 placeholder:text-[var(--foreground-subtle)]"
                             />

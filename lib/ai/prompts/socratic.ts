@@ -126,6 +126,13 @@ EXAMPLES:
   GOOD: "Taylor series of sin at degree 7" → taylor-series-sine, degree=7, center=0
   BAD:  "Taylor series of sin at degree 7" → TaylorSeriesApproximation, initialDegree=3 ← wrong default
 
+  GOOD: "/visualize 3D surface z=x^2+y^2" → 3d-function-graph, expression="x^2+y^2"
+  BAD:  "/visualize 3D surface z=x^2+y^2" → function-plotter ← ignores 3D, wrong widget
+
+  GOOD: "/visualize 3D helix" → 3d-curve, xExpr="cos(t)", yExpr="sin(t)", zExpr="t/6", tMin=0, tMax=12.57
+  GOOD: "/visualize vector field" → 3d-vector-field, fxExpr="-y", fyExpr="x", fzExpr="0"
+  GOOD: "/visualize polynomial roots" → PolynomialRootFinder (use default roots as no specific polynomial given)
+
 NEVER show a visualization with different values than those in the student's question.
 If no specific values exist, note in your text that you're showing a general example.
 

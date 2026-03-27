@@ -178,6 +178,26 @@ export const questionsRelations = relations(questions, ({ one, many }) => ({
         references: [topics.id],
     }),
     attemptLogs: many(attemptLogs),
+    questionSteps: many(questionSteps),
+}));
+
+// Question Steps (Tonande Lösningssteg / Fading Steps)
+export const questionSteps = sqliteTable('question_steps', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    questionId: text('question_id').references(() => questions.id, { onDelete: 'cascade' }).notNull(),
+    stepNumber: integer('step_number').notNull(),
+    instruction: text('instruction').notNull(),
+    displayLatex: text('display_latex'),
+    correctAnswer: text('correct_answer').notNull(),
+    questionType: text('question_type').default('algebra'),
+    hint: text('hint'),
+});
+
+export const questionStepsRelations = relations(questionSteps, ({ one }) => ({
+    question: one(questions, {
+        fields: [questionSteps.questionId],
+        references: [questions.id],
+    }),
 }));
 
 // User Mastery
