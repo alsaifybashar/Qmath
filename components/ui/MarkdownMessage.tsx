@@ -186,18 +186,32 @@ function renderTextBlock(text: string): ReactNode {
         if (headingMatch) {
             const level = headingMatch[1].length;
             const headingText = headingMatch[2];
-            const headingStyles: Record<number, string> = {
-                1: 'text-2xl font-bold text-[var(--foreground)] mt-4 mb-1.5 leading-tight',
-                2: 'text-xl font-bold text-[var(--foreground)] mt-3 mb-1 leading-tight',
-                3: 'text-lg font-semibold text-[var(--foreground)] mt-2.5 mb-0.5 leading-snug',
-                4: 'text-base font-semibold text-[var(--foreground-muted)] mt-2 mb-0.5 leading-snug',
-            };
-            const Tag = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4';
-            elements.push(
-                <Tag key={`h${level}_${key++}`} className={headingStyles[level]}>
-                    {renderInline(headingText)}
-                </Tag>
-            );
+            if (level === 1) {
+                elements.push(
+                    <h1 key={`h1_${key++}`} className="text-2xl font-bold mt-6 mb-2 leading-tight bg-gradient-to-r from-violet-600 to-blue-500 dark:from-violet-400 dark:to-blue-400 bg-clip-text text-transparent">
+                        {renderInline(headingText)}
+                    </h1>
+                );
+            } else if (level === 2) {
+                elements.push(
+                    <h2 key={`h2_${key++}`} className="text-lg font-bold mt-5 mb-1.5 leading-tight text-[var(--foreground)] flex items-center gap-2">
+                        <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-violet-500 to-blue-500 flex-shrink-0" />
+                        {renderInline(headingText)}
+                    </h2>
+                );
+            } else if (level === 3) {
+                elements.push(
+                    <h3 key={`h3_${key++}`} className="text-base font-semibold mt-4 mb-1 leading-snug text-[var(--foreground)]">
+                        {renderInline(headingText)}
+                    </h3>
+                );
+            } else {
+                elements.push(
+                    <h4 key={`h4_${key++}`} className="text-sm font-semibold mt-3 mb-0.5 leading-snug text-[var(--foreground-muted)] uppercase tracking-wide">
+                        {renderInline(headingText)}
+                    </h4>
+                );
+            }
             i++;
             continue;
         }
@@ -222,9 +236,9 @@ function renderTextBlock(text: string): ReactNode {
                 i++;
             }
             elements.push(
-                <ol key={`ol_${key++}`} className="list-decimal list-outside ml-5 space-y-1 my-2 text-[var(--foreground)]">
+                <ol key={`ol_${key++}`} className="list-decimal list-outside ml-5 space-y-1.5 my-3 text-[var(--foreground)] leading-relaxed">
                     {items.map((item, idx) => (
-                        <li key={idx}>{renderInline(item)}</li>
+                        <li key={idx} className="pl-1">{renderInline(item)}</li>
                     ))}
                 </ol>
             );
@@ -239,9 +253,9 @@ function renderTextBlock(text: string): ReactNode {
                 i++;
             }
             elements.push(
-                <ul key={`ul_${key++}`} className="list-disc list-outside ml-5 space-y-1 my-2 text-[var(--foreground)]">
+                <ul key={`ul_${key++}`} className="list-disc list-outside ml-5 space-y-1.5 my-3 text-[var(--foreground)] leading-relaxed">
                     {items.map((item, idx) => (
-                        <li key={idx}>{renderInline(item)}</li>
+                        <li key={idx} className="pl-1">{renderInline(item)}</li>
                     ))}
                 </ul>
             );
@@ -256,11 +270,10 @@ function renderTextBlock(text: string): ReactNode {
                 i++;
             }
             elements.push(
-                <blockquote key={`bq_${key++}`} className="pl-3 border-l-2 border-violet-500/50 text-[var(--foreground-muted)] italic my-2">
+                <blockquote key={`bq_${key++}`} className="my-3 pl-4 pr-3 py-2.5 border-l-[3px] border-violet-500 bg-violet-50/60 dark:bg-violet-500/[0.07] rounded-r-lg text-[var(--foreground)] not-italic">
                     {quoteLines.map((ql, idx) => (
-                        <span key={idx}>
+                        <span key={idx} className="block leading-relaxed">
                             {renderInline(ql)}
-                            {idx < quoteLines.length - 1 && <br />}
                         </span>
                     ))}
                 </blockquote>
@@ -268,19 +281,28 @@ function renderTextBlock(text: string): ReactNode {
             continue;
         }
 
-        // Regular line — add <br> if followed by another regular line
-        const nextLine = lines[i + 1];
-        const nextIsBlank = !nextLine || nextLine.trim() === '';
-        const nextIsList = nextLine && (/^\d+[\.\)]\s/.test(nextLine) || /^[-*•]\s/.test(nextLine));
-        const nextIsHeading = nextLine && /^#{1,4}\s/.test(nextLine);
-
-        elements.push(
-            <span key={`ln_${key++}`}>
-                {renderInline(line)}
-                {!nextIsBlank && !nextIsList && !nextIsHeading && i < lines.length - 1 && <br />}
-            </span>
-        );
-        i++;
+        // Regular line — collect consecutive plain lines into a paragraph
+        const plainLines: string[] = [];
+        while (
+            i < lines.length &&
+            lines[i].trim() !== '' &&
+            !/^(#{1,4}\s|[-*•]\s|\d+[\.\)]\s|> |>\s*$|[-*_]{3,}\s*$|\|)/.test(lines[i])
+        ) {
+            plainLines.push(lines[i]);
+            i++;
+        }
+        if (plainLines.length > 0) {
+            elements.push(
+                <p key={`p_${key++}`} className="leading-relaxed text-[var(--foreground)] my-1.5">
+                    {plainLines.map((pl, idx) => (
+                        <span key={idx}>
+                            {renderInline(pl)}
+                            {idx < plainLines.length - 1 && <br />}
+                        </span>
+                    ))}
+                </p>
+            );
+        }
     }
 
     return elements.length > 0 ? <>{elements}</> : null;

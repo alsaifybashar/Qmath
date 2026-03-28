@@ -37,6 +37,11 @@ export interface OllamaCallOptions {
     /** Context window size. Default: 4096. Keep low to avoid OOM on large-ctx models. */
     numCtx?: number;
     format?: 'json';
+    /**
+     * Specific model name to use (e.g. "qwen3.5:latest").
+     * When set, the fallback chain is bypassed and only this model is tried.
+     */
+    model?: string;
 }
 
 /** Errors that are specific to a model — safe to skip to the next in the chain. */
@@ -113,10 +118,19 @@ async function callOllamaModel(
 
 /**
  * Send a chat request to the local Ollama server.
- * Tries each model in OLLAMA_MODELS in order, skipping to the next on model-level failures.
+ *
+ * - If `options.model` is set, that specific model is used (no fallback).
+ * - Otherwise, tries each model in OLLAMA_MODELS in order, skipping to the
+ *   next on model-level failures.
+ *
  * Returns the assistant's reply text, or throws if all models fail.
  */
 export async function callOllama(options: OllamaCallOptions): Promise<string> {
+    // Specific model requested — bypass the fallback chain.
+    if (options.model) {
+        return callOllamaModel(options.model, options);
+    }
+
     const lastError: Error[] = [];
 
     for (const model of OLLAMA_MODELS) {

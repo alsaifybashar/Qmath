@@ -101,7 +101,7 @@ async function handleAnthropic(
     userMessage: string,
     context: StudentContext,
     systemPrompt: string,
-    forceWidget = false,
+    model = 'claude-sonnet-4-6',
 ) {
     const tools: Anthropic.Tool[] = [
         getMathValidationTool() as Anthropic.Tool,
@@ -112,13 +112,10 @@ async function handleAnthropic(
     const messages = buildMessages(userMessage, context.conversationHistory ?? []);
 
     let response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1500,
+        model,
+        max_tokens: 2000,
         system: systemPrompt,
         tools,
-        tool_choice: forceWidget
-            ? { type: 'tool' as const, name: 'render_visual_widget' }
-            : { type: 'auto' as const },
         messages,
     });
 
@@ -286,6 +283,7 @@ async function handleOllama(
     userMessage: string,
     context: StudentContext,
     systemPrompt: string,
+    model?: string,
 ) {
     const history = (context.conversationHistory ?? []).slice(-HISTORY_MAX_MESSAGES);
 
@@ -298,11 +296,12 @@ async function handleOllama(
     // Use JSON format mode — the only reliable way with small models like llama3.2
     const rawText = await callOllama({
         messages,
-        maxTokens: 1200,
+        maxTokens: 2000,
         temperature: 0.2,
         timeoutMs: 60_000,
-        numCtx: 4096,
+        numCtx: 8192,
         format: 'json',
+        model,
     });
 
     // Parse the structured JSON response
@@ -362,22 +361,6 @@ function buildSystemPrompt(context: StudentContext): string {
     return SOCRATIC_SYSTEM_PROMPT + contextBlock;
 }
 
-function buildVisualizeAddendum(topic: string): string {
-    return `
-
-CRITICAL OVERRIDE — /visualize COMMAND DETECTED
-The student used the /visualize command. Topic: "${topic}"
-You MUST call render_visual_widget in this response. A text-only response is NOT acceptable.
-
-Selection guide:
-- Explicit expression (e.g. "sin(x)", "x^2+1") → function-plotter with that expression
-- "3D" or "surface" or "z=" in topic → 3d-function-graph with the expression
-- "parametric" or "helix" or "3D curve" → 3d-curve with xExpr/yExpr/zExpr
-- "vector field" → 3d-vector-field
-- Named concept (e.g. "polynomial roots", "unit circle", "Taylor series") → matching specialized widget
-After calling the tool, provide a 2–3 sentence explanation of what the visualization shows.`;
-}
-
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -404,14 +387,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Parse body
-    let body: { message: string; context: StudentContext; provider?: string; visualizeCommand?: { topic: string } };
+    let body: { message: string; context: StudentContext; provider?: string; model?: string };
     try {
         body = await req.json();
     } catch {
         return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const { message, context, provider = 'anthropic', visualizeCommand } = body;
+    const { message, context, provider = 'anthropic', model } = body;
 
     if (!message || typeof message !== 'string') {
         return NextResponse.json({ error: 'Missing or invalid message' }, { status: 400 });
@@ -422,22 +405,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Message payload too large' }, { status: 413 });
     }
 
-    // 4. Build system prompt (with optional /visualize addendum)
+    // 4. Build system prompt
     const systemPrompt = buildSystemPrompt(context);
-    const effectiveSystemPrompt = visualizeCommand
-        ? systemPrompt + buildVisualizeAddendum(visualizeCommand.topic)
-        : systemPrompt;
 
     // 5. Route to the appropriate provider
     try {
         if (provider === 'ollama') {
-            const result = await handleOllama(message, context, effectiveSystemPrompt);
-            if (visualizeCommand && !result.visualWidget) {
-                const safeExpr = visualizeCommand.topic
-                    .replace(/\s+/g, '')
-                    .replace(/[^a-z0-9+\-*/^().]/gi, '') || 'x';
-                result.visualWidget = { type: 'function-plotter', props: { expression: safeExpr } };
-            }
+            const result = await handleOllama(message, context, systemPrompt, model);
             return NextResponse.json({ success: true, ...result });
         }
 
@@ -449,13 +423,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const result = await handleAnthropic(message, context, effectiveSystemPrompt, !!visualizeCommand);
-        if (visualizeCommand && !result.visualWidget) {
-            const safeExpr = visualizeCommand.topic
-                .replace(/\s+/g, '')
-                .replace(/[^a-z0-9+\-*/^().]/gi, '') || 'x';
-            result.visualWidget = { type: 'function-plotter', props: { expression: safeExpr } };
-        }
+        const result = await handleAnthropic(message, context, systemPrompt, model);
         return NextResponse.json({ success: true, ...result });
     } catch (err: unknown) {
         const error = err as Error;

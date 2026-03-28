@@ -25,6 +25,8 @@ import { useBoardNarration } from '@/lib/hooks/useBoardNarration';
 import type { AnyWidgetType, BoardStateSnapshot } from '@/types/jsxgraph-widgets';
 import { MarkdownMessage } from '@/components/ui/MarkdownMessage';
 import { JSXTemplate } from '../interactive/JSXTemplate';
+import { ModelSelector, DEFAULT_MODEL } from './ModelSelector';
+import type { SelectedModel } from './ModelSelector';
 
 interface AIMessage {
     id: string;
@@ -101,7 +103,9 @@ export function AIPanel({
      * widget in the chat history.
      */
     const [activeWidgetMessageId, setActiveWidgetMessageId] = useState<string | null>(null);
-    const [provider, setProvider] = useState<'anthropic' | 'ollama'>('anthropic');
+    const [selectedModel, setSelectedModel] = useState<SelectedModel>(DEFAULT_MODEL);
+    // Convenience alias — keeps all downstream code (useBoardNarration, fetch bodies) unchanged
+    const provider = selectedModel.provider;
     /** Fraction of total width occupied by the visualization panel (0.18–0.82) */
     const [splitRatio, setSplitRatio] = useState(0.62);
     const isDraggingRef = useRef(false);
@@ -210,6 +214,7 @@ export function AIPanel({
                         message: '__OPEN__',
                         context: { ...context, conversationHistory: [] },
                         provider,
+                        model: selectedModel.model,
                     }),
                 });
                 const data = await resp.json();
@@ -232,12 +237,6 @@ export function AIPanel({
         })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, position, context.question?.id]);
-
-    function parseVisualizeCommand(text: string): { isVisualize: boolean; topic: string } {
-        const match = text.trim().match(/^\/visualize\s+(.+)$/i);
-        if (match) return { isVisualize: true, topic: match[1].trim() };
-        return { isVisualize: false, topic: '' };
-    }
 
     const handleSendMessage = async (textOverride?: string) => {
         const textToSend = textOverride || inputValue;
@@ -282,15 +281,14 @@ export function AIPanel({
                 setMessages(prev => [...prev, assistantMessage]);
             } else {
                 // Call actual AI backend
-                const { isVisualize, topic } = parseVisualizeCommand(userMessage.content);
                 const response = await fetch('/api/ai/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: userMessage.content,
                         context: contextWithHistory,
-                        provider: provider,
-                        ...(isVisualize && { visualizeCommand: { topic } }),
+                        provider,
+                        model: selectedModel.model,
                     })
                 });
 
@@ -349,6 +347,13 @@ export function AIPanel({
     };
 
     // ── RESIZABLE SPLITTER ────────────────────────────────────────────────────────
+    const applyRatio = useCallback((clientX: number) => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const ratio = (clientX - rect.left) / rect.width;
+        setSplitRatio(Math.min(0.82, Math.max(0.18, ratio)));
+    }, []);
+
     const onSplitterMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
         isDraggingRef.current = true;
@@ -356,10 +361,8 @@ export function AIPanel({
         document.body.style.userSelect = 'none';
 
         const onMouseMove = (ev: MouseEvent) => {
-            if (!isDraggingRef.current || !containerRef.current) return;
-            const rect = containerRef.current.getBoundingClientRect();
-            const ratio = (ev.clientX - rect.left) / rect.width;
-            setSplitRatio(Math.min(0.82, Math.max(0.18, ratio)));
+            if (!isDraggingRef.current) return;
+            applyRatio(ev.clientX);
         };
         const onMouseUp = () => {
             isDraggingRef.current = false;
@@ -370,7 +373,25 @@ export function AIPanel({
         };
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
-    }, []);
+    }, [applyRatio]);
+
+    const onSplitterTouchStart = useCallback((e: React.TouchEvent) => {
+        isDraggingRef.current = true;
+        document.body.style.userSelect = 'none';
+
+        const onTouchMove = (ev: TouchEvent) => {
+            if (!isDraggingRef.current) return;
+            applyRatio(ev.touches[0].clientX);
+        };
+        const onTouchEnd = () => {
+            isDraggingRef.current = false;
+            document.body.style.userSelect = '';
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+        };
+        document.addEventListener('touchmove', onTouchMove, { passive: true });
+        document.addEventListener('touchend', onTouchEnd);
+    }, [applyRatio]);
 
     // ── PANEL MODE (right-side split in question view) ──────────────────────────
     if (position === 'panel') {
@@ -388,17 +409,8 @@ export function AIPanel({
                             {context.question?.topic || 'Vägledning'}
                         </p>
                     </div>
-                    {/* Provider toggle */}
-                    <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 gap-0.5 flex-shrink-0">
-                        <button
-                            onClick={() => setProvider('anthropic')}
-                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${provider === 'anthropic' ? 'bg-violet-600 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
-                        >Claude</button>
-                        <button
-                            onClick={() => setProvider('ollama')}
-                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${provider === 'ollama' ? 'bg-emerald-600 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
-                        >Lokal</button>
-                    </div>
+                    {/* Model selector */}
+                    <ModelSelector value={selectedModel} onChange={setSelectedModel} direction="down" compact />
                     <button
                         onClick={onToggle}
                         className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-white rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex-shrink-0"
@@ -611,26 +623,21 @@ export function AIPanel({
                     className="flex flex-col h-full flex-shrink-0 relative bg-[var(--background)]"
                     style={{ width: `${splitRatio * 100}%` }}
                 >
-                    {/* Thin top bar: widget name (left) + hint + minimize (right) */}
-                    <div className="flex-none flex items-center justify-between px-5 py-2.5 border-b border-[var(--glass-border)] bg-[var(--surface)]/50">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                    {/* Thin top bar: widget name + minimize */}
+                    <div className="flex-none flex items-center justify-between px-4 py-2 border-b border-[var(--glass-border)] bg-[var(--surface)]/60 backdrop-blur-sm">
+                        <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-violet-500/80" />
                             <span className="text-[11px] font-semibold text-[var(--foreground-muted)] uppercase tracking-widest">
                                 {activeWidgetData.type.replace(/([A-Z])/g, ' $1').trim()}
                             </span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-[11px] text-[var(--foreground-subtle)] select-none">
-                                Scroll inside to zoom · drag to pan
-                            </span>
-                            <button
-                                onClick={() => setIsWidgetMinimized(true)}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-[var(--foreground-muted)] hover:text-[var(--foreground)] bg-[var(--surface-hover)] hover:bg-[var(--surface-elevated)] rounded-lg border border-[var(--glass-border)] transition-all"
-                            >
-                                <Minimize2 className="w-3 h-3" />
-                                Minimize
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => setIsWidgetMinimized(true)}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] rounded-lg border border-transparent hover:border-[var(--glass-border)] transition-all"
+                        >
+                            <Minimize2 className="w-3 h-3" />
+                            Minimize
+                        </button>
                     </div>
 
                     {/* ── Widget area: fills remaining space, NO overflow/scroll ────
@@ -664,15 +671,22 @@ export function AIPanel({
             {isSplitScreen && (
                 <div
                     onMouseDown={onSplitterMouseDown}
-                    className="flex-shrink-0 w-1.5 h-full cursor-col-resize relative z-30 group"
+                    onTouchStart={onSplitterTouchStart}
+                    className="flex-shrink-0 w-3 h-full cursor-col-resize relative z-30 group select-none"
                     title="Drag to resize panels"
+                    role="separator"
+                    aria-label="Resize panels"
                 >
-                    {/* Resting state: very subtle */}
-                    <div className="absolute inset-0 bg-white/[0.04] group-hover:bg-violet-500/30 transition-colors duration-150" />
-                    {/* Centre grip dots */}
-                    <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-0.5 h-6 rounded-full bg-violet-400/70" />
+                    {/* Track line */}
+                    <div className="absolute inset-y-0 left-1/2 -translate-x-px w-px bg-white/[0.06] group-hover:bg-violet-500/40 transition-colors duration-150" />
+                    {/* Grip handle — always visible, larger on hover */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-[3px] transition-all duration-150 group-hover:scale-125">
+                        {[0, 1, 2, 3, 4].map(i => (
+                            <div key={i} className="w-1 h-1 rounded-full bg-zinc-500 group-hover:bg-violet-400 transition-colors duration-150" />
+                        ))}
                     </div>
+                    {/* Wider invisible hit area */}
+                    <div className="absolute inset-y-0 -left-2 -right-2" />
                 </div>
             )}
 
@@ -750,12 +764,12 @@ export function AIPanel({
                                 {isExploreMode && isFullScreen && (
                                     <div className="mt-6 flex flex-wrap gap-2 justify-center max-w-lg">
                                         {[
-                                            '/visualize sin(x) + cos(2x)',
-                                            '/visualize 3D surface z=x^2+y^2',
                                             'Explain derivatives visually',
                                             'Show me how eigenvectors work',
                                             'What is the intuition behind integrals?',
                                             'How do Taylor series approximate functions?',
+                                            'Plot sin(x) + cos(2x)',
+                                            'Show a 3D surface z = x² + y²',
                                         ].map((prompt, index) => (
                                             <button
                                                 key={index}
@@ -935,21 +949,8 @@ export function AIPanel({
                         : "w-full flex flex-col"
                     }>
                         <div className="flex justify-between items-center px-4 pt-1 mb-2">
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--foreground-subtle)]">AI Engine</span>
-                            <div className="flex bg-[var(--surface-hover)] rounded-lg p-1 border border-[var(--glass-border)]">
-                                <button
-                                    onClick={() => setProvider('anthropic')}
-                                    className={`px-3 py-1 text-xs rounded-md transition-all ${provider === 'anthropic' ? 'bg-gradient-to-r from-blue-500 to-violet-500 text-white shadow-md' : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'}`}
-                                >
-                                    Claude 3.5
-                                </button>
-                                <button
-                                    onClick={() => setProvider('ollama')}
-                                    className={`px-3 py-1 text-xs rounded-md transition-all gap-1 flex items-center ${provider === 'ollama' ? 'bg-emerald-600 text-white shadow-md' : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'}`}
-                                >
-                                    Local Ollama
-                                </button>
-                            </div>
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--foreground-subtle)]">AI Model</span>
+                            <ModelSelector value={selectedModel} onChange={setSelectedModel} direction="up" />
                         </div>
 
                         <div className="flex gap-2">
@@ -966,7 +967,7 @@ export function AIPanel({
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder={isExploreMode ? "Ask anything, or type /visualize [topic] for an instant graph..." : "Ask about this problem..."}
+                                placeholder={isExploreMode ? "Ask anything — concepts, proofs, problems, visualizations..." : "Ask about this problem..."}
                                 disabled={isLoading}
                                 className="flex-1 px-4 py-3 bg-transparent text-[var(--foreground)] text-base focus:outline-none disabled:opacity-50 placeholder:text-[var(--foreground-subtle)]"
                             />

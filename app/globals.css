@@ -1019,3 +1019,28 @@ html {
   width: 100% !important;
   height: 100% !important;
 }
+
+/* =========================================
+   Template stat bars inside the AI visualization panel
+   The hardcoded bg-slate-800/50 / border-slate-700 in each template
+   is overridden here so they match the app's glass design system.
+   ========================================= */
+.jxg-fullscreen-wrapper > div:first-child > div:first-child {
+  background: rgba(24, 24, 27, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0.625rem !important;
+  padding: 0.625rem 1rem !important;
+}
+
+/* Light mode: invert to a light glass surface */
+:root:not(.dark) .jxg-fullscreen-wrapper > div:first-child > div:first-child {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #52525b !important;
+}
+
+/* JSXTemplate header (category + name labels above the board) */
+.jxg-fullscreen-wrapper .jxg-template-header {
+  opacity: 0.6;
+  font-size: 0.6875rem;
+}

@@ -52,7 +52,7 @@ export function JSXTemplate({
 
     return (
         <div className="flex flex-col gap-1 w-full h-full">
-            <div className="flex items-center gap-2 px-1">
+            <div className="jxg-template-header flex items-center gap-2 px-1">
                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                     {template.category}
                 </span>
