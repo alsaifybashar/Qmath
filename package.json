@@ -23,6 +23,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
     "@dotenvx/dotenvx-ops": "^0.30.3",
+    "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.6.2",
     "clsx": "^2.1.1",

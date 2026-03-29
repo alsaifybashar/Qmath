@@ -3,7 +3,7 @@ import type { BoardStateSnapshot } from '@/types/jsxgraph-widgets';
 
 interface UseBoardNarrationOptions {
     debounceMs?: number;
-    provider?: 'anthropic' | 'ollama';
+    provider?: 'anthropic' | 'ollama' | 'google';
     onNarration?: (text: string) => void;
 }
 

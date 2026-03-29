@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI, SchemaType, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { auth } from '@/auth';
 import {
     SOCRATIC_SYSTEM_PROMPT,
     EXPLORER_SYSTEM_PROMPT,
+    buildGeminiSystemPrompt,
     getMathValidationTool,
     getPlotTool,
     getVisualWidgetTool,
 } from '@/lib/ai/prompts/socratic';
-import { callOllama, OllamaMessage } from '@/lib/ollama';
+import { callOllama } from '@/lib/ollama';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { preprocessUserInput } from '@/lib/ai/preprocessor';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = process.env.GOOGLE_GENERATIVE_AI_API_KEY 
+    ? new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+    : null;
 
 const MESSAGE_MAX_CHARS = 2000;
 const HISTORY_MAX_MESSAGES = 20;
@@ -361,6 +367,205 @@ function buildSystemPrompt(context: StudentContext): string {
     return SOCRATIC_SYSTEM_PROMPT + contextBlock;
 }
 
+// ─── Gemini handler (with function calling loop) ───────────────────────────────
+
+async function handleGemini(
+    userMessage: string,
+    context: StudentContext,
+    _systemPrompt: string,  // unused — Gemini uses its own optimised prompt
+    modelName = 'gemini-2.5-pro',
+) {
+    if (!genAI) {
+        throw new Error('Google Generative AI not configured');
+    }
+
+    // Build Gemini-optimised system prompt (XML-tagged, motivational teacher persona)
+    const geminiSystemPrompt = buildGeminiSystemPrompt(context);
+
+    // Map tools to Gemini format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tools: any[] = [
+        {
+            functionDeclarations: [
+                {
+                    name: 'validate_math',
+                    description: 'Evaluates whether the student\'s mathematical expression is equivalent to the expected correct answer. Call this for ANY algebraic verification — never evaluate symbolic algebra yourself.',
+                    parameters: {
+                        type: SchemaType.OBJECT,
+                        properties: {
+                            student_expression: { type: SchemaType.STRING, description: 'The math expression provided by the student.' },
+                            expected_expression: { type: SchemaType.STRING, description: 'The correct target expression to verify against.' },
+                        },
+                        required: ['student_expression', 'expected_expression'],
+                    },
+                },
+                {
+                    name: 'plot_function',
+                    description: 'Generates an interactive 2D graph of a mathematical function. Use when the student asks to "plot", "sketch", "draw", or "visualise" a function, or when a graph would clarify the concept.',
+                    parameters: {
+                        type: SchemaType.OBJECT,
+                        properties: {
+                            expression: { type: SchemaType.STRING, description: 'The function expression to plot using x as variable (e.g. "sin(x)", "x^2 - 3*x + 2").' },
+                            title: { type: SchemaType.STRING, description: 'A short descriptive title for the graph.' },
+                            x_range: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER }, description: '[min, max] x-axis range.' },
+                            y_range: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER }, description: '[min, max] y-axis range (optional).' },
+                        },
+                        required: ['expression', 'title'],
+                    },
+                },
+                {
+                    name: 'render_visual_widget',
+                    description: 'Launch an interactive JSXGraph math visualisation. Call this proactively whenever a visual would deepen understanding. MANDATORY when the student says "sketch", "plot", "draw", "visualise", "rita", or "skissa" — never describe a graph in plain text.',
+                    parameters: {
+                        type: SchemaType.OBJECT,
+                        properties: {
+                            widget_type: { type: SchemaType.STRING, description: 'The widget type matching the mathematical topic (e.g. "function-plotter", "PolynomialRootFinder", "DerivativeDefinitionBoard").' },
+                            config: { type: SchemaType.OBJECT, description: 'Widget configuration with values extracted from the student\'s question — never use generic defaults when specific values exist.' },
+                        },
+                        required: ['widget_type'],
+                    },
+                },
+            ],
+        },
+    ];
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT,        threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,        threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,  threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,  threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+    ];
+
+    // Best-practice generation config for Gemini:
+    // • temperature = 1.0  — required for thinking models (Google's recommendation)
+    // • topP = 0.95        — diverse but focused sampling
+    // • maxOutputTokens    — 65536 to accommodate thinking tokens + full response
+    // • thinkingConfig     — medium budget on Pro for deeper reasoning without excess cost;
+    //                        Flash models skip thinking to stay fast and work on free tier
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const generationConfig: any = {
+        temperature: 1.0,
+        topP: 0.95,
+        maxOutputTokens: 65536,
+    };
+
+    const isProModel = modelName.includes('pro');
+    const isLiteModel = modelName.includes('lite');
+
+    if (isProModel) {
+        // Pro models (2.5 Pro, 3.x Pro): enable extended thinking for deep math reasoning
+        generationConfig.thinkingConfig = {
+            thinkingBudget: 8000,
+        };
+    } else if (isLiteModel) {
+        // Lite/Micro models: optimise for speed — lower temperature, smaller output budget
+        generationConfig.temperature = 0.5;
+        generationConfig.maxOutputTokens = 4096;
+    } else {
+        // Flash variants: balance speed and quality
+        generationConfig.temperature = 0.7;
+    }
+
+    const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: geminiSystemPrompt,
+        tools,
+        safetySettings,
+        generationConfig,
+    });
+
+    const history = (context.conversationHistory ?? []).slice(-HISTORY_MAX_MESSAGES).map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+    }));
+
+    const chat = model.startChat({
+        history,
+    });
+
+    let result = await chat.sendMessage(userMessage);
+    let response = result.response;
+    let calls = response.functionCalls();
+
+    let plot: object | undefined;
+    let visualWidget: object | undefined;
+
+    // Tool execution loop
+    let iterations = 0;
+    while (calls && calls.length > 0 && iterations < 5) {
+        iterations++;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const toolResults: any[] = [];
+
+        for (const call of calls) {
+            if (call.name === 'validate_math') {
+                const args = call.args as { student_expression: string; expected_expression: string };
+                const isCorrect = await validateMath(args.student_expression, args.expected_expression);
+                toolResults.push({
+                    functionResponse: {
+                        name: 'validate_math',
+                        response: { is_equivalent: isCorrect },
+                    },
+                });
+            } else if (call.name === 'plot_function') {
+                const input = call.args as { 
+                    expression: string; 
+                    title: string; 
+                    x_range?: [number, number]; 
+                    y_range?: [number, number] 
+                };
+                plot = {
+                    expression: input.expression,
+                    title: input.title,
+                    x_range: input.x_range,
+                    y_range: input.y_range,
+                };
+                toolResults.push({
+                    functionResponse: {
+                        name: 'plot_function',
+                        response: { status: 'rendered', expression: input.expression },
+                    },
+                });
+            } else if (call.name === 'render_visual_widget') {
+                const input = call.args as { 
+                    widget_type: string; 
+                    config?: Record<string, unknown> 
+                };
+                const expressionKeys = new Set(['expression', 'expression2', 'fExpression', 'gExpression',
+                    'xExpr', 'yExpr', 'zExpr', 'fxExpr', 'fyExpr', 'fzExpr']);
+                const sanitizedConfig: Record<string, unknown> = {};
+                if (input.config) {
+                    for (const [k, v] of Object.entries(input.config)) {
+                        sanitizedConfig[k] = expressionKeys.has(k) && typeof v === 'string'
+                            ? sanitizeMathExpression(v)
+                            : v;
+                    }
+                }
+                visualWidget = {
+                    type: input.widget_type,
+                    props: sanitizedConfig,
+                };
+                toolResults.push({
+                    functionResponse: {
+                        name: 'render_visual_widget',
+                        response: { status: 'rendered', widget_type: input.widget_type },
+                    },
+                });
+            }
+        }
+
+        if (toolResults.length > 0) {
+            result = await chat.sendMessage(toolResults);
+            response = result.response;
+            calls = response.functionCalls();
+        } else {
+            calls = [];
+        }
+    }
+
+    return { response: response.text(), plot, visualWidget };
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -394,10 +599,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const { message, context, provider = 'anthropic', model } = body;
+    const { message: rawMessage, context, provider = 'anthropic', model } = body;
 
-    if (!message || typeof message !== 'string') {
+    if (!rawMessage || typeof rawMessage !== 'string') {
         return NextResponse.json({ error: 'Missing or invalid message' }, { status: 400 });
+    }
+
+    // ── Pre-process: clean the user input before sending to the AI ────────────
+    // Removes PDF artefacts, control chars, duplicate paragraphs, etc.
+    // The client already pre-processes, but this is the server-side safety net.
+    const { cleaned: message, savedTokens: serverSavedTokens, flags: cleanFlags } = preprocessUserInput(rawMessage);
+    if (serverSavedTokens > 0) {
+        console.log(`[Preprocessor] Cleaned input: ${rawMessage.length}→${message.length} chars (saved ~${serverSavedTokens} tokens). Flags: ${cleanFlags.join(', ')}`);
     }
 
     // 3. Payload size guard (DoS protection)
@@ -412,6 +625,17 @@ export async function POST(req: NextRequest) {
     try {
         if (provider === 'ollama') {
             const result = await handleOllama(message, context, systemPrompt, model);
+            return NextResponse.json({ success: true, ...result });
+        }
+
+        if (provider === 'google') {
+            if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+                return NextResponse.json(
+                    { error: 'Gemini API key not configured', details: 'Add GOOGLE_GENERATIVE_AI_API_KEY to .env.local' },
+                    { status: 503 },
+                );
+            }
+            const result = await handleGemini(message, context, systemPrompt, model);
             return NextResponse.json({ success: true, ...result });
         }
 
@@ -447,6 +671,35 @@ export async function POST(req: NextRequest) {
                 },
                 { status: 503 },
             );
+        }
+
+        // Surface Gemini-specific errors with actionable messages
+        if (provider === 'google') {
+            const msg = error.message;
+            if (msg.includes('429') || msg.includes('Too Many Requests') || msg.includes('quota')) {
+                const isPro = (model ?? '').includes('pro');
+                return NextResponse.json(
+                    {
+                        error: 'Gemini quota exceeded',
+                        details: isPro
+                            ? 'Gemini Pro requires a paid Google AI API plan. Please switch to Gemini Flash (free tier) or upgrade your API plan at aistudio.google.com.'
+                            : 'Gemini rate limit reached. Please wait a moment and try again.',
+                    },
+                    { status: 429 },
+                );
+            }
+            if (msg.includes('API_KEY_INVALID') || msg.includes('API key not valid')) {
+                return NextResponse.json(
+                    { error: 'Invalid Gemini API key', details: 'The GOOGLE_GENERATIVE_AI_API_KEY in .env.local is invalid. Get a new key at aistudio.google.com.' },
+                    { status: 401 },
+                );
+            }
+            if (msg.includes('404') || msg.includes('not found') || msg.includes('models/')) {
+                return NextResponse.json(
+                    { error: 'Gemini model not found', details: `Model "${model}" is not available on your API plan. Try Gemini Flash instead.` },
+                    { status: 404 },
+                );
+            }
         }
 
         return NextResponse.json(

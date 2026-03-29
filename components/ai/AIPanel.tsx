@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, X, Minimize2, Maximize2, Loader2, Sparkles, LayoutGrid, Mic } from 'lucide-react';
 import { AIGraph } from './AIGraph';
@@ -27,6 +27,8 @@ import { MarkdownMessage } from '@/components/ui/MarkdownMessage';
 import { JSXTemplate } from '../interactive/JSXTemplate';
 import { ModelSelector, DEFAULT_MODEL } from './ModelSelector';
 import type { SelectedModel } from './ModelSelector';
+import { preprocessUserInput, describeCleaning } from '@/lib/ai/preprocessor';
+import type { CleanFlag } from '@/lib/ai/preprocessor';
 
 interface AIMessage {
     id: string;
@@ -34,6 +36,11 @@ interface AIMessage {
     content: string;
     timestamp: Date;
     isNarration?: boolean;
+    /** Set when the client pre-processed the user's input before sending. */
+    cleanInfo?: {
+        savedTokens: number;
+        flags: CleanFlag[];
+    };
     plot?: {
         expression: string;
         title: string;
@@ -111,7 +118,8 @@ export function AIPanel({
     const isDraggingRef = useRef(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    // Typed as the common supertype — used for both <input> (sidebar) and <textarea> (fullscreen)
+    const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
     const { reportBoardState, lastNarration } = useBoardNarration({
         debounceMs: 1500,
@@ -239,14 +247,28 @@ export function AIPanel({
     }, [isOpen, position, context.question?.id]);
 
     const handleSendMessage = async (textOverride?: string) => {
-        const textToSend = textOverride || inputValue;
-        if (!textToSend.trim() || isLoading) return;
+        const rawText = textOverride || inputValue;
+        if (!rawText.trim() || isLoading) return;
+
+        // ── Pre-process: clean before sending ────────────────────────────────
+        const preResult = preprocessUserInput(rawText.trim());
+        const textToSend = preResult.cleaned;
+        if (preResult.wasCleaned) {
+            console.log(
+                `[AIPanel Preprocessor] cleaned=${preResult.wasCleaned} saved=~${preResult.savedTokens} tokens flags=[${preResult.flags.join(', ')}]`,
+                `\nraw (${rawText.length} chars) → cleaned (${textToSend.length} chars)`
+            );
+        }
 
         const userMessage: AIMessage = {
             id: `msg_${Date.now()}`,
             role: 'user',
-            content: textToSend.trim(),
-            timestamp: new Date()
+            content: textToSend,
+            timestamp: new Date(),
+            // Attach cleaning info so the UI can show a badge when anything was cleaned
+            ...(preResult.wasCleaned
+                ? { cleanInfo: { savedTokens: preResult.savedTokens, flags: preResult.flags } }
+                : {}),
         };
 
         setMessages(prev => [...prev, userMessage]);
@@ -511,7 +533,7 @@ export function AIPanel({
                 <div className="flex-none px-4 pb-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
                     <div className="flex gap-2 items-center">
                         <input
-                            ref={inputRef}
+                            ref={inputRef as React.RefObject<HTMLInputElement>}
                             type="text"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
@@ -821,8 +843,25 @@ export function AIPanel({
                                         {isFullScreen ? (
                                             <div className="w-full flex flex-col">
                                                 {message.role === 'user' ? (
-                                                    <div className="self-end max-w-[85%] bg-[var(--surface-elevated)] border border-[var(--glass-border)] text-[var(--foreground)] px-5 py-3 rounded-3xl rounded-br-sm text-[15px] shadow-[var(--shadow-md)] mb-4">
-                                                        {message.content}
+                                                    <div className="self-end max-w-[85%] flex flex-col items-end gap-1 mb-4">
+                                                        <div className="bg-[var(--surface-elevated)] border border-[var(--glass-border)] text-[var(--foreground)] px-5 py-3 rounded-3xl rounded-br-sm text-[15px] shadow-[var(--shadow-md)]">
+                                                            {message.content}
+                                                        </div>
+                                                        {message.cleanInfo && (
+                                                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                                                                <svg className="w-2.5 h-2.5 flex-shrink-0" viewBox="0 0 12 12" fill="none">
+                                                                    <path d="M6 1L7.5 4.5L11 5L8.5 7.5L9 11L6 9.5L3 11L3.5 7.5L1 5L4.5 4.5L6 1Z" fill="currentColor" />
+                                                                </svg>
+                                                                <span>
+                                                                    Cleaned input · saved ~{message.cleanInfo.savedTokens} tokens
+                                                                    {message.cleanInfo.flags.length > 0 && (
+                                                                        <span className="opacity-60 ml-1">
+                                                                            ({describeCleaning(message.cleanInfo.flags)})
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <div className="self-start w-full flex flex-col">
@@ -961,15 +1000,25 @@ export function AIPanel({
                             >
                                 <Mic className="w-5 h-5" />
                             </button>
-                            <input
-                                ref={inputRef}
-                                type="text"
+                            {/* Textarea supports multiline paste (e.g. PDF content) so the
+                                preprocessor can detect page numbers, duplicate paragraphs, etc.
+                                Enter sends the message; Shift+Enter inserts a newline. */}
+                            <textarea
+                                ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                                rows={1}
                                 value={inputValue}
-                                onChange={(e) => setInputValue(e.target.value)}
+                                onChange={(e) => {
+                                    setInputValue(e.target.value);
+                                    // Auto-resize: shrink to 1 row then grow to content
+                                    const el = e.target;
+                                    el.style.height = 'auto';
+                                    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+                                }}
                                 onKeyDown={handleKeyDown}
-                                placeholder={isExploreMode ? "Ask anything — concepts, proofs, problems, visualizations..." : "Ask about this problem..."}
+                                placeholder={isExploreMode ? "Ask anything — concepts, proofs, problems, visualizations… (paste PDF content here)" : "Ask about this problem…"}
                                 disabled={isLoading}
-                                className="flex-1 px-4 py-3 bg-transparent text-[var(--foreground)] text-base focus:outline-none disabled:opacity-50 placeholder:text-[var(--foreground-subtle)]"
+                                className="flex-1 px-4 py-3 bg-transparent text-[var(--foreground)] text-base focus:outline-none disabled:opacity-50 placeholder:text-[var(--foreground-subtle)] resize-none overflow-y-auto leading-relaxed"
+                                style={{ maxHeight: '160px' }}
                             />
                             <button
                                 onClick={() => handleSendMessage()}
