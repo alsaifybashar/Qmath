@@ -9,26 +9,41 @@ export const functionTemplates: JSXTemplateDef[] = [
         category: 'Functions',
         tags: ['plot', 'graph', 'f(x)', 'visualize', 'function', 'curve', 'hyperbola', 'exponential', 'logarithm', 'parabola', 'draggable'],
         description: 'Plot one or two f(x) functions on configurable axes. Use expression/expression2 for the formulas.',
-        defaultConfig: { expression: 'sin(x)', xMin: -7, xMax: 7, yMin: -4, yMax: 4 },
+        defaultConfig: { expression: 'sin(x)', xMin: -10, xMax: 10, yMin: -6, yMax: 6 },
         init(JXG, boardId, cfg) {
-            const { expression = 'sin(x)', expression2, xMin = -7, xMax = 7, yMin = -4, yMax = 4 } = cfg;
+            const { expression = 'sin(x)', expression2, xMin = -10, xMax = 10, yMin = -6, yMax = 6 } = cfg;
             const board = JXG.JSXGraph.initBoard(boardId, {
                 boundingbox: [xMin, yMax, xMax, yMin],
-                axis: true, ...BOARD_BASE_OPTS,
+                axis: true,
+                // Zoom and pan are already set globally in JSXGraphBoard,
+                // but we reinforce them here so templates are self-contained.
+                zoom: { wheel: true, needShift: false, min: 0.001, max: 1000 },
+                pan:  { enabled: true, needShift: false },
+                ...BOARD_BASE_OPTS,
             });
+
             const f = makeJSFunction(expression);
-            board.create('functiongraph', [f, xMin, xMax], {
+            // No x-range limits → JSXGraph draws the curve for the full visible
+            // area and automatically extends it as the student zooms out.
+            board.create('functiongraph', [f], {
                 strokeColor: C.primary, strokeWidth: 2.5,
             });
+
             if (expression2) {
                 const g = makeJSFunction(expression2);
-                board.create('functiongraph', [g, xMin, xMax], {
+                board.create('functiongraph', [g], {
                     strokeColor: C.secondary, strokeWidth: 2.5,
                 });
             }
-            board.create('text', [xMin + 0.3, yMax - 0.4,
-                expression2 ? `f(x) = ${expression}   g(x) = ${expression2}` : `f(x) = ${expression}`
-            ], { fontSize: 12, strokeColor: C.primary });
+
+            // Label: pinned to a fixed board position (top-left area)
+            const labelText = expression2
+                ? `f(x) = ${expression}    g(x) = ${expression2}`
+                : `f(x) = ${expression}`;
+            board.create('text', [xMin + 0.4, yMax - 0.5, labelText], {
+                fontSize: 12, strokeColor: C.primary, fixed: true,
+            });
+
             return board;
         },
     },

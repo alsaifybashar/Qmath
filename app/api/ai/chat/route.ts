@@ -187,7 +187,7 @@ async function handleAnthropic(
         messages.push({ role: 'user', content: toolResults });
 
         response = await anthropic.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
+            model,
             max_tokens: 1500,
             system: systemPrompt,
             tools,

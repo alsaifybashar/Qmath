@@ -93,7 +93,8 @@
       "Bash(chmod +x /tmp/verify_docs.sh)",
       "Bash(/tmp/verify_docs.sh)",
       "Bash(/tmp/docs_summary.txt:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(xargs kill:*)"
     ]
   }
 }

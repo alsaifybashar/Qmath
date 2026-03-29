@@ -2,13 +2,16 @@
 
 /**
  * MarkdownMessage — renders AI chat responses with:
- *  - LaTeX math via KaTeX (inline $...$ and block $$...$$, also \(...\) / \[...\])
- *  - Markdown structure: **bold**, *italic*, `code`, ``` code blocks ```, numbered/bullet lists,
- *    headings (#–####), tables, horizontal rules (---), blockquotes (>)
+ *  - LaTeX math via KaTeX (inline $...$ and \(...\) within paragraphs,
+ *    and standalone $$...$$ / \[...\] block math)
+ *  - Markdown structure: **bold**, *italic*, `code`, ``` code blocks ```,
+ *    numbered/bullet lists, headings (#–####), tables, horizontal rules (---),
+ *    blockquotes (>)
  *  - Progressive disclosure for complex block math (>100 chars of LaTeX source)
  *  - Horizontal scroll on tables and code blocks for mobile safety
  *
- * Used in AIPanel for assistant message bubbles.
+ * Inline math ($...$) is rendered WITHIN paragraphs so it flows with the
+ * surrounding text — it is NOT extracted as a standalone block token.
  */
 
 import dynamic from 'next/dynamic';
@@ -16,7 +19,7 @@ import 'katex/dist/katex.min.css';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
-// Dynamically load KaTeX components to avoid SSR issues
+// Dynamically load KaTeX to avoid SSR issues
 const BlockMath = dynamic(
     () => import('react-katex').then((mod) => mod.BlockMath),
     { ssr: false, loading: () => <span className="text-zinc-400 dark:text-zinc-500 text-xs italic">…</span> }
@@ -27,20 +30,21 @@ const InlineMath = dynamic(
 );
 
 // ── Token types ───────────────────────────────────────────────────────────────
+// Only BLOCK-level tokens are extracted. Inline math stays inside text tokens
+// and is handled by renderLineWithMath() during paragraph rendering.
 
 type Token =
     | { type: 'text'; content: string }
-    | { type: 'inline-math'; content: string }
     | { type: 'block-math'; content: string }
     | { type: 'code-block'; lang: string; content: string };
 
 // ── Tokenizer ─────────────────────────────────────────────────────────────────
-// Order: code blocks first (so $ inside ``` isn't parsed as math),
-// then block math ($$), then inline math ($).
+// Extracts only block-level delimiters: ```...``` and $$...$$ / \[...\].
+// Inline $...$ is intentionally left inside 'text' tokens.
 
 function tokenize(text: string): Token[] {
     // eslint-disable-next-line no-useless-escape
-    const PATTERN = /(```[\w]*\n[\s\S]*?```|\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^\$\n]{1,400}?\$|\\\([\s\S]{0,400}?\\\))/g;
+    const PATTERN = /(```[\w]*\n[\s\S]*?```|\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\])/g;
     const tokens: Token[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
@@ -56,11 +60,9 @@ function tokenize(text: string): Token[] {
             const lang = firstNewline > 3 ? raw.slice(3, firstNewline).trim() : '';
             const content = firstNewline !== -1 ? raw.slice(firstNewline + 1, -3).trim() : raw.slice(3, -3).trim();
             tokens.push({ type: 'code-block', lang, content });
-        } else if (raw.startsWith('$$') || raw.startsWith('\\[')) {
-            tokens.push({ type: 'block-math', content: raw.slice(2, -2).trim() });
         } else {
-            // $...$ or \(...\)
-            tokens.push({ type: 'inline-math', content: raw.startsWith('\\(') ? raw.slice(2, -2).trim() : raw.slice(1, -1).trim() });
+            // $$...$$ or \[...\]
+            tokens.push({ type: 'block-math', content: raw.slice(2, -2).trim() });
         }
         lastIndex = match.index + raw.length;
     }
@@ -71,45 +73,66 @@ function tokenize(text: string): Token[] {
     return tokens;
 }
 
-// ── Inline markdown renderer ──────────────────────────────────────────────────
-// Handles **bold**, *italic*, `code` within a single line.
+// ── Inline renderer with math ─────────────────────────────────────────────────
+// Renders a single line of text that may contain:
+//   - Inline math:  $...$  or  \(...\)
+//   - Bold:         **...**
+//   - Italic:       *...*
+//   - Inline code:  `...`
+// All elements flow inline — this is used wherever text and math must coexist
+// on the same line (paragraphs, headings, list items, blockquotes).
 
-function renderInline(text: string): ReactNode {
-    const INLINE_RE = /(`[^`\n]+`|\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g;
+function renderLineWithMath(text: string): ReactNode {
+    // Order matters: inline code first (so * inside ` isn't italic),
+    // then math (so $...$ isn't confused with other chars), then bold/italic.
+    const INLINE_RE = /(`[^`\n]+`|\$[^\$\n]{1,400}?\$|\\\([\s\S]{0,400}?\\\)|\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g;
     const parts: ReactNode[] = [];
     let lastIdx = 0;
     let m: RegExpExecArray | null;
+    let key = 0;
 
     while ((m = INLINE_RE.exec(text)) !== null) {
         if (m.index > lastIdx) parts.push(text.slice(lastIdx, m.index));
         const raw = m[0];
-        if (raw.startsWith('`')) {
+
+        if (raw.startsWith('$') || raw.startsWith('\\(')) {
+            const mathContent = raw.startsWith('\\(')
+                ? raw.slice(2, -2).trim()
+                : raw.slice(1, -1).trim();
+            parts.push(<InlineMath key={key++} math={mathContent} />);
+        } else if (raw.startsWith('`')) {
             parts.push(
                 <code
-                    key={m.index}
+                    key={key++}
                     className="px-1.5 py-0.5 bg-[var(--code-bg-light)] dark:bg-[var(--code-bg)] text-[var(--code-text-light)] dark:text-[var(--code-text)] rounded text-[0.8em] font-mono leading-none"
                 >
                     {raw.slice(1, -1)}
                 </code>
             );
         } else if (raw.startsWith('**')) {
-            parts.push(<strong key={m.index} className="font-semibold text-[var(--foreground)]">{raw.slice(2, -2)}</strong>);
+            parts.push(
+                <strong key={key++} className="font-semibold text-[var(--foreground)]">
+                    {raw.slice(2, -2)}
+                </strong>
+            );
         } else {
-            parts.push(<em key={m.index} className="italic text-[var(--foreground-muted)]">{raw.slice(1, -1)}</em>);
+            parts.push(
+                <em key={key++} className="italic text-[var(--foreground-muted)]">
+                    {raw.slice(1, -1)}
+                </em>
+            );
         }
         lastIdx = m.index + raw.length;
     }
     if (lastIdx < text.length) parts.push(text.slice(lastIdx));
 
-    return parts.length === 0
-        ? null
-        : parts.length === 1 && typeof parts[0] === 'string'
-            ? parts[0]
-            : <>{parts}</>;
+    if (parts.length === 0) return null;
+    return parts.length === 1 && typeof parts[0] === 'string'
+        ? parts[0]
+        : <>{parts}</>;
 }
 
 // ── Table renderer ────────────────────────────────────────────────────────────
-// Parses GFM-style | col | col | table rows into a scrollable <table>.
 
 function renderTable(lines: string[], keyPrefix: number): ReactNode {
     const separatorRe = /^[-: ]+$/;
@@ -117,7 +140,6 @@ function renderTable(lines: string[], keyPrefix: number): ReactNode {
         .filter(l => l.trim().startsWith('|'))
         .map(l => l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim()));
 
-    // Remove separator rows (e.g. | --- | --- |)
     const tableRows = rows.filter(row => !row.every(cell => separatorRe.test(cell)));
     if (tableRows.length === 0) return null;
 
@@ -130,7 +152,7 @@ function renderTable(lines: string[], keyPrefix: number): ReactNode {
                     <tr>
                         {headerRow.map((cell, ci) => (
                             <th key={ci} className="px-3 py-2 text-left font-semibold text-[var(--foreground)] border-b border-[var(--glass-border)] whitespace-nowrap">
-                                {renderInline(cell)}
+                                {renderLineWithMath(cell)}
                             </th>
                         ))}
                     </tr>
@@ -140,7 +162,7 @@ function renderTable(lines: string[], keyPrefix: number): ReactNode {
                         <tr key={ri} className={ri % 2 === 0 ? 'bg-[var(--surface)]' : 'bg-[var(--surface-hover)]/50'}>
                             {row.map((cell, ci) => (
                                 <td key={ci} className="px-3 py-2 text-[var(--foreground-muted)] border-b border-[var(--glass-border)]">
-                                    {renderInline(cell)}
+                                    {renderLineWithMath(cell)}
                                 </td>
                             ))}
                         </tr>
@@ -152,7 +174,9 @@ function renderTable(lines: string[], keyPrefix: number): ReactNode {
 }
 
 // ── Block text renderer ───────────────────────────────────────────────────────
-// Turns a plain-text block (no math/code) into structured paragraphs and lists.
+// Parses a text segment (no block-math, no code-block) into structured
+// paragraphs, headings, lists, etc. Inline math within each line is handled
+// by renderLineWithMath() so it flows with the surrounding text.
 
 function renderTextBlock(text: string): ReactNode {
     if (!text) return null;
@@ -189,26 +213,26 @@ function renderTextBlock(text: string): ReactNode {
             if (level === 1) {
                 elements.push(
                     <h1 key={`h1_${key++}`} className="text-2xl font-bold mt-6 mb-2 leading-tight bg-gradient-to-r from-violet-600 to-blue-500 dark:from-violet-400 dark:to-blue-400 bg-clip-text text-transparent">
-                        {renderInline(headingText)}
+                        {renderLineWithMath(headingText)}
                     </h1>
                 );
             } else if (level === 2) {
                 elements.push(
                     <h2 key={`h2_${key++}`} className="text-lg font-bold mt-5 mb-1.5 leading-tight text-[var(--foreground)] flex items-center gap-2">
                         <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-violet-500 to-blue-500 flex-shrink-0" />
-                        {renderInline(headingText)}
+                        {renderLineWithMath(headingText)}
                     </h2>
                 );
             } else if (level === 3) {
                 elements.push(
                     <h3 key={`h3_${key++}`} className="text-base font-semibold mt-4 mb-1 leading-snug text-[var(--foreground)]">
-                        {renderInline(headingText)}
+                        {renderLineWithMath(headingText)}
                     </h3>
                 );
             } else {
                 elements.push(
                     <h4 key={`h4_${key++}`} className="text-sm font-semibold mt-3 mb-0.5 leading-snug text-[var(--foreground-muted)] uppercase tracking-wide">
-                        {renderInline(headingText)}
+                        {renderLineWithMath(headingText)}
                     </h4>
                 );
             }
@@ -238,7 +262,7 @@ function renderTextBlock(text: string): ReactNode {
             elements.push(
                 <ol key={`ol_${key++}`} className="list-decimal list-outside ml-5 space-y-1.5 my-3 text-[var(--foreground)] leading-relaxed">
                     {items.map((item, idx) => (
-                        <li key={idx} className="pl-1">{renderInline(item)}</li>
+                        <li key={idx} className="pl-1">{renderLineWithMath(item)}</li>
                     ))}
                 </ol>
             );
@@ -255,7 +279,7 @@ function renderTextBlock(text: string): ReactNode {
             elements.push(
                 <ul key={`ul_${key++}`} className="list-disc list-outside ml-5 space-y-1.5 my-3 text-[var(--foreground)] leading-relaxed">
                     {items.map((item, idx) => (
-                        <li key={idx} className="pl-1">{renderInline(item)}</li>
+                        <li key={idx} className="pl-1">{renderLineWithMath(item)}</li>
                     ))}
                 </ul>
             );
@@ -273,7 +297,7 @@ function renderTextBlock(text: string): ReactNode {
                 <blockquote key={`bq_${key++}`} className="my-3 pl-4 pr-3 py-2.5 border-l-[3px] border-violet-500 bg-violet-50/60 dark:bg-violet-500/[0.07] rounded-r-lg text-[var(--foreground)] not-italic">
                     {quoteLines.map((ql, idx) => (
                         <span key={idx} className="block leading-relaxed">
-                            {renderInline(ql)}
+                            {renderLineWithMath(ql)}
                         </span>
                     ))}
                 </blockquote>
@@ -281,7 +305,7 @@ function renderTextBlock(text: string): ReactNode {
             continue;
         }
 
-        // Regular line — collect consecutive plain lines into a paragraph
+        // Regular paragraph — collect consecutive plain lines
         const plainLines: string[] = [];
         while (
             i < lines.length &&
@@ -296,7 +320,7 @@ function renderTextBlock(text: string): ReactNode {
                 <p key={`p_${key++}`} className="leading-relaxed text-[var(--foreground)] my-1.5">
                     {plainLines.map((pl, idx) => (
                         <span key={idx}>
-                            {renderInline(pl)}
+                            {renderLineWithMath(pl)}
                             {idx < plainLines.length - 1 && <br />}
                         </span>
                     ))}
@@ -309,8 +333,6 @@ function renderTextBlock(text: string): ReactNode {
 }
 
 // ── Progressive disclosure for complex block math ─────────────────────────────
-// Formulas with >100 chars of LaTeX source start collapsed to avoid overwhelming
-// beginners (Bayes, binomial distribution, etc.). A clear toggle reveals them.
 
 function CollapsibleBlockMath({ math }: { math: string }) {
     const isComplex = math.length > 100;
@@ -346,9 +368,7 @@ function CollapsibleBlockMath({ math }: { math: string }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface MarkdownMessageProps {
-    /** Raw text from the AI — may contain LaTeX delimiters and markdown */
     content: string;
-    /** Additional Tailwind classes applied to the wrapper div */
     className?: string;
 }
 
@@ -360,9 +380,6 @@ export function MarkdownMessage({ content, className = '' }: MarkdownMessageProp
             {tokens.map((token, i) => {
                 if (token.type === 'block-math') {
                     return <CollapsibleBlockMath key={i} math={token.content} />;
-                }
-                if (token.type === 'inline-math') {
-                    return <InlineMath key={i} math={token.content} />;
                 }
                 if (token.type === 'code-block') {
                     return (
@@ -378,6 +395,7 @@ export function MarkdownMessage({ content, className = '' }: MarkdownMessageProp
                         </div>
                     );
                 }
+                // 'text' token — may contain inline math, rendered inline within paragraphs
                 const rendered = renderTextBlock(token.content);
                 return rendered ? <span key={i}>{rendered}</span> : null;
             })}
