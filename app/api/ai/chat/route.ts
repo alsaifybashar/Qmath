@@ -13,6 +13,9 @@ import {
 import { callOllama } from '@/lib/ollama';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { preprocessUserInput } from '@/lib/ai/preprocessor';
+import { db } from '@/db/drizzle';
+import { questions, topics } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const genAI = process.env.GOOGLE_GENERATIVE_AI_API_KEY 
@@ -32,6 +35,13 @@ interface ChatMessage {
 interface StudentContext {
     currentPage: string;
     mode?: 'explore' | 'guided';
+    /**
+     * Preferred: send only questionId — the server fetches the full guided-mode
+     * question context from the DB so the browser does not need to send the
+     * question body or the correct answer on each turn.
+     */
+    questionId?: string;
+    /** Legacy / non-DB path: full question object (correctAnswer omitted by client). */
     question?: {
         id: string;
         content: string;
@@ -49,6 +59,39 @@ interface StudentContext {
         recentPerformance: string;
     };
     conversationHistory?: ChatMessage[];
+}
+
+// ─── Server-side guided-question lookup ───────────────────────────────────────
+//
+// For secure guided tutoring, the DB is the source of truth for the question
+// prompt context. That lets the client send only a stable questionId while the
+// server resolves the exact question text, topic, difficulty, and correct answer.
+
+async function fetchQuestionContextById(questionId: string): Promise<NonNullable<StudentContext['question']> | null> {
+    const row = await db
+        .select({
+            id: questions.id,
+            content: questions.contentMarkdown,
+            difficulty: questions.difficultyTier,
+            correctAnswer: questions.correctAnswer,
+            topicTitle: topics.title,
+            topicTitleSv: topics.titleSv,
+        })
+        .from(questions)
+        .leftJoin(topics, eq(questions.topicId, topics.id))
+        .where(eq(questions.id, questionId))
+        .limit(1);
+
+    const question = row[0];
+    if (!question) return null;
+
+    return {
+        id: question.id,
+        content: question.content,
+        topic: question.topicTitleSv ?? question.topicTitle ?? 'Matematik',
+        difficulty: question.difficulty ?? 1,
+        correctAnswer: question.correctAnswer,
+    };
 }
 
 // ─── Math expression sanitization ────────────────────────────────────────────
@@ -117,10 +160,21 @@ async function handleAnthropic(
 
     const messages = buildMessages(userMessage, context.conversationHistory ?? []);
 
+    // Prompt caching: the system prompt (which includes the question context) is
+    // marked ephemeral so Anthropic caches it for 5 minutes. Turns 2-N of the
+    // same conversation hit the cache and cost ~10% of the uncached token price.
+    const systemWithCache: Anthropic.TextBlockParam[] = [
+        {
+            type: 'text',
+            text: systemPrompt,
+            cache_control: { type: 'ephemeral' },
+        },
+    ];
+
     let response = await anthropic.messages.create({
         model,
         max_tokens: 2000,
-        system: systemPrompt,
+        system: systemWithCache,
         tools,
         messages,
     });
@@ -195,7 +249,7 @@ async function handleAnthropic(
         response = await anthropic.messages.create({
             model,
             max_tokens: 1500,
-            system: systemPrompt,
+            system: systemWithCache,
             tools,
             messages,
         });
@@ -618,13 +672,40 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Message payload too large' }, { status: 413 });
     }
 
-    // 4. Build system prompt
-    const systemPrompt = buildSystemPrompt(context);
+    // 4. Resolve question context.
+    //
+    // Preferred path:
+    //   client sends only questionId, server fetches the full question context.
+    //
+    // Legacy fallback:
+    //   callers without a DB-backed questionId may still send inline question
+    //   content so the AI remains usable in demos and older flows.
+    let resolvedContext = context;
+    const questionId = context.questionId ?? context.question?.id;
+    if (questionId) {
+        const serverQuestion = await fetchQuestionContextById(questionId);
+        if (serverQuestion) {
+            resolvedContext = {
+                ...context,
+                mode: 'guided',
+                question: serverQuestion,
+            };
+        } else if (context.question?.content) {
+            resolvedContext = { ...context, mode: 'guided' };
+        } else {
+            // If the question ID is invalid or unavailable, keep guided mode so the
+            // tutor still behaves correctly, but omit the missing question block.
+            resolvedContext = { ...context, mode: 'guided' };
+        }
+    }
+
+    // 4b. Build system prompt
+    const systemPrompt = buildSystemPrompt(resolvedContext);
 
     // 5. Route to the appropriate provider
     try {
         if (provider === 'ollama') {
-            const result = await handleOllama(message, context, systemPrompt, model);
+            const result = await handleOllama(message, resolvedContext, systemPrompt, model);
             return NextResponse.json({ success: true, ...result });
         }
 
@@ -635,7 +716,7 @@ export async function POST(req: NextRequest) {
                     { status: 503 },
                 );
             }
-            const result = await handleGemini(message, context, systemPrompt, model);
+            const result = await handleGemini(message, resolvedContext, systemPrompt, model);
             return NextResponse.json({ success: true, ...result });
         }
 
@@ -647,7 +728,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const result = await handleAnthropic(message, context, systemPrompt, model);
+        const result = await handleAnthropic(message, resolvedContext, systemPrompt, model);
         return NextResponse.json({ success: true, ...result });
     } catch (err: unknown) {
         const error = err as Error;

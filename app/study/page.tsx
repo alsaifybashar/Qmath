@@ -10,6 +10,7 @@ import {
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import 'katex/dist/katex.min.css';
+import { MathInputWithToolbar } from '@/components/study/MathInputWithToolbar';
 
 import { FocusedStudyLayout } from '@/components/layout/FocusedStudyLayout';
 import { WorkShowPanel } from '@/components/study/WorkShowPanel';
@@ -45,7 +46,7 @@ const BlockMath = dynamic(
     { ssr: false }
 );
 
-// ── Simple numeric input ───────────────────────────────────────────────────────
+// ── Math answer input with toolbar ────────────────────────────────────────────
 function SimpleNumericInput({
     correctAnswer,
     onAnswer,
@@ -56,40 +57,40 @@ function SimpleNumericInput({
     const [value, setValue] = useState('');
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => { inputRef.current?.focus(); }, []);
 
     const handleSubmit = () => {
         if (!value.trim() || isSubmitted) return;
-        const correct = value.trim().toLowerCase() === correctAnswer.toString().toLowerCase();
+        const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '');
+        const correct = normalize(value) === normalize(correctAnswer.toString());
         setIsCorrect(correct);
         setIsSubmitted(true);
         onAnswer(value, correct);
     };
 
     return (
-        <div className="flex flex-col items-center gap-4">
-            <div className="flex gap-3 w-full max-w-md">
-                <input
-                    ref={inputRef}
-                    type="text"
+        <div className="space-y-4">
+            {/* MathLive WYSIWYG field + clickable toolbar */}
+            <div className={`rounded-xl transition-colors ${
+                isSubmitted
+                    ? isCorrect
+                        ? 'ring-2 ring-emerald-400'
+                        : 'ring-2 ring-orange-400'
+                    : ''
+            }`}>
+                <MathInputWithToolbar
                     value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                    onChange={setValue}
                     disabled={isSubmitted}
-                    placeholder="Skriv ditt svar…"
-                    className={`flex-1 px-4 py-3.5 text-lg font-mono rounded-xl border-2 transition-all focus:outline-none ${isSubmitted
-                        ? isCorrect
-                            ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                            : 'border-orange-400 bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300'
-                        : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-blue-400 dark:focus:border-blue-500 placeholder:text-zinc-400 dark:placeholder:text-zinc-500'
-                        }`}
+                    placeholder="Skriv eller bygg ditt svar med verktygen nedan…"
                 />
+            </div>
+
+            {/* Submit */}
+            <div className="flex justify-center">
                 <button
                     onClick={handleSubmit}
                     disabled={!value.trim() || isSubmitted}
-                    className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-zinc-200 dark:disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-semibold rounded-xl transition-colors disabled:cursor-not-allowed shadow-sm"
+                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-zinc-200 dark:disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-semibold rounded-xl transition-colors disabled:cursor-not-allowed shadow-sm"
                 >
                     Svara
                 </button>
@@ -460,14 +461,12 @@ function StudyHubContent() {
             context={{
                 currentPage: 'study',
                 mode: 'guided',
+                questionId: currentQuestion.id,
                 question: {
                     id: currentQuestion.id,
                     content: currentQuestion.content?.question?.text || '',
                     topic: topicName || 'Matematik',
                     difficulty: currentQuestion.difficulty || 1,
-                    correctAnswer: typeof currentQuestion.correctAnswer === 'string'
-                        ? currentQuestion.correctAnswer
-                        : JSON.stringify(currentQuestion.correctAnswer),
                 },
                 attempts: {
                     count: currentAttempt.attempts,

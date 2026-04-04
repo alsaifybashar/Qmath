@@ -57,6 +57,7 @@ interface AIContext {
     currentPage: 'study' | 'review' | 'exam' | 'progress';
     /** 'explore' = free learning assistant; 'guided' = Socratic tutoring on a specific question */
     mode?: 'explore' | 'guided';
+    questionId?: string;
     question?: {
         id: string;
         content: string;
@@ -80,6 +81,10 @@ interface AIContext {
     };
     recentConcepts?: string[];
 }
+
+type AIRequestContext = AIContext & {
+    conversationHistory?: Array<Pick<AIMessage, 'role' | 'content'>>;
+};
 
 interface AIPanelProps {
     isOpen: boolean;
@@ -134,6 +139,15 @@ export function AIPanel({
             }]);
         },
     });
+
+    const buildRequestContext = useCallback((baseContext: AIRequestContext): AIRequestContext => {
+        if (!baseContext.questionId) return baseContext;
+
+        return {
+            ...baseContext,
+            question: undefined,
+        };
+    }, []);
 
     const renderJSXWidget = useCallback((widgetData: { type: string; props: any }, withStateChange = true) => {
         const stateChangeHandler = withStateChange
@@ -220,7 +234,7 @@ export function AIPanel({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: '__OPEN__',
-                        context: { ...context, conversationHistory: [] },
+                        context: buildRequestContext({ ...context, conversationHistory: [] }),
                         provider,
                         model: selectedModel.model,
                     }),
@@ -244,7 +258,7 @@ export function AIPanel({
             }
         })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen, position, context.question?.id]);
+    }, [buildRequestContext, isOpen, position, context, context.question?.id]);
 
     const handleSendMessage = async (textOverride?: string) => {
         const rawText = textOverride || inputValue;
@@ -308,7 +322,7 @@ export function AIPanel({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: userMessage.content,
-                        context: contextWithHistory,
+                        context: buildRequestContext(contextWithHistory),
                         provider,
                         model: selectedModel.model,
                     })

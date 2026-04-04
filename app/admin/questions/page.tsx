@@ -22,8 +22,9 @@ import {
     analyzeQuestionsBatch,
     reviewSolutionSteps,
     suggestGuidanceSteps,
+    suggestSolutionSteps,
 } from '@/app/actions/ai-question-analysis';
-import type { AIQuestionAnalysis, AISolutionReview, GuidanceStep } from '@/app/actions/ai-question-analysis';
+import type { AIQuestionAnalysis, AISolutionReview, GuidanceStep, SuggestedSolutionStep } from '@/app/actions/ai-question-analysis';
 import {
     Plus,
     Trash2,
@@ -579,6 +580,79 @@ export default function AdminQuestionsPage() {
     const [aiGuidanceSuggestions, setAiGuidanceSuggestions] = useState<GuidanceStep[] | null>(null);
     const [generatingGuidance, setGeneratingGuidance] = useState(false);
 
+    // AI Solution suggestion state
+    const [aiSolutionSuggestions, setAiSolutionSuggestions] = useState<SuggestedSolutionStep[] | null>(null);
+    const [isGeneratingSolution, setIsGeneratingSolution] = useState(false);
+
+    const handleSuggestSolution = async () => {
+        if (!formData.contentMarkdown.trim()) {
+            alert('Skriv frågetext innan du genererar en lösning.');
+            return;
+        }
+
+        setIsGeneratingSolution(true);
+        setAiSolutionSuggestions(null);
+
+        const topicObj = topics.find((t: any) => t.id === selectedTopicId);
+        const result = await suggestSolutionSteps({
+            questionContent: formData.contentMarkdown,
+            correctAnswer: formData.correctAnswer,
+            questionType: formData.questionType,
+            topicName: topicObj?.title,
+            courseCode: selectedCourse?.code,
+            courseName: selectedCourse?.name,
+        });
+
+        if (result.success) {
+            setAiSolutionSuggestions(result.steps);
+        } else {
+            alert(result.error);
+        }
+        setIsGeneratingSolution(false);
+    };
+
+    const handleAcceptAllSolutions = () => {
+        if (!aiSolutionSuggestions) return;
+        setFormData(f => ({
+            ...f,
+            solutionSteps: aiSolutionSuggestions.map(s => ({
+                id: crypto.randomUUID(),
+                label: s.label,
+                content: s.content,
+                expectedAnswer: s.expectedAnswer,
+            })),
+        }));
+        setAiSolutionSuggestions(null);
+        setExpandedStepIndex(0);
+    };
+
+    const handleAcceptSolutionStep = (step: SuggestedSolutionStep, index: number) => {
+        setFormData(f => {
+            const newSteps = [...f.solutionSteps];
+            const newStep = {
+                id: crypto.randomUUID(),
+                label: step.label,
+                content: step.content,
+                expectedAnswer: step.expectedAnswer,
+            };
+            if (index < newSteps.length) {
+                newSteps[index] = newStep;
+            } else {
+                newSteps.push(newStep);
+            }
+            return { ...f, solutionSteps: newSteps };
+        });
+        setAiSolutionSuggestions(prev => prev ? prev.filter((_, i) => i !== index) : null);
+    };
+
+    const handleRejectSolutionStep = (index: number) => {
+        setAiSolutionSuggestions(prev => prev ? prev.filter((_, i) => i !== index) : null);
+    };
+
+    const handleDismissSolutionSuggestions = () => {
+        setAiSolutionSuggestions(null);
+    };
+
     // Filtered questions per tab
     const filteredQuestions = allQuestions.filter(q => {
         const status = q.status || (q.isPublished ? 'published' : 'draft');
@@ -1044,6 +1118,15 @@ export default function AdminQuestionsPage() {
         await refreshQuestions();
     };
 
+    const selectedTopic = topics.find((topic: any) => topic.id === selectedTopicId) ?? null;
+    const filledSolutionSteps = formData.solutionSteps.filter(step => step.content.trim()).length;
+    const filledGuidanceSteps = formData.guidanceSteps.filter(step => step.content.trim()).length;
+    const completedFormSections = [
+        formData.contentMarkdown.trim().length > 0,
+        filledSolutionSteps > 0,
+        filledGuidanceSteps > 0,
+    ].filter(Boolean).length;
+
 
     if (!session) return null;
 
@@ -1051,21 +1134,75 @@ export default function AdminQuestionsPage() {
 
     return (
         <AdminLayout>
-            <div className="p-8 max-w-7xl mx-auto">
+            <div className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_30%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.08),transparent_26%),linear-gradient(180deg,#f8fbff_0%,#f5f7fb_45%,#f8fafc_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:42px_42px] opacity-40" />
 
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-zinc-900 mb-2">
-                        Frågehantering
-                    </h1>
-                    <p className="text-zinc-600">
-                        Skapa frågor, analysera med AI och publicera till studenter.
-                    </p>
-                </div>
+                <div className="relative max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+                    <section className="overflow-hidden rounded-[30px] border border-white/70 bg-white/90 shadow-[0_24px_80px_-32px_rgba(37,99,235,0.28)] backdrop-blur">
+                        <div className="relative border-b border-blue-100/80 px-6 py-7 sm:px-8">
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-violet-500 opacity-[0.08]" />
+                            <div className="absolute -left-16 top-0 h-40 w-40 rounded-full bg-blue-400/20 blur-3xl" />
+                            <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-violet-400/20 blur-3xl" />
+
+                            <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                                <div className="max-w-3xl space-y-3">
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-blue-700">
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        Frågeverkstad
+                                    </div>
+                                    <div>
+                                        <h1 className="text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl">
+                                            Frågehantering för lärare och admin
+                                        </h1>
+                                        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
+                                            Ett lugnare arbetsflöde för att välja kurs, skapa frågor, granska lösningar och publicera utan att flera paneler konkurrerar om uppmärksamheten samtidigt.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    <div className="rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-sm">
+                                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Kurs</p>
+                                        <p className="mt-2 text-lg font-semibold text-zinc-900">{selectedCourse?.code ?? 'Ingen vald'}</p>
+                                        <p className="text-xs text-zinc-500">{selectedCourse?.name ?? 'Börja med att välja kurs.'}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-sm">
+                                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Ämne</p>
+                                        <p className="mt-2 text-lg font-semibold text-zinc-900">{selectedTopic?.title ?? 'Väntar'}</p>
+                                        <p className="text-xs text-zinc-500">{selectedCourse ? `${topics.length} ämnen i kursen` : 'Välj kurs först.'}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-sm">
+                                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Produktion</p>
+                                        <p className="mt-2 text-lg font-semibold text-zinc-900">{selectedTopicId ? allQuestions.length : courses.length}</p>
+                                        <p className="text-xs text-zinc-500">{selectedTopicId ? 'Frågor i valt ämne' : 'Kurser tillgängliga'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-3 px-6 py-5 text-sm text-zinc-600 sm:grid-cols-3 sm:px-8">
+                            <div className="rounded-2xl border border-zinc-200/80 bg-zinc-50/80 px-4 py-3">
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">Steg 1</p>
+                                <p className="mt-1 font-medium text-zinc-900">Välj kurs</p>
+                                <p className="mt-1 text-xs leading-5">Byt kontext snabbt utan att förlora överblicken.</p>
+                            </div>
+                            <div className="rounded-2xl border border-zinc-200/80 bg-zinc-50/80 px-4 py-3">
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">Steg 2</p>
+                                <p className="mt-1 font-medium text-zinc-900">Avgränsa ämne</p>
+                                <p className="mt-1 text-xs leading-5">Samla relevanta frågor i ett tydligt arbetsområde.</p>
+                            </div>
+                            <div className="rounded-2xl border border-zinc-200/80 bg-zinc-50/80 px-4 py-3">
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">Steg 3</p>
+                                <p className="mt-1 font-medium text-zinc-900">Skapa och publicera</p>
+                                <p className="mt-1 text-xs leading-5">Arbeta fokuserat i formuläret och skicka vidare när frågan är klar.</p>
+                            </div>
+                        </div>
+                    </section>
 
                 {/* ── Step 1: Course selection ── */}
-                <section className="mb-6">
-                    <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 mb-3 flex items-center gap-2">
+                <section className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.25)] backdrop-blur mb-6">
+                    <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                         <BookOpen className="w-4 h-4" /> Steg 1 — Välj kurs
                     </h2>
 
@@ -1087,20 +1224,24 @@ export default function AdminQuestionsPage() {
                                         setIsCreatingQuestion(false);
                                         setIsCreatingTopic(false);
                                     }}
-                                    className={`text-left p-4 rounded-xl border transition-all ${selectedCourse?.id === course.id
-                                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20'
-                                        : 'border-zinc-200 bg-white hover:border-blue-400'
+                                    className={`text-left p-4 rounded-2xl border transition-all ${selectedCourse?.id === course.id
+                                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white ring-2 ring-blue-500/15 shadow-[0_18px_45px_-30px_rgba(37,99,235,0.7)]'
+                                        : 'border-zinc-200 bg-zinc-50/70 hover:border-blue-300 hover:bg-white'
                                         }`}
                                 >
-                                    <div className="font-mono font-bold text-zinc-900 text-lg">
-                                        {course.code}
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <div className="font-mono font-bold text-zinc-900 text-lg">
+                                                {course.code}
+                                            </div>
+                                            <div className="text-sm text-zinc-600 truncate">
+                                                {course.name}
+                                            </div>
+                                        </div>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${selectedCourse?.id === course.id ? 'border-blue-200 bg-blue-600 text-white' : 'border-zinc-200 bg-white text-zinc-300'}`}>
+                                            <Check className="w-4 h-4" />
+                                        </div>
                                     </div>
-                                    <div className="text-sm text-zinc-600 truncate">
-                                        {course.name}
-                                    </div>
-                                    {selectedCourse?.id === course.id && (
-                                        <Check className="w-4 h-4 text-blue-600 mt-1" />
-                                    )}
                                 </button>
                             ))}
                         </div>
@@ -1109,7 +1250,7 @@ export default function AdminQuestionsPage() {
 
                 {/* ── Step 2: Topic selection ── */}
                 {selectedCourse && (
-                    <section className="mb-6">
+                    <section className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.25)] backdrop-blur mb-6">
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                 <Layers className="w-4 h-4" /> Steg 2 — Välj eller skapa ämne
@@ -1127,7 +1268,7 @@ export default function AdminQuestionsPage() {
                         {isCreatingTopic && (
                             <form
                                 onSubmit={handleCreateTopic}
-                                className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-4 space-y-3"
+                                className="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-2xl p-5 mb-4 space-y-3"
                             >
                                 <h3 className="font-semibold text-blue-900 text-sm">
                                     Skapa nytt ämne för {selectedCourse.code}
@@ -1183,8 +1324,8 @@ export default function AdminQuestionsPage() {
                                             setActiveTab('draft');
                                         }}
                                         className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${selectedTopicId === topic.id
-                                            ? 'border-blue-500 bg-blue-600 text-white'
-                                            : 'border-zinc-200 bg-white text-zinc-700 hover:border-blue-400'
+                                            ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                            : 'border-zinc-200 bg-zinc-50/80 text-zinc-700 hover:border-blue-300 hover:bg-white'
                                             }`}
                                     >
                                         {topic.title}
@@ -1197,16 +1338,21 @@ export default function AdminQuestionsPage() {
 
                 {/* ── Step 3: Questions with workflow tabs ── */}
                 {selectedTopicId && (
-                    <section>
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                                <HelpCircle className="w-4 h-4" /> Steg 3 — Frågor
-                                {allQuestions.length > 0 && (
-                                    <span className="ml-1 px-2 py-0.5 bg-zinc-100 rounded-full text-xs text-zinc-600">
-                                        {allQuestions.length}
-                                    </span>
-                                )}
-                            </h2>
+                    <section className="rounded-[28px] border border-white/70 bg-white/92 p-5 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.3)] backdrop-blur">
+                        <div className="flex flex-col gap-4 border-b border-zinc-100 pb-5 mb-5 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                                <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                                    <HelpCircle className="w-4 h-4" /> Steg 3 — Frågor
+                                    {allQuestions.length > 0 && (
+                                        <span className="ml-1 px-2 py-0.5 bg-zinc-100 rounded-full text-xs text-zinc-600">
+                                            {allQuestions.length}
+                                        </span>
+                                    )}
+                                </h2>
+                                <p className="mt-2 text-sm text-zinc-600">
+                                    Arbeta i ett ämne i taget. Skapa eller redigera frågor ovanför listan och hantera publiceringsflödet nedan.
+                                </p>
+                            </div>
                             {!isCreatingQuestion && (
                                 <button
                                     onClick={() => {
@@ -1215,7 +1361,7 @@ export default function AdminQuestionsPage() {
                                         setFormData(DEFAULT_FORM);
                                         setFormSection('question');
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
+                                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-2xl text-sm font-semibold transition-all shadow-lg shadow-blue-600/20"
                                 >
                                     <Plus className="w-4 h-4" /> Ny fråga
                                 </button>
@@ -1224,27 +1370,57 @@ export default function AdminQuestionsPage() {
 
                         {/* ── Question creation form ── */}
                         {isCreatingQuestion && (
-                            <div className="bg-white border border-zinc-200 rounded-xl p-6 mb-6 space-y-6">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-lg font-bold text-zinc-900">
-                                        {editingQuestionId ? 'Redigera fråga' : 'Ny fråga'}
-                                    </h3>
+                            <div className="bg-gradient-to-br from-white via-white to-blue-50/50 border border-zinc-200 rounded-[28px] p-6 mb-6 space-y-6 shadow-[0_24px_80px_-48px_rgba(37,99,235,0.35)]">
+                                <div className="flex justify-between items-start gap-4">
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
+                                            {editingQuestionId ? 'Redigerar fråga' : 'Ny fråga'}
+                                        </p>
+                                        <h3 className="mt-1 text-2xl font-bold tracking-tight text-zinc-900">
+                                            {editingQuestionId ? 'Förfina innehållet och spara igen' : 'Bygg frågan i tre fokuserade steg'}
+                                        </h3>
+                                        <p className="mt-2 text-sm text-zinc-600">
+                                            Endast ett redigeringsområde är öppet åt gången för att hålla arbetsytan lugn.
+                                        </p>
+                                    </div>
                                     <button
                                         onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); setFormSection('question'); }}
-                                        className="text-zinc-400 hover:text-zinc-600"
+                                        className="text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200 bg-white p-2"
                                     >
                                         <X className="w-5 h-5" />
                                     </button>
                                 </div>
 
                                 <form onSubmit={handleSubmitQuestion} className="space-y-4">
+                                    <div className="grid gap-3 md:grid-cols-4">
+                                        <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3">
+                                            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Kurs</p>
+                                            <p className="mt-2 text-sm font-semibold text-zinc-900">{selectedCourse?.code ?? 'Ingen'}</p>
+                                            <p className="text-xs text-zinc-500">{selectedTopic?.title ?? 'Inget ämne'}</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3">
+                                            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Framsteg</p>
+                                            <p className="mt-2 text-sm font-semibold text-zinc-900">{completedFormSections}/3 sektioner</p>
+                                            <p className="text-xs text-zinc-500">Fråga, lösning och vägledning</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3">
+                                            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Lösning</p>
+                                            <p className="mt-2 text-sm font-semibold text-zinc-900">{filledSolutionSteps} steg klara</p>
+                                            <p className="text-xs text-zinc-500">AI-granskning finns under steg 2</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3">
+                                            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Vägledning</p>
+                                            <p className="mt-2 text-sm font-semibold text-zinc-900">{filledGuidanceSteps} ledtrådar</p>
+                                            <p className="text-xs text-zinc-500">Valfritt men tidsbesparande för elever</p>
+                                        </div>
+                                    </div>
 
                                     {/* ── Section 1: Question ── */}
-                                    <div className={`border rounded-xl overflow-hidden transition-colors ${formSection === 'question' ? 'border-blue-400 ring-1 ring-blue-400' : 'border-zinc-200'}`}>
+                                    <div className={`border rounded-3xl overflow-hidden transition-colors ${formSection === 'question' ? 'border-blue-400 ring-1 ring-blue-400 shadow-[0_18px_45px_-34px_rgba(37,99,235,0.6)]' : 'border-zinc-200 bg-white/80'}`}>
                                         <button
                                             type="button"
                                             onClick={() => setFormSection('question')}
-                                            className="w-full flex items-center justify-between p-4 bg-zinc-50 hover:bg-zinc-100 transition-colors"
+                                            className="w-full flex items-center justify-between p-4 bg-zinc-50/90 hover:bg-zinc-100 transition-colors"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${formData.contentMarkdown.trim() ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
@@ -1342,11 +1518,11 @@ export default function AdminQuestionsPage() {
                                     </div>
 
                                     {/* ── Section 2: Solution Steps ── */}
-                                    <div className={`border rounded-xl overflow-hidden transition-colors ${formSection === 'solution' ? 'border-blue-400 ring-1 ring-blue-400' : 'border-zinc-200'}`}>
+                                    <div className={`border rounded-3xl overflow-hidden transition-colors ${formSection === 'solution' ? 'border-blue-400 ring-1 ring-blue-400 shadow-[0_18px_45px_-34px_rgba(37,99,235,0.6)]' : 'border-zinc-200 bg-white/80'}`}>
                                         <button
                                             type="button"
                                             onClick={() => setFormSection('solution')}
-                                            className="w-full flex items-center justify-between p-4 bg-zinc-50 hover:bg-zinc-100 transition-colors"
+                                            className="w-full flex items-center justify-between p-4 bg-zinc-50/90 hover:bg-zinc-100 transition-colors"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${formData.solutionSteps.some(s => s.content.trim()) ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
@@ -1370,6 +1546,16 @@ export default function AdminQuestionsPage() {
                                                         <p className="text-xs text-blue-700 mt-0.5">Dela upp lösningen i logiska delsteg för studenten.</p>
                                                     </div>
                                                     <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleSuggestSolution}
+                                                            disabled={isGeneratingSolution || !formData.contentMarkdown.trim()}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            title="Generera en fullständig lösning med AI"
+                                                        >
+                                                            {isGeneratingSolution ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                                                            {isGeneratingSolution ? 'Genererar...' : 'Föreslå lösning med AI'}
+                                                        </button>
                                                         <button
                                                             type="button"
                                                             onClick={handleReviewSolution}
@@ -1495,6 +1681,76 @@ export default function AdminQuestionsPage() {
                                                     </div>
                                                 )}
 
+                                                {aiSolutionSuggestions && aiSolutionSuggestions.length > 0 && (
+                                                    <div className="border border-blue-300 bg-white rounded-xl p-4 space-y-3 mt-3 shadow-md animate-in slide-in-from-top-2 duration-300">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <Sparkles className="w-4 h-4 text-blue-600" />
+                                                                <span className="text-sm font-semibold text-blue-900">
+                                                                    AI-lösningsförslag ({aiSolutionSuggestions.length} steg)
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleAcceptAllSolutions}
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                                                >
+                                                                    <Check className="w-3 h-3" /> Ersätt alla steg
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleDismissSolutionSuggestions}
+                                                                    className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+                                                                    title="Avvisa förslag"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-3">
+                                                            {aiSolutionSuggestions.map((step, i) => (
+                                                                <div key={i} className="flex flex-col gap-2 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-5 h-5 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                                                {i + 1}
+                                                                            </div>
+                                                                            <span className="text-xs font-bold text-zinc-800">{step.label}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleAcceptSolutionStep(step, i)}
+                                                                                className="shrink-0 p-1.5 rounded-lg text-blue-600 hover:bg-blue-100 transition-colors bg-white border border-blue-200"
+                                                                                title={i < formData.solutionSteps.length ? `Ersätt steg ${i + 1}` : 'Lägg till steg'}
+                                                                            >
+                                                                                <Check className="w-3.5 h-3.5" />
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleRejectSolutionStep(i)}
+                                                                                className="shrink-0 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors bg-white border border-zinc-200"
+                                                                                title="Avvisa detta steg"
+                                                                            >
+                                                                                <X className="w-3.5 h-3.5" />
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2 mb-1">
+                                                                        <span className="text-[10px] uppercase tracking-wider text-blue-500 font-semibold">Förväntat svar:</span>
+                                                                        <span className="text-xs font-mono text-zinc-700">{step.expectedAnswer || 'Ej angivet'}</span>
+                                                                    </div>
+                                                                    <div className="prose max-w-none text-xs text-zinc-700 line-clamp-3 bg-white/50 p-2 rounded border border-blue-50">
+                                                                        <MarkdownMessage content={step.content} />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
                                                 <div className="flex justify-end pt-2">
                                                     <button
                                                         type="button"
@@ -1509,11 +1765,11 @@ export default function AdminQuestionsPage() {
                                     </div>
 
                                     {/* ── Section 3: Guidance ── */}
-                                    <div className={`border rounded-xl overflow-hidden transition-colors ${formSection === 'guidance' ? 'border-blue-400 ring-1 ring-blue-400' : 'border-zinc-200'}`}>
+                                    <div className={`border rounded-3xl overflow-hidden transition-colors ${formSection === 'guidance' ? 'border-blue-400 ring-1 ring-blue-400 shadow-[0_18px_45px_-34px_rgba(37,99,235,0.6)]' : 'border-zinc-200 bg-white/80'}`}>
                                         <button
                                             type="button"
                                             onClick={() => setFormSection('guidance')}
-                                            className="w-full flex items-center justify-between p-4 bg-zinc-50 hover:bg-zinc-100 transition-colors"
+                                            className="w-full flex items-center justify-between p-4 bg-zinc-50/90 hover:bg-zinc-100 transition-colors"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${formData.guidanceSteps.length > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
@@ -1660,26 +1916,26 @@ export default function AdminQuestionsPage() {
                         )}
 
                         {/* ── Workflow tabs ── */}
-                        <div className="flex gap-1 border-b border-zinc-200 mb-4">
+                        <div className="grid gap-3 mb-5 md:grid-cols-4">
                             {TABS.map(tab => (
                                 <button
                                     key={tab.key}
                                     onClick={() => setActiveTab(tab.key)}
-                                    className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${activeTab === tab.key
-                                        ? 'border-blue-600 text-blue-600'
-                                        : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
+                                    className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-4 text-sm font-medium transition-all ${activeTab === tab.key
+                                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white text-blue-700 shadow-[0_18px_45px_-30px_rgba(37,99,235,0.7)]'
+                                        : 'border-zinc-200 bg-zinc-50/80 text-zinc-500 hover:bg-white hover:border-zinc-300'
                                         }`}
                                 >
-                                    {tab.icon}
-                                    {tab.label}
-                                    {tabCounts[tab.key] > 0 && (
-                                        <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.key
-                                            ? 'bg-blue-100 text-blue-700'
-                                            : 'bg-zinc-100 text-zinc-500'
-                                            }`}>
-                                            {tabCounts[tab.key]}
-                                        </span>
-                                    )}
+                                    <span className="flex items-center gap-2">
+                                        {tab.icon}
+                                        {tab.label}
+                                    </span>
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.key
+                                        ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-zinc-100 text-zinc-500'
+                                        }`}>
+                                        {tabCounts[tab.key]}
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -1690,7 +1946,7 @@ export default function AdminQuestionsPage() {
                                 <button
                                     onClick={handleAnalyzeBatch}
                                     disabled={analyzingIds.size > 0}
-                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm disabled:opacity-50 transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl text-sm font-semibold disabled:opacity-50 transition-colors"
                                 >
                                     {analyzingIds.size > 0 ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -1707,7 +1963,7 @@ export default function AdminQuestionsPage() {
                                 <button
                                     onClick={handlePublishAll}
                                     disabled={publishingIds.size > 0}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm disabled:opacity-50 transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-sm font-semibold disabled:opacity-50 transition-colors"
                                 >
                                     {publishingIds.size > 0 ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -1723,7 +1979,7 @@ export default function AdminQuestionsPage() {
                         {loadingQuestions ? (
                             <p className="text-zinc-500 text-sm text-center py-8">Laddar frågor...</p>
                         ) : filteredQuestions.length === 0 ? (
-                            <div className="text-center py-12 bg-white rounded-xl border border-zinc-200">
+                            <div className="text-center py-12 bg-zinc-50 rounded-3xl border border-dashed border-zinc-200">
                                 <HelpCircle className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
                                 <p className="text-zinc-500">
                                     {activeTab === 'draft' && 'Inga utkast. Skapa en ny fråga ovan.'}
@@ -1737,10 +1993,10 @@ export default function AdminQuestionsPage() {
                                 {filteredQuestions.map(q => (
                                     <div
                                         key={q.id}
-                                        className="bg-white rounded-xl border border-zinc-200 overflow-hidden"
+                                        className="bg-white rounded-3xl border border-zinc-200 overflow-hidden shadow-[0_18px_50px_-35px_rgba(15,23,42,0.28)]"
                                     >
                                         {/* Question header */}
-                                        <div className="flex items-start justify-between p-5">
+                                        <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-start lg:justify-between">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                                                     <DifficultyBadge tier={q.difficultyTier} label="Admin" />
@@ -1763,19 +2019,19 @@ export default function AdminQuestionsPage() {
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="prose max-w-none text-sm text-zinc-800 line-clamp-2">
+                                                <div className="prose max-w-none text-sm text-zinc-800 line-clamp-3">
                                                     <MarkdownMessage content={q.contentMarkdown} />
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                                            <div className="flex flex-wrap items-center gap-2 lg:max-w-[320px] lg:justify-end">
                                                 {/* Tab-specific actions */}
                                                 {activeTab === 'draft' && (
                                                     <>
                                                         <button
                                                             onClick={() => handleAnalyze(q.id)}
                                                             disabled={analyzingIds.has(q.id) || publishingIds.has(q.id)}
-                                                            className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                                                            className="flex items-center gap-1.5 px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-2xl text-xs font-semibold transition-colors disabled:opacity-50"
                                                             title="Analysera med AI"
                                                         >
                                                             {analyzingIds.has(q.id) ? (
@@ -1788,7 +2044,7 @@ export default function AdminQuestionsPage() {
                                                         <button
                                                             onClick={() => handlePublishDirect(q.id)}
                                                             disabled={publishingIds.has(q.id) || analyzingIds.has(q.id)}
-                                                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                                                            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl text-xs font-semibold transition-colors disabled:opacity-50"
                                                             title="Publicera direkt utan AI-analys"
                                                         >
                                                             {publishingIds.has(q.id) ? (
@@ -1801,7 +2057,7 @@ export default function AdminQuestionsPage() {
                                                     </>
                                                 )}
                                                 {activeTab === 'ai_review' && (
-                                                    <div className="flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-medium">
+                                                    <div className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 text-amber-700 rounded-2xl text-xs font-semibold">
                                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                                         Analyserar...
                                                     </div>
@@ -1810,7 +2066,7 @@ export default function AdminQuestionsPage() {
                                                     <button
                                                         onClick={() => handlePublish(q.id)}
                                                         disabled={publishingIds.has(q.id)}
-                                                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                                                        className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl text-xs font-semibold transition-colors disabled:opacity-50"
                                                     >
                                                         {publishingIds.has(q.id) ? (
                                                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1823,7 +2079,7 @@ export default function AdminQuestionsPage() {
                                                 {activeTab === 'published' && (
                                                     <button
                                                         onClick={() => handleUnpublish(q.id)}
-                                                        className="flex items-center gap-1 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-lg text-xs font-medium transition-colors"
+                                                        className="flex items-center gap-1.5 px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-2xl text-xs font-semibold transition-colors"
                                                     >
                                                         <XCircle className="w-3.5 h-3.5" />
                                                         Avpublicera
@@ -1834,7 +2090,7 @@ export default function AdminQuestionsPage() {
                                                 {q.explanationMarkdown && (
                                                     <button
                                                         onClick={() => setExpandedQuestionId(prev => prev === q.id ? null : q.id)}
-                                                        className="flex items-center gap-1 text-xs text-zinc-500 hover:text-blue-600 transition-colors"
+                                                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-zinc-200 text-xs font-semibold text-zinc-500 hover:text-blue-600 hover:border-blue-200 transition-colors"
                                                     >
                                                         <ChevronDown className={`w-4 h-4 transition-transform ${expandedQuestionId === q.id ? 'rotate-180' : ''}`} />
                                                         Lösning
@@ -1842,17 +2098,19 @@ export default function AdminQuestionsPage() {
                                                 )}
                                                 <button
                                                     onClick={() => handleEditQuestion(q)}
-                                                    className="text-zinc-400 hover:text-blue-500 transition-colors"
+                                                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-zinc-200 text-xs font-semibold text-zinc-500 hover:text-blue-600 hover:border-blue-200 transition-colors"
                                                     title="Redigera"
                                                 >
                                                     <Edit className="w-4 h-4" />
+                                                    Redigera
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteQuestion(q.id)}
-                                                    className="text-zinc-400 hover:text-red-500 transition-colors"
+                                                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-zinc-200 text-xs font-semibold text-zinc-500 hover:text-red-600 hover:border-red-200 transition-colors"
                                                     title="Ta bort"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
+                                                    Ta bort
                                                 </button>
                                             </div>
                                         </div>
@@ -1881,6 +2139,7 @@ export default function AdminQuestionsPage() {
                         )}
                     </section>
                 )}
+                </div>
             </div>
         </AdminLayout>
     );

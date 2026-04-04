@@ -1,12 +1,20 @@
 'use server';
 
 import crypto from 'crypto';
+import { revalidatePath } from 'next/cache';
+import Anthropic from '@anthropic-ai/sdk';
 import { callOllama } from '@/lib/ollama';
 import { db } from '@/db/drizzle';
 import { questions, topics, courses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
-import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+
+// ============ ANTHROPIC CLIENT ============
+
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
+});
 
 // ============ TYPES ============
 
@@ -31,25 +39,141 @@ async function checkAdmin() {
     return session.user;
 }
 
-/** Strip markdown code fences from Claude's JSON output */
+/** Extract the JSON object from Claude's output, handling code fences and surrounding text */
 function stripMarkdownFences(text: string): string {
-    return text
+    // Strip markdown code fences
+    let stripped = text
         .replace(/^```(?:json)?\s*\n?/i, '')
         .replace(/\n?```\s*$/i, '')
         .trim();
+
+    // If there's still surrounding prose, grab the first {...} block
+    const jsonMatch = stripped.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+        stripped = jsonMatch[0];
+    }
+
+    return stripped;
 }
 
 /**
- * Fix unescaped LaTeX backslashes inside JSON strings.
- * The AI often outputs \frac, \lim, \sin etc. which are invalid JSON escape
- * sequences and cause JSON.parse to throw. This replaces any \ not followed
- * by a valid JSON escape character with \\, making the JSON parseable.
- * Valid JSON escapes kept intact: " \ / b f n r t u
+ * Repair invalid backslash escapes inside JSON string literals.
+ * Models frequently emit LaTeX such as \frac, \Rightarrow or \left inside
+ * JSON strings. Those are invalid JSON escapes and make JSON.parse fail.
+ * This sanitizer only operates while inside JSON strings and preserves valid
+ * JSON escapes like \n, \t, \\, \" and \u1234.
  */
 function fixLatexBackslashes(json: string): string {
-    // Match backslashes not followed by valid JSON escape chars
-    return json.replace(/\\(?!["\\\//bfnrtu0-9])/g, '\\\\');
+    let result = '';
+    let inString = false;
+    let escaped = false;
+
+    for (let i = 0; i < json.length; i++) {
+        const char = json[i];
+
+        if (!inString) {
+            result += char;
+            if (char === '"') {
+                inString = true;
+            }
+            continue;
+        }
+
+        if (escaped) {
+            result += char;
+            escaped = false;
+            continue;
+        }
+
+        if (char === '\\') {
+            const next = json[i + 1];
+
+            if (
+                next === '"' ||
+                next === '\\' ||
+                next === '/' ||
+                next === 'b' ||
+                next === 'f' ||
+                next === 'n' ||
+                next === 'r' ||
+                next === 't'
+            ) {
+                result += char;
+                escaped = true;
+                continue;
+            }
+
+            if (
+                next === 'u' &&
+                /^[0-9a-fA-F]{4}$/.test(json.slice(i + 2, i + 6))
+            ) {
+                result += char;
+                escaped = true;
+                continue;
+            }
+
+            result += '\\\\';
+            continue;
+        }
+
+        result += char;
+
+        if (char === '"') {
+            inString = false;
+        }
+    }
+
+    return result;
 }
+
+function normalizeJsonQuotes(text: string): string {
+    return text
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'");
+}
+
+function removeTrailingCommas(text: string): string {
+    return text.replace(/,\s*([}\]])/g, '$1');
+}
+
+function collectAnthropicTextBlocks(
+    content: Anthropic.Messages.Message['content']
+): string {
+    return content
+        .filter(block => block.type === 'text')
+        .map(block => block.text)
+        .join('\n')
+        .trim();
+}
+
+function parseAiJson<T>(rawText: string): T {
+    const candidates = [
+        rawText,
+        stripMarkdownFences(rawText),
+        fixLatexBackslashes(stripMarkdownFences(rawText)),
+        removeTrailingCommas(fixLatexBackslashes(stripMarkdownFences(rawText))),
+        removeTrailingCommas(fixLatexBackslashes(normalizeJsonQuotes(stripMarkdownFences(rawText)))),
+    ].filter(Boolean);
+
+    let lastError: unknown;
+    for (const candidate of candidates) {
+        try {
+            return JSON.parse(candidate) as T;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    throw lastError ?? new Error('Unknown JSON parse error');
+}
+
+const suggestedSolutionSchema = z.object({
+    steps: z.array(z.object({
+        label: z.string().trim().min(1),
+        content: z.string().trim().min(1),
+        expectedAnswer: z.string().optional().default(''),
+    })).min(1),
+});
 
 // ============ SINGLE QUESTION ANALYSIS ============
 
@@ -344,6 +468,144 @@ Svara med JSON only.`;
     }
 }
 
+// ============ AI SOLUTION SUGGESTION ============
+
+export interface SuggestedSolutionStep {
+    label: string;
+    content: string;
+    expectedAnswer: string;
+}
+
+/**
+ * AI-powered solution suggestion. Generates a step-by-step solution for a given question.
+ * The AI acts as an elite teacher providing formulas and clear reasoning.
+ */
+export async function suggestSolutionSteps(input: {
+    questionContent: string;
+    correctAnswer: string;
+    questionType: string;
+    topicName?: string;
+    courseCode?: string;
+    courseName?: string;
+}): Promise<{ success: true; steps: SuggestedSolutionStep[] } | { success: false; error: string }> {
+    try {
+        await checkAdmin();
+
+        if (!input.questionContent.trim()) {
+            return { success: false, error: 'Frågeinnehållet får inte vara tomt.' };
+        }
+
+        const prompt = `Du är en elit-lärare i matematik vid ett svenskt universitet. Din uppgift är att ta fram en pedagogisk, steg-för-steg-lösning till en matematikuppgift.
+
+## Uppgiftskontext
+- Kurs: ${input.courseCode ?? '?'} ${input.courseName ?? ''}
+- Ämne: ${input.topicName ?? 'Ej angivet'}
+- Frågetyp: ${input.questionType}
+
+## Frågetext
+${input.questionContent}
+
+${input.correctAnswer ? `## Korrekt slutresultat\n${input.correctAnswer}` : ''}
+
+## Din uppgift
+Skapa en fullständig lösning uppdelad i 3-6 logiska steg. Varje steg ska vara tydligt, pedagogiskt och innehålla de formler som används för att lösa just det steget.
+
+För varje steg ska du ange:
+1. En kort etikett/rubrik (label) som beskriver vad man gör i steget (t.ex. "Faktorisera uttrycket").
+2. En utförlig förklaring (content) med Markdown och LaTeX ($...$ för inline, $$...$$ för block). Förklara VARFÖR man gör som man gör och vilka regler/formler som tillämpas.
+3. Ett förväntat svar (expectedAnswer) för just det steget. Detta är vad studenten bör ha kommit fram till efter att ha utfört steget (t.ex. ett förenklat uttryck eller ett delresultat).
+
+Svara med JSON:
+{
+  "steps": [
+    {
+      "label": "<kort rubrik>",
+      "content": "<pedagogisk förklaring med LaTeX>",
+      "expectedAnswer": "<delresultat efter steget>"
+    }
+  ]
+}
+
+Regler:
+- Svara på svenska.
+- Var noggrann med LaTeX-formatering.
+- Se till att lösningen leder fram till det korrekta slutresultatet.
+- Inkludera de matematiska formler som används explicit i förklaringen.
+- Svara med JSON only.`;
+
+        let rawText: string;
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+
+        if (apiKey) {
+            // Use Claude if API key is available
+            const message = await anthropic.messages.create({
+                model: 'claude-sonnet-4-5',
+                max_tokens: 8192,
+                temperature: 0.3,
+                system: 'Du är en elit-lärare i matematik. Skapa pedagogiska lösningar med formler och steg-för-steg-instruktioner. Skriv på svenska. Svara med JSON only.',
+                messages: [{ role: 'user', content: prompt }],
+            });
+            rawText = collectAnthropicTextBlocks(message.content);
+        } else {
+            // Fallback to Ollama
+            rawText = await callOllama({
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'Du är en elit-lärare i matematik. Skapa pedagogiska lösningar med formler och steg-för-steg-instruktioner. Skriv på svenska. Svara med JSON only.',
+                    },
+                    { role: 'user', content: prompt },
+                ],
+                maxTokens: 8192,
+                temperature: 0.3,
+                timeoutMs: 120_000,
+                format: 'json',
+            });
+        }
+
+        let parsed: unknown;
+        try {
+            parsed = parseAiJson(rawText);
+        } catch (parseErr) {
+            console.error('[AI Solution Suggest] Failed to parse JSON. Raw:', rawText);
+            console.error('[AI Solution Suggest] Parse error:', parseErr);
+            return { success: false, error: 'AI-förslaget kunde inte tolkas. Försök igen.' };
+        }
+
+        const candidate = (
+            parsed &&
+            typeof parsed === 'object' &&
+            !Array.isArray(parsed)
+        )
+            ? {
+                ...(parsed as Record<string, unknown>),
+                steps:
+                    (parsed as Record<string, unknown>).steps ??
+                    (parsed as Record<string, unknown>).solutionSteps ??
+                    (parsed as Record<string, unknown>).suggestedSteps,
+            }
+            : parsed;
+
+        const validated = suggestedSolutionSchema.safeParse(candidate);
+        if (!validated.success) {
+            console.error('[AI Solution Suggest] Invalid JSON shape:', validated.error.flatten());
+            return { success: false, error: 'AI returnerade inga lösningssteg.' };
+        }
+
+        return {
+            success: true,
+            steps: validated.data.steps.map(step => ({
+                label: step.label.trim(),
+                content: step.content.trim(),
+                expectedAnswer: step.expectedAnswer.trim(),
+            })),
+        };
+    } catch (error) {
+        console.error('[AI Solution Suggest] Error:', error);
+        return { success: false, error: 'Kunde inte generera lösningssteg. Kontrollera API-nyckeln och försök igen.' };
+    }
+}
+
 // ============ AI SOLUTION REVIEW ============
 
 export interface AISolutionStepReview {
@@ -389,11 +651,15 @@ export async function reviewSolutionSteps(input: {
 
         const prompt = buildSolutionReviewPrompt(input);
 
-        const rawText = await callOllama({
-            messages: [
-                {
-                    role: 'system',
-                    content: `Du är en erfaren matematiklektor vid ett svenskt universitet som granskar lösningsförslag till matematikuppgifter. Din uppgift är att granska varje steg i lösningen och föreslå förbättringar som ökar tydligheten, pedagogiken och den matematiska korrektheten.
+        let rawText: string;
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+
+        if (apiKey) {
+            const message = await anthropic.messages.create({
+                model: 'claude-sonnet-4-5',
+                max_tokens: 2500,
+                temperature: 0.3,
+                system: `Du är en erfaren matematiklektor vid ett svenskt universitet som granskar lösningsförslag till matematikuppgifter. Din uppgift är att granska varje steg i lösningen och föreslå förbättringar som ökar tydligheten, pedagogiken och den matematiska korrektheten.
 
 Dina förslag ska:
 - Vara på svenska
@@ -404,13 +670,33 @@ Dina förslag ska:
 - Behålla den övergripande strukturen och stilen
 
 Svara ALLTID med giltig JSON utan markdown-formatering utanför JSON.`,
-                },
-                { role: 'user', content: prompt },
-            ],
-            maxTokens: 2000,
-            temperature: 0.3,
-            timeoutMs: 90_000,
-        });
+                messages: [{ role: 'user', content: prompt }],
+            });
+            rawText = collectAnthropicTextBlocks(message.content);
+        } else {
+            rawText = await callOllama({
+                messages: [
+                    {
+                        role: 'system',
+                        content: `Du är en erfaren matematiklektor vid ett svenskt universitet som granskar lösningsförslag till matematikuppgifter. Din uppgift är att granska varje steg i lösningen och föreslå förbättringar som ökar tydligheten, pedagogiken och den matematiska korrektheten.
+
+Dina förslag ska:
+- Vara på svenska
+- Förbättra pedagogisk tydlighet (t.ex. lägga till motiveringar, mellsteg)
+- Korrigera eventuella matematiska fel
+- Förbättra LaTeX-formateringen om det behövs
+- Föreslå saknade steg om lösningen hoppar över viktiga resonemang
+- Behålla den övergripande strukturen och stilen
+
+Svara ALLTID med giltig JSON utan markdown-formatering utanför JSON.`,
+                    },
+                    { role: 'user', content: prompt },
+                ],
+                maxTokens: 2000,
+                temperature: 0.3,
+                timeoutMs: 90_000,
+            });
+        }
 
         let review: AISolutionReview;
         try {
@@ -519,7 +805,7 @@ Svara med JSON only.`;
 
         let parsed: { steps: Array<{ order: number; content: string }> };
         try {
-            parsed = JSON.parse(stripMarkdownFences(rawText));
+            parsed = JSON.parse(fixLatexBackslashes(stripMarkdownFences(rawText)));
         } catch {
             console.error('[Guidance Steps] Failed to parse JSON:', rawText);
             return { success: false, error: 'AI-förslaget kunde inte tolkas. Försök igen.' };
