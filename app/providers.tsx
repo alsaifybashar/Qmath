@@ -1,11 +1,14 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
+import { SidebarProvider } from '@/lib/hooks/use-sidebar';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <SessionProvider>
-            {children}
+            <SidebarProvider>
+                {children}
+            </SidebarProvider>
         </SessionProvider>
     );
 }

@@ -4,8 +4,8 @@ import { db } from '@/db/drizzle';
 import { eq } from 'drizzle-orm';
 import { questionAttempts } from '@/db/dashboard-schema';
 
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import ConstellationBG from '@/components/dashboard/ConstellationBG';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default async function ArticlesLayout({
     children,
@@ -33,15 +33,12 @@ export default async function ArticlesLayout({
     return (
         <div className="min-h-screen relative" style={{ background: '#F0F2F8' }}>
             <ConstellationBG />
-            <div className="flex justify-center">
-                <DashboardSidebar
-                    userName={user.name || 'Student'}
-                    userLevel={userLevel}
-                />
-                <main className="flex-1 relative z-10 min-w-0">
-                    {children}
-                </main>
-            </div>
+            <DashboardShell
+                userName={user.name || 'Student'}
+                userLevel={userLevel}
+            >
+                {children}
+            </DashboardShell>
         </div>
     );
 }

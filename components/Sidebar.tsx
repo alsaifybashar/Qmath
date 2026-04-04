@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
     LayoutDashboard, BookOpen, Brain, Layers,
-    Settings, HelpCircle, ChevronLeft,
+    Settings, HelpCircle, ChevronLeft, ChevronRight,
     GraduationCap, User, Home, FlaskConical, Archive, FileText
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSidebar } from '@/lib/hooks/use-sidebar';
 
 const studyItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'blue' },
@@ -41,13 +42,15 @@ const colorMap: Record<string, { bg: string; text: string; glow: string }> = {
 
 export function Sidebar() {
     const pathname = usePathname();
-    const [collapsed, setCollapsed] = useState(false);
+    const { isSidebarExpanded, toggleSidebar } = useSidebar();
     const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
     const isActive = (href: string) => {
         if (href === '/dashboard') return pathname === href;
         return pathname.startsWith(href);
     };
+
+    const collapsed = !isSidebarExpanded;
 
     return (
         <motion.aside
@@ -79,7 +82,7 @@ export function Sidebar() {
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setCollapsed(!collapsed)}
+                    onClick={toggleSidebar}
                     className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-xl transition-all duration-200"
                 >
                     <motion.div
@@ -346,14 +349,15 @@ export function Sidebar() {
 }
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
+    const { isSidebarExpanded } = useSidebar();
     return (
         <div className="min-h-screen bg-zinc-950">
             <Sidebar />
             <motion.div
-                className="pl-[260px] transition-all duration-300"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
+                initial={false}
+                animate={{ paddingLeft: isSidebarExpanded ? 260 : 80 }}
+                className="transition-all duration-300"
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
                 {children}
             </motion.div>
