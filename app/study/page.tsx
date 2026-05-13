@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Trophy, ChevronRight, CheckCircle, XCircle, Lightbulb, BookOpen,
-    ArrowLeft, Zap, Flame, RotateCcw, Target, Clock, Star,
+    ArrowLeft, Zap, Flame, RotateCcw, Target, Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -13,7 +13,6 @@ import 'katex/dist/katex.min.css';
 import { MathInputWithToolbar } from '@/components/study/MathInputWithToolbar';
 
 import { FocusedStudyLayout } from '@/components/layout/FocusedStudyLayout';
-import { WorkShowPanel } from '@/components/study/WorkShowPanel';
 import { MultipleChoiceInput } from '@/components/study/MultipleChoiceInput';
 import { GuidedStepSession } from '@/components/study/GuidedStepSession';
 import { FillBlankInput } from '@/components/study/FillBlankInput';
@@ -133,12 +132,10 @@ function StudyHubContent() {
         submitAnswer,
         revealHint,
         nextQuestion,
-        clearFeedback,
     } = useStudySession(topicId);
 
     // ── Local state ──────────────────────────────────────────────────────────
     const [isHelpOpen, setIsHelpOpen] = useState(false);
-    const [attemptKey, setAttemptKey] = useState(0);
     const [streak, setStreak] = useState(0);
     const [maxStreak, setMaxStreak] = useState(0);
 
@@ -170,7 +167,7 @@ function StudyHubContent() {
             }
         }
         prevFeedbackShowingRef.current = nowShowing;
-    }, [feedbackState.isShowing, feedbackState.isCorrect]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [feedbackState.isShowing, feedbackState.isCorrect]);
 
 
 
@@ -269,13 +266,6 @@ function StudyHubContent() {
         window.addEventListener('keydown', handle);
         return () => window.removeEventListener('keydown', handle);
     }, []);
-
-    const handleTryAgain = useCallback(() => {
-        clearFeedback();
-        setAttemptKey(prev => prev + 1);
-    }, [clearFeedback]);
-
-    const handleHintUsed = useCallback((level: number) => revealHint(level), [revealHint]);
 
     // ── LOADING ──────────────────────────────────────────────────────────────
     if (isLoading) {
@@ -495,7 +485,7 @@ function StudyHubContent() {
                 {/* Question card */}
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={`${currentQuestion?.id}-${attemptKey}`}
+                        key={currentQuestion?.id}
                         initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -506,7 +496,7 @@ function StudyHubContent() {
                                 question={currentQuestion}
                                 questionIndex={questionIndex}
                                 totalQuestions={totalQuestions}
-                                onAnswer={(answer, isCorrect) => {
+                                onAnswer={(answer) => {
                                     submitAnswer(answer, currentQuestion.correctAnswer, currentQuestion);
                                 }}
                             />
@@ -529,10 +519,9 @@ function StudyHubContent() {
                     {feedbackState.isShowing && !feedbackState.isCorrect && (
                         <WrongFeedback
                             key="wrong-feedback"
-                            attempts={currentAttempt.attempts}
+                            correctAnswer={String(currentQuestion?.correctAnswer || '')}
                             stepBreakdown={currentQuestion?.helps?.stepBreakdown}
                             workedExample={currentQuestion?.helps?.workedExample}
-                            onTryAgain={handleTryAgain}
                             onSkip={nextQuestion}
                         />
                     )}
@@ -657,19 +646,13 @@ function CorrectFeedback({
 }
 
 // ── Wrong feedback ────────────────────────────────────────────────────────────
-// Flow:
-//  1. Show sub-questions (WorkShowPanel in checkpoints mode) immediately.
-//  2. Sub-question correct  → moves to next sub-question (WorkShowPanel handles this).
-//  3. Sub-question wrong    → shows correct answer for that sub-question.
-//  4. "Visa steg-för-steg lösning" is always accessible via a button.
 function WrongFeedback({
-    attempts,
+    correctAnswer,
     stepBreakdown,
     workedExample,
-    onTryAgain,
     onSkip,
 }: {
-    attempts: number;
+    correctAnswer: string;
     stepBreakdown?: {
         intro: string;
         steps: Array<{ prompt: string; correctAnswer: string; hint?: string }>;
@@ -679,11 +662,10 @@ function WrongFeedback({
         similarQuestion: string;
         solution: Array<{ step: number; action: string; result: string; explanation?: string }>;
     };
-    onTryAgain: () => void;
     onSkip: () => void;
 }) {
     const [showFullSolution, setShowFullSolution] = useState(false);
-    const hasSubQuestions = !!stepBreakdown?.steps?.length;
+    const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
     const hasSolution = !!(stepBreakdown || workedExample);
 
     return (
@@ -702,22 +684,13 @@ function WrongFeedback({
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="font-semibold text-orange-800 dark:text-orange-200 text-sm">
-                            {hasSubQuestions ? 'Inte riktigt — låt oss gå igenom det steg för steg' : 'Inte riktigt — försök igen'}
+                            Inte riktigt. Välj hur du vill gå vidare.
+                        </p>
+                        <p className="mt-0.5 text-sm text-orange-700 dark:text-orange-300">
+                            Du kan se hela lösningen, visa endast rätt svar, eller hoppa vidare.
                         </p>
                     </div>
                 </div>
-
-                {/* ── Sub-questions (WorkShowPanel in checkpoints mode) ──────── */}
-                {hasSubQuestions && !showFullSolution && (
-                    <div className="px-4 sm:px-5 pb-4">
-                        <WorkShowPanel
-                            stepBreakdown={stepBreakdown!}
-                            defaultMode="checkpoints"
-                            accentColor="orange"
-                            onRequestFullSolution={() => setShowFullSolution(true)}
-                        />
-                    </div>
-                )}
 
                 {/* ── Full passive solution (shown on request) ──────────────── */}
                 <AnimatePresence>
@@ -742,35 +715,60 @@ function WrongFeedback({
                     )}
                 </AnimatePresence>
 
-                {/* ── Action row ───────────────────────────────────────────── */}
-                <div className="px-5 pb-4 flex flex-wrap gap-2 border-t border-orange-100 dark:border-orange-500/15 pt-3">
-                    {/* Always-visible solution button */}
-                    {hasSolution && !showFullSolution && (
-                        <button
-                            onClick={() => setShowFullSolution(true)}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-orange-200 dark:border-orange-500/30 text-orange-600 dark:text-orange-400 text-sm font-medium hover:bg-orange-100/60 dark:hover:bg-orange-500/10 transition-colors"
+                {/* ── Correct answer only (shown on request) ───────────────── */}
+                <AnimatePresence>
+                    {showCorrectAnswer && (
+                        <motion.div
+                            key="correct-answer-panel"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.24, ease: 'easeInOut' }}
+                            className="overflow-hidden"
                         >
-                            <BookOpen className="w-3.5 h-3.5" />
-                            Visa steg-för-steg lösning
-                        </button>
+                            <div className="mx-5 mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/25 dark:bg-emerald-500/10">
+                                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+                                    <CheckCircle className="h-4 w-4" />
+                                    Korrekt svar
+                                </div>
+                                <div className="rounded-xl bg-white/70 p-3 text-sm text-emerald-900 dark:bg-zinc-950/30 dark:text-emerald-100">
+                                    {correctAnswer ? <SolutionContent content={correctAnswer} /> : 'Inget korrekt svar är angivet.'}
+                                </div>
+                            </div>
+                        </motion.div>
                     )}
+                </AnimatePresence>
 
-                    <div className="flex gap-2 ml-auto">
-                        <button
-                            onClick={onTryAgain}
-                            className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-zinc-900 hover:bg-orange-50 dark:hover:bg-orange-500/5 border border-orange-200 dark:border-orange-500/30 text-orange-700 dark:text-orange-300 rounded-xl font-semibold text-sm transition-colors"
-                        >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            Försök igen
-                        </button>
-                        <button
-                            onClick={onSkip}
-                            className="flex items-center gap-1.5 px-4 py-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-xl font-medium text-sm transition-colors"
-                        >
-                            Hoppa över
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
+                {/* ── Action row ───────────────────────────────────────────── */}
+                <div className="grid gap-2 border-t border-orange-100 px-5 pb-4 pt-3 dark:border-orange-500/15 sm:grid-cols-3">
+                    <button
+                        onClick={() => {
+                            setShowCorrectAnswer(false);
+                            setShowFullSolution(true);
+                        }}
+                        disabled={!hasSolution}
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-white px-3 py-2.5 text-sm font-semibold text-orange-700 transition-colors hover:bg-orange-100/60 disabled:cursor-not-allowed disabled:opacity-45 dark:border-orange-500/30 dark:bg-zinc-900 dark:text-orange-300 dark:hover:bg-orange-500/10"
+                    >
+                        <BookOpen className="h-3.5 w-3.5" />
+                        Visa steg för steg lösning
+                    </button>
+                    <button
+                        onClick={() => {
+                            setShowFullSolution(false);
+                            setShowCorrectAnswer(true);
+                        }}
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 dark:border-emerald-500/30 dark:bg-zinc-900 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
+                    >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Visa korrekt svar
+                    </button>
+                    <button
+                        onClick={onSkip}
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm font-semibold text-zinc-500 transition-colors hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:text-white"
+                    >
+                        Hoppa över
+                        <ChevronRight className="h-4 w-4" />
+                    </button>
                 </div>
             </div>
         </motion.div>
@@ -790,7 +788,6 @@ function SolutionContent({ content }: { content: string }) {
     const TOKEN_RE = /(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$|\\\([\s\S]*?\\\))/g;
     let last = 0;
     let m: RegExpExecArray | null;
-    // eslint-disable-next-line no-cond-assign
     while ((m = TOKEN_RE.exec(content)) !== null) {
         if (m.index > last) parts.push(content.slice(last, m.index));
         parts.push(m[0]);
@@ -1008,11 +1005,20 @@ function StatCard({
 // ── Question card ─────────────────────────────────────────────────────────────
 function QuestionCard({
     question,
-    questionIndex,
-    totalQuestions,
     onAnswer,
 }: {
-    question: any;
+    question: Record<string, unknown> & {
+        id?: string;
+        type?: string;
+        content?: {
+            question?: {
+                text?: string;
+                math?: string;
+            };
+        };
+        difficulty?: number;
+        correctAnswer?: string;
+    };
     questionIndex: number;
     totalQuestions: number;
     onAnswer: (answer: string, isCorrect: boolean) => void;
@@ -1069,7 +1075,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <SimpleNumericInput
-                        correctAnswer={question.correctAnswer}
+                        correctAnswer={String(question.correctAnswer ?? '')}
                         onAnswer={(val, isCorrect) => onAnswer(val, isCorrect)}
                     />
                 </div>
@@ -1080,7 +1086,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <MultipleChoiceInput
-                        question={question}
+                        question={question as Parameters<typeof MultipleChoiceInput>[0]['question']}
                         onAnswer={(id, isCorrect) => onAnswer(id, isCorrect)}
                     />
                 </div>
@@ -1090,7 +1096,7 @@ function QuestionCard({
             return (
                 <div className={card}>
                     <GuidedStepSession
-                        question={question}
+                        question={question as Parameters<typeof GuidedStepSession>[0]['question']}
                         onComplete={() => onAnswer('complete', true)}
                         onExit={() => { }}
                     />
@@ -1102,7 +1108,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <FillBlankInput
-                        question={question}
+                        question={question as Parameters<typeof FillBlankInput>[0]['question']}
                         onAnswer={(vals, isCorrect) => onAnswer(JSON.stringify(vals), isCorrect)}
                     />
                 </div>
@@ -1113,7 +1119,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <DragDropInput
-                        question={question}
+                        question={question as Parameters<typeof DragDropInput>[0]['question']}
                         onAnswer={(ord, isCorrect) => onAnswer(JSON.stringify(ord), isCorrect)}
                     />
                 </div>
@@ -1124,7 +1130,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <ToggleInput
-                        question={question}
+                        question={question as Parameters<typeof ToggleInput>[0]['question']}
                         onAnswer={(states, isCorrect) => onAnswer(JSON.stringify(states), isCorrect)}
                     />
                 </div>
@@ -1135,7 +1141,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <ExpressionBuilderInput
-                        question={question}
+                        question={question as Parameters<typeof ExpressionBuilderInput>[0]['question']}
                         onAnswer={(expr, isCorrect) => onAnswer(expr, isCorrect)}
                     />
                 </div>
@@ -1145,8 +1151,8 @@ function QuestionCard({
             return (
                 <div className={card}>
                     <SolutionBuilderInput
-                        question={question}
-                        onAnswer={(isCorrect) => onAnswer(question.correctAnswer, isCorrect)}
+                        question={question as Parameters<typeof SolutionBuilderInput>[0]['question']}
+                        onAnswer={(isCorrect) => onAnswer(String(question.correctAnswer ?? ''), isCorrect)}
                     />
                 </div>
             );

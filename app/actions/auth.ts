@@ -20,6 +20,7 @@ export async function authenticate(
         await signIn('credentials', {
             email: typeof email === 'string' ? email : '',
             password: typeof password === 'string' ? password : '',
+            redirectTo: '/dashboard',
         });
     } catch (error) {
         if (error instanceof AuthError) {

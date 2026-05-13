@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Suppress middleware deprecation warning (false positive with NextAuth v5)
+    // Auth runs in root `proxy.ts` (Next.js 16+); see https://nextjs.org/docs/messages/middleware-to-proxy
     logging: {
         fetches: {
             fullUrl: true,

@@ -1,6 +1,8 @@
 import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
+    // Dev / reverse-proxy setups: accept forwarded Host (and avoid rejecting valid sessions).
+    trustHost: true,
     pages: {
         signIn: '/login',
     },

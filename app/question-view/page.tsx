@@ -50,11 +50,12 @@ const BlockMath = dynamic(
 
 type AnswerMode = 'multiple_choice' | 'free_text' | 'toggle' | 'guided_steps';
 type FeedbackState = 'idle' | 'correct' | 'wrong';
+type AssistanceLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
 type HintItem = {
   label: string;
   text: string;
-  tone: 'amber' | 'blue' | 'violet';
+  tone: 'blue' | 'violet';
   icon: ElementType;
   math?: string;
 };
@@ -145,7 +146,7 @@ const QUESTIONS: DemoQuestion[] = [
       {
         label: 'Domän',
         text: 'Börja med att fråga dig var uttrycket över huvud taget är definierat. Roten och nämnaren ger två olika villkor.',
-        tone: 'amber',
+        tone: 'blue',
         icon: Lightbulb,
       },
       {
@@ -219,7 +220,7 @@ const QUESTIONS: DemoQuestion[] = [
       {
         label: 'Första test',
         text: 'Sätt in $x=1$ direkt innan du väljer metod. Det säger om du har ett vanligt gränsvärde eller en obestämd form.',
-        tone: 'amber',
+        tone: 'blue',
         icon: Lightbulb,
       },
       {
@@ -304,7 +305,7 @@ const QUESTIONS: DemoQuestion[] = [
       {
         label: 'Skriv matrisform',
         text: 'Omskriv först systemet till $A\\mathbf{u}=\\mathbf{b}$. Då blir metoden tydligare.',
-        tone: 'amber',
+        tone: 'blue',
         icon: Lightbulb,
       },
       {
@@ -378,11 +379,13 @@ function RichText({ text, className = '' }: { text: string; className?: string }
   );
 }
 
-function difficultyLabel(n: number) {
-  if (n <= 2) return 'Grund';
-  if (n === 3) return 'Medel';
-  if (n === 4) return 'Avancerad';
-  return 'Hög';
+function assistanceLabel(level: AssistanceLevel) {
+  if (level === 0) return 'Observerar';
+  if (level === 1) return 'Nudge';
+  if (level === 2) return 'Formel';
+  if (level === 3) return 'Delsteg';
+  if (level === 4) return 'Sokratisk tutor';
+  return 'Genomgång';
 }
 
 // ── Figure ────────────────────────────────────────────────────────────────────
@@ -469,10 +472,10 @@ function MultipleChoicePanel({ question, feedback, onAnswer }: {
         const stateClass = isSubmitted
           ? isSelected
             ? opt.isCorrect
-              ? 'border-emerald-400 bg-emerald-50/80 dark:border-emerald-500/40 dark:bg-emerald-500/10'
-              : 'border-rose-400 bg-rose-50/80 dark:border-rose-500/40 dark:bg-rose-500/10'
+              ? 'border-primary-400 bg-primary-50/80 dark:border-primary-500/40 dark:bg-primary-500/10'
+              : 'border-accent-400 bg-accent-50/80 dark:border-accent-500/40 dark:bg-accent-500/10'
             : opt.isCorrect
-            ? 'border-emerald-300/60 bg-emerald-50/40 dark:border-emerald-500/25 dark:bg-emerald-500/5'
+            ? 'border-primary-300/60 bg-primary-50/40 dark:border-primary-500/25 dark:bg-primary-500/5'
             : 'border-zinc-200 bg-white/60 opacity-40 dark:border-zinc-700 dark:bg-zinc-900/40'
           : isSelected
           ? 'border-primary-400 bg-primary-50 dark:border-primary-500/60 dark:bg-primary-500/10'
@@ -501,11 +504,11 @@ function MultipleChoicePanel({ question, feedback, onAnswer }: {
             </div>
             {isSubmitted && isSelected && (
               opt.isCorrect
-                ? <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-emerald-500" />
-                : <XCircle className="h-5 w-5 flex-shrink-0 text-rose-500" />
+                ? <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary-500" />
+                : <XCircle className="h-5 w-5 flex-shrink-0 text-accent-500" />
             )}
             {isSubmitted && !isSelected && opt.isCorrect && (
-              <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-emerald-400/60" />
+              <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary-400/60" />
             )}
           </motion.button>
         );
@@ -534,8 +537,8 @@ function FreeTextPanel({ question, feedback, onAnswer }: {
         <div className={`rounded-xl border transition-colors ${
           submitted
             ? feedback === 'correct'
-              ? 'border-emerald-400 bg-emerald-50/60 dark:border-emerald-500/40 dark:bg-emerald-500/10'
-              : 'border-rose-400 bg-rose-50/60 dark:border-rose-500/40 dark:bg-rose-500/10'
+              ? 'border-primary-400 bg-primary-50/60 dark:border-primary-500/40 dark:bg-primary-500/10'
+              : 'border-accent-400 bg-accent-50/60 dark:border-accent-500/40 dark:bg-accent-500/10'
             : 'border-zinc-200 bg-white focus-within:border-primary-400 dark:border-zinc-700 dark:bg-zinc-900/50 dark:focus-within:border-primary-500/60'
         }`}>
           <textarea
@@ -603,8 +606,8 @@ function TogglePanel({ question, feedback, onAnswer }: {
           const cls = submitted
             ? isSelected
               ? isCorrect
-                ? 'border-emerald-400 bg-emerald-50 dark:border-emerald-500/40 dark:bg-emerald-500/10'
-                : 'border-rose-400 bg-rose-50 dark:border-rose-500/40 dark:bg-rose-500/10'
+                ? 'border-primary-400 bg-primary-50 dark:border-primary-500/40 dark:bg-primary-500/10'
+                : 'border-accent-400 bg-accent-50 dark:border-accent-500/40 dark:bg-accent-500/10'
               : 'border-zinc-200 bg-white/50 opacity-40 dark:border-zinc-700 dark:bg-zinc-900/30'
             : isSelected
             ? 'border-primary-400 bg-primary-50 dark:border-primary-500/50 dark:bg-primary-500/10'
@@ -625,8 +628,8 @@ function TogglePanel({ question, feedback, onAnswer }: {
               <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{item.label}</span>
               {submitted && isSelected && (
                 isCorrect
-                  ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  : <XCircle className="h-4 w-4 text-rose-500" />
+                  ? <CheckCircle2 className="h-4 w-4 text-primary-500" />
+                  : <XCircle className="h-4 w-4 text-accent-500" />
               )}
             </motion.button>
           );
@@ -696,15 +699,15 @@ function FeedbackCard({ feedback, question, onRetry, onShowSolution }: {
         transition={{ type: 'spring', damping: 28, stiffness: 360 }}
         className={`rounded-xl border p-4 ${
           isCorrect
-            ? 'border-emerald-200 bg-emerald-50/90 dark:border-emerald-500/30 dark:bg-emerald-500/10'
-            : 'border-rose-200 bg-rose-50/90 dark:border-rose-500/30 dark:bg-rose-500/10'
+            ? 'border-primary-200 bg-primary-50/90 dark:border-primary-500/30 dark:bg-primary-500/10'
+            : 'border-accent-200 bg-accent-50/90 dark:border-accent-500/30 dark:bg-accent-500/10'
         }`}
       >
         <div className="flex items-start gap-3">
           <div className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
             isCorrect
-              ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300'
-              : 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300'
+              ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300'
+              : 'bg-accent-500/10 text-accent-600 dark:bg-accent-500/20 dark:text-accent-400'
           }`}>
             {isCorrect ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
           </div>
@@ -712,23 +715,23 @@ function FeedbackCard({ feedback, question, onRetry, onShowSolution }: {
           <div className="flex-1 min-w-0">
             {isCorrect ? (
               <>
-                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Rätt svar!</p>
-                <p className="mt-0.5 text-xs text-emerald-700 dark:text-emerald-300">
+                <p className="text-sm font-semibold text-primary-900 dark:text-primary-100">Rätt svar!</p>
+                <p className="mt-0.5 text-xs text-primary-700 dark:text-primary-300">
                   Välj steg-för-steg nedan om du vill jämföra med en modellösning.
                 </p>
               </>
             ) : (
               <>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-rose-900 dark:text-rose-100">Inte helt rätt.</p>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-white/70 px-2 py-0.5 text-xs font-semibold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                  <p className="text-sm font-semibold text-accent-600 dark:text-accent-400">Inte helt rätt.</p>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-white/70 px-2 py-0.5 text-xs font-semibold text-accent-600 dark:border-accent-500/30 dark:bg-accent-500/10 dark:text-accent-400">
                     <Brain className="h-3 w-3" />
                     {question.misconceptionLabel}
                   </span>
                 </div>
                 <RichText
                   text={question.misconceptionText}
-                  className="mt-1.5 block text-xs leading-5 text-rose-800 dark:text-rose-200"
+                  className="mt-1.5 block text-xs leading-5 text-zinc-700 dark:text-zinc-200"
                 />
               </>
             )}
@@ -737,7 +740,7 @@ function FeedbackCard({ feedback, question, onRetry, onShowSolution }: {
               {!isCorrect && (
                 <button
                   onClick={onRetry}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-accent-200 px-3 py-1.5 text-xs font-semibold text-accent-600 transition hover:bg-accent-50 dark:border-accent-500/30 dark:text-accent-400 dark:hover:bg-accent-500/10"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   Försök igen
@@ -747,8 +750,8 @@ function FeedbackCard({ feedback, question, onRetry, onShowSolution }: {
                 onClick={onShowSolution}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                   isCorrect
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'bg-zinc-800 text-white hover:bg-zinc-700 dark:bg-zinc-700 dark:hover:bg-zinc-600'
+                    ? 'bg-primary-600 text-white hover:bg-primary-700'
+                    : 'bg-gradient-to-r from-primary-500 to-accent-500 text-white hover:opacity-90'
                 }`}
               >
                 <Eye className="h-3.5 w-3.5" />
@@ -767,18 +770,13 @@ function FeedbackCard({ feedback, question, onRetry, onShowSolution }: {
 const HINT_TONE: Record<HintItem['tone'], {
   wrap: string; icon: string; dot: string;
 }> = {
-  amber: {
-    wrap: 'border-amber-200 bg-amber-50/80 dark:border-amber-500/25 dark:bg-amber-500/8',
-    icon: 'text-amber-500',
-    dot: 'bg-amber-400',
-  },
   blue: {
     wrap: 'border-primary-200 bg-primary-50/80 dark:border-primary-500/25 dark:bg-primary-500/8',
     icon: 'text-primary-500',
     dot: 'bg-primary-400',
   },
   violet: {
-    wrap: 'border-accent-200 bg-accent-50/80 dark:border-accent-500/25 dark:bg-accent-500/8',
+    wrap: 'border-accent-200 bg-accent-500/10 dark:border-accent-500/25 dark:bg-accent-500/10',
     icon: 'text-accent-500',
     dot: 'bg-accent-400',
   },
@@ -885,6 +883,267 @@ const MODE_META: Record<AnswerMode, { label: string; icon: ElementType }> = {
   guided_steps: { label: 'Delsteg', icon: Grid2X2 },
 };
 
+const WORK_COMMANDS = [
+  { label: '/matrix', text: 'Matris' },
+  { label: '/integral', text: 'Integral' },
+  { label: '/cases', text: 'Fall' },
+  { label: '/proof', text: 'Bevis' },
+  { label: '/vector', text: 'Vektor' },
+];
+
+function LearningRail({ question, questionIndex, progress, feedback, assistanceLevel }: {
+  question: DemoQuestion;
+  questionIndex: number;
+  progress: number;
+  feedback: FeedbackState;
+  assistanceLevel: AssistanceLevel;
+}) {
+  const mastery = feedback === 'correct' ? 72 : feedback === 'wrong' ? 53 : 58;
+  const status = feedback === 'correct' ? 'Klar' : feedback === 'wrong' ? 'Reparera' : 'Aktiv';
+
+  return (
+    <aside className="hidden xl:block">
+      <div className="sticky top-20 space-y-3">
+        <div className="rounded-2xl border border-[var(--border-light)] bg-white/90 p-4 shadow-sm dark:bg-zinc-900/70">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">Lärläge</p>
+          <div className="mt-4 flex items-end gap-2">
+            <span className="text-3xl font-bold text-zinc-900 dark:text-white">{questionIndex + 1}</span>
+            <span className="pb-1 text-sm text-zinc-400">/ {QUESTIONS.length}</span>
+          </div>
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+            <motion.div
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.5 }}
+              className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-500"
+            />
+          </div>
+        </div>
+
+        {[
+          { label: 'Status', value: status, icon: Target },
+          { label: 'Mastery', value: `${mastery}%`, icon: Brain },
+          { label: 'Hjälpnivå', value: assistanceLabel(assistanceLevel), icon: Lightbulb },
+          { label: 'Tid', value: `~${question.estimatedMinutes} min`, icon: Clock },
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-2xl border border-[var(--border-light)] bg-white/80 p-4 shadow-sm dark:bg-zinc-900/60">
+            <div className="mb-2 flex items-center gap-2 text-zinc-400">
+              <Icon className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest">{label}</span>
+            </div>
+            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{value}</p>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function Scratchpad({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/70 p-4 dark:border-zinc-700 dark:bg-zinc-950/30">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Scratchpad</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">Rough work is separate from the official answer until you promote it.</p>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {WORK_COMMANDS.map((cmd) => (
+            <button
+              key={cmd.label}
+              onClick={() => onChange(`${value}${value ? '\n' : ''}${cmd.label} `)}
+              className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-semibold text-zinc-500 transition hover:border-primary-300 hover:text-primary-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
+            >
+              {cmd.text}
+            </button>
+          ))}
+        </div>
+      </div>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={3}
+        placeholder="Testa idéer, mellanled, bevisstruktur eller en snabb LaTeX-skiss här..."
+        className="w-full resize-none rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm leading-6 text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-primary-400 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
+      />
+    </div>
+  );
+}
+
+function ProgressiveTutorPanel({ question, feedback, visibleHints, assistanceLevel, aiOpen, onSetAssistanceLevel, onOpenAI, onUseGuidedSteps, onShowSolution }: {
+  question: DemoQuestion;
+  feedback: FeedbackState;
+  visibleHints: HintItem[];
+  assistanceLevel: AssistanceLevel;
+  aiOpen: boolean;
+  onSetAssistanceLevel: (level: AssistanceLevel) => void;
+  onOpenAI: () => void;
+  onUseGuidedSteps: () => void;
+  onShowSolution: () => void;
+}) {
+  const stages: Array<{ level: AssistanceLevel; title: string; copy: string; action: string }> = [
+    { level: 1, title: 'Context-aware nudge', copy: 'Small cue tied to the current bottleneck.', action: 'Reveal nudge' },
+    { level: 2, title: 'Formula / concept', copy: 'Show the useful theorem without solving the task.', action: 'Show formula' },
+    { level: 3, title: 'Step unlocking', copy: 'Switch to checkpoints and require student input.', action: 'Use guided steps' },
+    { level: 4, title: 'Socratic tutor', copy: 'Discuss the current work without giving the final answer.', action: 'Open tutor' },
+    { level: 5, title: 'Solution walkthrough', copy: 'Only after attempts, review, or explicit escalation.', action: 'Show walkthrough' },
+  ];
+
+  return (
+    <aside className="space-y-4 xl:sticky xl:top-20 xl:self-start">
+      <div className="overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white/95 shadow-sm dark:bg-zinc-900/80">
+        <div className="border-b border-zinc-200/70 p-4 dark:border-zinc-800">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 text-white">
+              <Bot className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Embedded tutor</p>
+              <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                Current mode: {assistanceLabel(assistanceLevel)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {aiOpen ? (
+          <div className="h-[640px]">
+            <AIPanel
+              isOpen={aiOpen}
+              onToggle={onOpenAI}
+              position="panel"
+              context={{
+                currentPage: 'study',
+                mode: 'guided',
+                question: {
+                  id: question.id,
+                  content: buildQuestionContent(question),
+                  topic: question.area,
+                  difficulty: question.difficulty,
+                },
+                attempts: {
+                  count: feedback === 'idle' ? 0 : 1,
+                  timeSpent: question.estimatedMinutes * 60,
+                },
+                student: {
+                  masteryLevel: feedback === 'wrong' ? 0.42 : 0.58,
+                  recentPerformance: feedback === 'wrong' ? 'struggling' : 'learning',
+                },
+              }}
+            />
+          </div>
+        ) : (
+          <div className="space-y-4 p-4">
+            <div className="rounded-xl border border-primary-200 bg-gradient-to-r from-primary-50 to-accent-500/10 p-3 dark:border-primary-500/20 dark:from-primary-500/10 dark:to-accent-500/10">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary-700 dark:text-primary-300">Scaffold policy</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-700 dark:text-zinc-200">
+                The tutor escalates from hint to formula to guided steps before revealing a full solution.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {stages.map((stage) => {
+                const active = assistanceLevel >= stage.level;
+                return (
+                  <button
+                    key={stage.level}
+                    onClick={() => {
+                      onSetAssistanceLevel(stage.level);
+                      if (stage.level === 3) onUseGuidedSteps();
+                      if (stage.level === 4) onOpenAI();
+                      if (stage.level === 5) onShowSolution();
+                    }}
+                    className={`w-full rounded-xl border p-3 text-left transition ${
+                      active
+                        ? 'border-primary-300 bg-primary-50 dark:border-primary-500/30 dark:bg-primary-500/10'
+                        : 'border-zinc-200 bg-white hover:border-primary-300 dark:border-zinc-700 dark:bg-zinc-900/60'
+                    }`}
+                  >
+                    <div className="mb-1 flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{stage.title}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        active
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-zinc-100 text-zinc-400 dark:bg-zinc-800'
+                      }`}>
+                        L{stage.level}
+                      </span>
+                    </div>
+                    <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">{stage.copy}</p>
+                    <p className="mt-2 text-xs font-semibold text-primary-600 dark:text-primary-400">{stage.action}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {!aiOpen && (
+        <div className="rounded-2xl border border-[var(--border-light)] bg-white/95 p-4 shadow-sm dark:bg-zinc-900/80">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-primary-500" />
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Active support</h3>
+            </div>
+            <span className="rounded-full border border-zinc-200 px-2 py-0.5 text-xs text-zinc-500 dark:border-zinc-700">
+              {visibleHints.length} / {question.hints.length}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {visibleHints.map((hint, i) => (
+              <HintCard key={`${question.id}-${hint.label}`} hint={hint} index={i} />
+            ))}
+          </div>
+        </div>
+      )}
+    </aside>
+  );
+}
+
+function BottomCommandBar({ feedback, onCheckStep, onStuck, onOpenTutor, onShowSolution }: {
+  feedback: FeedbackState;
+  onCheckStep: () => void;
+  onStuck: () => void;
+  onOpenTutor: () => void;
+  onShowSolution: () => void;
+}) {
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
+      <div className="pointer-events-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white/90 p-2 shadow-xl shadow-zinc-900/10 backdrop-blur-md dark:border-zinc-700 dark:bg-zinc-900/90">
+        <button
+          onClick={onCheckStep}
+          className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:border-primary-300 hover:text-primary-600 dark:border-zinc-700 dark:text-zinc-200"
+        >
+          <CheckCircle2 className="h-4 w-4" />
+          Check step
+        </button>
+        <button
+          onClick={onStuck}
+          className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-3 py-2 text-xs font-semibold text-primary-700 transition hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-300"
+        >
+          <Lightbulb className="h-4 w-4" />
+          I’m stuck
+        </button>
+        <button
+          onClick={onOpenTutor}
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-accent-500 px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-primary-500/20"
+        >
+          <Bot className="h-4 w-4" />
+          Socratic tutor
+        </button>
+        <button
+          onClick={onShowSolution}
+          disabled={feedback === 'idle'}
+          className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-200"
+        >
+          <Eye className="h-4 w-4" />
+          Walkthrough
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function QuestionViewPage() {
@@ -894,7 +1153,8 @@ export default function QuestionViewPage() {
   const [feedback, setFeedback] = useState<FeedbackState>('idle');
   const [solutionOpen, setSolutionOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
-  const [hintsExpanded, setHintsExpanded] = useState(false);
+  const [assistanceLevel, setAssistanceLevel] = useState<AssistanceLevel>(0);
+  const [scratchpad, setScratchpad] = useState('');
 
   const question = useMemo(
     () => QUESTIONS.find((q) => q.id === activeId) ?? QUESTIONS[0],
@@ -904,9 +1164,16 @@ export default function QuestionViewPage() {
   const questionIndex = QUESTIONS.findIndex((q) => q.id === question.id);
   const progress = ((questionIndex + 1) / QUESTIONS.length) * 100;
 
-  // Unlock more hints on wrong answer
-  const visibleHints = feedback === 'wrong' || hintsExpanded
-    ? question.hints
+  const effectiveAssistanceLevel = feedback === 'wrong'
+    ? Math.max(assistanceLevel, 2) as AssistanceLevel
+    : assistanceLevel;
+
+  const visibleHintCount = Math.min(
+    question.hints.length,
+    Math.max(1, effectiveAssistanceLevel)
+  );
+  const visibleHints = effectiveAssistanceLevel >= 2 || feedback === 'wrong'
+    ? question.hints.slice(0, visibleHintCount)
     : question.hints.slice(0, 1);
 
   function switchQuestion(id: string) {
@@ -914,14 +1181,36 @@ export default function QuestionViewPage() {
     setAnswerMode(QUESTIONS.find((q) => q.id === id)!.answerModes[0]);
     setFeedback('idle');
     setSolutionOpen(false);
-    setHintsExpanded(false);
+    setAiOpen(false);
+    setAssistanceLevel(0);
+    setScratchpad('');
+  }
+
+  function handleAnswer(isCorrect: boolean) {
+    setFeedback(isCorrect ? 'correct' : 'wrong');
+    if (isCorrect) {
+      setAssistanceLevel((level) => Math.max(level, 1) as AssistanceLevel);
+      return;
+    }
+    setAssistanceLevel((level) => Math.max(level, 2) as AssistanceLevel);
+  }
+
+  function handleGuidedSteps() {
+    if (question.answerModes.includes('guided_steps')) {
+      setAnswerMode('guided_steps');
+    }
+  }
+
+  function showSolution() {
+    setAssistanceLevel(5);
+    setSolutionOpen(true);
   }
 
   function renderAnswer() {
     const props = {
       question,
       feedback,
-      onAnswer: (c: boolean) => setFeedback(c ? 'correct' : 'wrong'),
+      onAnswer: handleAnswer,
     };
     switch (answerMode) {
       case 'multiple_choice': return <MultipleChoicePanel {...props} />;
@@ -968,7 +1257,7 @@ export default function QuestionViewPage() {
           {/* Stats */}
           <div className="hidden items-center gap-2 sm:flex">
             <div className="flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-              <Flame className="h-3.5 w-3.5 text-orange-500" />
+              <Flame className="h-3.5 w-3.5 text-accent-500" />
               7
             </div>
             <div className="flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
@@ -1003,7 +1292,7 @@ export default function QuestionViewPage() {
       </header>
 
       {/* ── Body ──────────────────────────────────────────────────────────────── */}
-      <div className={`mx-auto max-w-screen-xl px-4 py-6 transition-all duration-300 lg:px-6 ${aiOpen ? 'lg:pr-[400px]' : ''}`}>
+      <div className="mx-auto max-w-[1500px] px-4 pb-28 pt-6 lg:px-6">
 
         {/* Question switcher */}
         <div className="mb-5 flex flex-wrap gap-2">
@@ -1023,13 +1312,20 @@ export default function QuestionViewPage() {
           ))}
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
+        <div className="grid gap-5 xl:grid-cols-[156px_minmax(0,1fr)_380px]">
+          <LearningRail
+            question={question}
+            questionIndex={questionIndex}
+            progress={progress}
+            feedback={feedback}
+            assistanceLevel={effectiveAssistanceLevel}
+          />
 
-          {/* ── Left: Question + Answer ──────────────────────────────────────── */}
+          {/* ── Center: Problem + Work Canvas ───────────────────────────────── */}
           <div className="space-y-5">
 
             {/* Question card */}
-            <div className="rounded-2xl border border-[var(--border-light)] bg-white/90 p-5 shadow-sm dark:bg-zinc-900/70 sm:p-6">
+            <div className="sticky top-[68px] z-20 rounded-2xl border border-[var(--border-light)] bg-white/95 p-5 shadow-sm backdrop-blur-md dark:bg-zinc-900/90 sm:p-6">
               {/* Meta row */}
               <div className="mb-5 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary-500/10 to-accent-500/10 border border-primary-200/60 dark:border-primary-500/25 px-3 py-1 text-xs font-semibold text-primary-700 dark:text-primary-300">
@@ -1078,6 +1374,18 @@ export default function QuestionViewPage() {
 
             {/* Answer card */}
             <div className="rounded-2xl border border-[var(--border-light)] bg-white/90 p-5 shadow-sm dark:bg-zinc-900/70 sm:p-6">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Work canvas</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Type naturally first. Use structured modes only when they reduce notation friction.
+                  </p>
+                </div>
+                <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900">
+                  {MODE_META[answerMode].label}
+                </span>
+              </div>
+
               {/* Mode tabs */}
               <div className="mb-5 flex flex-wrap gap-2">
                 {question.answerModes.map((mode) => {
@@ -1119,38 +1427,14 @@ export default function QuestionViewPage() {
                   <FeedbackCard
                     feedback={feedback}
                     question={question}
-                    onRetry={() => { setFeedback('idle'); setHintsExpanded(false); }}
-                    onShowSolution={() => setSolutionOpen(true)}
+                    onRetry={() => { setFeedback('idle'); setAssistanceLevel(1); }}
+                    onShowSolution={showSolution}
                   />
                 </div>
               )}
             </div>
 
-            {/* Hints card */}
-            <div className="rounded-2xl border border-[var(--border-light)] bg-white/90 p-5 shadow-sm dark:bg-zinc-900/70 sm:p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-amber-500" />
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Ledtrådar</h3>
-                  <span className="rounded-full border border-zinc-200 px-2 py-0.5 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                    {visibleHints.length} / {question.hints.length}
-                  </span>
-                </div>
-                {feedback !== 'wrong' && question.hints.length > 1 && (
-                  <button
-                    onClick={() => setHintsExpanded((v) => !v)}
-                    className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-                  >
-                    {hintsExpanded ? 'Dölj' : 'Visa alla'}
-                  </button>
-                )}
-              </div>
-              <div className="space-y-3">
-                {visibleHints.map((hint, i) => (
-                  <HintCard key={`${question.id}-${hint.label}`} hint={hint} index={i} />
-                ))}
-              </div>
-            </div>
+            <Scratchpad value={scratchpad} onChange={setScratchpad} />
 
             {/* Solution */}
             <SolutionPanel
@@ -1180,7 +1464,7 @@ export default function QuestionViewPage() {
                       q.id === question.id
                         ? 'h-2 w-6 bg-gradient-to-r from-primary-500 to-accent-500'
                         : i < questionIndex
-                        ? 'h-2 w-2 bg-emerald-400'
+                        ? 'h-2 w-2 bg-primary-400'
                         : 'h-2 w-2 bg-zinc-200 dark:bg-zinc-700'
                     }`}
                   />
@@ -1198,110 +1482,36 @@ export default function QuestionViewPage() {
             </div>
           </div>
 
-          {/* ── Right: Metadata + Checklist ──────────────────────────────────── */}
-          <aside className="space-y-5">
-
-            {/* Question metadata */}
-            <div className="rounded-2xl border border-[var(--border-light)] bg-white/90 p-5 shadow-sm dark:bg-zinc-900/70">
-              <h2 className="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Frågeinfo</h2>
-              <div className="space-y-3">
-                {[
-                  { label: 'Kurs', value: question.course },
-                  { label: 'Område', value: question.area },
-                  { label: 'Ämne', value: question.topicTag },
-                  { label: 'Svårighet', value: difficultyLabel(question.difficulty) },
-                  { label: 'Poäng', value: `${question.points} p` },
-                  { label: 'Tid', value: `~${question.estimatedMinutes} min` },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-500 dark:text-zinc-400">{label}</span>
-                    <span className="font-medium text-zinc-800 dark:text-zinc-100">{value}</span>
-                  </div>
-                ))}
-
-                {/* Difficulty bar */}
-                <div className="pt-1">
-                  <div className="flex gap-1">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <div
-                        key={i}
-                        className={`h-1.5 flex-1 rounded-full transition-colors ${
-                          i < question.difficulty
-                            ? 'bg-gradient-to-r from-primary-500 to-accent-500'
-                            : 'bg-zinc-200 dark:bg-zinc-700'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Concept checklist */}
-            <div className="rounded-2xl border border-[var(--border-light)] bg-white/90 p-5 shadow-sm dark:bg-zinc-900/70">
-              <div className="mb-4 flex items-center gap-2">
-                <Target className="h-4 w-4 text-primary-500" />
-                <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Vad testas</h2>
-              </div>
-              <div className="space-y-2.5">
-                {question.conceptChecklist.map((item) => (
-                  <div key={item} className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300">
-                    <div className="mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2 border-primary-300 dark:border-primary-500/50" />
-                    <RichText text={item} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* AI CTA (visible when AI panel is closed) */}
-            {!aiOpen && (
-              <motion.button
-                onClick={() => setAiOpen(true)}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full rounded-2xl border border-primary-200/60 bg-gradient-to-br from-primary-50 to-accent-50/60 p-5 text-left transition hover:shadow-md dark:border-primary-500/20 dark:from-primary-500/8 dark:to-accent-500/5"
-              >
-                <div className="mb-3 flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 shadow-sm">
-                    <Bot className="h-4 w-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">AI-Tutor</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Redo att hjälpa</p>
-                  </div>
-                </div>
-                <p className="text-xs leading-5 text-zinc-600 dark:text-zinc-300">
-                  Ställ en fråga om den här uppgiften och få Sokratisk vägledning utan att AI:n avslöjar svaret.
-                </p>
-                <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 dark:text-primary-400">
-                  Öppna AI-hjälp
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </div>
-              </motion.button>
-            )}
-          </aside>
+          {/* ── Right: Intervention Space ───────────────────────────────────── */}
+          <ProgressiveTutorPanel
+            question={question}
+            feedback={feedback}
+            visibleHints={visibleHints}
+            assistanceLevel={effectiveAssistanceLevel}
+            aiOpen={aiOpen}
+            onSetAssistanceLevel={(level) => setAssistanceLevel(level)}
+            onOpenAI={() => {
+              setAssistanceLevel(4);
+              setAiOpen((v) => !v);
+            }}
+            onUseGuidedSteps={handleGuidedSteps}
+            onShowSolution={showSolution}
+          />
         </div>
       </div>
 
-      {/* ── AIPanel ───────────────────────────────────────────────────────────── */}
-      <AIPanel
-        isOpen={aiOpen}
-        onToggle={() => setAiOpen((v) => !v)}
-        position="sidebar"
-        context={{
-          currentPage: 'study',
-          mode: 'guided',
-          question: {
-            id: question.id,
-            content: buildQuestionContent(question),
-            topic: question.area,
-            difficulty: question.difficulty,
-          },
-          student: {
-            masteryLevel: 0.58,
-            recentPerformance: feedback === 'wrong' ? 'struggling' : 'learning',
-          },
+      <BottomCommandBar
+        feedback={feedback}
+        onCheckStep={() => {
+          setAssistanceLevel(3);
+          handleGuidedSteps();
         }}
+        onStuck={() => setAssistanceLevel((level) => Math.max(level, 2) as AssistanceLevel)}
+        onOpenTutor={() => {
+          setAssistanceLevel(4);
+          setAiOpen(true);
+        }}
+        onShowSolution={showSolution}
       />
     </div>
   );
