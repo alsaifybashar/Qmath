@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/db/drizzle';
-import { users, exams, attemptLogs, courses } from '@/db/schema';
-import { sql, count, desc, gte } from 'drizzle-orm';
+import { users, exams, attemptLogs, courses, questions, enrollments } from '@/db/schema';
+import { sql, count, desc, gte, eq } from 'drizzle-orm';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -63,6 +63,21 @@ export async function GET() {
         // Total searches - use a reasonable mock for now (could track this in the future)
         const totalSearches = Math.floor(totalDownloads * 3.1);
 
+        // Total courses
+        const [totalCoursesResult] = await db.select({ count: count() }).from(courses);
+        const totalCourses = totalCoursesResult?.count || 0;
+
+        // Total published questions
+        const [totalQuestionsResult] = await db
+            .select({ count: count() })
+            .from(questions)
+            .where(eq(questions.status, 'published'));
+        const totalQuestions = totalQuestionsResult?.count || 0;
+
+        // Total enrollments
+        const [totalEnrollmentsResult] = await db.select({ count: count() }).from(enrollments);
+        const totalEnrollments = totalEnrollmentsResult?.count || 0;
+
         // Calculate storage used (uploads directory)
         let storageUsed = '0 B';
         try {
@@ -117,11 +132,11 @@ export async function GET() {
         const topCoursesRaw = await db
             .select({
                 courseCode: exams.courseCode,
-                courseName: exams.courseName,
+                courseName: sql<string>`max(${exams.courseName})`,
                 downloads: count(),
             })
             .from(exams)
-            .groupBy(exams.courseCode, exams.courseName)
+            .groupBy(exams.courseCode)
             .orderBy(desc(count()))
             .limit(5);
 
@@ -136,6 +151,9 @@ export async function GET() {
             totalExams,
             totalDownloads,
             totalSearches,
+            totalCourses,
+            totalQuestions,
+            totalEnrollments,
             storageUsed,
             usersThisWeek,
             examsThisWeek,

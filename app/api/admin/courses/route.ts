@@ -21,13 +21,13 @@ export async function GET() {
         const examStats = await db
             .select({
                 courseCode: exams.courseCode,
-                courseName: exams.courseName,
+                courseName: sql<string>`max(${exams.courseName})`,
                 examCount: sql<number>`count(*)`,
                 withSolutions: sql<number>`coalesce(sum(case when ${exams.hasSolution} then 1 else 0 end), 0)`,
                 latestExam: sql<number>`max(${exams.examDate})`,
             })
             .from(exams)
-            .groupBy(exams.courseCode, exams.courseName);
+            .groupBy(exams.courseCode);
 
         if (examStats.length === 0) {
             return NextResponse.json({ courses: [] });

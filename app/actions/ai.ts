@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import { db } from '@/db/drizzle';
 import { courseExamAnalysisCache } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { logAIRequest } from '@/lib/ai-logger';
 
 // ============ ANTHROPIC CLIENT ============
 
@@ -392,6 +393,15 @@ Svara alltid på svenska — alla ämnesnamn (topics.name), studyTips, commonMis
 
         const elapsed = Date.now() - startTime;
         console.log(`[AI] ✅ Exam analysis: Claude responded in ${elapsed}ms (${message.usage.input_tokens} in, ${message.usage.output_tokens} out)`);
+        void logAIRequest({
+            provider: 'anthropic',
+            model: 'claude-sonnet-4-20250514',
+            requestType: 'exam_analysis',
+            promptTokens: message.usage.input_tokens,
+            completionTokens: message.usage.output_tokens,
+            latencyMs: elapsed,
+            success: true,
+        });
 
         const raw = message.content[0].type === 'text' ? message.content[0].text : '';
         const parsed = parseExamAnalysisJson(raw);
@@ -557,6 +567,15 @@ Return ONLY raw JSON (no markdown, no code fences):
 
         const elapsed = Date.now() - startTime;
         console.log(`[AI] ✅ Claude responded in ${elapsed}ms (${message.usage.input_tokens} input tokens, ${message.usage.output_tokens} output tokens)`);
+        void logAIRequest({
+            provider: 'anthropic',
+            model: 'claude-sonnet-4-20250514',
+            requestType: 'study_plan',
+            promptTokens: message.usage.input_tokens,
+            completionTokens: message.usage.output_tokens,
+            latencyMs: elapsed,
+            success: true,
+        });
 
         const raw = message.content[0].type === 'text' ? message.content[0].text : '';
 

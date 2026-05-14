@@ -16,6 +16,7 @@ import { preprocessUserInput } from '@/lib/ai/preprocessor';
 import { db } from '@/db/drizzle';
 import { questions, topics } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { logAIRequest } from '@/lib/ai-logger';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const genAI = process.env.GOOGLE_GENERATIVE_AI_API_KEY 
@@ -151,6 +152,7 @@ async function handleAnthropic(
     context: StudentContext,
     systemPrompt: string,
     model = 'claude-sonnet-4-6',
+    userId?: string,
 ) {
     const tools: Anthropic.Tool[] = [
         getMathValidationTool() as Anthropic.Tool,
@@ -258,6 +260,16 @@ async function handleAnthropic(
     // Extract the final text response
     const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === 'text');
     const assistantText = textBlock?.text ?? '';
+
+    void logAIRequest({
+        provider: 'anthropic',
+        model,
+        requestType: 'chat_tutor',
+        promptTokens: response.usage.input_tokens,
+        completionTokens: response.usage.output_tokens,
+        success: true,
+        userId,
+    });
 
     return { response: assistantText, plot, visualWidget };
 }
@@ -728,7 +740,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const result = await handleAnthropic(message, resolvedContext, systemPrompt, model);
+        const result = await handleAnthropic(message, resolvedContext, systemPrompt, model, session?.user?.id);
         return NextResponse.json({ success: true, ...result });
     } catch (err: unknown) {
         const error = err as Error;

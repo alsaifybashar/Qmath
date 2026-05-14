@@ -12,6 +12,7 @@ import {
     createQuestion,
     updateQuestion,
     createTopic,
+    deleteAdminCourse,
     deleteQuestion,
     updateQuestionStatus,
     publishQuestions,
@@ -566,6 +567,7 @@ export default function AdminQuestionsPage() {
     const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [submittingQuestion, setSubmittingQuestion] = useState(false);
     const [submittingTopic, setSubmittingTopic] = useState(false);
+    const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
     const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
     const [publishingIds, setPublishingIds] = useState<Set<string>>(new Set());
 
@@ -734,6 +736,30 @@ export default function AdminQuestionsPage() {
             alert(result.error);
         }
         setSubmittingTopic(false);
+    };
+
+    const handleDeleteCourse = async (course: any) => {
+        const confirmed = window.confirm(
+            `Remove ${course.code} - ${course.name}? This deletes the course, its exams, topics, questions, enrollments, and generated study content.`
+        );
+        if (!confirmed) return;
+
+        setDeletingCourseId(course.id);
+        const result = await deleteAdminCourse(course.id);
+        if (result.success) {
+            setCourses(prev => prev.filter(c => c.id !== course.id));
+            if (selectedCourse?.id === course.id) {
+                setSelectedCourse(null);
+                setSelectedTopicId('');
+                setTopics([]);
+                setAllQuestions([]);
+                setIsCreatingQuestion(false);
+                setIsCreatingTopic(false);
+            }
+        } else {
+            alert(result.error);
+        }
+        setDeletingCourseId(null);
     };
 
     // ── Question form helpers ────────────────────────────────────────────────
@@ -1216,33 +1242,51 @@ export default function AdminQuestionsPage() {
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {courses.map(course => (
-                                <button
+                                <div
                                     key={course.id}
-                                    onClick={() => {
-                                        setSelectedCourse(course);
-                                        setSelectedTopicId('');
-                                        setIsCreatingQuestion(false);
-                                        setIsCreatingTopic(false);
-                                    }}
-                                    className={`text-left p-4 rounded-2xl border transition-all ${selectedCourse?.id === course.id
+                                    className={`relative rounded-2xl border transition-all ${selectedCourse?.id === course.id
                                         ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white ring-2 ring-blue-500/15 shadow-[0_18px_45px_-30px_rgba(37,99,235,0.7)]'
                                         : 'border-zinc-200 bg-zinc-50/70 hover:border-blue-300 hover:bg-white'
                                         }`}
                                 >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <div className="font-mono font-bold text-zinc-900 text-lg">
-                                                {course.code}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedCourse(course);
+                                            setSelectedTopicId('');
+                                            setIsCreatingQuestion(false);
+                                            setIsCreatingTopic(false);
+                                        }}
+                                        className="w-full text-left p-4 pr-12"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="font-mono font-bold text-zinc-900 text-lg">
+                                                    {course.code}
+                                                </div>
+                                                <div className="text-sm text-zinc-600 truncate">
+                                                    {course.name}
+                                                </div>
                                             </div>
-                                            <div className="text-sm text-zinc-600 truncate">
-                                                {course.name}
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${selectedCourse?.id === course.id ? 'border-blue-200 bg-blue-600 text-white' : 'border-zinc-200 bg-white text-zinc-300'}`}>
+                                                <Check className="w-4 h-4" />
                                             </div>
                                         </div>
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${selectedCourse?.id === course.id ? 'border-blue-200 bg-blue-600 text-white' : 'border-zinc-200 bg-white text-zinc-300'}`}>
-                                            <Check className="w-4 h-4" />
-                                        </div>
-                                    </div>
-                                </button>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDeleteCourse(course)}
+                                        disabled={deletingCourseId === course.id}
+                                        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-red-200 bg-white text-red-500 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                        title={`Remove ${course.code}`}
+                                    >
+                                        {deletingCourseId === course.id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Trash2 className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
                             ))}
                         </div>
                     )}

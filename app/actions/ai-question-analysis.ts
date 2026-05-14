@@ -9,6 +9,7 @@ import { questions, topics, courses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { z } from 'zod';
+import { logAIRequest } from '@/lib/ai-logger';
 
 // ============ ANTHROPIC CLIENT ============
 
@@ -538,12 +539,22 @@ Regler:
 
         if (apiKey) {
             // Use Claude if API key is available
+            const _solveSuggestStart = Date.now();
             const message = await anthropic.messages.create({
                 model: 'claude-sonnet-4-5',
                 max_tokens: 8192,
                 temperature: 0.3,
                 system: 'Du är en elit-lärare i matematik. Skapa pedagogiska lösningar med formler och steg-för-steg-instruktioner. Skriv på svenska. Svara med JSON only.',
                 messages: [{ role: 'user', content: prompt }],
+            });
+            void logAIRequest({
+                provider: 'anthropic',
+                model: 'claude-sonnet-4-5',
+                requestType: 'solution_suggest',
+                promptTokens: message.usage.input_tokens,
+                completionTokens: message.usage.output_tokens,
+                latencyMs: Date.now() - _solveSuggestStart,
+                success: true,
             });
             rawText = collectAnthropicTextBlocks(message.content);
         } else {
@@ -655,6 +666,7 @@ export async function reviewSolutionSteps(input: {
         const apiKey = process.env.ANTHROPIC_API_KEY;
 
         if (apiKey) {
+            const _solutionReviewStart = Date.now();
             const message = await anthropic.messages.create({
                 model: 'claude-sonnet-4-5',
                 max_tokens: 2500,
@@ -671,6 +683,15 @@ Dina förslag ska:
 
 Svara ALLTID med giltig JSON utan markdown-formatering utanför JSON.`,
                 messages: [{ role: 'user', content: prompt }],
+            });
+            void logAIRequest({
+                provider: 'anthropic',
+                model: 'claude-sonnet-4-5',
+                requestType: 'solution_review',
+                promptTokens: message.usage.input_tokens,
+                completionTokens: message.usage.output_tokens,
+                latencyMs: Date.now() - _solutionReviewStart,
+                success: true,
             });
             rawText = collectAnthropicTextBlocks(message.content);
         } else {

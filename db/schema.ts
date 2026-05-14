@@ -471,3 +471,57 @@ export const articlesRelations = relations(articles, ({ one }) => ({
         references: [users.id],
     }),
 }));
+
+// ── Audit Logs ────────────────────────────────────────────────────────────────
+// Records admin actions and significant system events for security and debugging.
+export const auditLogs = sqliteTable('audit_logs', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    type: text('type').notNull(),          // e.g. 'user_role_change', 'user_delete', 'key_revoke'
+    actorId: text('actor_id'),             // admin who performed the action
+    actorEmail: text('actor_email'),
+    targetId: text('target_id'),           // affected entity id
+    targetType: text('target_type'),       // 'user' | 'exam' | 'api_key' | ...
+    description: text('description').notNull(),
+    metadata: text('metadata', { mode: 'json' }),
+    ipAddress: text('ip_address'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+// ── AI Request Logs ───────────────────────────────────────────────────────────
+// Tracks every AI API call for monitoring success rates, latency, and token usage.
+export const aiRequestLogs = sqliteTable('ai_request_logs', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    provider: text('provider').notNull(),          // 'anthropic' | 'google'
+    model: text('model').notNull(),
+    requestType: text('request_type'),             // e.g. 'question_analysis', 'exam_analysis'
+    promptTokens: integer('prompt_tokens'),
+    completionTokens: integer('completion_tokens'),
+    latencyMs: integer('latency_ms'),
+    success: integer('success', { mode: 'boolean' }).notNull(),
+    errorMessage: text('error_message'),
+    userId: text('user_id'),                       // who triggered the request (optional)
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+// ── API Keys ──────────────────────────────────────────────────────────────────
+// Manages externally issued API keys for integrations. Full key is shown once at
+// generation time; only a SHA-256 hash and 8-char prefix are stored.
+export const apiKeys = sqliteTable('api_keys', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    name: text('name').notNull(),                  // human label, e.g. "Production LLM Key"
+    keyHash: text('key_hash').notNull(),           // SHA-256 of the full key
+    keyPrefix: text('key_prefix').notNull(),       // first 8 chars — shown in UI
+    permissions: text('permissions', { mode: 'json' }), // string[] of scopes
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+    lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+    isActive: integer('is_active', { mode: 'boolean' }).default(true),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+    creator: one(users, {
+        fields: [apiKeys.createdBy],
+        references: [users.id],
+    }),
+}));

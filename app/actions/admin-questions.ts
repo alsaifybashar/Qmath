@@ -35,6 +35,143 @@ export async function getAdminCourses() {
     }
 }
 
+export async function deleteAdminCourse(courseId: string): Promise<{ success: true } | { success: false; error: string }> {
+    try {
+        await checkAdmin();
+
+        const course = await db.query.courses.findFirst({
+            where: eq(courses.id, courseId),
+        });
+
+        if (!course) {
+            return { success: false, error: 'Course not found' };
+        }
+
+        const [{ count: sameCodeCount }] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(courses)
+            .where(eq(courses.code, course.code));
+        const isLastCourseForCode = Number(sameCodeCount) <= 1;
+
+        db.transaction((tx) => {
+            tx.run(sql`
+                delete from content_attempts
+                where content_id in (
+                    select gc.id
+                    from generated_content gc
+                    inner join topics t on t.id = gc.topic_id
+                    where t.course_id = ${courseId}
+                )
+            `);
+            tx.run(sql`
+                delete from content_quality
+                where content_id in (
+                    select gc.id
+                    from generated_content gc
+                    inner join topics t on t.id = gc.topic_id
+                    where t.course_id = ${courseId}
+                )
+            `);
+            tx.run(sql`
+                delete from generated_content
+                where topic_id in (select id from topics where course_id = ${courseId})
+            `);
+
+            tx.run(sql`
+                delete from question_attempts
+                where question_id in (
+                    select q.id
+                    from questions q
+                    inner join topics t on t.id = q.topic_id
+                    where t.course_id = ${courseId}
+                )
+            `);
+            tx.run(sql`
+                delete from question_steps
+                where question_id in (
+                    select q.id
+                    from questions q
+                    inner join topics t on t.id = q.topic_id
+                    where t.course_id = ${courseId}
+                )
+            `);
+            tx.run(sql`
+                delete from attempt_logs
+                where question_id in (
+                    select q.id
+                    from questions q
+                    inner join topics t on t.id = q.topic_id
+                    where t.course_id = ${courseId}
+                )
+            `);
+            tx.run(sql`
+                delete from diagnostic_item_responses
+                where topic_id in (select id from topics where course_id = ${courseId})
+                   or question_id in (
+                        select q.id
+                        from questions q
+                        inner join topics t on t.id = q.topic_id
+                        where t.course_id = ${courseId}
+                   )
+            `);
+
+            tx.run(sql`
+                delete from user_mastery
+                where topic_id in (select id from topics where course_id = ${courseId})
+            `);
+            tx.run(sql`
+                delete from user_topic_mastery
+                where topic_id in (select id from topics where course_id = ${courseId})
+            `);
+            tx.run(sql`
+                delete from calibration_logs
+                where topic_id in (select id from topics where course_id = ${courseId})
+            `);
+            tx.run(sql`
+                delete from prerequisite_edges
+                where from_topic_id in (select id from topics where course_id = ${courseId})
+                   or to_topic_id in (select id from topics where course_id = ${courseId})
+            `);
+            tx.run(sql`
+                update misconceptions
+                set remediation_topic_id = null
+                where remediation_topic_id in (select id from topics where course_id = ${courseId})
+            `);
+
+            tx.run(sql`
+                delete from exam_questions
+                where topic_id in (select id from topics where course_id = ${courseId})
+                   or source_exam_id in (select id from source_exams where course_id = ${courseId})
+            `);
+            tx.run(sql`delete from source_exams where course_id = ${courseId}`);
+            tx.run(sql`delete from articles where course_id = ${courseId} or topic_id in (select id from topics where course_id = ${courseId})`);
+            tx.run(sql`delete from questions where topic_id in (select id from topics where course_id = ${courseId})`);
+            tx.run(sql`delete from topics where course_id = ${courseId}`);
+
+            tx.run(sql`delete from enrollments where course_id = ${courseId}`);
+            tx.run(sql`delete from user_city where course_id = ${courseId}`);
+            tx.run(sql`delete from course_areas where course_id = ${courseId}`);
+            tx.run(sql`update study_sessions set course_id = null where course_id = ${courseId}`);
+            tx.run(sql`update diagnostic_results set course_id = null where course_id = ${courseId}`);
+
+            if (isLastCourseForCode) {
+                tx.run(sql`delete from exams where course_code = ${course.code}`);
+                tx.run(sql`delete from course_exam_analysis_cache where course_code = ${course.code}`);
+            }
+            tx.delete(courses).where(eq(courses.id, courseId)).run();
+        });
+
+        revalidatePath('/admin/questions');
+        revalidatePath('/admin/courses');
+        revalidatePath('/courses');
+        revalidatePath('/archive');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete course:', error);
+        return { success: false, error: 'Failed to delete course' };
+    }
+}
+
 // ── Topics ───────────────────────────────────────────────────────────────────
 
 export async function createTopic(data: {

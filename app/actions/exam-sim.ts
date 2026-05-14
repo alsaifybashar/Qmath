@@ -6,6 +6,7 @@ import { eq, and, inArray } from 'drizzle-orm';
 import { userTopicMastery, questionAttempts } from '@/db/dashboard-schema';
 import { courses, topics, questions } from '@/db/schema';
 import { enrollments } from '@/db/schema';
+import { logAIRequest } from '@/lib/ai-logger';
 
 // ============ TYPES ============
 
@@ -230,12 +231,22 @@ Return ONLY raw JSON in exactly this format (no markdown, no backticks, no expla
                 });
             } else {
                 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+                const _examSimStart = Date.now();
                 const message = await anthropic.messages.create({
                     model: 'claude-3-5-sonnet-20241022',
                     max_tokens: 2000,
                     temperature: 0.7,
                     system: 'You are a precise JSON-generating math tutor AI. Return ONLY JSON without markdown.',
                     messages: [{ role: 'user', content: batchPrompt }]
+                });
+                void logAIRequest({
+                    provider: 'anthropic',
+                    model: 'claude-3-5-sonnet-20241022',
+                    requestType: 'exam_sim_questions',
+                    promptTokens: message.usage.input_tokens,
+                    completionTokens: message.usage.output_tokens,
+                    latencyMs: Date.now() - _examSimStart,
+                    success: true,
                 });
                 questionsJson = message.content[0].type === 'text' ? message.content[0].text : '';
             }

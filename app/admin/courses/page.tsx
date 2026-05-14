@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
+import { deleteAdminCourse } from '@/app/actions/admin-questions';
 import {
     BookOpen,
     FileText,
@@ -12,6 +13,8 @@ import {
     HelpCircle,
     ExternalLink,
     Layers,
+    Loader2,
+    Trash2,
 } from 'lucide-react';
 
 interface AdminCourse {
@@ -27,6 +30,7 @@ export default function AdminCoursesPage() {
     const { data: session } = useSession();
     const [courses, setCourses] = useState<AdminCourse[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
 
     useEffect(() => {
         (async () => {
@@ -43,6 +47,27 @@ export default function AdminCoursesPage() {
             }
         })();
     }, []);
+
+    const handleDeleteCourse = async (course: AdminCourse) => {
+        if (!course.id) {
+            alert('This course cannot be removed because it has no course record.');
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Remove ${course.courseCode} - ${course.courseName}? This deletes the course, its exams, topics, questions, enrollments, and generated study content.`
+        );
+        if (!confirmed) return;
+
+        setDeletingCourseId(course.id);
+        const result = await deleteAdminCourse(course.id);
+        if (result.success) {
+            setCourses(prev => prev.filter(c => c.id !== course.id));
+        } else {
+            alert(result.error);
+        }
+        setDeletingCourseId(null);
+    };
 
     if (!session) return null;
 
@@ -195,6 +220,19 @@ export default function AdminCoursesPage() {
                                     >
                                         <FileText className="w-3.5 h-3.5" />
                                     </Link>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDeleteCourse(course)}
+                                        disabled={!course.id || deletingCourseId === course.id}
+                                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 text-xs font-medium transition-colors"
+                                        title="Remove course"
+                                    >
+                                        {deletingCourseId === course.id ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                         ))}
