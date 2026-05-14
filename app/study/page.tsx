@@ -766,7 +766,7 @@ function WrongFeedback({
                         onClick={onSkip}
                         className="flex items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm font-semibold text-zinc-500 transition-colors hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:text-white"
                     >
-                        Hoppa över
+                        Nästa
                         <ChevronRight className="h-4 w-4" />
                     </button>
                 </div>

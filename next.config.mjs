@@ -1,3 +1,8 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const repoRoot = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     // Auth runs in root `proxy.ts` (Next.js 16+); see https://nextjs.org/docs/messages/middleware-to-proxy
@@ -13,6 +18,10 @@ const nextConfig = {
         serverActions: {
             bodySizeLimit: '10mb', // Increase for exam PDF uploads
         },
+    },
+
+    turbopack: {
+        root: repoRoot,
     },
 };
 

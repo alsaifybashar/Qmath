@@ -8,15 +8,46 @@ import 'katex/dist/katex.min.css';
 // Dynamically import KaTeX components with no SSR
 const BlockMath = dynamic(() => import('react-katex').then((mod) => mod.BlockMath), { ssr: false });
 
-import { useActionState } from 'react';
-import { useState } from 'react';
-import { authenticate } from '@/app/actions/auth';
+import { type FormEvent, useState } from 'react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-    const [errorMessage, formAction, isPending] = useActionState(
-        authenticate,
-        undefined,
-    );
+    const router = useRouter();
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [isPending, setIsPending] = useState(false);
+
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        setErrorMessage(null);
+        setIsPending(true);
+
+        try {
+            const formData = new FormData(event.currentTarget);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const callbackUrl = new URLSearchParams(window.location.search).get('callbackUrl') || '/dashboard';
+
+            const result = await signIn('credentials', {
+                email: typeof email === 'string' ? email : '',
+                password: typeof password === 'string' ? password : '',
+                redirect: false,
+                redirectTo: callbackUrl,
+            });
+
+            if (result?.ok && !result.error) {
+                router.push(callbackUrl);
+                router.refresh();
+                return;
+            }
+
+            setErrorMessage('Invalid credentials.');
+        } catch {
+            setErrorMessage('Something went wrong.');
+        } finally {
+            setIsPending(false);
+        }
+    }
 
     return (
         <div className="min-h-screen w-full flex bg-white dark:bg-black transition-colors duration-300">
@@ -75,10 +106,10 @@ export default function LoginPage() {
                     <div className="space-y-4">
                         {/* SSO Buttons */}
                         <div className="grid grid-cols-2 gap-4">
-                            <button className="flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all font-medium text-zinc-700 dark:text-zinc-200">
+                            <button type="button" className="flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all font-medium text-zinc-700 dark:text-zinc-200">
                                 <Mail className="w-5 h-5 text-red-500" /> Google
                             </button>
-                            <button className="flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all font-medium text-zinc-700 dark:text-zinc-200">
+                            <button type="button" className="flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all font-medium text-zinc-700 dark:text-zinc-200">
                                 <Globe className="w-5 h-5 text-blue-500" /> SSO
                             </button>
                         </div>
@@ -89,7 +120,7 @@ export default function LoginPage() {
                         </div>
 
                         {/* Email Form - Now using NextAuth */}
-                        <form action={formAction} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">E-postadress</label>
                                 <input
