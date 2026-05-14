@@ -107,7 +107,7 @@ export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
 // Topics
 export const topics = sqliteTable('topics', {
     id: text('id').primaryKey().$defaultFn(generateId),
-    courseId: text('course_id').references(() => courses.id, { onDelete: 'set null' }),
+    courseId: text('course_id').references(() => courses.id, { onDelete: 'cascade' }),
     slug: text('slug').unique().notNull(),
     title: text('title').notNull(),
     titleSv: text('title_sv'), // Swedish title
@@ -442,7 +442,7 @@ export const articles = sqliteTable('articles', {
     title: text('title').notNull(),
     titleSv: text('title_sv'),
     excerpt: text('excerpt'),             // Short description for cards / search results
-    courseId: text('course_id').references(() => courses.id, { onDelete: 'set null' }),
+    courseId: text('course_id').references(() => courses.id, { onDelete: 'cascade' }),
     topicId: text('topic_id').references(() => topics.id, { onDelete: 'set null' }),
     // JSON array of ArticleBlock — see types/articles.ts for block definitions
     contentBlocks: text('content_blocks', { mode: 'json' }),

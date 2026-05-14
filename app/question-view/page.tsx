@@ -5,6 +5,7 @@ import type { ElementType } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import 'katex/dist/katex.min.css';
 import { MathInputWithToolbar } from '@/components/study/MathInputWithToolbar';
 import {
   AlertCircle,
@@ -364,17 +365,54 @@ function buildQuestionContent(q: DemoQuestion): string {
   return lines.join('\n');
 }
 
+const MATH_TOKEN_RE = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^\$\n]+?\$|\\\([\s\S]*?\\\))/g;
+
+function looksLikeStandaloneLatex(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed || /\s/.test(trimmed)) return false;
+  return /\\[a-zA-Z]+|[_^{}]|\\[,;:!]/.test(trimmed);
+}
+
 function RichText({ text, className = '' }: { text: string; className?: string }) {
-  const parts = text.split(/(\$[^$]+\$)/g).filter(Boolean);
+  const parts = text.split(MATH_TOKEN_RE).filter(Boolean);
+
+  if (parts.length === 1 && looksLikeStandaloneLatex(parts[0])) {
+    return (
+      <span className={className}>
+        <InlineMath math={parts[0].trim()} />
+      </span>
+    );
+  }
+
   return (
     <span className={className}>
-      {parts.map((part, i) =>
-        part.startsWith('$') && part.endsWith('$') ? (
-          <InlineMath key={i} math={part.slice(1, -1)} />
-        ) : (
-          <span key={i}>{part}</span>
-        )
-      )}
+      {parts.map((part, i) => {
+        if (part.startsWith('$$') && part.endsWith('$$')) {
+          return (
+            <span key={i} className="my-2 block overflow-x-auto">
+              <BlockMath math={part.slice(2, -2).trim()} />
+            </span>
+          );
+        }
+
+        if (part.startsWith('\\[') && part.endsWith('\\]')) {
+          return (
+            <span key={i} className="my-2 block overflow-x-auto">
+              <BlockMath math={part.slice(2, -2).trim()} />
+            </span>
+          );
+        }
+
+        if (part.startsWith('$') && part.endsWith('$')) {
+          return <InlineMath key={i} math={part.slice(1, -1).trim()} />;
+        }
+
+        if (part.startsWith('\\(') && part.endsWith('\\)')) {
+          return <InlineMath key={i} math={part.slice(2, -2).trim()} />;
+        }
+
+        return <span key={i}>{part}</span>;
+      })}
     </span>
   );
 }

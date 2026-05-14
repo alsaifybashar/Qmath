@@ -12,6 +12,7 @@ import {
     createQuestion,
     updateQuestion,
     createTopic,
+    deleteTopic,
     deleteAdminCourse,
     deleteQuestion,
     updateQuestionStatus,
@@ -568,6 +569,7 @@ export default function AdminQuestionsPage() {
     const [submittingQuestion, setSubmittingQuestion] = useState(false);
     const [submittingTopic, setSubmittingTopic] = useState(false);
     const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
+    const [deletingTopicId, setDeletingTopicId] = useState<string | null>(null);
     const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
     const [publishingIds, setPublishingIds] = useState<Set<string>>(new Set());
 
@@ -736,6 +738,30 @@ export default function AdminQuestionsPage() {
             alert(result.error);
         }
         setSubmittingTopic(false);
+    };
+
+    const handleDeleteTopic = async (topicId: string) => {
+        const topic = topics.find(t => t.id === topicId);
+        if (!topic) return;
+
+        const confirmed = window.confirm(
+            `Remove topic "${topic.title}"? This will delete all questions, generated content, and student progress for this topic.`
+        );
+        if (!confirmed) return;
+
+        setDeletingTopicId(topicId);
+        const result = await deleteTopic(topicId);
+        if (result.success) {
+            setTopics(prev => prev.filter(t => t.id !== topicId));
+            if (selectedTopicId === topicId) {
+                setSelectedTopicId('');
+                setAllQuestions([]);
+                setIsCreatingQuestion(false);
+            }
+        } else {
+            alert(result.error);
+        }
+        setDeletingTopicId(null);
     };
 
     const handleDeleteCourse = async (course: any) => {
@@ -1360,20 +1386,39 @@ export default function AdminQuestionsPage() {
                         ) : (
                             <div className="flex flex-wrap gap-2">
                                 {topics.map(topic => (
-                                    <button
-                                        key={topic.id}
-                                        onClick={() => {
-                                            setSelectedTopicId(topic.id);
-                                            setIsCreatingQuestion(false);
-                                            setActiveTab('draft');
-                                        }}
-                                        className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${selectedTopicId === topic.id
-                                            ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                                            : 'border-zinc-200 bg-zinc-50/80 text-zinc-700 hover:border-blue-300 hover:bg-white'
-                                            }`}
-                                    >
-                                        {topic.title}
-                                    </button>
+                                    <div key={topic.id} className="group relative flex items-center">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedTopicId(topic.id);
+                                                setIsCreatingQuestion(false);
+                                                setActiveTab('draft');
+                                            }}
+                                            className={`pl-4 pr-10 py-2 rounded-full border text-sm font-medium transition-all ${selectedTopicId === topic.id
+                                                ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                                : 'border-zinc-200 bg-zinc-50/80 text-zinc-700 hover:border-blue-300 hover:bg-white'
+                                                }`}
+                                        >
+                                            {topic.title}
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteTopic(topic.id);
+                                            }}
+                                            disabled={deletingTopicId === topic.id}
+                                            className={`absolute right-2 p-1.5 rounded-full transition-all ${selectedTopicId === topic.id
+                                                ? 'text-blue-200 hover:text-white hover:bg-white/10'
+                                                : 'text-zinc-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100'
+                                                }`}
+                                            title={`Remove topic "${topic.title}"`}
+                                        >
+                                            {deletingTopicId === topic.id ? (
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            )}
+                                        </button>
+                                    </div>
                                 ))}
                             </div>
                         )}
