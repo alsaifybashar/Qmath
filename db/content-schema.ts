@@ -11,7 +11,7 @@ const generateId = () => crypto.randomUUID();
 // ============================================================================
 export const sourceExams = sqliteTable('source_exams', {
     id: text('id').primaryKey().$defaultFn(generateId),
-    courseId: text('course_id').references(() => courses.id, { onDelete: 'set null' }),
+    courseId: text('course_id').references(() => courses.id, { onDelete: 'cascade' }),
     examDate: integer('exam_date', { mode: 'timestamp' }),
     examType: text('exam_type'), // 'midterm', 'final', 'retake'
     fileName: text('file_name').notNull(),

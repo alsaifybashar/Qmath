@@ -53,7 +53,7 @@ export async function deleteAdminCourse(courseId: string): Promise<{ success: tr
             .where(eq(courses.code, course.code));
         const isLastCourseForCode = Number(sameCodeCount) <= 1;
 
-        db.transaction((tx) => {
+        await db.transaction(async (tx) => {
             tx.run(sql`
                 delete from content_attempts
                 where content_id in (
@@ -216,6 +216,93 @@ export async function createTopic(data: {
     } catch (error) {
         console.error('Failed to create topic:', error);
         return { success: false, error: 'Failed to create topic' };
+    }
+}
+
+export async function deleteTopic(topicId: string): Promise<{ success: true } | { success: false; error: string }> {
+    try {
+        await checkAdmin();
+
+        const topic = await db.query.topics.findFirst({
+            where: eq(topics.id, topicId),
+        });
+
+        if (!topic) {
+            return { success: false, error: 'Topic not found' };
+        }
+
+        await db.transaction(async (tx) => {
+            // Delete content related to this topic
+            tx.run(sql`
+                delete from content_attempts
+                where content_id in (
+                    select id from generated_content where topic_id = ${topicId}
+                )
+            `);
+            tx.run(sql`
+                delete from content_quality
+                where content_id in (
+                    select id from generated_content where topic_id = ${topicId}
+                )
+            `);
+            tx.run(sql`delete from generated_content where topic_id = ${topicId}`);
+
+            // Delete question related to this topic
+            tx.run(sql`
+                delete from question_attempts
+                where question_id in (
+                    select id from questions where topic_id = ${topicId}
+                )
+            `);
+            tx.run(sql`
+                delete from question_steps
+                where question_id in (
+                    select id from questions where topic_id = ${topicId}
+                )
+            `);
+            tx.run(sql`
+                delete from attempt_logs
+                where question_id in (
+                    select id from questions where topic_id = ${topicId}
+                )
+            `);
+
+            // Delete other topic relations
+            tx.run(sql`
+                delete from diagnostic_item_responses
+                where topic_id = ${topicId}
+                   or question_id in (select id from questions where topic_id = ${topicId})
+            `);
+
+            tx.run(sql`delete from user_mastery where topic_id = ${topicId}`);
+            tx.run(sql`delete from user_topic_mastery where topic_id = ${topicId}`);
+            tx.run(sql`delete from calibration_logs where topic_id = ${topicId}`);
+            tx.run(sql`
+                delete from prerequisite_edges
+                where from_topic_id = ${topicId}
+                   or to_topic_id = ${topicId}
+            `);
+
+            tx.run(sql`
+                update misconceptions
+                set remediation_topic_id = null
+                where remediation_topic_id = ${topicId}
+            `);
+
+            tx.run(sql`update articles set topic_id = null where topic_id = ${topicId}`);
+            tx.run(sql`update exam_questions set topic_id = null where topic_id = ${topicId}`);
+
+            tx.run(sql`delete from questions where topic_id = ${topicId}`);
+            tx.run(sql`delete from topics where id = ${topicId}`);
+        });
+
+        revalidatePath('/admin/questions');
+        revalidatePath('/study');
+        revalidatePath('/practice');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete topic:', error);
+        return { success: false, error: 'Failed to delete topic' };
     }
 }
 

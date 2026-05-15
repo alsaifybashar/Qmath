@@ -9,12 +9,13 @@ echo "✅ Using Node $(node -v)"
 
 # Kill any node/next processes and python math engine
 echo "📦 Stopping existing processes..."
+fuser -k 3000/tcp 2>/dev/null || true
+fuser -k 3001/tcp 2>/dev/null || true
+fuser -k 8000/tcp 2>/dev/null || true
 pkill -f "next dev" 2>/dev/null || true
+pkill -f "next-server" 2>/dev/null || true
 pkill -f "node.*qmath" 2>/dev/null || true
 pkill -f "uvicorn" 2>/dev/null || true
-lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-lsof -ti:3001 | xargs kill -9 2>/dev/null || true
-lsof -ti:8000 | xargs kill -9 2>/dev/null || true
 sleep 1
 
 # Clear Next.js cache
@@ -26,7 +27,7 @@ echo "🔨 Ensuring better-sqlite3 is built for $(node -v)..."
 npm rebuild better-sqlite3
 
 echo "🧮 Starting Python math-engine on port 8000..."
-(cd math-engine && source venv/bin/activate && uvicorn main:app --reload) &
+(cd math-engine && ./venv/bin/python -m uvicorn main:app --reload --port 8000) &
 MATH_PID=$!
 
 # Ensure the Python process is cleaned up when Next.js stops
