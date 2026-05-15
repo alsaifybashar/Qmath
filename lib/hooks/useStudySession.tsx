@@ -473,9 +473,9 @@ export function useStudySession(topicId?: string) {
         }
     }, []);
 
-    const submitAnswer = useCallback((answer: string, correctAnswer: any, question?: QuestionWithHelp) => {
-        // Simple validation - in production this would call the grade API
-        const isCorrect = validateAnswer(answer, correctAnswer);
+    const submitAnswer = useCallback((answer: string, correctAnswer: any, question?: QuestionWithHelp, manualIsCorrect?: boolean) => {
+        // Use manualIsCorrect if provided, otherwise fallback to validation logic
+        const isCorrect = manualIsCorrect !== undefined ? manualIsCorrect : validateAnswer(answer, correctAnswer);
 
         let feedback = isCorrect
             ? 'Du svarade rätt!'

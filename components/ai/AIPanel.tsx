@@ -457,7 +457,7 @@ export function AIPanel({
                 </div>
 
                 {/* Messages — scrollable */}
-                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scroll-smooth">
+                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scroll-smooth relative">
                     {/* Loading greeting */}
                     {messages.length === 0 && isLoading && (
                         <div className="flex items-center gap-3">
@@ -780,7 +780,7 @@ export function AIPanel({
                 )}
 
                 {/* Messages — min-h-0 ensures flex-1 respects overflow-y-auto in flex columns */}
-                <div className={isFullScreen ? "flex-1 min-h-0 overflow-y-auto w-full relative pb-40 pt-10 px-4 scroll-smooth" : "flex-1 min-h-0 overflow-y-auto p-4 space-y-4"}>
+                <div className={isFullScreen ? "flex-1 min-h-0 overflow-y-auto w-full relative pb-40 pt-10 px-4 scroll-smooth" : "flex-1 min-h-0 overflow-y-auto p-4 space-y-4 relative"}>
                     <div className={isFullScreen ? "max-w-4xl mx-auto space-y-12 flex flex-col" : "space-y-4"}>
                         {messages.length === 0 ? (
                             <div className={isFullScreen ? "h-full flex flex-col items-center justify-center text-center p-4 mt-20" : "h-full flex flex-col items-center justify-center text-center p-4"}>

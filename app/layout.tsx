@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Atkinson_Hyperlegible } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -7,7 +7,12 @@ import { Providers } from './providers';
 
 import { GlobalErrorLogger } from '@/components/GlobalErrorLogger';
 
-const inter = Inter({ subsets: ['latin'] });
+const atkinsonHyperlegible = Atkinson_Hyperlegible({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Qmath | Adaptiv lärplattform för universitetsmatte',
@@ -21,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="sv" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={atkinsonHyperlegible.variable}>
         <GlobalErrorLogger />
         <Providers>
           <ThemeProvider

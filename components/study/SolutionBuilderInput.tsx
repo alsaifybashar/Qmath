@@ -145,14 +145,14 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
     }
 
     return (
-        <div className="w-full max-w-2xl mx-auto">
+        <div className="w-full">
             {/* Question */}
             <div className="mb-6">
-                <div className="text-xl font-medium text-zinc-900 dark:text-zinc-100 leading-relaxed mb-4">
+                <div className="text-lg md:text-xl font-medium text-black dark:text-zinc-100 leading-relaxed mb-4">
                     <MathRenderer text={question.content.question.text} />
                 </div>
                 {question.content.question.math && (
-                    <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl inline-block">
+                    <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl inline-block text-lg md:text-xl text-black dark:text-zinc-100">
                         <MathRenderer text={question.content.question.math} block />
                     </div>
                 )}

@@ -44,14 +44,14 @@ export function FillBlankInput({ question, onAnswer }: FillBlankProps) {
     const parts = question.question.text.split(/(\{\{\d+\}\})/g);
 
     return (
-        <div className="w-full max-w-2xl mx-auto flex flex-col h-full items-center justify-center">
+        <div className="w-full flex flex-col h-full items-stretch justify-start">
             {question.question.math && (
                 <div className="mb-8 w-full">
                     <MathRenderer text={question.question.math} block />
                 </div>
             )}
 
-            <div className="text-xl md:text-2xl leading-loose font-medium text-zinc-800 dark:text-zinc-100 text-center">
+            <div className="text-lg md:text-xl leading-loose font-medium text-black dark:text-zinc-100 text-left">
                 {parts.map((part, i) => {
                     const match = part.match(/\{\{(\d+)\}\}/);
                     if (match) {

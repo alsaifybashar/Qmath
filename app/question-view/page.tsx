@@ -1344,14 +1344,6 @@ export default function QuestionViewPage() {
                 </span>
               </div>
 
-              {/* Title */}
-              <h1 className="mb-2 text-xl font-bold text-zinc-900 dark:text-white sm:text-2xl">
-                {question.title}
-              </h1>
-              <p className="mb-5 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                {question.intro}
-              </p>
-
               {/* Prompt + math */}
               <div className="space-y-3 rounded-xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-zinc-700/60 dark:bg-zinc-800/30">
                 {question.prompt.map((p) => (

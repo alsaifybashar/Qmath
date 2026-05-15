@@ -16,14 +16,17 @@ interface MathRendererProps {
 export const MathRenderer = memo(({ text, block = false, className = '' }: MathRendererProps) => {
     if (!text) return null;
 
+    const mathTextClass =
+        '[&_.katex]:text-[1em] [&_.katex]:text-inherit [&_.katex-display]:text-left [&_.katex-display]:text-[1em] [&_.katex-display]:text-inherit [&_.katex-display]:my-2';
+
     if (block) {
-        return <div className={`katex-block ${className}`}><BlockMath math={text} /></div>;
+        return <div className={`katex-block text-inherit ${mathTextClass} ${className}`}><BlockMath math={text} /></div>;
     }
 
     const parts = text.split(/(\$\$[\s\S]*?\$\$)|(\$[\s\S]*?\$)|(\\\([\s\S]*?\\\))/g).filter(p => p !== undefined && p !== '');
 
     return (
-        <span className={`katex-inline whitespace-pre-wrap ${className}`}>
+        <span className={`katex-inline whitespace-pre-wrap text-inherit ${mathTextClass} ${className}`}>
             {parts.map((part, i) => {
                 if (part.startsWith('$$') && part.endsWith('$$')) {
                     return <div key={i} className="my-2"><BlockMath math={part.slice(2, -2)} /></div>;

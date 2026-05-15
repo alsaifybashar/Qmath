@@ -64,14 +64,14 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
     }
 
     return (
-        <div className="w-full max-w-2xl mx-auto flex flex-col h-full">
+        <div className="w-full flex flex-col h-full">
             {/* Question Area - Top */}
             <div className="flex-1 mb-6">
-                <div className="text-lg md:text-xl font-medium text-zinc-800 dark:text-zinc-100 leading-relaxed">
+                <div className="text-lg md:text-xl font-medium text-black dark:text-zinc-100 leading-relaxed">
                     <MathRenderer text={questionData.text} />
                 </div>
                 {questionData.math && (
-                    <div className="my-6 flex justify-center p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                    <div className="my-6 flex justify-start p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 text-lg md:text-xl text-black dark:text-zinc-100">
                         <MathRenderer text={questionData.math} block />
                     </div>
                 )}

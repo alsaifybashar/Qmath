@@ -38,8 +38,8 @@ export function ToggleInput({ question, onAnswer }: ToggleProps) {
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto flex flex-col h-full items-center justify-center">
-            <h2 className="text-xl md:text-2xl font-medium text-zinc-900 dark:text-zinc-100 mb-8 text-center leading-relaxed">
+        <div className="w-full flex flex-col h-full items-stretch justify-start">
+            <h2 className="text-lg md:text-xl font-medium text-black dark:text-zinc-100 mb-8 text-left leading-relaxed">
                 <MathRenderer text={question.question.text} />
             </h2>
 

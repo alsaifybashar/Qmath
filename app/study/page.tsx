@@ -47,15 +47,18 @@ const BlockMath = dynamic(
 
 // ── Math answer input with toolbar ────────────────────────────────────────────
 function SimpleNumericInput({
-    correctAnswer,
+    question,
     onAnswer,
 }: {
-    correctAnswer: string;
+    question: any;
     onAnswer: (value: string, isCorrect: boolean) => void;
 }) {
     const [value, setValue] = useState('');
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
+
+    const content = question.content;
+    const correctAnswer = String(question.correctAnswer ?? '');
 
     const handleSubmit = () => {
         if (!value.trim() || isSubmitted) return;
@@ -68,6 +71,20 @@ function SimpleNumericInput({
 
     return (
         <div className="space-y-4">
+            {/* Question text */}
+            {content.question?.text && (
+                <div className="text-lg md:text-xl font-medium text-black dark:text-zinc-100 leading-relaxed text-left mb-6 [&_.katex]:text-[1em] [&_.katex]:text-inherit [&_.katex-display]:text-left [&_.katex-display]:text-[1em] [&_.katex-display]:text-inherit [&_.katex-display]:my-2">
+                    <SolutionContent content={content.question.text} />
+                </div>
+            )}
+
+            {/* Math block */}
+            {content.question?.math && (
+                <div className="mb-8 p-6 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-x-auto text-lg md:text-xl text-black dark:text-zinc-100 [&_.katex]:text-[1em] [&_.katex]:text-inherit [&_.katex-display]:text-left [&_.katex-display]:text-[1em] [&_.katex-display]:text-inherit [&_.katex-display]:my-2">
+                    <BlockMath math={content.question.math} />
+                </div>
+            )}
+
             {/* MathLive WYSIWYG field + clickable toolbar */}
             <div className={`rounded-xl transition-colors ${
                 isSubmitted
@@ -496,8 +513,8 @@ function StudyHubContent() {
                                 question={currentQuestion}
                                 questionIndex={questionIndex}
                                 totalQuestions={totalQuestions}
-                                onAnswer={(answer) => {
-                                    submitAnswer(answer, currentQuestion.correctAnswer, currentQuestion);
+                                onAnswer={(answer, isCorrect) => {
+                                    submitAnswer(answer, currentQuestion.correctAnswer, currentQuestion, isCorrect);
                                 }}
                             />
                         )}
@@ -573,7 +590,33 @@ function CorrectFeedback({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: -6 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="relative"
         >
+            {/* ── Celebration particles (floating stars) ─────────────────── */}
+            <div className="absolute inset-0 pointer-events-none">
+                {[...Array(6)].map((_, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+                        animate={{
+                            opacity: [0, 1, 0],
+                            scale: [0.5, 1.2, 0.8],
+                            x: (i % 2 === 0 ? 1 : -1) * (Math.random() * 100 + 40),
+                            y: -(Math.random() * 100 + 60),
+                            rotate: Math.random() * 360,
+                        }}
+                        transition={{
+                            duration: 1.2,
+                            delay: i * 0.1,
+                            ease: "easeOut",
+                        }}
+                        className="absolute left-1/2 top-1/2 text-yellow-400"
+                    >
+                        <Zap className="w-5 h-5 fill-current" />
+                    </motion.div>
+                ))}
+            </div>
+
             {/* ── Green celebration card ─────────────────────────────────── */}
             <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 p-5 shadow-lg shadow-emerald-500/20">
                 {/* Decorative circles */}
@@ -594,7 +637,14 @@ function CorrectFeedback({
                     <div className="flex-1 min-w-0 pt-0.5">
                         {/* Headline row */}
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <span className="text-lg font-bold text-white">{motivationalMessage}</span>
+                            <motion.span
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="text-lg font-bold text-white"
+                            >
+                                {motivationalMessage}
+                            </motion.span>
 
                             {/* XP badge */}
                             <motion.span
@@ -796,7 +846,7 @@ function SolutionContent({ content }: { content: string }) {
     if (last < content.length) parts.push(content.slice(last));
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-2 text-inherit [&_.katex]:text-[1em] [&_.katex]:text-inherit [&_.katex-display]:text-left [&_.katex-display]:text-[1em] [&_.katex-display]:text-inherit [&_.katex-display]:my-2">
             {parts.map((part, i) => {
                 // Block math: $$...$$
                 const blockMatch = part.match(/^\$\$([\s\S]*?)\$\$$/);
@@ -820,7 +870,7 @@ function SolutionContent({ content }: { content: string }) {
                 // Plain text — preserve whitespace/newlines
                 if (part) {
                     return (
-                        <span key={i} className="text-sm text-orange-800 dark:text-orange-200 leading-relaxed whitespace-pre-wrap">
+                        <span key={i} className="text-inherit leading-relaxed whitespace-pre-wrap">
                             {part}
                         </span>
                     );
@@ -1049,20 +1099,6 @@ function QuestionCard({
                     {difficulty <= 2 ? 'Lätt' : difficulty <= 3 ? 'Medel' : 'Svår'}
                 </span>
             </div>
-
-            {/* Question text */}
-            {content.question?.text && (
-                <h2 className="text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-white leading-snug">
-                    {content.question.text}
-                </h2>
-            )}
-
-            {/* Math block */}
-            {content.question?.math && (
-                <div className="mt-5 p-6 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-x-auto">
-                    <BlockMath math={content.question.math} />
-                </div>
-            )}
         </div>
     );
 
@@ -1075,7 +1111,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <SimpleNumericInput
-                        correctAnswer={String(question.correctAnswer ?? '')}
+                        question={question}
                         onAnswer={(val, isCorrect) => onAnswer(val, isCorrect)}
                     />
                 </div>

@@ -34,10 +34,10 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
 
     const currentExpression = tokens.join(' ');
     // Joining with space prevents some latex merging issues, but simple concat might be better for things like '2' 'x' -> '2x'.
-    // Let's try simple concat for now, but sometimes spacing is needed for commands like \sin x. 
+    // Let's try simple concat for now, but sometimes spacing is needed for commands like \sin x.
     // Actually, blocks usually bring their own spacing or structure.
 
-    // Improved join logic: if block starts with char and prev ends with char, maybe no space? 
+    // Improved join logic: if block starts with char and prev ends with char, maybe no space?
     // For latex, space usually doesn't hurt except inside keywords.
     // We'll stick to a simple join('') for now as blocks usually have full latex tokens.
 
@@ -52,8 +52,8 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto flex flex-col h-full items-center">
-            <div className="mb-6 text-xl font-medium text-zinc-800 dark:text-zinc-100 leading-relaxed">
+        <div className="w-full flex flex-col h-full items-stretch">
+            <div className="mb-6 text-lg md:text-xl font-medium text-black dark:text-zinc-100 leading-relaxed text-left">
                 <MathRenderer text={question.question.text} />
             </div>
 

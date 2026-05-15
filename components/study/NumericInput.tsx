@@ -104,7 +104,7 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
         if (!keys.includes('.')) keys.push('.'); // Ensure dot is there
         // Replace dot with slash or add slash? Usually standard keypad has both or toggles.
         // Let's add extra row or modify layout.
-        // For simple calc styled keypad: 
+        // For simple calc styled keypad:
         /*
           7 8 9
           4 5 6
@@ -115,15 +115,15 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
     }
 
     return (
-        <div className="w-full max-w-md mx-auto flex flex-col h-full">
+        <div className="w-full flex flex-col h-full">
             {/* Question Area */}
-            <div className="flex-1 mb-8 text-center flex flex-col items-center justify-center">
-                <div className="text-xl font-medium text-zinc-800 dark:text-zinc-100 mb-4">
+            <div className="flex-1 mb-8 flex flex-col items-stretch justify-start">
+                <div className="text-lg md:text-xl font-medium text-black dark:text-zinc-100 mb-4 text-left">
                     <MathRenderer text={question.question.text} />
                 </div>
                 {question.question.math && (
-                    <div className="mb-8">
-                        <MathRenderer text={question.question.math} block className="text-2xl" />
+                    <div className="mb-8 text-lg md:text-xl text-black dark:text-zinc-100">
+                        <MathRenderer text={question.question.math} block />
                     </div>
                 )}
 

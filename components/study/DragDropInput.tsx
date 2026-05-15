@@ -33,8 +33,8 @@ export function DragDropInput({ question, onAnswer }: DragDropProps) {
     };
 
     return (
-        <div className="w-full max-w-xl mx-auto flex flex-col h-full items-center justify-center">
-            <h2 className="text-xl font-medium text-zinc-900 dark:text-zinc-100 mb-8 text-center">
+        <div className="w-full flex flex-col h-full items-stretch justify-start">
+            <h2 className="text-lg md:text-xl font-medium text-black dark:text-zinc-100 mb-8 text-left">
                 <MathRenderer text={question.question.text} />
             </h2>
 
@@ -62,7 +62,7 @@ export function DragDropInput({ question, onAnswer }: DragDropProps) {
                                 <GripVertical className="w-6 h-6" />
                             </div>
                         )}
-                        <div className="flex-1 font-medium text-lg text-zinc-800 dark:text-zinc-200">
+                        <div className="flex-1 font-medium text-lg text-black dark:text-zinc-200">
                             <MathRenderer text={item.content} />
                         </div>
 

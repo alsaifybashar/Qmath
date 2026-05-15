@@ -191,7 +191,7 @@ export default function PdfViewer({ url, accent = 'blue' }: PdfViewerProps) {
             {/* ── PDF Content ── */}
             <div
                 ref={containerRef}
-                className="flex-1 overflow-y-auto overflow-x-auto"
+                className="flex-1 overflow-y-auto overflow-x-auto relative"
                 style={{ scrollbarGutter: 'stable', scrollBehavior: 'auto' }}
             >
                 {loading && (
