@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Send, X, Minimize2, Maximize2, Loader2, Sparkles, LayoutGrid, Mic } from 'lucide-react';
+import { Send, X, Minimize2, Maximize2, Loader2, Sparkles, LayoutGrid, Mic, Star } from 'lucide-react';
 import { AIGraph } from './AIGraph';
 import { GridMultiplier } from '../interactive/GridMultiplier';
 import { ColumnAddition } from '../interactive/ColumnAddition';
@@ -99,7 +99,7 @@ export function AIPanel({
     onToggle,
     context,
     position = 'sidebar',
-    onSendMessage
+    onSendMessage,
 }: AIPanelProps) {
     const [messages, setMessages] = useState<AIMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -331,7 +331,7 @@ export function AIPanel({
                 if (!response.ok) {
                     // Surface the server's human-readable details when available
                     // (e.g. Ollama timeout message), otherwise use a generic fallback.
-                    let detail = 'Failed to get a response. Please try again.';
+                    let detail = 'Handledaren kunde inte svara just nu — ge det en stund.';
                     try {
                         const errBody = await response.json();
                         if (errBody?.details) detail = errBody.details;
@@ -357,7 +357,7 @@ export function AIPanel({
             const errorMessage: AIMessage = {
                 id: `msg_${Date.now()}_error`,
                 role: 'assistant',
-                content: `Sorry, I encountered an error: ${error?.message || "Please try again."}`,
+                content: `Något gick fel: ${error?.message || "ge det en stund."}`,
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, errorMessage]);
@@ -433,27 +433,36 @@ export function AIPanel({
     if (position === 'panel') {
         const QUICK_REPLIES = ['Jag förstår inte', 'Kan du förklara mer?', 'Vad är nästa steg?', 'Ge mig en ledtråd'];
         return (
-            <div className="flex flex-col h-full bg-white dark:bg-zinc-950">
+            <div className="flex h-full flex-col bg-white/70 text-zinc-950 backdrop-blur-2xl dark:bg-zinc-950/55 dark:text-white">
                 {/* Header */}
-                <div className="flex-none px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3 bg-white dark:bg-zinc-900/80">
-                    <div className="w-8 h-8 bg-violet-100 dark:bg-violet-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                <div className="flex-none border-b border-white/60 bg-white/45 px-4 py-3 shadow-sm backdrop-blur-2xl dark:border-white/10 dark:bg-white/5">
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-white/80 shadow-lg shadow-violet-500/10 dark:border-white/10 dark:bg-white/10">
+                            <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.9),transparent_42%),linear-gradient(135deg,rgba(124,58,237,0.26),rgba(14,165,233,0.12))]" />
+                            <div className="relative">
+                                <Star className="h-4 w-4 text-violet-700 dark:text-violet-200 fill-current" />
+                                <Star className="absolute -top-1 -right-1 h-2 w-2 text-violet-500 dark:text-violet-300 fill-current" />
+                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                                <h3 className="font-semibold text-sm text-zinc-950 dark:text-white leading-none">AI-handledare</h3>
+                                <Sparkles className="h-3.5 w-3.5 text-violet-500 dark:text-violet-300" />
+                            </div>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-1">
+                                {context.question?.topic || 'Vägledning'}
+                            </p>
+                        </div>
+                        {/* Model selector */}
+                        <ModelSelector value={selectedModel} onChange={setSelectedModel} direction="down" compact />
+                        <button
+                            onClick={onToggle}
+                            className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-white rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex-shrink-0"
+                            title="Stäng handledaren"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm text-zinc-900 dark:text-white leading-none">AI-handledare</h3>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
-                            {context.question?.topic || 'Vägledning'}
-                        </p>
-                    </div>
-                    {/* Model selector */}
-                    <ModelSelector value={selectedModel} onChange={setSelectedModel} direction="down" compact />
-                    <button
-                        onClick={onToggle}
-                        className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-white rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex-shrink-0"
-                        title="Stäng handledaren"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
                 </div>
 
                 {/* Messages — scrollable */}
@@ -461,8 +470,8 @@ export function AIPanel({
                     {/* Loading greeting */}
                     {messages.length === 0 && isLoading && (
                         <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 bg-violet-100 dark:bg-violet-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                                <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                            <div className="w-7 h-7 bg-white/75 dark:bg-white/10 border border-white/70 dark:border-white/10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <Star className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                             </div>
                             <div className="flex items-center gap-2 text-zinc-400 text-sm">
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -478,14 +487,14 @@ export function AIPanel({
                             className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                             {message.role === 'assistant' && (
-                                <div className="w-7 h-7 bg-violet-100 dark:bg-violet-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                                    <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                                <div className="w-7 h-7 bg-white/75 dark:bg-white/10 border border-white/70 dark:border-white/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
+                                    <Star className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                                 </div>
                             )}
                             <div className={`max-w-[82%] text-sm leading-relaxed ${
                                 message.role === 'user'
-                                    ? 'bg-blue-600 text-white rounded-2xl rounded-br-sm px-4 py-2.5'
-                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-2xl rounded-bl-sm px-4 py-2.5'
+                                    ? 'bg-zinc-950 text-white rounded-2xl rounded-br-sm px-4 py-2.5 shadow-lg shadow-zinc-950/10 dark:bg-white dark:text-zinc-950'
+                                    : 'border border-white/70 bg-white/70 text-zinc-900 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/10 dark:text-zinc-100 rounded-2xl rounded-bl-sm px-4 py-2.5'
                             }`}>
                                 {message.role === 'assistant'
                                     ? <MarkdownMessage content={message.content} className="text-sm" />
@@ -516,8 +525,8 @@ export function AIPanel({
                     ))}
                     {isLoading && messages.length > 0 && (
                         <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 bg-violet-100 dark:bg-violet-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                                <Bot className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                            <div className="w-7 h-7 bg-white/75 dark:bg-white/10 border border-white/70 dark:border-white/10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <Star className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                             </div>
                             <div className="flex items-center gap-1.5 text-zinc-400 text-sm">
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -535,7 +544,7 @@ export function AIPanel({
                             <button
                                 key={reply}
                                 onClick={() => { setInputValue(reply); setTimeout(() => inputRef.current?.focus(), 0); }}
-                                className="px-3 py-1 text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300 rounded-full transition-colors border border-transparent hover:border-violet-200 dark:hover:border-violet-500/30"
+                                className="px-3 py-1 text-xs text-zinc-600 dark:text-zinc-400 bg-white/55 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 hover:text-violet-700 dark:hover:text-violet-300 rounded-full transition-colors border border-white/70 dark:border-white/10 hover:border-violet-200 dark:hover:border-violet-500/30"
                             >
                                 {reply}
                             </button>
@@ -544,7 +553,7 @@ export function AIPanel({
                 )}
 
                 {/* Input */}
-                <div className="flex-none px-4 pb-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                <div className="flex-none px-4 pb-4 pt-2 border-t border-white/60 bg-white/55 backdrop-blur-2xl dark:border-white/10 dark:bg-zinc-950/65">
                     <div className="flex gap-2 items-center">
                         <input
                             ref={inputRef as React.RefObject<HTMLInputElement>}
@@ -554,12 +563,12 @@ export function AIPanel({
                             onKeyDown={handleKeyDown}
                             placeholder="Skriv ditt svar eller fråga..."
                             disabled={isLoading}
-                            className="flex-1 px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder:text-zinc-400 text-sm rounded-xl border-2 border-transparent focus:border-violet-400 dark:focus:border-violet-500 focus:outline-none disabled:opacity-50 transition-colors"
+                            className="flex-1 px-4 py-2.5 bg-white/75 dark:bg-white/10 text-zinc-900 dark:text-white placeholder:text-zinc-400 text-sm rounded-2xl border border-white/80 dark:border-white/10 focus:border-violet-400 dark:focus:border-violet-500 focus:outline-none disabled:opacity-50 transition-colors shadow-inner"
                         />
                         <button
                             onClick={() => handleSendMessage()}
                             disabled={!inputValue.trim() || isLoading}
-                            className="p-2.5 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-200 dark:disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-xl transition-colors disabled:cursor-not-allowed flex-shrink-0"
+                            className="p-2.5 bg-zinc-950 hover:bg-violet-600 disabled:bg-zinc-200 dark:disabled:bg-zinc-700 text-white disabled:text-zinc-400 rounded-2xl transition-colors disabled:cursor-not-allowed flex-shrink-0 shadow-lg shadow-zinc-950/10 dark:bg-white dark:text-zinc-950 dark:hover:bg-violet-300"
                         >
                             <Send className="w-4 h-4" />
                         </button>
@@ -575,23 +584,31 @@ export function AIPanel({
             <motion.button
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={onToggle}
-                className="w-full p-4 bg-gradient-to-r from-violet-500/10 to-purple-500/10 hover:from-violet-500/20 hover:to-purple-500/20 rounded-2xl border border-violet-200 dark:border-violet-500/20 transition-all group"
+                className="w-full relative overflow-hidden p-4 bg-white/40 backdrop-blur-md dark:bg-zinc-900/40 rounded-2xl border border-primary-200 dark:border-primary-500/20 transition-all group shadow-glass"
             >
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-violet-100 dark:bg-violet-500/20 rounded-xl group-hover:scale-110 transition-transform">
-                        <Bot className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                {/* Neural flow background effect */}
+                <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[length:200%_200%] animate-gradient bg-gradient-to-br from-primary-500/10 via-accent-500/10 to-primary-500/10" />
+
+                <div className="flex items-center gap-3 relative z-10">
+                    <div className="p-2 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg shadow-primary-500/20">
+                        <Star className="w-5 h-5 text-white" />
                     </div>
                     <div className="text-left flex-1">
-                        <h4 className="font-semibold text-sm text-violet-900 dark:text-violet-100">
+                        <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                             AI Tutor
                         </h4>
-                        <p className="text-xs text-violet-600 dark:text-violet-300">
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
                             Need help? Click to chat
                         </p>
                     </div>
-                    <Sparkles className="w-4 h-4 text-violet-400" />
+                    <Sparkles className="w-4 h-4 text-primary-400 animate-pulse" />
                 </div>
+
+                {/* Shimmer "Spark" */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-primary-500/5 to-transparent" />
             </motion.button>
         );
     }
@@ -608,7 +625,7 @@ export function AIPanel({
                     onClick={() => setIsMinimized(false)}
                     className="w-full p-3 flex items-center gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
                 >
-                    <Bot className="w-5 h-5 text-violet-500" />
+                    <Star className="w-5 h-5 text-violet-500" />
                     <div className="flex-1 text-left">
                         <span className="text-sm font-medium">AI Tutor</span>
                         {messages.length > 0 && (
@@ -695,7 +712,7 @@ export function AIPanel({
                         {/* AI narration overlay — bottom of the viz area */}
                         {lastNarration && (
                             <div className="absolute bottom-4 left-4 right-4 z-50 px-4 py-2.5 bg-slate-950/90 backdrop-blur-md border border-violet-500/25 rounded-xl text-[12px] text-slate-300 italic pointer-events-none flex items-start gap-2 shadow-xl">
-                                <Bot className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 mt-0.5" />
+                                <Star className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 mt-0.5" />
                                 <span>{lastNarration}</span>
                             </div>
                         )}
@@ -743,7 +760,7 @@ export function AIPanel({
                     <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-500/10 dark:to-purple-500/10">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <Bot className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                                <Star className="w-5 h-5 text-violet-600 dark:text-violet-400" />
                                 <span className="font-semibold text-sm text-violet-900 dark:text-violet-100">
                                     AI Tutor
                                 </span>
@@ -785,7 +802,7 @@ export function AIPanel({
                         {messages.length === 0 ? (
                             <div className={isFullScreen ? "h-full flex flex-col items-center justify-center text-center p-4 mt-20" : "h-full flex flex-col items-center justify-center text-center p-4"}>
                                 <div className="w-16 h-16 bg-gradient-to-br from-violet-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mb-4 shadow-[var(--shadow-glow)]">
-                                    <Bot className="w-8 h-8 text-violet-600 dark:text-violet-400" />
+                                    <Star className="w-8 h-8 text-violet-600 dark:text-violet-400" />
                                 </div>
                                 <h4 className="font-semibold text-[var(--foreground)] mb-2 text-xl">
                                     {isExploreMode ? 'Explore Mathematics' : 'How can I help?'}
@@ -881,7 +898,7 @@ export function AIPanel({
                                                     <div className="self-start w-full flex flex-col">
                                                         <div className="flex items-start gap-4 inline-flex">
                                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${message.isNarration ? 'bg-violet-500/10 shadow-none' : 'bg-gradient-to-br from-blue-500 to-violet-500 shadow-[var(--shadow-glow)]'}`}>
-                                                                <Bot className="w-5 h-5 text-white" />
+                                                                <Star className="w-5 h-5 text-white" />
                                                             </div>
                                                             <div className={`flex-1 leading-relaxed pt-1 w-full max-w-full overflow-hidden ${message.isNarration ? 'text-[var(--foreground-subtle)] text-sm italic border-l-2 border-violet-500/30 pl-3' : 'text-[var(--foreground)] text-[15px]'}`}>
                                                                 {message.isNarration

@@ -117,9 +117,9 @@ export function FeedbackRenderer({
                     <div className="px-4 pb-3">
                         <button
                             onClick={onTryAgain}
-                            className="px-4 py-2 rounded-lg text-sm font-medium border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-colors"
+                            className="px-4 py-2 rounded-lg text-sm font-medium border border-amber-200 dark:border-amber-300/30 text-amber-700 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-400/10 transition-colors"
                         >
-                            Försök igen
+                            Skriv om
                         </button>
                     </div>
                 )}
@@ -204,12 +204,12 @@ export function FeedbackRenderer({
             )}
 
             {onTryAgain && (
-                <div className="px-4 pb-3 border-t border-red-100 dark:border-red-500/20 pt-2">
+                <div className="px-4 pb-3 border-t border-amber-200 dark:border-amber-300/20 pt-2">
                     <button
                         onClick={onTryAgain}
-                        className="px-4 py-2 rounded-lg text-sm font-medium border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-500/10 transition-colors"
+                        className="px-4 py-2 rounded-lg text-sm font-medium border border-amber-200 dark:border-amber-300/30 text-amber-700 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-400/10 transition-colors"
                     >
-                        Försök igen
+                        Skriv om
                     </button>
                 </div>
             )}

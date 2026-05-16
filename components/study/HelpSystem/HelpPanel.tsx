@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Lightbulb, BookOpen, ListOrdered, FileText, Bot,
+    Lightbulb, BookOpen, ListOrdered, FileText, Star,
     ChevronRight, CheckCircle, XCircle, RefreshCw
 } from 'lucide-react';
 import { MathRenderer } from '../MathRenderer';
@@ -124,12 +124,14 @@ export function HelpPanel({
                 />
             </div>
 
-            {/* AI Tutor Button (Full Width) */}
             <button
                 onClick={onRequestAI}
-                className="w-full p-3 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30"
+                className="w-full p-3 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 group"
             >
-                <Bot className="w-5 h-5" />
+                <div className="relative">
+                    <Star className="w-5 h-5 fill-current" />
+                    <Star className="absolute -top-1 -right-1 w-2.5 h-2.5 fill-white/80 transition-all duration-700 group-hover:scale-125 group-hover:rotate-[-15deg]" />
+                </div>
                 <span className="font-semibold">Ask AI Tutor</span>
             </button>
 

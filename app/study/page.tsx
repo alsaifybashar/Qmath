@@ -33,9 +33,8 @@ const HINT_LEVEL_2_DELAY_MS = 90_000;
 const WRONG_ATTEMPTS_FOR_LEVEL_3 = 3;
 
 const MOTIVATIONAL_MESSAGES = [
-    'Fantastiskt!', 'Perfekt!', 'Bra jobbat!', 'Kanon!',
-    'Utmärkt!', 'Imponerande!', 'Precis rätt!', 'Spot on!',
-    'Lysande!', 'Rätt på pricken!',
+    'Precis rätt', 'Snyggt', 'Klart', 'Fortsätt så',
+    'Bra steg', 'Det stämmer', 'Solid', 'Klockrent',
 ];
 
 
@@ -153,6 +152,7 @@ function StudyHubContent() {
 
     // ── Local state ──────────────────────────────────────────────────────────
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [helpPanelWidth, setHelpPanelWidth] = useState(32);
     const [streak, setStreak] = useState(0);
     const [maxStreak, setMaxStreak] = useState(0);
 
@@ -495,18 +495,26 @@ function StudyHubContent() {
             totalQuestions={totalQuestions}
             xpEarned={sessionProgress.xpEarned}
             streak={streak}
+            helpPanelWidth={helpPanelWidth}
+            onHelpPanelWidthChange={setHelpPanelWidth}
         >
             {/* ── Full-width single-column stack ───────────────────────────── */}
             <div className="space-y-6">
 
-                {/* Question card */}
+                {/* Question card — identical transition regardless of correct/incorrect/skipped origin.
+                    The card exhales (scale + opacity) into the glass backdrop, then the next inhales
+                    with a quiet violet rim-light. */}
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentQuestion?.id}
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.22 }}
+                        initial={{ opacity: 0, y: 16, scale: 0.99 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.985 }}
+                        transition={{
+                            opacity: { duration: 0.25, ease: 'easeOut' },
+                            y: { duration: 0.28, ease: 'easeOut' },
+                            scale: { duration: 0.28, ease: 'easeOut' },
+                        }}
                     >
                         {currentQuestion && (
                             <QuestionCard
@@ -574,7 +582,9 @@ function StudyHubContent() {
 }
 
 // ── Correct feedback ──────────────────────────────────────────────────────────
-// Shows a celebration card. The student must click "Nästa fråga" to proceed.
+// Glass-emerald verdict card. Same forward affordance as the wrong-answer
+// Nästa button: the student's hand learns one motion for "forward" regardless
+// of outcome.
 function CorrectFeedback({
     message, motivationalMessage, xpGained, streak, onContinue,
 }: {
@@ -584,98 +594,125 @@ function CorrectFeedback({
     streak: number;
     onContinue: () => void;
 }) {
+    const nextRef = useRef<HTMLButtonElement | null>(null);
+    useEffect(() => {
+        // Auto-focus so Enter advances. Delayed past the entry animation so the
+        // focus ring doesn't fight the shimmer for the eye.
+        const t = window.setTimeout(() => nextRef.current?.focus(), 350);
+        return () => window.clearTimeout(t);
+    }, []);
+
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.97, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: -6 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            exit={{ opacity: 0, scale: 0.98, y: -6 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 280 }}
             className="relative"
         >
-            {/* ── Celebration particles (floating stars) ─────────────────── */}
-            <div className="absolute inset-0 pointer-events-none">
-                {[...Array(6)].map((_, i) => (
+            {/* ── Reward halo (blooms behind, decays to zero) ───────────────── */}
+            <motion.div
+                aria-hidden
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.6, 0] }}
+                transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
+                className="pointer-events-none absolute -inset-6 rounded-3xl bg-emerald-400/25 dark:bg-emerald-400/30 blur-2xl"
+            />
+
+            {/* ── Particle ascent (3 specks, quiet) ─────────────────────────── */}
+            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-visible">
+                {[...Array(3)].map((_, i) => (
                     <motion.div
                         key={i}
                         initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
                         animate={{
-                            opacity: [0, 1, 0],
-                            scale: [0.5, 1.2, 0.8],
-                            x: (i % 2 === 0 ? 1 : -1) * (Math.random() * 100 + 40),
-                            y: -(Math.random() * 100 + 60),
-                            rotate: Math.random() * 360,
+                            opacity: [0, 0.6, 0],
+                            scale: [0.5, 1, 0.7],
+                            x: (i - 1) * 36,
+                            y: -(110 + i * 14),
                         }}
                         transition={{
-                            duration: 1.2,
-                            delay: i * 0.1,
-                            ease: "easeOut",
+                            duration: 1.0,
+                            delay: 0.4 + i * 0.08,
+                            ease: 'easeOut',
                         }}
-                        className="absolute left-1/2 top-1/2 text-yellow-400"
+                        className="absolute left-1/2 bottom-6 text-violet-500 dark:text-violet-300"
                     >
-                        <Zap className="w-5 h-5 fill-current" />
+                        <Zap className="w-3.5 h-3.5 fill-current" />
                     </motion.div>
                 ))}
             </div>
 
-            {/* ── Green celebration card ─────────────────────────────────── */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 p-5 shadow-lg shadow-emerald-500/20">
-                {/* Decorative circles */}
-                <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-white/10" />
-                <div className="absolute -right-2 -bottom-4 w-16 h-16 rounded-full bg-white/10" />
+            {/* ── Glass-emerald verdict card (light + dark variants) ────────── */}
+            <div className="relative overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50/80 dark:border-emerald-300/25 dark:bg-emerald-400/[0.08] backdrop-blur-2xl p-5 shadow-xl shadow-emerald-200/40 dark:shadow-2xl dark:shadow-emerald-950/20">
+
+                {/* Diagonal shimmer sweep — premium "confetti" that lives on the glass.
+                    The white sheen reads on both modes: it brightens the emerald
+                    surface in light mode, lifts the glass in dark mode. */}
+                <motion.div
+                    aria-hidden
+                    initial={{ x: '-110%' }}
+                    animate={{ x: '110%' }}
+                    transition={{ duration: 0.6, delay: 0.2, ease: 'easeInOut' }}
+                    className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-tr from-transparent via-white/40 to-transparent dark:via-white/15 skew-x-12"
+                />
 
                 <div className="relative flex items-start gap-4">
-                    {/* Animated checkmark */}
+                    {/* Checkmark */}
                     <motion.div
-                        initial={{ scale: 0, rotate: -20 }}
+                        initial={{ scale: 0, rotate: -12 }}
                         animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: 'spring', damping: 12, stiffness: 300, delay: 0.05 }}
-                        className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                        transition={{ type: 'spring', damping: 14, stiffness: 280, delay: 0.05 }}
+                        className="w-11 h-11 bg-emerald-100 border border-emerald-200 dark:bg-emerald-400/20 dark:border-emerald-300/30 rounded-xl flex items-center justify-center flex-shrink-0"
                     >
-                        <CheckCircle className="w-7 h-7 text-white" />
+                        <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-200" />
                     </motion.div>
 
                     <div className="flex-1 min-w-0 pt-0.5">
                         {/* Headline row */}
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                             <motion.span
-                                initial={{ opacity: 0, x: -10 }}
+                                initial={{ opacity: 0, x: -8 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.1 }}
-                                className="text-lg font-bold text-white"
+                                className="text-lg font-semibold text-emerald-900 dark:text-emerald-50"
                             >
                                 {motivationalMessage}
                             </motion.span>
 
-                            {/* XP badge */}
+                            {/* XP chip — violet pill, no count-up */}
                             <motion.span
-                                initial={{ opacity: 0, y: 8 }}
+                                initial={{ opacity: 0, y: 6 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.15 }}
-                                className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white/20 rounded-full text-sm font-bold text-white"
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-violet-100 border border-violet-200 text-violet-700 dark:bg-violet-400/20 dark:border-violet-300/25 dark:text-violet-100 rounded-full text-xs font-semibold"
                             >
-                                <Zap className="w-3.5 h-3.5" />
+                                <Zap className="w-3 h-3" />
                                 +{xpGained} XP
                             </motion.span>
 
-                            {/* Streak badge */}
+                            {/* Streak ember — only at ≥2 */}
                             {streak >= 2 && (
                                 <motion.span
-                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    initial={{ opacity: 0, scale: 0.85 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: 0.25, type: 'spring' }}
-                                    className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-orange-400/30 rounded-full text-sm font-bold text-white"
+                                    className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 border border-amber-200 text-amber-700 dark:bg-amber-400/15 dark:border-amber-300/25 dark:text-amber-100 rounded-full text-xs font-semibold"
                                 >
-                                    <Flame className="w-3.5 h-3.5" />
-                                    {streak} i rad!
+                                    <Flame className="w-3 h-3" />
+                                    {streak} i rad
                                 </motion.span>
                             )}
                         </div>
 
-                        <p className="text-emerald-100 text-sm leading-relaxed">{message}</p>
+                        {message && (
+                            <p className="text-emerald-800/80 dark:text-emerald-100/80 text-sm leading-relaxed">{message}</p>
+                        )}
                     </div>
                 </div>
 
-                {/* Next button — explicit, no auto-advance */}
+                {/* Nästa — same affordance as the wrong-answer Nästa.
+                    The gradient pill carries its own contrast and works on both modes. */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -683,10 +720,11 @@ function CorrectFeedback({
                     className="mt-4"
                 >
                     <button
+                        ref={nextRef}
                         onClick={onContinue}
-                        className="w-full py-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
+                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-400 hover:to-violet-400 active:from-blue-600 active:to-violet-600 text-white font-semibold transition-colors flex items-center justify-center gap-2 text-sm shadow-lg shadow-violet-500/25 dark:shadow-violet-950/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70 dark:focus-visible:ring-violet-300/60"
                     >
-                        Nästa fråga
+                        Nästa
                         <ChevronRight className="w-4 h-4" />
                     </button>
                 </motion.div>
@@ -725,19 +763,19 @@ function WrongFeedback({
             exit={{ opacity: 0, y: -6 }}
             transition={{ type: 'spring', damping: 22, stiffness: 300 }}
         >
-            <div className="rounded-2xl border border-orange-200 dark:border-orange-500/30 bg-orange-50/80 dark:bg-orange-500/5 overflow-hidden">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/80 dark:border-amber-300/25 dark:bg-amber-400/[0.06] backdrop-blur-2xl shadow-lg shadow-amber-200/30 dark:shadow-2xl dark:shadow-amber-950/10 overflow-hidden">
 
-                {/* ── Header: minimal wrong indicator ──────────────────────── */}
+                {/* ── Header: navigational, not evaluative ─────────────────── */}
                 <div className="px-5 pt-4 pb-3 flex items-center gap-3">
-                    <div className="w-9 h-9 bg-orange-100 dark:bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <XCircle className="w-5 h-5 text-orange-500" />
+                    <div className="w-9 h-9 bg-amber-100 border border-amber-200 dark:bg-amber-400/15 dark:border-amber-300/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <XCircle className="w-5 h-5 text-amber-600 dark:text-amber-300" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-orange-800 dark:text-orange-200 text-sm">
-                            Inte riktigt. Välj hur du vill gå vidare.
+                        <p className="font-semibold text-amber-900 dark:text-amber-100 text-sm">
+                            Inte riktigt — vill du se vägen dit?
                         </p>
-                        <p className="mt-0.5 text-sm text-orange-700 dark:text-orange-300">
-                            Du kan se hela lösningen, visa endast rätt svar, eller hoppa vidare.
+                        <p className="mt-0.5 text-sm text-amber-700/80 dark:text-amber-200/70">
+                            Välj hur du vill fortsätta.
                         </p>
                     </div>
                 </div>
@@ -753,7 +791,7 @@ function WrongFeedback({
                             transition={{ duration: 0.28, ease: 'easeInOut' }}
                             className="overflow-hidden"
                         >
-                            <div className="px-5 pb-6 border-t-2 border-orange-200 dark:border-orange-500/30">
+                            <div className="px-5 pb-6 border-t border-amber-200 dark:border-amber-300/15">
                                 {stepBreakdown
                                     ? <StepBreakdownView breakdown={stepBreakdown} />
                                     : workedExample
@@ -776,12 +814,12 @@ function WrongFeedback({
                             transition={{ duration: 0.24, ease: 'easeInOut' }}
                             className="overflow-hidden"
                         >
-                            <div className="mx-5 mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/25 dark:bg-emerald-500/10">
+                            <div className="mx-5 mb-4 rounded-2xl border border-emerald-200 bg-emerald-50/80 dark:border-emerald-300/25 dark:bg-emerald-400/[0.08] backdrop-blur-2xl p-4">
                                 <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
                                     <CheckCircle className="h-4 w-4" />
                                     Korrekt svar
                                 </div>
-                                <div className="rounded-xl bg-white/70 p-3 text-sm text-emerald-900 dark:bg-zinc-950/30 dark:text-emerald-100">
+                                <div className="rounded-xl bg-white border border-emerald-100 dark:bg-white/[0.04] dark:border-white/10 p-3 text-sm text-emerald-900 dark:text-emerald-100">
                                     {correctAnswer ? <SolutionContent content={correctAnswer} /> : 'Inget korrekt svar är angivet.'}
                                 </div>
                             </div>
@@ -789,32 +827,32 @@ function WrongFeedback({
                     )}
                 </AnimatePresence>
 
-                {/* ── Action row ───────────────────────────────────────────── */}
-                <div className="grid gap-2 border-t border-orange-100 px-5 pb-4 pt-3 dark:border-orange-500/15 sm:grid-cols-3">
+                {/* ── Three forward doors — equal visual weight, both modes ──── */}
+                <div className="grid gap-2 border-t border-amber-200 dark:border-amber-300/15 px-5 pb-4 pt-3 sm:grid-cols-3">
                     <button
                         onClick={() => {
                             setShowCorrectAnswer(false);
                             setShowFullSolution(true);
                         }}
                         disabled={!hasSolution}
-                        className="flex items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-white px-3 py-2.5 text-sm font-semibold text-orange-700 transition-colors hover:bg-orange-100/60 disabled:cursor-not-allowed disabled:opacity-45 dark:border-orange-500/30 dark:bg-zinc-900 dark:text-orange-300 dark:hover:bg-orange-500/10"
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 dark:border-white/15 dark:bg-white/[0.06] dark:text-zinc-100 dark:hover:bg-white/[0.10] dark:hover:border-white/25 backdrop-blur-md px-3 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         <BookOpen className="h-3.5 w-3.5" />
-                        Visa steg för steg lösning
+                        Visa stegen
                     </button>
                     <button
                         onClick={() => {
                             setShowFullSolution(false);
                             setShowCorrectAnswer(true);
                         }}
-                        className="flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 dark:border-emerald-500/30 dark:bg-zinc-900 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 dark:border-white/15 dark:bg-white/[0.06] dark:text-zinc-100 dark:hover:bg-white/[0.10] dark:hover:border-white/25 backdrop-blur-md px-3 py-2.5 text-sm font-semibold transition-colors"
                     >
                         <CheckCircle className="h-3.5 w-3.5" />
-                        Visa korrekt svar
+                        Visa lösningen
                     </button>
                     <button
                         onClick={onSkip}
-                        className="flex items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm font-semibold text-zinc-500 transition-colors hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:text-white"
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 dark:border-white/15 dark:bg-white/[0.06] dark:text-zinc-100 dark:hover:bg-white/[0.10] dark:hover:border-white/25 backdrop-blur-md px-3 py-2.5 text-sm font-semibold transition-colors"
                     >
                         Nästa
                         <ChevronRight className="h-4 w-4" />

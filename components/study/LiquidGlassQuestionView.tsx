@@ -4,9 +4,9 @@ import { useState, ReactNode } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Bot, Calculator, ChevronLeft, FileText,
+    Calculator, ChevronLeft, FileText,
     Flame, HelpCircle, Lightbulb, PenLine,
-    Sigma, Sparkles, X, Zap,
+    Sigma, Sparkles, Star, X, Zap,
 } from 'lucide-react';
 
 // ── GlassPanel ────────────────────────────────────────────────────────────────
@@ -402,7 +402,7 @@ export function LiquidGlassQuestionView({
                         <div className="mb-4 flex flex-shrink-0 items-center justify-between gap-2">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 text-violet-100">
-                                    <Bot className="h-5 w-5" />
+                                    <Star className="h-5 w-5" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold">AI & Help</p>

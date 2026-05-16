@@ -101,7 +101,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
             setStepFeedback({
                 isCorrect: false,
                 message: !operationMatches
-                    ? 'Det är inte rätt operation för detta steg. Försök igen!'
+                    ? 'Det är inte rätt operation för detta steg — välj en annan.'
                     : 'Värdet är inte riktigt rätt. Kontrollera din beräkning.'
             });
             setCompletedSteps(prev => [...prev, {

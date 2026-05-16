@@ -92,7 +92,7 @@ export function StepRenderer({ steps, onStepSubmit, disabled }: StepRendererProp
                 setStepStates((prev) =>
                     prev.map((s, i) =>
                         i === stepIndex
-                            ? { ...s, submitting: false, feedback: result.feedback ?? 'Svaret är inte rätt. Försök igen.', error: true }
+                            ? { ...s, submitting: false, feedback: result.feedback ?? 'Inte riktigt — titta på steget igen.', error: true }
                             : s
                     )
                 );
@@ -101,7 +101,7 @@ export function StepRenderer({ steps, onStepSubmit, disabled }: StepRendererProp
             setStepStates((prev) =>
                 prev.map((s, i) =>
                     i === stepIndex
-                        ? { ...s, submitting: false, feedback: 'Något gick fel. Försök igen.', error: true }
+                        ? { ...s, submitting: false, feedback: 'Något gick fel — ladda om sidan.', error: true }
                         : s
                 )
             );

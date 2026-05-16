@@ -304,13 +304,13 @@ function FocusedStep({
                             </button>
                         </div>
 
-                        {/* Skip link */}
+                        {/* Forward link — never "skip" */}
                         <button
                             onClick={onSkip}
                             className="w-full py-2 text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 flex items-center justify-center gap-1.5 transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
                         >
                             <SkipForward className="w-3.5 h-3.5" />
-                            Hoppa över detta steg
+                            Nästa steg
                         </button>
                     </motion.div>
                 )}

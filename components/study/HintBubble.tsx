@@ -22,32 +22,35 @@ interface HintBubbleProps {
     onDismiss?: () => void;
 }
 
+// Amber is reserved for the wrong-answer surface — hints stay informational.
+// Level 1 → blue (a quiet question), Level 2 → indigo/violet bridge (a concept),
+// Level 3 → violet (a worked first step). The gradient deepens with the rung.
 const levelConfig = {
     1: {
         icon: Lightbulb,
         label: 'Ledtråd',
-        gradient: 'from-amber-500/10 to-orange-500/10',
-        border: 'border-amber-200/60 dark:border-amber-500/20',
-        iconColor: 'text-amber-500',
-        textColor: 'text-amber-900 dark:text-amber-200',
+        gradient: 'from-blue-500/10 to-sky-500/10',
+        border: 'border-blue-200/60 dark:border-blue-300/20',
+        iconColor: 'text-blue-400',
+        textColor: 'text-blue-900 dark:text-blue-100',
         dots: 1,
     },
     2: {
         icon: BookOpen,
         label: 'Formel',
-        gradient: 'from-blue-500/10 to-indigo-500/10',
-        border: 'border-blue-200/60 dark:border-blue-500/20',
-        iconColor: 'text-blue-500',
-        textColor: 'text-blue-900 dark:text-blue-200',
+        gradient: 'from-indigo-500/10 to-violet-500/10',
+        border: 'border-indigo-200/60 dark:border-indigo-300/20',
+        iconColor: 'text-indigo-400',
+        textColor: 'text-indigo-900 dark:text-indigo-100',
         dots: 2,
     },
     3: {
         icon: Sparkles,
         label: 'Första steget',
         gradient: 'from-violet-500/10 to-purple-500/10',
-        border: 'border-violet-200/60 dark:border-violet-500/20',
-        iconColor: 'text-violet-500',
-        textColor: 'text-violet-900 dark:text-violet-200',
+        border: 'border-violet-200/60 dark:border-violet-300/20',
+        iconColor: 'text-violet-400',
+        textColor: 'text-violet-900 dark:text-violet-100',
         dots: 3,
     },
 };

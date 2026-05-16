@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, ReactNode, useCallback } from 'react';
+import { useState, ReactNode, useCallback, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ChevronLeft, X, Lightbulb, HelpCircle, Zap, Flame } from 'lucide-react';
+import { ChevronLeft, X, HelpCircle, Zap, Flame, Sparkles, Brain, Star } from 'lucide-react';
 
 interface FocusedStudyLayoutProps {
     children: ReactNode;
@@ -15,6 +15,8 @@ interface FocusedStudyLayoutProps {
     totalQuestions?: number;
     xpEarned?: number;
     streak?: number;
+    helpPanelWidth?: number;
+    onHelpPanelWidthChange?: (width: number) => void;
 }
 
 export function FocusedStudyLayout({
@@ -27,8 +29,11 @@ export function FocusedStudyLayout({
     totalQuestions = 10,
     xpEarned = 0,
     streak = 0,
+    helpPanelWidth = 32,
+    onHelpPanelWidthChange,
 }: FocusedStudyLayoutProps) {
     const [isMobileHelpOpen, setIsMobileHelpOpen] = useState(false);
+    const [isResizingHelp, setIsResizingHelp] = useState(false);
 
     const handleHelpToggle = useCallback(() => {
         onHelpToggle?.(!isHelpOpen);
@@ -39,6 +44,42 @@ export function FocusedStudyLayout({
         : 0;
 
     const splitActive = isHelpOpen && !!helpPanel;
+    const clampedHelpWidth = Math.min(56, Math.max(28, helpPanelWidth));
+
+    const handleHelpResizeStart = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+        if (!onHelpPanelWidthChange) return;
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        setIsResizingHelp(true);
+        const previousCursor = document.body.style.cursor;
+        const previousUserSelect = document.body.style.userSelect;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        const applyWidth = (clientX: number) => {
+            const nextWidth = ((window.innerWidth - clientX) / window.innerWidth) * 100;
+            onHelpPanelWidthChange(Math.min(56, Math.max(28, Math.round(nextWidth))));
+        };
+
+        applyWidth(event.clientX);
+
+        const handlePointerMove = (moveEvent: PointerEvent) => {
+            applyWidth(moveEvent.clientX);
+        };
+
+        const handlePointerUp = () => {
+            setIsResizingHelp(false);
+            document.body.style.cursor = previousCursor;
+            document.body.style.userSelect = previousUserSelect;
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('pointerup', handlePointerUp);
+            window.removeEventListener('pointercancel', handlePointerUp);
+        };
+
+        window.addEventListener('pointermove', handlePointerMove);
+        window.addEventListener('pointerup', handlePointerUp);
+        window.addEventListener('pointercancel', handlePointerUp);
+    }, [onHelpPanelWidthChange]);
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors">
@@ -96,14 +137,28 @@ export function FocusedStudyLayout({
                         {/* Help toggle — desktop */}
                         <button
                             onClick={handleHelpToggle}
-                            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                            aria-pressed={splitActive}
+                            className={`group relative overflow-hidden hidden lg:flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold shadow-sm backdrop-blur-xl transition-all duration-700 ease-in-out ${
                                 splitActive
-                                    ? 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300'
-                                    : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                                    ? 'border-primary-500/50 bg-white/70 text-zinc-950 shadow-lg shadow-primary-500/20 dark:border-white/10 dark:bg-white/10 dark:text-white'
+                                    : 'border-zinc-200/50 bg-white/55 text-zinc-600 hover:border-primary-400 hover:text-zinc-950 dark:border-white/10 dark:bg-zinc-900/40 dark:text-zinc-300 dark:hover:border-primary-500/50 dark:hover:text-white shadow-glass'
                             }`}
                         >
-                            <Lightbulb className="w-4 h-4" />
-                            <span>{splitActive ? 'Dölj handledare' : 'Hjälp'}</span>
+                            {/* Neural flow background effect */}
+                            <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[length:200%_200%] animate-gradient bg-gradient-to-br from-primary-500/10 via-accent-500/10 to-primary-500/10" />
+
+                            <span className={`relative flex h-6 w-6 items-center justify-center rounded-full transition-all duration-700 group-hover:scale-110 group-hover:rotate-[15deg] ${
+                                splitActive
+                                    ? 'bg-gradient-to-br from-primary-600 to-accent-600 text-white shadow-lg shadow-primary-600/25'
+                                    : 'bg-gradient-to-br from-primary-500/10 to-accent-500/10 text-primary-600 group-hover:bg-gradient-to-br group-hover:from-primary-500 group-hover:to-accent-500 group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary-500/30'
+                            }`}>
+                                <Star className={`h-3.5 w-3.5 transition-all duration-700 ${splitActive ? 'fill-current' : 'group-hover:fill-current'}`} />
+                                <Star className={`absolute -top-0.5 -right-0.5 h-2 w-2 transition-all duration-1000 delay-100 opacity-0 group-hover:opacity-100 group-hover:rotate-[-15deg] ${splitActive ? 'fill-current text-white/80' : 'fill-accent-400 text-accent-400'}`} />
+                            </span>
+                            <span className="relative z-10">{splitActive ? 'Handledare' : 'Chit-Chat'}</span>
+
+                            {/* Shimmer "Spark" */}
+                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-primary-500/5 to-transparent" />
                         </button>
 
                         {/* Help — mobile */}
@@ -132,9 +187,10 @@ export function FocusedStudyLayout({
 
                 {/* ── LEFT: Question content ──────────────────────────────── */}
                 <main
-                    className={`transition-all duration-300 ease-in-out overflow-y-auto ${
-                        splitActive ? 'lg:w-1/2 flex-none' : 'flex-1'
+                    className={`${isResizingHelp ? '' : 'transition-all duration-300 ease-in-out'} overflow-y-auto ${
+                        splitActive ? 'lg:flex-none lg:[width:calc(100%_-_var(--help-panel-width))]' : 'flex-1'
                     }`}
+                    style={splitActive ? { '--help-panel-width': `${clampedHelpWidth}vw` } as CSSProperties : undefined}
                 >
                     <div className={`py-8 lg:py-12 px-4 sm:px-6 ${splitActive ? 'max-w-xl mx-auto lg:px-8' : 'max-w-4xl mx-auto lg:px-8'}`}>
                         {children}
@@ -150,8 +206,36 @@ export function FocusedStudyLayout({
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: '100%', opacity: 0 }}
                             transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-                            className="hidden lg:flex fixed right-0 top-[60px] bottom-0 w-1/2 flex-col border-l border-zinc-200 dark:border-zinc-800 shadow-[-12px_0_30px_-8px_rgba(0,0,0,0.08)] dark:shadow-[-12px_0_30px_-8px_rgba(0,0,0,0.4)] z-40"
+                            className="hidden lg:flex fixed right-0 top-[60px] bottom-0 flex-col border-l border-white/60 bg-white/45 shadow-[-18px_0_55px_-24px_rgba(24,24,27,0.35)] backdrop-blur-2xl dark:border-white/10 dark:bg-zinc-950/45 dark:shadow-[-18px_0_60px_-24px_rgba(0,0,0,0.8)] z-40"
+                            style={{ width: `${clampedHelpWidth}vw` }}
                         >
+                            <div
+                                role="separator"
+                                aria-orientation="vertical"
+                                aria-label="Ändra bredd på AI-handledaren"
+                                aria-valuemin={28}
+                                aria-valuemax={56}
+                                aria-valuenow={clampedHelpWidth}
+                                onPointerDown={handleHelpResizeStart}
+                                className={`group absolute inset-y-0 left-0 z-20 -translate-x-1/2 cursor-col-resize touch-none px-2 ${
+                                    isResizingHelp ? 'select-none' : ''
+                                }`}
+                            >
+                                <div className={`h-full w-px transition-colors ${
+                                    isResizingHelp
+                                        ? 'bg-violet-500'
+                                        : 'bg-transparent group-hover:bg-violet-400/70'
+                                }`} />
+                                <div className={`absolute left-1/2 top-1/2 flex h-16 w-2 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border backdrop-blur-xl transition-all ${
+                                    isResizingHelp
+                                        ? 'border-violet-400 bg-violet-500 shadow-lg shadow-violet-500/20'
+                                        : 'border-white/70 bg-white/70 opacity-0 shadow-sm group-hover:opacity-100 dark:border-white/10 dark:bg-zinc-900/80'
+                                }`}>
+                                    <div className={`h-8 w-0.5 rounded-full ${
+                                        isResizingHelp ? 'bg-white' : 'bg-zinc-400 dark:bg-zinc-500'
+                                    }`} />
+                                </div>
+                            </div>
                             {helpPanel}
                         </motion.aside>
                     )}
@@ -180,7 +264,7 @@ export function FocusedStudyLayout({
                                     <div className="w-10 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full mb-3" />
                                     <div className="flex items-center justify-between w-full">
                                         <span className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                                            <Lightbulb className="w-4 h-4 text-violet-500" />
+                                            <Star className="w-4 h-4 text-violet-500 fill-current" />
                                             AI-handledare
                                         </span>
                                         <button

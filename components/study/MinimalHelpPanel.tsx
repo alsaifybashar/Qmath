@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lightbulb, BookOpen, Bot, ChevronRight, CheckCircle } from 'lucide-react';
+import { Lightbulb, BookOpen, Star, ChevronRight, CheckCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const BlockMath = dynamic(
@@ -192,7 +192,10 @@ export function MinimalHelpPanel({
                     className="w-full p-4 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 rounded-xl text-white transition-all group"
                 >
                     <div className="flex items-center justify-center gap-2">
-                        <Bot className="w-5 h-5" />
+                        <div className="relative">
+                            <Star className="w-5 h-5 fill-current" />
+                            <Star className="absolute -top-1 -right-1 w-2.5 h-2.5 fill-white/80 transition-all duration-700 group-hover:scale-125 group-hover:rotate-[-15deg]" />
+                        </div>
                         <span className="font-medium">Fråga AI-handledare</span>
                     </div>
                 </button>

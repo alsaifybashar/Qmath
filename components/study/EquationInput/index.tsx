@@ -232,7 +232,7 @@ export default function MathCASInput({
             }
         } catch {
             setState('wrong');
-            setFeedback({ code: 'unknown_error', message: 'Något gick fel. Försök igen.' });
+            setFeedback({ code: 'unknown_error', message: 'Något gick fel — ladda om sidan.' });
             onAnswer(value, false);
         }
     }, [value, state, disabled, showConfidence, correctAnswer, questionId, topicId, userId, ignoreConstant, questionType, confidence, onAnswer]);
@@ -406,7 +406,7 @@ export default function MathCASInput({
                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                         >
                             <RotateCcw size={14} />
-                            Försök igen
+                            Skriv om
                         </button>
                     )
                 )}

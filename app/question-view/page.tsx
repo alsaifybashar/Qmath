@@ -11,7 +11,6 @@ import {
   AlertCircle,
   ArrowRight,
   BookOpen,
-  Bot,
   Brain,
   CheckCircle2,
   ChevronLeft,
@@ -29,6 +28,7 @@ import {
   RotateCcw,
   Sigma,
   Sparkles,
+  Star,
   Sun,
   Target,
   ToggleLeft,
@@ -1032,7 +1032,7 @@ function ProgressiveTutorPanel({ question, feedback, visibleHints, assistanceLev
         <div className="border-b border-zinc-200/70 p-4 dark:border-zinc-800">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 text-white">
-              <Bot className="h-5 w-5" />
+              <Brain className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Embedded tutor</p>
@@ -1166,7 +1166,7 @@ function BottomCommandBar({ feedback, onCheckStep, onStuck, onOpenTutor, onShowS
           onClick={onOpenTutor}
           className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-accent-500 px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-primary-500/20"
         >
-          <Bot className="h-4 w-4" />
+          <Brain className="h-4 w-4" />
           Socratic tutor
         </button>
         <button
@@ -1307,16 +1307,28 @@ export default function QuestionViewPage() {
           {/* AI button */}
           <motion.button
             onClick={() => setAiOpen((v) => !v)}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all ${
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)",
+            }}
+            whileTap={{ scale: 0.95 }}
+            className={`group relative overflow-hidden inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-700 ease-in-out ${
               aiOpen
-                ? 'border-primary-500 bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-md shadow-primary-500/20'
-                : 'border-zinc-200 bg-white text-zinc-700 hover:border-primary-300 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-primary-500/50'
+                ? 'border-primary-500/50 bg-gradient-to-r from-primary-500 via-accent-500 to-primary-600 text-white shadow-lg shadow-primary-500/25'
+                : 'border-zinc-200/50 bg-white/40 backdrop-blur-md text-zinc-700 hover:border-primary-400 dark:border-white/10 dark:bg-zinc-900/40 dark:text-zinc-200 dark:hover:text-white dark:hover:border-primary-500/50 shadow-glass'
             }`}
           >
-            <Bot className="h-4 w-4" />
-            <span className="hidden sm:block">AI-hjälp</span>
+            {/* Neural flow background effect */}
+            <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[length:200%_200%] animate-gradient bg-gradient-to-br from-primary-500/20 via-accent-500/20 to-primary-500/20" />
+            
+            <div className="relative">
+              <Star className="h-4 w-4 transition-all duration-700 group-hover:scale-110 group-hover:rotate-[15deg] group-hover:fill-primary-400 group-hover:text-primary-400" />
+              <Star className="absolute -top-1.5 -right-1.5 h-2.5 w-2.5 transition-all duration-1000 delay-100 opacity-0 group-hover:opacity-100 group-hover:rotate-[-15deg] group-hover:fill-accent-400 group-hover:text-accent-400" />
+            </div>
+            <span className="hidden sm:block">Chit-Chat</span>
+            
+            {/* Shimmer "Spark" */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/10 to-transparent" />
           </motion.button>
 
           {/* Theme toggle */}

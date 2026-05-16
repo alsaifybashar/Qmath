@@ -93,7 +93,7 @@ export function CalibrationPrompt({
                         onClick={onSkip}
                         className="w-full py-2 text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
                     >
-                        Hoppa över
+                        Nästa
                     </button>
                 )}
             </div>
