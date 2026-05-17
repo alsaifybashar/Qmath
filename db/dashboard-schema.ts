@@ -220,3 +220,100 @@ export const userPersonalRecordsRelations = relations(userPersonalRecords, ({ on
         references: [users.id],
     }),
 }));
+
+// ============================================================================
+// FLASHCARD DECKS
+// ============================================================================
+export const flashcardDecks = sqliteTable('flashcard_decks', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    description: text('description'),
+    color: text('color').default('blue'), // tailwind colour token used by the UI
+    topicId: text('topic_id').references(() => topics.id, { onDelete: 'set null' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+// ============================================================================
+// FLASHCARDS - card content + source context
+// ============================================================================
+export const flashcards = sqliteTable('flashcards', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    deckId: text('deck_id').notNull().references(() => flashcardDecks.id, { onDelete: 'cascade' }),
+    topicId: text('topic_id').references(() => topics.id, { onDelete: 'set null' }),
+    type: text('type').notNull().default('basic'), // 'basic' | 'image_occlusion'
+    front: text('front'),
+    back: text('back'),
+    frontMath: text('front_math'),
+    backMath: text('back_math'),
+    imageUrl: text('image_url'),
+    occlusionMasks: text('occlusion_masks', { mode: 'json' }), // [{ x, y, w, h, label? }] (0-1 coords)
+    sourceContextType: text('source_context_type').default('manual'), // 'manual' | 'question' | 'article' | 'ai_draft'
+    sourceContextId: text('source_context_id'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+// ============================================================================
+// FLASHCARD CARD STATE - denormalised FSRS state (1:1 with flashcards)
+// ============================================================================
+export const flashcardCardState = sqliteTable('flashcard_card_state', {
+    cardId: text('card_id').primaryKey().references(() => flashcards.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    stability: real('stability').default(0),
+    difficulty: real('difficulty').default(0),
+    elapsedDays: real('elapsed_days').default(0),
+    scheduledDays: real('scheduled_days').default(0),
+    reps: integer('reps').default(0),
+    lapses: integer('lapses').default(0),
+    state: text('state').notNull().default('new'), // 'new' | 'learning' | 'review' | 'relearning'
+    lastReview: integer('last_review', { mode: 'timestamp' }),
+    nextReview: integer('next_review', { mode: 'timestamp' }).notNull(),
+});
+
+// ============================================================================
+// FLASHCARD REVIEWS - immutable append-only log
+// ============================================================================
+export const flashcardReviews = sqliteTable('flashcard_reviews', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    cardId: text('card_id').notNull().references(() => flashcards.id, { onDelete: 'cascade' }),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    rating: integer('rating').notNull(), // 1=Again, 2=Hard, 3=Good, 4=Easy
+    elapsedDays: real('elapsed_days').notNull(),
+    scheduledDays: real('scheduled_days').notNull(),
+    stability: real('stability').notNull(),
+    difficulty: real('difficulty').notNull(),
+    state: text('state').notNull(),
+    lapses: integer('lapses').notNull(),
+});
+
+// ============================================================================
+// FLASHCARD RELATIONS
+// ============================================================================
+
+export const flashcardDecksRelations = relations(flashcardDecks, ({ one, many }) => ({
+    user: one(users, { fields: [flashcardDecks.userId], references: [users.id] }),
+    topic: one(topics, { fields: [flashcardDecks.topicId], references: [topics.id] }),
+    cards: many(flashcards),
+}));
+
+export const flashcardsRelations = relations(flashcards, ({ one, many }) => ({
+    user: one(users, { fields: [flashcards.userId], references: [users.id] }),
+    deck: one(flashcardDecks, { fields: [flashcards.deckId], references: [flashcardDecks.id] }),
+    topic: one(topics, { fields: [flashcards.topicId], references: [topics.id] }),
+    state: one(flashcardCardState, { fields: [flashcards.id], references: [flashcardCardState.cardId] }),
+    reviews: many(flashcardReviews),
+}));
+
+export const flashcardCardStateRelations = relations(flashcardCardState, ({ one }) => ({
+    card: one(flashcards, { fields: [flashcardCardState.cardId], references: [flashcards.id] }),
+    user: one(users, { fields: [flashcardCardState.userId], references: [users.id] }),
+}));
+
+export const flashcardReviewsRelations = relations(flashcardReviews, ({ one }) => ({
+    card: one(flashcards, { fields: [flashcardReviews.cardId], references: [flashcards.id] }),
+    user: one(users, { fields: [flashcardReviews.userId], references: [users.id] }),
+}));

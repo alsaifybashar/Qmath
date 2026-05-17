@@ -33,7 +33,7 @@ import {
  */
 export async function awardXP(params: {
     xpAmount: number;
-    reason: 'question' | 'streak' | 'mastery' | 'achievement' | 'reflection' | 'pomodoro';
+    reason: 'question' | 'streak' | 'mastery' | 'achievement' | 'reflection' | 'pomodoro' | 'flashcard';
     metadata?: Record<string, unknown>;
 }) {
     const session = await auth();

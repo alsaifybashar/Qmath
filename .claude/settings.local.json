@@ -100,7 +100,15 @@
       "mcp__Claude_in_Chrome__javascript_tool",
       "mcp__Claude_in_Chrome__tabs_create_mcp",
       "Bash(node -e \":*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(npx eslint *)",
+      "Bash(npm run *)",
+      "Bash(sqlite3 qmath.db \".tables\")",
+      "Bash(sqlite3 qmath.db \"SELECT count\\(*\\) FROM ai_request_logs;\")",
+      "Bash(sqlite3 qmath.db \"SELECT count\\(*\\) FROM api_keys;\")",
+      "Bash(sqlite3 qmath.db \"SELECT count\\(*\\) FROM audit_logs;\")",
+      "Bash(sqlite3 /home/kali/github/Qmath/qmath.db)",
+      "Bash(sqlite3 /home/kali/github/Qmath/qmath.db \".tables flashcard%\")"
     ]
   }
 }

@@ -16,6 +16,11 @@ export const XP_PER_ACTION = {
     mastery_achieved: 100,
     achievement_unlocked: 50,
     helped_other_student: 30, // Future feature
+    flashcard_created: 5,
+    flashcard_again: 3,
+    flashcard_hard: 5,
+    flashcard_good: 8,
+    flashcard_easy: 10,
 } as const;
 
 // City levels and XP requirements

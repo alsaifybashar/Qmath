@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import type { ElementType } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    BarChart3, BookOpen, Clock, Target, ArrowLeft, Play,
-    ChevronRight, Layers, FileText, ScrollText
+    BarChart3, BookOpen, Target, ArrowLeft,
+    ChevronRight, ScrollText, Sparkles, Trophy
 } from 'lucide-react';
 import Link from 'next/link';
 import CourseAnalysisView from './CourseAnalysisView';
@@ -27,10 +28,12 @@ interface CourseHubProps {
     courseExams: CourseExam[];
 }
 
-export default function CourseHub({ course, analysisData, overviewData, courseExams }: CourseHubProps) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'study' | 'exams'>('overview');
+type CourseTabId = 'overview' | 'analysis' | 'study' | 'exams';
 
-    const tabs = [
+export default function CourseHub({ course, analysisData, overviewData, courseExams }: CourseHubProps) {
+    const [activeTab, setActiveTab] = useState<CourseTabId>('overview');
+
+    const tabs: Array<{ id: CourseTabId; label: string; icon: ElementType }> = [
         { id: 'overview', label: 'Overview', icon: BookOpen },
         { id: 'analysis', label: 'Exam Analysis', icon: BarChart3 },
         { id: 'study', label: 'Study Plan', icon: Target },
@@ -38,32 +41,56 @@ export default function CourseHub({ course, analysisData, overviewData, courseEx
     ];
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white transition-colors pb-20">
-            {/* Background noise/gradient similar to dashboard */}
-            <div className="fixed inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-900/10 dark:via-black dark:to-purple-900/10 pointer-events-none"></div>
+        <div className="liquid-theme relative min-h-screen overflow-hidden bg-slate-50 pb-20 text-zinc-950 dark:bg-[#08091f] dark:text-white">
+            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_14%,rgba(59,130,246,0.18),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(147,51,234,0.14),transparent_30%),radial-gradient(circle_at_52%_90%,rgba(16,185,129,0.13),transparent_34%),linear-gradient(135deg,#f8fbff_0%,#edf4ff_48%,#f7f3ff_100%)] dark:bg-[radial-gradient(circle_at_12%_14%,rgba(59,130,246,0.45),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(147,51,234,0.38),transparent_30%),radial-gradient(circle_at_52%_90%,rgba(16,185,129,0.24),transparent_34%),linear-gradient(135deg,#050816_0%,#11164e_48%,#24104f_100%)]"></div>
+            <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.55),transparent_24%,rgba(255,255,255,0.24)_52%,transparent_76%)] dark:bg-[linear-gradient(115deg,rgba(255,255,255,0.10),transparent_24%,rgba(255,255,255,0.04)_52%,transparent_76%)]"></div>
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
                 {/* Navigation */}
-                <div className="flex items-center gap-4 mb-8">
-                    <Link href="/dashboard" className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <div className="flex items-center gap-4 mb-6">
+                    <Link href="/dashboard" className="rounded-lg border border-white/10 bg-white/[0.04] p-2 text-white/55 backdrop-blur-md transition hover:text-white">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
-                    <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800"></div>
-                    <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">My Courses</span>
-                    <ChevronRight className="w-4 h-4 text-zinc-400" />
-                    <span className="text-sm font-bold text-zinc-900 dark:text-white">{course.code}</span>
+                    <div className="h-6 w-px bg-white/10"></div>
+                    <span className="text-sm font-medium text-white/45">My Courses</span>
+                    <ChevronRight className="w-4 h-4 text-white/25" />
+                    <span className="text-sm font-bold text-white/80">{course.code}</span>
                 </div>
 
                 {/* Course Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-white dark:to-zinc-400">
-                        {course.name}
-                    </h1>
-                    <div className="flex items-center gap-3 text-zinc-500 dark:text-zinc-400">
-                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                            {course.code}
-                        </span>
-                        {course.university && <span>{course.university.name}</span>}
+                <div className="mb-6 overflow-hidden rounded-lg border border-white/15 bg-white/[0.07] p-5 shadow-2xl shadow-black/25 backdrop-blur-md ring-1 ring-white/5">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <div className="mb-3 flex flex-wrap items-center gap-2">
+                                <span className="inline-flex items-center gap-1.5 rounded-md border border-blue-200/20 bg-blue-300/10 px-2.5 py-1 text-xs font-bold text-blue-100">
+                                    <Trophy className="h-3.5 w-3.5" />
+                                    Course journey
+                                </span>
+                                <span className="rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-mono font-bold text-white/75">
+                                    {course.code}
+                                </span>
+                                {course.university && (
+                                    <span className="text-xs font-medium text-white/45">{course.university.name}</span>
+                                )}
+                            </div>
+                            <h1 className="max-w-4xl text-3xl font-bold tracking-normal text-white sm:text-4xl">
+                                {course.name}
+                            </h1>
+                            {course.description && (
+                                <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">{course.description}</p>
+                            )}
+                        </div>
+                        <div className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-4 shadow-xl shadow-emerald-500/10">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-300/15 text-emerald-100">
+                                    <Sparkles className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold uppercase text-emerald-200">Din bana</p>
+                                    <p className="text-sm font-bold text-white">Översikt och träning</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -75,13 +102,14 @@ export default function CourseHub({ course, analysisData, overviewData, courseEx
                         return (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
-                                className={`relative flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${isActive
-                                    ? 'text-white shadow-lg shadow-blue-500/25'
-                                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-bold transition-all whitespace-nowrap ${isActive
+                                    ? 'border-white/20 text-white shadow-lg shadow-blue-500/20'
+                                    : 'border-transparent text-white/55 hover:border-white/10 hover:bg-white/[0.06] hover:text-white'
                                     }`}
                                 style={{
-                                    background: isActive ? 'linear-gradient(135deg, #3B82F6, #2563EB)' : undefined
+                                    background: isActive ? 'rgba(255,255,255,0.12)' : undefined,
+                                    backdropFilter: isActive ? 'blur(16px)' : undefined,
                                 }}
                             >
                                 <Icon className="w-4 h-4" />
@@ -89,7 +117,7 @@ export default function CourseHub({ course, analysisData, overviewData, courseEx
                                 {isActive && (
                                     <motion.div
                                         layoutId="activeTabGlow"
-                                        className="absolute inset-0 rounded-full bg-white/20"
+                                        className="absolute inset-0 rounded-lg bg-white/15"
                                         initial={false}
                                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                     />

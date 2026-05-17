@@ -28,14 +28,6 @@ export interface ExamReadinessBarProps {
     questionsThisWeek: number;
 }
 
-// ─── Palette ─────────────────────────────────────────────────────────────────
-
-const C = {
-    text: '#1A1D2E',
-    textMuted: '#A0A5C0',
-    border: '#EFF1F8',
-};
-
 // ─── Stage definitions ────────────────────────────────────────────────────────
 
 const STAGES = [
@@ -83,7 +75,8 @@ function CircularReadiness({ readiness }: { readiness: number }) {
                 {/* Track */}
                 <circle
                     cx={70} cy={70} r={RADIUS}
-                    fill="none" stroke={C.border} strokeWidth={10}
+                    fill="none" strokeWidth={10}
+                    className="stroke-teal-950/10 dark:stroke-white/10"
                 />
                 {/* Progress */}
                 <motion.circle
@@ -109,7 +102,7 @@ function CircularReadiness({ readiness }: { readiness: number }) {
                 >
                     {readiness}%
                 </motion.div>
-                <div className="text-xs font-semibold mt-1" style={{ color: C.textMuted }}>
+                <div className="dashboard-muted mt-1 text-xs font-semibold">
                     {stageName}
                 </div>
             </div>
@@ -134,20 +127,23 @@ function StageIndicator({ readiness }: { readiness: number }) {
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ delay: i * 0.1 }}
-                                className="w-3 h-3 rounded-full border-2 transition-colors duration-500"
+                                className="h-3 w-3 rounded-full border-2 border-teal-950/10 bg-teal-950/10 transition-colors duration-500 dark:border-white/10 dark:bg-white/10"
                                 style={{
-                                    background: isActive ? color : C.border,
-                                    borderColor: isActive ? color : C.border,
+                                    background: isActive ? color : undefined,
+                                    borderColor: isActive ? color : undefined,
                                 }}
                             />
-                            <span className="text-[9px] font-medium whitespace-nowrap" style={{ color: isActive ? color : C.textMuted }}>
+                            <span
+                                className="text-[9px] font-medium whitespace-nowrap dashboard-subtle"
+                                style={{ color: isActive ? color : undefined }}
+                            >
                                 {stage.label}
                             </span>
                         </div>
                         {i < STAGES.length - 1 && (
                             <div
-                                className="h-0.5 flex-1 mb-3 rounded-full transition-colors duration-500"
-                                style={{ background: i < activeIdx ? color : C.border }}
+                                className="h-0.5 flex-1 mb-3 rounded-full bg-teal-950/10 transition-colors duration-500 dark:bg-white/10"
+                                style={{ background: i < activeIdx ? color : undefined }}
                             />
                         )}
                     </div>
@@ -172,8 +168,6 @@ export function ExamReadinessBar({
     courseCode,
     overallReadiness,
     estimatedGrade,
-    weakestTopics,
-    strongestTopics,
     topicBreakdown,
     studyTimeThisWeek,
     questionsThisWeek,
@@ -189,12 +183,7 @@ export function ExamReadinessBar({
     return (
         <motion.div
             layout
-            className="rounded-2xl overflow-hidden"
-            style={{
-                background: 'white',
-                border: `1px solid ${C.border}`,
-                boxShadow: '0 2px 12px rgba(26,29,46,0.06)',
-            }}
+            className="dashboard-card overflow-hidden"
         >
             {/* ── Header ── */}
             <div className="p-5">
@@ -215,50 +204,41 @@ export function ExamReadinessBar({
                             >
                                 {courseCode}
                             </span>
-                            <h3 className="text-base font-semibold truncate" style={{ color: C.text }}>
+                            <h3 className="truncate text-base font-semibold text-slate-950 dark:text-white">
                                 {courseName}
                             </h3>
                         </div>
 
                         {/* Stats row */}
                         <div className="grid grid-cols-3 gap-3 mb-3">
-                            <div
-                                className="rounded-xl p-3 text-center"
-                                style={{ background: '#F7F8FC' }}
-                            >
-                                <div className="text-xs mb-1" style={{ color: C.textMuted }}>Beräknat betyg</div>
-                                <div className="font-extrabold text-lg" style={{ color: C.text }}>{estimatedGrade}</div>
+                            <div className="dashboard-card-soft p-3 text-center">
+                                <div className="dashboard-muted mb-1 text-xs">Beräknat betyg</div>
+                                <div className="text-lg font-extrabold text-slate-950 dark:text-white">{estimatedGrade}</div>
                             </div>
-                            <div
-                                className="rounded-xl p-3 text-center"
-                                style={{ background: '#F7F8FC' }}
-                            >
-                                <div className="text-xs mb-1" style={{ color: C.textMuted }}>Sannolikhet att klara</div>
+                            <div className="dashboard-card-soft p-3 text-center">
+                                <div className="dashboard-muted mb-1 text-xs">Sannolikhet att klara</div>
                                 <div className="font-extrabold text-lg" style={{ color }}>{passProbability}%</div>
                             </div>
-                            <div
-                                className="rounded-xl p-3 text-center"
-                                style={{ background: '#F7F8FC' }}
-                            >
-                                <div className="text-xs mb-1" style={{ color: C.textMuted }}>Denna vecka</div>
-                                <div className="font-extrabold text-lg" style={{ color: C.text }}>{questionsThisWeek} frågor</div>
+                            <div className="dashboard-card-soft p-3 text-center">
+                                <div className="dashboard-muted mb-1 text-xs">Denna vecka</div>
+                                <div className="text-lg font-extrabold text-slate-950 dark:text-white">{questionsThisWeek} frågor</div>
                             </div>
                         </div>
 
                         {/* Quick footer stats */}
-                        <div className="flex items-center gap-4 text-xs" style={{ color: C.textMuted }}>
+                        <div className="dashboard-muted flex items-center gap-4 text-xs">
                             <div className="flex items-center gap-1">
                                 <Clock className="w-3.5 h-3.5" />
                                 {studyTimeThisWeek} min denna vecka
                             </div>
                             {reviewTopics.length > 0 && (
-                                <div className="flex items-center gap-1 text-amber-600">
+                                <div className="flex items-center gap-1 text-amber-700 dark:text-amber-300">
                                     <AlertTriangle className="w-3.5 h-3.5" />
                                     {reviewTopics.length} behöver repeteras
                                 </div>
                             )}
                             {reviewTopics.length === 0 && (
-                                <div className="flex items-center gap-1 text-green-600">
+                                <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
                                     <CheckCircle className="w-3.5 h-3.5" />
                                     Allt i fas
                                 </div>
@@ -270,8 +250,7 @@ export function ExamReadinessBar({
                 {/* Expand toggle */}
                 <button
                     onClick={() => setExpanded(!expanded)}
-                    className="flex items-center gap-1 text-xs mt-3 hover:opacity-80 transition-opacity"
-                    style={{ color: '#4361EE' }}
+                    className="mt-3 flex items-center gap-1 text-xs font-semibold text-teal-700 transition-opacity hover:opacity-80 dark:text-teal-200"
                 >
                     {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     {expanded ? 'Dölj detaljer' : 'Visa ämnesöversikt'}
@@ -288,26 +267,25 @@ export function ExamReadinessBar({
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-5 pb-5 border-t" style={{ borderColor: C.border }}>
+                        <div className="border-t border-teal-950/10 px-5 pb-5 dark:border-white/10">
                             {/* Topic list */}
                             <div className="space-y-2">
                                 {topicBreakdown.slice(0, 10).map(topic => (
                                     <div
                                         key={topic.topicId}
-                                        className="flex items-center gap-3 py-2 px-3 rounded-lg"
-                                        style={{
-                                            background: topic.needsReview ? '#FEFCE8' : '#F8FAFC',
-                                            border: topic.needsReview ? '1px solid #FDE68A' : '1px solid transparent',
-                                        }}
+                                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${topic.needsReview
+                                            ? 'border-amber-300/70 bg-amber-100/70 dark:border-amber-200/20 dark:bg-amber-300/10'
+                                            : 'border-teal-950/10 bg-white/45 dark:border-white/10 dark:bg-white/[0.04]'
+                                            }`}
                                     >
                                         <TrendIcon trend={topic.trend} />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-medium truncate" style={{ color: C.text }}>
+                                            <p className="truncate text-xs font-medium text-slate-950 dark:text-white">
                                                 {topic.topicName}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: C.border }}>
+                                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-teal-950/10 dark:bg-white/10">
                                                 <div
                                                     className="h-full rounded-full"
                                                     style={{
@@ -316,7 +294,7 @@ export function ExamReadinessBar({
                                                     }}
                                                 />
                                             </div>
-                                            <span className="text-xs font-mono w-10 text-right" style={{ color: C.textMuted }}>
+                                            <span className="dashboard-muted w-10 text-right font-mono text-xs">
                                                 {Math.round(topic.mastery * 100)}%
                                             </span>
                                         </div>

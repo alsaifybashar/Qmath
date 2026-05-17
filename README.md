@@ -30,6 +30,8 @@ Qmath is an AI-driven intelligent tutoring system designed for university-level 
 
 ### For Students
 - **Adaptive Learning Engine**: IRT-based question selection with Bayesian Knowledge Tracing
+- **Flashcards Dashboard**: Redesigned FSRS-driven spaced repetition system with gamified streaks and interactive glass cards.
+  ![Flashcards Dashboard](./public/images/flashcards-dashboard.png)
 - **AI-Generated Content**: Dynamic problem generation using Claude AI with multiple content types
 - **Free-Form Symbolic Input**: Enter mathematical expressions with real-time LaTeX preview and equivalence checking
 - **Exam Archive**: Search and download old exams from various courses (liutentor.se inspired)

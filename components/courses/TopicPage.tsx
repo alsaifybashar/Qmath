@@ -1,42 +1,41 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import type { ElementType, ReactNode } from 'react';
 import {
-    ArrowLeft, ChevronRight, Play, BookOpen,
-    Layers, Target, Brain,
+    AlertTriangle,
+    ArrowLeft,
+    ArrowRight,
+    BookOpen,
+    Brain,
+    ChevronRight,
+    Clock,
+    Flame,
+    Gauge,
+    Layers,
+    Lightbulb,
+    Play,
+    ShieldCheck,
+    Sparkles,
+    Target,
+    Trophy,
+    Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { OverviewTopic } from '@/app/actions/course-overview';
 
-const PHASE_LABEL: Record<string, string> = {
-    foundation: 'Grundläggande',
-    core: 'Kärna',
-    advanced: 'Fördjupning',
-};
+const PHASE_CONFIG = {
+    foundation: { label: 'Start', icon: Layers, accent: '#34D399' },
+    core: { label: 'Kärna', icon: Target, accent: '#60A5FA' },
+    advanced: { label: 'Fördjupning', icon: Brain, accent: '#A78BFA' },
+} as const;
 
-const PHASE_COLOR: Record<string, string> = {
-    foundation: '#10B981',
-    core: '#3B82F6',
-    advanced: '#8B5CF6',
-};
-
-const PHASE_ICON: Record<string, React.ElementType> = {
-    foundation: Layers,
-    core: Target,
-    advanced: Brain,
-};
-
-const DIFFICULTY_LABEL: Record<string, string> = {
-    easy: 'Grundläggande',
-    medium: 'Medel',
-    hard: 'Avancerad',
-};
-
-const DIFFICULTY_STYLE: Record<string, string> = {
-    easy: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    hard: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-};
+const PRIORITY_CONFIG = {
+    critical: { label: 'Hög effekt', icon: Flame, color: 'text-rose-200' },
+    high: { label: 'Viktig', icon: Zap, color: 'text-amber-200' },
+    medium: { label: 'Stabil', icon: ShieldCheck, color: 'text-blue-200' },
+    low: { label: 'Bonus', icon: Sparkles, color: 'text-white/65' },
+} as const;
 
 interface TopicPageProps {
     course: { id: string; name: string; code: string };
@@ -45,173 +44,179 @@ interface TopicPageProps {
     courseCode: string;
 }
 
+function glass(className = '') {
+    return [
+        'rounded-lg border border-white/15 bg-white/[0.07]',
+        'shadow-2xl shadow-black/25 backdrop-blur-md ring-1 ring-white/5',
+        className,
+    ].join(' ');
+}
+
+function MiniStat({
+    icon: Icon,
+    label,
+    value,
+}: {
+    icon: ElementType;
+    label: string;
+    value: string;
+}) {
+    return (
+        <div className="rounded-lg border border-white/10 bg-white/[0.045] px-3 py-2">
+            <div className="mb-1 flex items-center gap-1.5 text-white/45">
+                <Icon className="h-3.5 w-3.5" />
+                <span className="text-[11px] font-bold uppercase">{label}</span>
+            </div>
+            <p className="truncate text-sm font-bold text-white">{value}</p>
+        </div>
+    );
+}
+
+function Step({ index, children }: { index: number; children: ReactNode }) {
+    return (
+        <li className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.045] p-3 text-sm leading-6 text-white/75">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/12 text-xs font-bold text-white">
+                {index}
+            </span>
+            <span>{children}</span>
+        </li>
+    );
+}
+
 export default function TopicPage({ course, topic, phase, courseCode }: TopicPageProps) {
-    const phaseColor = PHASE_COLOR[phase] || PHASE_COLOR.core;
-    const PhaseIcon = PHASE_ICON[phase] || Target;
+    const config = PHASE_CONFIG[phase as keyof typeof PHASE_CONFIG] || PHASE_CONFIG.core;
+    const PhaseIcon = config.icon;
+    const priority = PRIORITY_CONFIG[topic.priority];
+    const PriorityIcon = priority.icon;
+    const firstTips = topic.studyTips.slice(0, 3);
+    const firstMistakes = topic.commonMistakes.slice(0, 2);
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white transition-colors pb-20">
-            <div className="fixed inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-900/10 dark:via-black dark:to-purple-900/10 pointer-events-none" />
+        <div className="liquid-theme relative min-h-screen overflow-hidden bg-slate-50 pb-20 text-zinc-950 dark:bg-[#08091f] dark:text-white">
+            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_14%,rgba(59,130,246,0.18),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(147,51,234,0.14),transparent_30%),radial-gradient(circle_at_52%_90%,rgba(16,185,129,0.13),transparent_34%),linear-gradient(135deg,#f8fbff_0%,#edf4ff_48%,#f7f3ff_100%)] dark:bg-[radial-gradient(circle_at_12%_14%,rgba(59,130,246,0.45),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(147,51,234,0.38),transparent_30%),radial-gradient(circle_at_52%_90%,rgba(16,185,129,0.24),transparent_34%),linear-gradient(135deg,#050816_0%,#11164e_48%,#24104f_100%)]" />
+            <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.55),transparent_24%,rgba(255,255,255,0.24)_52%,transparent_76%)] dark:bg-[linear-gradient(115deg,rgba(255,255,255,0.10),transparent_24%,rgba(255,255,255,0.04)_52%,transparent_76%)]" />
 
-            <div className="relative z-10 max-w-3xl mx-auto px-4 py-8">
-                {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm mb-8">
+            <div className="relative z-10 mx-auto max-w-5xl px-4 py-8">
+                <div className="mb-5 flex items-center gap-2 text-sm">
                     <Link
                         href={`/courses/${courseCode}`}
-                        className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-white/55 backdrop-blur-md transition hover:text-white"
                     >
-                        <ArrowLeft className="w-4 h-4" />
+                        <ArrowLeft className="h-4 w-4" />
                         {course.code}
                     </Link>
-                    <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600" />
-                    <span className="font-medium text-zinc-900 dark:text-white truncate">{topic.name}</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-white/25" />
+                    <span className="truncate font-medium text-white/80">{topic.name}</span>
                 </div>
 
-                {/* Topic header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
+                <motion.section
+                    initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
+                    className={glass('p-5 sm:p-6')}
                 >
-                    <div className="flex items-start gap-4 mb-4">
-                        <div
-                            className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                            style={{ background: `linear-gradient(135deg, ${phaseColor}, ${phaseColor}CC)` }}
-                        >
-                            <PhaseIcon className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h1 className="text-2xl font-bold mb-1.5">{topic.name}</h1>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${DIFFICULTY_STYLE[topic.difficulty]}`}>
-                                    {DIFFICULTY_LABEL[topic.difficulty]}
+                    <div className="grid gap-6 lg:grid-cols-[1fr_280px] lg:items-center">
+                        <div className="min-w-0">
+                            <div className="mb-4 flex flex-wrap items-center gap-2">
+                                <span
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-bold"
+                                    style={{ color: config.accent }}
+                                >
+                                    <PhaseIcon className="h-3.5 w-3.5" />
+                                    {config.label}
                                 </span>
-                                <span className="text-xs text-zinc-400">
-                                    {PHASE_LABEL[phase]} · {topic.examFrequency}
+                                <span className={`inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-bold ${priority.color}`}>
+                                    <PriorityIcon className="h-3.5 w-3.5" />
+                                    {priority.label}
                                 </span>
                             </div>
-                        </div>
-                    </div>
 
-                    {topic.description && (
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                            {topic.description}
-                        </p>
-                    )}
-                </motion.div>
-
-                {/* Action — Start practicing */}
-                <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                >
-                    <Link
-                        href={`/study?topic=${topic.id}&course=${courseCode}`}
-                        className="flex items-center justify-between w-full px-5 py-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:border-blue-300 dark:hover:border-blue-800 hover:shadow-md transition-all group"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                                <Play className="w-5 h-5 text-blue-600 dark:text-blue-400 fill-current" />
-                            </div>
-                            <div>
-                                <p className="font-semibold text-sm">Öva på detta ämne</p>
-                                <p className="text-xs text-zinc-400">Starta en övningssession</p>
+                            <h1 className="text-3xl font-bold tracking-normal sm:text-4xl">{topic.name}</h1>
+                            {topic.description && (
+                                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60">{topic.description}</p>
+                            )}
+                            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                                <Link
+                                    href={`/study?topic=${topic.id}&course=${courseCode}`}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-emerald-100"
+                                >
+                                    <Play className="h-4 w-4 fill-current" />
+                                    Starta träning
+                                </Link>
+                                <Link
+                                    href={`/courses/${courseCode}`}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/12 bg-white/[0.06] px-5 py-3 text-sm font-bold text-white/75 transition hover:bg-white/[0.10] hover:text-white"
+                                >
+                                    Kursresan
+                                    <ArrowRight className="h-4 w-4" />
+                                </Link>
                             </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
-                    </Link>
-                </motion.div>
 
-                {/* Topic details — compact info */}
-                <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="mt-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4"
-                >
-                    {/* Importance */}
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Viktighet</span>
-                        <div className="flex items-center gap-2">
-                            <div className="w-20 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-4 shadow-xl shadow-emerald-500/10">
+                            <div className="mb-3 flex items-center gap-3">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-300/15 text-emerald-100">
+                                    <Trophy className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold uppercase text-emerald-200">Fokusvärde</p>
+                                    <p className="text-2xl font-bold text-white">{topic.importance}/10</p>
+                                </div>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-white/10">
                                 <div
-                                    className="h-full rounded-full transition-all"
-                                    style={{
-                                        width: `${(topic.importance / 10) * 100}%`,
-                                        backgroundColor: phaseColor,
-                                    }}
+                                    className="h-full rounded-full bg-gradient-to-r from-emerald-300 to-blue-300"
+                                    style={{ width: `${Math.max(10, Math.min(100, topic.importance * 10))}%` }}
                                 />
                             </div>
-                            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">{topic.importance}/10</span>
                         </div>
                     </div>
+                </motion.section>
 
-                    {/* Exam sections */}
-                    {topic.examSections.length > 0 && (
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Tentadel</span>
-                            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">
-                                {topic.examSections.join(', ')}
-                            </span>
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                    <MiniStat icon={Gauge} label="Tentafokus" value={topic.examFrequency || 'Ej angivet'} />
+                    <MiniStat icon={Clock} label="Tid" value={`~${topic.estimatedHours}h`} />
+                    <MiniStat icon={BookOpen} label="Frågor" value={topic.questionCount != null ? `${topic.questionCount}` : 'Ej angivet'} />
+                </div>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_0.8fr]">
+                    <section className={glass('p-4')}>
+                        <div className="mb-3 flex items-center gap-2">
+                            <Lightbulb className="h-5 w-5 text-blue-200" />
+                            <h2 className="text-base font-bold">Gör detta först</h2>
                         </div>
-                    )}
 
-                    {/* Estimated time */}
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Uppskattad studietid</span>
-                        <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">~{topic.estimatedHours}h</span>
-                    </div>
-                </motion.div>
+                        {firstTips.length > 0 ? (
+                            <ol className="space-y-2">
+                                {firstTips.map((tip, index) => (
+                                    <Step key={index} index={index + 1}>{tip}</Step>
+                                ))}
+                            </ol>
+                        ) : (
+                            <p className="rounded-lg border border-white/10 bg-white/[0.045] p-3 text-sm leading-6 text-white/60">
+                                Starta en träningssession och låt frågorna visa nästa konkreta steg.
+                            </p>
+                        )}
+                    </section>
 
-                {/* Study tips — only if they exist, shown cleanly */}
-                {topic.studyTips.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="mt-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5"
-                    >
-                        <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
-                            Studietips
-                        </p>
-                        <ul className="space-y-2">
-                            {topic.studyTips.map((tip, i) => (
-                                <li key={i} className="flex items-start gap-2.5 text-sm text-zinc-700 dark:text-zinc-300">
-                                    <span
-                                        className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-white text-[10px] font-bold mt-0.5"
-                                        style={{ backgroundColor: phaseColor }}
+                    {firstMistakes.length > 0 && (
+                        <section className={glass('p-4')}>
+                            <div className="mb-3 flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-rose-200" />
+                                <h2 className="text-base font-bold">Undvik</h2>
+                            </div>
+                            <div className="space-y-2">
+                                {firstMistakes.map((mistake, index) => (
+                                    <p
+                                        key={index}
+                                        className="rounded-lg border border-rose-200/15 bg-rose-400/10 p-3 text-sm leading-6 text-rose-100/85"
                                     >
-                                        {i + 1}
-                                    </span>
-                                    {tip}
-                                </li>
-                            ))}
-                        </ul>
-                    </motion.div>
-                )}
-
-                {/* Common mistakes */}
-                {topic.commonMistakes.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.25 }}
-                        className="mt-4 bg-red-50/50 dark:bg-red-900/10 border border-red-200/60 dark:border-red-800/30 rounded-2xl p-5"
-                    >
-                        <p className="text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-wider mb-3">
-                            Vanliga misstag
-                        </p>
-                        <ul className="space-y-2">
-                            {topic.commonMistakes.map((mistake, i) => (
-                                <li key={i} className="flex items-start gap-2.5 text-sm text-red-700 dark:text-red-300">
-                                    <span className="flex-shrink-0 text-red-400 mt-0.5">✗</span>
-                                    {mistake}
-                                </li>
-                            ))}
-                        </ul>
-                    </motion.div>
-                )}
+                                        {mistake}
+                                    </p>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </div>
             </div>
         </div>
     );

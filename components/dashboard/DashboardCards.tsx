@@ -1,10 +1,10 @@
 'use client';
 
 import {
-    ArrowRight, Play, Brain, FileText, Sparkles, Calendar,
-    BookOpen, GraduationCap, User, Settings, Library, HelpCircle,
-    Layers, CreditCard, School, Info, MessageSquare, Zap, BarChart, UploadCloud,
-    LayoutDashboard, History, FlaskConical
+    ArrowRight, Play, Brain, FileText, Sparkles,
+    BookOpen, GraduationCap, User, Settings, HelpCircle,
+    Layers, CreditCard, School, Info, MessageSquare, Zap, BarChart,
+    History, FlaskConical
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -68,24 +68,17 @@ export function WeeklyActivityChart({ data, totalQuestions, accuracy }: WeeklyAc
     const maxV = Math.max(...data.map((d) => d.minutes), 1);
 
     return (
-        <div
-            className="rounded-2xl p-6"
-            style={{
-                background: C.surface,
-                border: `1px solid ${C.borderLight}`,
-                boxShadow: C.cardShadow,
-            }}
-        >
+        <div className="dashboard-card p-6">
             <div className="flex justify-between items-center mb-5">
-                <h3 className="text-xl font-bold" style={{ color: C.text }}>
+                <h3 className="text-xl font-bold">
                     Dina framsteg
                 </h3>
                 <div className="flex gap-4 text-sm">
-                    <span style={{ color: C.text, fontWeight: 600 }}>
-                        Antal svar: <span style={{ color: C.blue }}>{totalQuestions}</span>
+                    <span className="font-semibold">
+                        Antal svar: <span className="text-teal-600 dark:text-teal-200">{totalQuestions}</span>
                     </span>
-                    <span style={{ color: C.text, fontWeight: 600 }}>
-                        Noggrannhet: <span style={{ color: C.green }}>{accuracy}%</span>
+                    <span className="font-semibold">
+                        Noggrannhet: <span className="text-emerald-600 dark:text-emerald-200">{accuracy}%</span>
                     </span>
                 </div>
             </div>
@@ -96,8 +89,7 @@ export function WeeklyActivityChart({ data, totalQuestions, accuracy }: WeeklyAc
                     return (
                         <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
                             <span
-                                className="text-xs font-semibold"
-                                style={{ color: w.minutes > 0 ? C.blue : C.textMuted }}
+                                className={`text-xs font-semibold ${w.minutes > 0 ? 'text-teal-600 dark:text-teal-200' : 'dashboard-subtle'}`}
                             >
                                 {w.minutes > 0 ? `${w.minutes}m` : ''}
                             </span>
@@ -107,13 +99,13 @@ export function WeeklyActivityChart({ data, totalQuestions, accuracy }: WeeklyAc
                                     height: Math.max(h, 6),
                                     background:
                                         w.minutes > 0
-                                            ? `linear-gradient(180deg, ${C.blue}, ${C.purple}90)`
-                                            : C.borderLight,
+                                            ? 'linear-gradient(180deg, #14B8A6, #FF684A)'
+                                            : 'rgba(20,184,166,0.12)',
                                     transitionDelay: `${i * 60}ms`,
-                                    boxShadow: w.minutes > 0 ? `0 4px 12px ${C.blue}20` : 'none',
+                                    boxShadow: w.minutes > 0 ? '0 4px 16px rgba(20,184,166,0.22)' : 'none',
                                 }}
                             />
-                            <span className="text-xs font-medium" style={{ color: C.textMuted }}>
+                            <span className="dashboard-subtle text-xs font-medium">
                                 {w.day}
                             </span>
                         </div>
@@ -238,15 +230,13 @@ export function CourseCard({
             </div>
 
             <div
-                className="p-4 flex justify-between items-center"
-                style={{ background: C.surface, borderTop: `1px solid ${C.borderLight}` }}
+                className="dashboard-card-soft p-4 flex justify-between items-center"
             >
-                <div className="text-sm" style={{ color: C.textSec }}>
-                    <strong style={{ color: C.text }}>{topicsMastered}</strong>/{topicsTotal} områden klara
+                <div className="dashboard-muted text-sm">
+                    <strong className="text-zinc-950 dark:text-white">{topicsMastered}</strong>/{topicsTotal} områden klara
                 </div>
                 <div
-                    className="flex items-center gap-1.5 text-sm font-semibold"
-                    style={{ color: C.blue }}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-teal-700 dark:text-teal-200"
                 >
                     Fortsätt <ArrowRight size={14} />
                 </div>
@@ -288,7 +278,7 @@ export function MasteryTopicCard({ name, course, mastery }: MasteryTopicProps) {
                     {Math.round(mastery * 100)}%
                 </span>
             </div>
-            <div className="text-sm font-semibold mb-2.5" style={{ color: C.text, lineHeight: 1.3 }}>
+            <div className="text-sm font-semibold mb-2.5 text-zinc-950 dark:text-zinc-950" style={{ lineHeight: 1.3 }}>
                 {name}
             </div>
             <div className="h-1 rounded-full" style={{ background: s.border + '20' }}>
@@ -513,15 +503,8 @@ const navigationItems = [
 
 export function QuickNavigation() {
     return (
-        <div
-            className="rounded-2xl p-6"
-            style={{
-                background: C.surface,
-                border: `1px solid ${C.borderLight}`,
-                boxShadow: C.cardShadow,
-            }}
-        >
-            <h3 className="text-xl font-bold mb-5" style={{ color: C.text }}>
+        <div className="dashboard-card p-6">
+            <h3 className="text-xl font-bold mb-5">
                 Snabbnavigering
             </h3>
 
@@ -529,8 +512,7 @@ export function QuickNavigation() {
                 {navigationItems.map((section) => (
                     <div key={section.category}>
                         <h4
-                            className="text-xs font-semibold uppercase tracking-wider mb-3"
-                            style={{ color: C.textMuted }}
+                            className="dashboard-subtle text-xs font-semibold uppercase tracking-wider mb-3"
                         >
                             {section.category}
                         </h4>
@@ -539,8 +521,7 @@ export function QuickNavigation() {
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-md group"
-                                    style={{ background: C.surfaceAlt }}
+                                    className="dashboard-card-soft flex flex-col items-center gap-2 p-3 transition-all duration-200 hover:-translate-y-1 hover:shadow-md group"
                                 >
                                     <div
                                         className="w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
@@ -553,7 +534,6 @@ export function QuickNavigation() {
                                     </div>
                                     <span
                                         className="text-xs font-medium text-center"
-                                        style={{ color: C.text }}
                                     >
                                         {item.label}
                                     </span>

@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { AIPanel } from '@/components/ai/AIPanel';
+import { FlashcardContextBridge } from '@/components/flashcards/FlashcardContextBridge';
 
 const InlineMath = dynamic(
   () => import('react-katex').then((m) => m.InlineMath),
@@ -1260,6 +1261,12 @@ export default function QuestionViewPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors">
+      <FlashcardContextBridge
+        sourceContextType="question"
+        sourceContextId={question.id}
+        topicName={question.topicTag}
+        snippet={[question.title, question.intro, ...question.mathBlocks].join('\n')}
+      />
       {/* Subtle ambient gradient */}
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_0%_0%,rgba(59,130,246,0.07),transparent),radial-gradient(ellipse_60%_40%_at_100%_100%,rgba(139,92,246,0.06),transparent)]" />
 

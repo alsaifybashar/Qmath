@@ -172,3 +172,63 @@ export function accuracyColor(accuracy: number): string {
     if (accuracy >= 0.40) return 'orange';
     return 'red';
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gamification & stage progression
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type MasteryStage = 'grund' | 'god' | 'stabil' | 'redo';
+
+export const STAGE_ORDER: MasteryStage[] = ['grund', 'god', 'stabil', 'redo'];
+
+export const STAGE_LABELS: Record<MasteryStage, string> = {
+    grund: 'Grund',
+    god: 'God',
+    stabil: 'Stabil',
+    redo: 'Redo',
+};
+
+/** Map 0–5 masteryLevel → stage. ≤1 grund, 2 god, 3 stabil, ≥4 redo. */
+export function masteryToStage(m: number): MasteryStage {
+    if (m >= 4) return 'redo';
+    if (m >= 3) return 'stabil';
+    if (m >= 2) return 'god';
+    return 'grund';
+}
+
+/** Map 0–100 percentage → stage. <40 grund, <70 god, <90 stabil, ≥90 redo. */
+export function percentToStage(pct: number): MasteryStage {
+    if (pct >= 90) return 'redo';
+    if (pct >= 70) return 'stabil';
+    if (pct >= 40) return 'god';
+    return 'grund';
+}
+
+export type AchievementId =
+    | 'veckokrigare'
+    | 'manadsmastare'
+    | 'fokusstjarna'
+    | 'tempo'
+    | 'precision'
+    | 'redo';
+
+export interface AchievementBadgeData {
+    id: AchievementId;
+    name: string;
+    description: string;
+    icon: 'flame' | 'trophy' | 'star' | 'shield' | 'target' | 'sparkles';
+    unlocked: boolean;
+    unlockedAt?: Date;
+    progress?: { current: number; target: number };
+}
+
+export interface GamificationData {
+    xp: number;
+    weeklyXp: number;
+    streakDays: number;
+    longestStreak: number;
+    /** 0–100 exam-readiness percentage */
+    examReadinessPct: number;
+    examDateISO?: string;
+    achievements: AchievementBadgeData[];
+}

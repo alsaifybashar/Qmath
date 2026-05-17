@@ -1,21 +1,20 @@
 'use client';
 
 /**
- * AnalyticsDashboard – root container for the three-module learning analytics.
+ * AnalyticsDashboard – root container for the learning analytics page.
  *
- * Module 1 – Descriptive  (DescriptiveSection)
- * Module 2 – Prescriptive (PrescriptiveSection)
- * Module 3 – Behavioural  (BehavioralSection)
+ * Layout: a single scrolling experience with a hero strip at the top,
+ * followed by three progressively-revealed sections:
+ *   1. Descriptive  (DescriptiveSection)  — Kunskapsläge
+ *   2. Prescriptive (PrescriptiveSection) — Åtgärder
+ *   3. Behavioural  (BehavioralSection)   — Beteende
  *
- * Also exports `generateMockData()` so the demo page can pass in realistic data
+ * Exports `generateMockData()` so the demo page can pass in realistic data
  * without a database round-trip.
  */
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import DescriptiveSection from './DescriptiveSection';
-import PrescriptiveSection from './PrescriptiveSection';
-import BehavioralSection from './BehavioralSection';
+import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
     StudentProgress,
     ModuleProgress,
@@ -23,35 +22,27 @@ import {
     BehaviouralMetrics,
     BehaviouralDataPoint,
     FocusState,
+    GamificationData,
+    AchievementBadgeData,
+    percentToStage,
     RAPID_GUESS_THRESHOLD_MS,
 } from '@/types/analytics';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Tab definitions
-// ─────────────────────────────────────────────────────────────────────────────
-
-type TabId = 'descriptive' | 'prescriptive' | 'behavioural';
-
-const TABS: { id: TabId; label: string; icon: string; description: string }[] = [
-    {
-        id: 'descriptive',
-        label: 'Kunskapsläge',
-        icon: '📊',
-        description: 'Ämnesöversikt, radar och framsteg',
-    },
-    {
-        id: 'prescriptive',
-        label: 'Åtgärder',
-        icon: '🎯',
-        description: 'Felanalys och prioriterade uppgifter',
-    },
-    {
-        id: 'behavioural',
-        label: 'Beteende',
-        icon: '🧠',
-        description: 'Fokus, stress och sessionsmönster',
-    },
-];
+import {
+    AlertTriangle,
+    Brain,
+    CheckCircle2,
+    Clock,
+    Flame,
+    Gauge,
+    Play,
+    ShieldCheck,
+    Sparkles,
+    Target,
+    Trophy,
+    Zap,
+} from 'lucide-react';
+import Link from 'next/link';
+import PsychInsightsPanel from './PsychInsightsPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mock data factory
@@ -71,6 +62,7 @@ export interface AnalyticsMockData {
     moduleProgress: ModuleProgress[];
     errorPatterns: ErrorPattern[];
     behaviouralMetrics: BehaviouralMetrics;
+    gamification: GamificationData;
 }
 
 export function generateMockData(seed = 42): AnalyticsMockData {
@@ -112,7 +104,7 @@ export function generateMockData(seed = 42): AnalyticsMockData {
             topicId: t.id,
             topicName: t.name,
             masteryLevel: mastery,
-            targetMastery: 3 + (i % 3 === 0 ? 1 : 0), // 3 or 4
+            targetMastery: 3 + (i % 3 === 0 ? 1 : 0),
             classAvgMastery: classAvg,
             attempts,
             accuracy,
@@ -174,7 +166,7 @@ export function generateMockData(seed = 42): AnalyticsMockData {
 
     const totalErrors = 80 + Math.floor(rng() * 60);
 
-    const errorPatterns: ErrorPattern[] = errorDefs.map((e, i) => {
+    const errorPatterns: ErrorPattern[] = errorDefs.map(e => {
         const freq = Math.floor(rng() * 30) + 5;
         const daysAgo = Math.floor(rng() * 7);
         return {
@@ -193,17 +185,13 @@ export function generateMockData(seed = 42): AnalyticsMockData {
 
     // ── Behavioural Metrics ───────────────────────────────────────────────────
     const TOTAL_QUESTIONS = 25;
-    const SESSION_DURATION = 1200; // 20 minutes
+    const SESSION_DURATION = 1200;
 
-    const focusStates: FocusState[] = ['focused', 'distracted', 'stressed'];
-
-    // Build realistic data points with stress arc: calm → build → peak → taper
     const dataPoints: BehaviouralDataPoint[] = Array.from({ length: TOTAL_QUESTIONS }, (_, i) => {
         const t = i / TOTAL_QUESTIONS;
-        // stress peaks around 60-70% through session
         const stressBase = t < 0.65
-            ? t * 0.9            // rising
-            : (1 - t) * 1.3;    // tapering
+            ? t * 0.9
+            : (1 - t) * 1.3;
         const stressLevel = Math.min(1, Math.max(0, stressBase + (rng() - 0.5) * 0.25));
 
         const focusState: FocusState = stressLevel > 0.65
@@ -212,7 +200,6 @@ export function generateMockData(seed = 42): AnalyticsMockData {
                 ? (rng() > 0.6 ? 'distracted' : 'focused')
                 : 'focused';
 
-        // Response time: stressed → faster (panic), distracted → slower
         const baseRt = focusState === 'stressed'
             ? 4000 - stressLevel * 2000
             : focusState === 'distracted'
@@ -269,100 +256,361 @@ export function generateMockData(seed = 42): AnalyticsMockData {
         },
     };
 
-    return { studentProgress, moduleProgress, errorPatterns, behaviouralMetrics };
+    // ── Gamification ──────────────────────────────────────────────────────────
+    const avgMastery =
+        studentProgress.reduce((s, t) => s + t.masteryLevel, 0) / studentProgress.length;
+    const examReadinessPct = Math.round(Math.min(100, Math.max(0, (avgMastery / 5) * 100)));
+
+    const xp = 800 + Math.floor(rng() * 1200);
+    const weeklyXp = 80 + Math.floor(rng() * 200);
+    const streakDays = 3 + Math.floor(rng() * 22);
+    const longestStreak = Math.max(streakDays, streakDays + Math.floor(rng() * 10));
+    const totalAttempts = studentProgress.reduce((s, t) => s + t.attempts, 0);
+    const masteredTopics = studentProgress.filter(t => t.masteryLevel >= 4).length;
+    const focusedShare = behaviouralMetrics.summary.focusedShare;
+
+    const achievements: AchievementBadgeData[] = [
+        {
+            id: 'veckokrigare',
+            name: 'Veckokrigare',
+            description: 'Plugga 7 dagar i rad.',
+            icon: 'flame',
+            unlocked: longestStreak >= 7,
+            progress: longestStreak >= 7 ? undefined : { current: longestStreak, target: 7 },
+        },
+        {
+            id: 'manadsmastare',
+            name: 'Månadsmästare',
+            description: 'Plugga 30 dagar i rad.',
+            icon: 'trophy',
+            unlocked: longestStreak >= 30,
+            progress: longestStreak >= 30 ? undefined : { current: longestStreak, target: 30 },
+        },
+        {
+            id: 'fokusstjarna',
+            name: 'Fokusstjärna',
+            description: 'Håll över 70% fokus i en session.',
+            icon: 'star',
+            unlocked: focusedShare >= 0.7,
+            progress: focusedShare >= 0.7
+                ? undefined
+                : { current: Math.round(focusedShare * 100), target: 70 },
+        },
+        {
+            id: 'tempo',
+            name: 'Tempokänsla',
+            description: 'Genomför 100 frågor totalt.',
+            icon: 'shield',
+            unlocked: totalAttempts >= 100,
+            progress: totalAttempts >= 100 ? undefined : { current: totalAttempts, target: 100 },
+        },
+        {
+            id: 'precision',
+            name: 'Precision',
+            description: 'Bemästra minst 3 ämnen.',
+            icon: 'target',
+            unlocked: masteredTopics >= 3,
+            progress: masteredTopics >= 3 ? undefined : { current: masteredTopics, target: 3 },
+        },
+        {
+            id: 'redo',
+            name: 'Redo för tenta',
+            description: 'Nå 90% tentaklarhet.',
+            icon: 'sparkles',
+            unlocked: examReadinessPct >= 90,
+            progress: examReadinessPct >= 90
+                ? undefined
+                : { current: examReadinessPct, target: 90 },
+        },
+    ];
+
+    const gamification: GamificationData = {
+        xp,
+        weeklyXp,
+        streakDays,
+        longestStreak,
+        examReadinessPct,
+        achievements,
+    };
+
+    return {
+        studentProgress,
+        moduleProgress,
+        errorPatterns,
+        behaviouralMetrics,
+        gamification,
+    };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Props
+// Inline helpers — keep layout-glue local, no extra files
+// ─────────────────────────────────────────────────────────────────────────────
+
+function glass(className = '') {
+    return [
+        'rounded-lg border border-white/15 bg-white/[0.07]',
+        'shadow-2xl shadow-black/25 backdrop-blur-md ring-1 ring-white/5',
+        className,
+    ].join(' ');
+}
+
+function actionTitle(pattern: ErrorPattern) {
+    const labels: Record<ErrorPattern['type'], string> = {
+        conceptual: 'Repetera grundbegreppen',
+        procedural: 'Träna metodval',
+        computational: 'Gör kontrollträning',
+        interpretation: 'Öva på att tolka uppgiften',
+        notation: 'Rätta notationsvanor',
+        incomplete: 'Träna fullständiga svar',
+        time_pressure: 'Sänk tempot och höj precisionen',
+    };
+    return labels[pattern.type];
+}
+
+function MiniMetric({
+    icon: Icon,
+    label,
+    value,
+}: {
+    icon: React.ElementType;
+    label: string;
+    value: string;
+}) {
+    return (
+        <div className={glass('p-4')}>
+            <Icon className="mb-3 h-5 w-5 text-blue-200" />
+            <p className="text-[11px] font-bold uppercase text-white/45">{label}</p>
+            <p className="mt-1 text-lg font-bold text-white">{value}</p>
+        </div>
+    );
+}
+
+function TopicFocusRow({ topic }: { topic: StudentProgress }) {
+    const targetPct = Math.max(5, Math.min(100, (topic.masteryLevel / Math.max(topic.targetMastery, 1)) * 100));
+
+    return (
+        <div className="rounded-lg border border-white/10 bg-white/[0.045] p-3">
+            <div className="mb-2 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                    <h3 className="truncate text-sm font-bold text-white">{topic.topicName}</h3>
+                    <p className="text-xs text-white/45">{topic.subject}</p>
+                </div>
+                <span className="rounded-lg border border-white/10 bg-white/[0.05] px-2 py-1 text-xs font-bold text-white/70">
+                    {Math.round(topic.accuracy * 100)}%
+                </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-300 to-emerald-300"
+                    style={{ width: `${targetPct}%` }}
+                />
+            </div>
+        </div>
+    );
+}
+
+function InsightLine({
+    icon: Icon,
+    label,
+    value,
+    tone,
+}: {
+    icon: React.ElementType;
+    label: string;
+    value: string;
+    tone: 'emerald' | 'amber' | 'blue';
+}) {
+    const toneClass = {
+        emerald: 'text-emerald-200 bg-emerald-400/10 border-emerald-300/20',
+        amber: 'text-amber-200 bg-amber-400/10 border-amber-300/20',
+        blue: 'text-blue-200 bg-blue-400/10 border-blue-300/20',
+    }[tone];
+
+    return (
+        <div className={`flex items-center justify-between gap-3 rounded-lg border p-3 ${toneClass}`}>
+            <span className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold">
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{label}</span>
+            </span>
+            <span className="text-sm font-bold text-white">{value}</span>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Props & main component
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface AnalyticsDashboardProps {
-    /** If not provided the component will use mock data */
     studentProgress?: StudentProgress[];
     moduleProgress?: ModuleProgress[];
     errorPatterns?: ErrorPattern[];
     behaviouralMetrics?: BehaviouralMetrics;
+    gamification?: GamificationData;
     /** Override default seed used for mock data */
     mockSeed?: number;
-    /** Initial tab to show */
-    defaultTab?: TabId;
+    /** Optional student first name for hero greeting */
+    studentName?: string;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Main component
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function AnalyticsDashboard({
     studentProgress: progressProp,
     moduleProgress: moduleProp,
     errorPatterns: errorProp,
     behaviouralMetrics: behaviouralProp,
+    gamification: gamificationProp,
     mockSeed = 42,
-    defaultTab = 'descriptive',
+    studentName,
 }: AnalyticsDashboardProps) {
-    const [activeTab, setActiveTab] = useState<TabId>(defaultTab);
-
-    // Resolve data — real props take precedence over generated mock data
-    const mock = generateMockData(mockSeed);
+    const mock = useMemo(() => generateMockData(mockSeed), [mockSeed]);
     const studentProgress = progressProp ?? mock.studentProgress;
     const moduleProgress = moduleProp ?? mock.moduleProgress;
     const errorPatterns = errorProp ?? mock.errorPatterns;
     const behaviouralMetrics = behaviouralProp ?? mock.behaviouralMetrics;
+    const gamification = gamificationProp ?? mock.gamification;
+
+    const stage = percentToStage(gamification.examReadinessPct);
+    const stageLabel = { grund: 'Grund', god: 'God', stabil: 'Stabil', redo: 'Redo' }[stage];
+    const unlockedAchievements = gamification.achievements.filter((a) => a.unlocked).length;
+    const weakestTopics = [...studentProgress]
+        .sort((a, b) => {
+            const deficitA = Math.max(0, a.targetMastery - a.masteryLevel);
+            const deficitB = Math.max(0, b.targetMastery - b.masteryLevel);
+            return deficitB - deficitA || a.accuracy - b.accuracy;
+        })
+        .slice(0, 3);
+    const topModule = [...moduleProgress].sort((a, b) => a.progress - b.progress)[0];
+    const topPattern = [...errorPatterns].sort((a, b) => {
+        const severity = { high: 3, medium: 2, low: 1 };
+        return severity[b.severity] * b.share - severity[a.severity] * a.share;
+    })[0];
+    const focusPct = Math.round(behaviouralMetrics.summary.focusedShare * 100);
+    const rapidGuessPct = Math.round(behaviouralMetrics.summary.rapidGuessShare * 100);
+    const firstName = studentName ? `, ${studentName}` : '';
 
     return (
-        <div className="w-full space-y-4">
-            {/* ── Tab bar ─────────────────────────────────────────────────── */}
-            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 overflow-x-auto">
-                {TABS.map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={[
-                            'flex-1 min-w-[120px] flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
-                            activeTab === tab.id
-                                ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm'
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
-                        ].join(' ')}
+        <div className="w-full space-y-4 text-white">
+            <motion.section
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={glass('p-5 sm:p-6')}
+            >
+                <div className="grid gap-6 lg:grid-cols-[1fr_280px] lg:items-center">
+                    <div>
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-blue-200/20 bg-blue-300/10 px-3 py-1.5 text-xs font-bold text-blue-100">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Läranalys
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-normal sm:text-4xl">
+                            Nästa tydliga steg{firstName}
+                        </h1>
+                        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60">
+                            Här visas bara det som hjälper dig plugga bättre nu: beredskap, fokus och en prioriterad åtgärd.
+                        </p>
+                    </div>
+
+                    <div className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-4 shadow-xl shadow-emerald-500/10">
+                        <div className="mb-3 flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-300/15 text-emerald-100">
+                                <Trophy className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase text-emerald-200">Tentaklarhet</p>
+                                <p className="text-2xl font-bold">{gamification.examReadinessPct}%</p>
+                            </div>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                            <div
+                                className="h-full rounded-full bg-gradient-to-r from-emerald-300 to-blue-300"
+                                style={{ width: `${gamification.examReadinessPct}%` }}
+                            />
+                        </div>
+                        <p className="mt-3 text-sm font-semibold text-white/75">{stageLabel}</p>
+                    </div>
+                </div>
+            </motion.section>
+
+            <section className={glass('p-4 sm:p-5')}>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-emerald-300/25 bg-emerald-400/15 text-emerald-100 shadow-lg shadow-emerald-500/20">
+                            <CheckCircle2 className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase text-emerald-200">Gör detta först</p>
+                            <h2 className="mt-1 text-xl font-bold">{topPattern ? actionTitle(topPattern) : 'Fortsätt med adaptiv träning'}</h2>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-white/60">
+                                {topPattern?.actionableMessage ?? 'Systemet har inget tydligt felmönster just nu. Fortsätt med nästa träningspass.'}
+                            </p>
+                        </div>
+                    </div>
+                    <Link
+                        href="/study"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-zinc-950 transition hover:bg-emerald-100"
                     >
-                        <span className="text-base leading-none">{tab.icon}</span>
-                        <span className="leading-tight">{tab.label}</span>
-                        <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500 hidden sm:block leading-tight">
-                            {tab.description}
-                        </span>
-                    </button>
-                ))}
+                        Starta träning
+                        <Play className="h-4 w-4 fill-current" />
+                    </Link>
+                </div>
+            </section>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <MiniMetric icon={Flame} label="Streak" value={`${gamification.streakDays} dagar`} />
+                <MiniMetric icon={Zap} label="Veckans XP" value={`+${gamification.weeklyXp}`} />
+                <MiniMetric icon={Brain} label="Fokus" value={`${focusPct}%`} />
+                <MiniMetric icon={ShieldCheck} label="Badges" value={`${unlockedAchievements}/${gamification.achievements.length}`} />
             </div>
 
-            {/* ── Tab panels ──────────────────────────────────────────────── */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.22 }}
-                >
-                    {activeTab === 'descriptive' && (
-                        <DescriptiveSection
-                            topics={studentProgress}
-                            modules={moduleProgress}
-                        />
-                    )}
-                    {activeTab === 'prescriptive' && (
-                        <PrescriptiveSection
-                            topics={studentProgress}
-                            errorPatterns={errorPatterns}
-                        />
-                    )}
-                    {activeTab === 'behavioural' && (
-                        <BehavioralSection metrics={behaviouralMetrics} />
-                    )}
-                </motion.div>
-            </AnimatePresence>
+            <PsychInsightsPanel
+                input={{
+                    topics: studentProgress,
+                    metrics: behaviouralMetrics,
+                    errorPatterns,
+                }}
+            />
 
-            {/* ── Footer note (demo only) ──────────────────────────────────── */}
+            <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr]">
+                <section className={glass('p-4')}>
+                    <div className="mb-3 flex items-center gap-2">
+                        <Target className="h-5 w-5 text-blue-200" />
+                        <h2 className="text-base font-bold">Ämnen att lyfta</h2>
+                    </div>
+                    <div className="space-y-2">
+                        {weakestTopics.map((topic) => (
+                            <TopicFocusRow key={topic.topicId} topic={topic} />
+                        ))}
+                    </div>
+                </section>
+
+                <section className={glass('p-4')}>
+                    <div className="mb-3 flex items-center gap-2">
+                        <Gauge className="h-5 w-5 text-violet-200" />
+                        <h2 className="text-base font-bold">Sessionens signal</h2>
+                    </div>
+                    <div className="space-y-3">
+                        <InsightLine
+                            icon={Clock}
+                            label="Snabba gissningar"
+                            value={`${rapidGuessPct}%`}
+                            tone={rapidGuessPct > 20 ? 'amber' : 'emerald'}
+                        />
+                        {topModule && (
+                            <InsightLine
+                                icon={AlertTriangle}
+                                label="Lägst modulprogress"
+                                value={`${topModule.progress}%`}
+                                tone="blue"
+                            />
+                        )}
+                        <p className="rounded-lg border border-white/10 bg-white/[0.045] p-3 text-sm leading-6 text-white/60">
+                            Håll fokus på ett område i taget. När nästa pass är klart kan analysen visa fler detaljer.
+                        </p>
+                    </div>
+                </section>
+            </div>
+
             {!progressProp && (
-                <p className="text-center text-[11px] text-gray-400 dark:text-gray-600">
+                <p className="text-center text-[11px] text-white/35">
                     Visar exempeldata · Koppla till riktiga API:er för att visa dina studiedata
                 </p>
             )}

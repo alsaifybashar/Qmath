@@ -1,26 +1,26 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import {
     Home, BookOpen, Zap, Settings, User,
-    FlaskConical, Archive, FileText, BarChart2, PanelLeft,
+    FlaskConical, Archive, FileText, BarChart2, PanelLeft, Sun, Moon, Monitor,
 } from 'lucide-react';
 import { useSidebar } from '@/lib/hooks/use-sidebar';
 
-// ─── Design tokens (globals.css) ─────────────────────────────────────────────
 const T = {
-    primary:     '#3b82f6',
-    accent:      '#8b5cf6',
-    primaryLight:'#eff6ff',
-    gradient:    'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)',
-    text:        '#1a1a1a',
-    textMuted:   '#525252',
-    textSubtle:  '#737373',
-    surfaceHover:'rgba(0,0,0,0.04)',
-    border:      'rgba(0,0,0,0.06)',
-    glass:       'rgba(255,255,255,0.90)',
+    primary: 'var(--sidebar-beta-text)',
+    primaryLight: 'var(--sidebar-beta-bg)',
+    gradient: 'var(--sidebar-active)',
+    text: 'var(--sidebar-text)',
+    textMuted: 'var(--sidebar-muted)',
+    textSubtle: 'var(--sidebar-subtle)',
+    surfaceHover: 'var(--sidebar-hover)',
+    border: 'var(--sidebar-border)',
+    glass: 'var(--sidebar-bg)',
 } as const;
 
 // ─── Grid constants ───────────────────────────────────────────────────────────
@@ -74,9 +74,70 @@ const NAV = [
     },
 ] as const;
 
+const SIDEBAR_THEMES: Record<string, React.CSSProperties> = {
+    dashboard: {
+        '--sidebar-beta-text': '#0f766e',
+        '--sidebar-beta-bg': 'rgba(20, 184, 166, 0.12)',
+        '--sidebar-active': 'linear-gradient(135deg, #14b8a6 0%, #ff684a 100%)',
+        '--sidebar-active-shadow': '0 12px 30px rgba(20, 184, 166, 0.22)',
+        '--sidebar-logo-shadow': '0 8px 24px rgba(20, 184, 166, 0.24)',
+        '--sidebar-rail-shadow': '18px 0 42px rgba(15, 118, 110, 0.08)',
+    } as React.CSSProperties,
+    analytics: {
+        '--sidebar-beta-text': '#2563eb',
+        '--sidebar-beta-bg': 'rgba(59, 130, 246, 0.12)',
+        '--sidebar-active': 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+        '--sidebar-active-shadow': '0 12px 30px rgba(59, 130, 246, 0.22)',
+        '--sidebar-logo-shadow': '0 8px 24px rgba(59, 130, 246, 0.24)',
+        '--sidebar-rail-shadow': '18px 0 42px rgba(59, 130, 246, 0.08)',
+    } as React.CSSProperties,
+    courses: {
+        '--sidebar-beta-text': '#1d4ed8',
+        '--sidebar-beta-bg': 'rgba(67, 97, 238, 0.12)',
+        '--sidebar-active': 'linear-gradient(135deg, #4361ee 0%, #22c55e 100%)',
+        '--sidebar-active-shadow': '0 12px 30px rgba(67, 97, 238, 0.22)',
+        '--sidebar-logo-shadow': '0 8px 24px rgba(67, 97, 238, 0.24)',
+        '--sidebar-rail-shadow': '18px 0 42px rgba(67, 97, 238, 0.08)',
+    } as React.CSSProperties,
+    articles: {
+        '--sidebar-beta-text': '#4f46e5',
+        '--sidebar-beta-bg': 'rgba(99, 102, 241, 0.12)',
+        '--sidebar-active': 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+        '--sidebar-active-shadow': '0 12px 30px rgba(99, 102, 241, 0.22)',
+        '--sidebar-logo-shadow': '0 8px 24px rgba(99, 102, 241, 0.24)',
+        '--sidebar-rail-shadow': '18px 0 42px rgba(99, 102, 241, 0.08)',
+    } as React.CSSProperties,
+    exams: {
+        '--sidebar-beta-text': '#c2410c',
+        '--sidebar-beta-bg': 'rgba(249, 115, 22, 0.13)',
+        '--sidebar-active': 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
+        '--sidebar-active-shadow': '0 12px 30px rgba(249, 115, 22, 0.22)',
+        '--sidebar-logo-shadow': '0 8px 24px rgba(249, 115, 22, 0.24)',
+        '--sidebar-rail-shadow': '18px 0 42px rgba(249, 115, 22, 0.08)',
+    } as React.CSSProperties,
+    account: {
+        '--sidebar-beta-text': '#475569',
+        '--sidebar-beta-bg': 'rgba(100, 116, 139, 0.12)',
+        '--sidebar-active': 'linear-gradient(135deg, #64748b 0%, #0ea5e9 100%)',
+        '--sidebar-active-shadow': '0 12px 30px rgba(100, 116, 139, 0.20)',
+        '--sidebar-logo-shadow': '0 8px 24px rgba(100, 116, 139, 0.22)',
+        '--sidebar-rail-shadow': '18px 0 42px rgba(100, 116, 139, 0.08)',
+    } as React.CSSProperties,
+};
+
 function isActive(pathname: string, href: string) {
     if (href === '/dashboard') return pathname === '/dashboard';
     return pathname === href || pathname.startsWith(href + '/');
+}
+
+function themeForPath(pathname: string) {
+    if (pathname === '/dashboard') return SIDEBAR_THEMES.dashboard;
+    if (pathname.startsWith('/analytics')) return SIDEBAR_THEMES.analytics;
+    if (pathname.startsWith('/courses') || pathname.startsWith('/study')) return SIDEBAR_THEMES.courses;
+    if (pathname.startsWith('/articles')) return SIDEBAR_THEMES.articles;
+    if (pathname.startsWith('/archive') || pathname.startsWith('/exam') || pathname.startsWith('/exams')) return SIDEBAR_THEMES.exams;
+    if (pathname.startsWith('/profile') || pathname.startsWith('/settings')) return SIDEBAR_THEMES.account;
+    return SIDEBAR_THEMES.dashboard;
 }
 
 // ─── Shared row styles ────────────────────────────────────────────────────────
@@ -124,7 +185,11 @@ export default function DashboardSidebar({
 }) {
     const pathname = usePathname();
     const { isSidebarExpanded, toggleSidebar } = useSidebar();
+    const { setTheme, theme } = useTheme();
+    const [isThemeMenuOpen, setIsThemeMenuOpen] = React.useState(false);
+    
     const lo = isSidebarExpanded ? 1 : 0;
+    const sidebarTheme = themeForPath(pathname);
 
     return (
         <motion.aside
@@ -132,6 +197,7 @@ export default function DashboardSidebar({
             animate={{ width: isSidebarExpanded ? W_OPEN : W_CLOSED }}
             transition={WT}
             style={{
+                ...sidebarTheme,
                 flexShrink: 0,
                 height: '100vh',
                 position: 'sticky',
@@ -142,6 +208,7 @@ export default function DashboardSidebar({
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 borderRight: `1px solid ${T.border}`,
+                boxShadow: 'var(--sidebar-rail-shadow)',
                 willChange: 'width',
                 overflow: 'hidden',
                 zIndex: 30,
@@ -166,7 +233,7 @@ export default function DashboardSidebar({
                                 height: ICON,
                                 borderRadius: 9,
                                 background: T.gradient,
-                                boxShadow: '0 4px 14px rgba(59,130,246,0.30)',
+                                boxShadow: 'var(--sidebar-logo-shadow)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -301,7 +368,7 @@ export default function DashboardSidebar({
                                             fontWeight: active ? 600 : 500,
                                             fontSize: 13,
                                             boxShadow: active
-                                                ? '0 4px 12px rgba(59,130,246,0.25)'
+                                                ? 'var(--sidebar-active-shadow)'
                                                 : 'none',
                                         }}
                                         onMouseEnter={e => {
@@ -343,12 +410,78 @@ export default function DashboardSidebar({
             <div style={{ height: 1, background: T.border, margin: `12px ${IPAD}px 0`, flexShrink: 0 }} />
 
             {/* ── User card ────────────────────────────────────────────────── */}
-            <div style={{ paddingBottom: 20, paddingTop: 6, flexShrink: 0 }}>
+            <div 
+                style={{ paddingBottom: 20, paddingTop: 6, flexShrink: 0, position: 'relative' }}
+                onMouseEnter={() => setIsThemeMenuOpen(true)}
+                onMouseLeave={() => setIsThemeMenuOpen(false)}
+            >
+                {/* Theme Switcher Popover */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ 
+                        opacity: isThemeMenuOpen ? 1 : 0, 
+                        y: isThemeMenuOpen ? -4 : 10, 
+                        scale: isThemeMenuOpen ? 1 : 0.95,
+                        pointerEvents: isThemeMenuOpen ? 'auto' : 'none'
+                    }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                    style={{
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: IPAD,
+                        width: isSidebarExpanded ? W_OPEN - (OUTER * 2) - (IPAD * 2) : 50,
+                        background: T.glass,
+                        backdropFilter: 'blur(32px)',
+                        border: `1px solid ${T.border}`,
+                        borderRadius: 16,
+                        padding: 6,
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        zIndex: 100,
+                    }}
+                >
+                    {[
+                        { id: 'light', label: 'Ljust', Icon: Sun },
+                        { id: 'dark', label: 'Mörkt', Icon: Moon },
+                        { id: 'system', label: 'System', Icon: Monitor },
+                    ].map((t) => (
+                        <button
+                            key={t.id}
+                            onClick={() => setTheme(t.id)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 10,
+                                padding: '8px 10px',
+                                borderRadius: 10,
+                                border: 'none',
+                                background: theme === t.id ? T.surfaceHover : 'transparent',
+                                color: theme === t.id ? T.text : T.textMuted,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                width: '100%',
+                            }}
+                        >
+                            <t.Icon size={16} />
+                            {isSidebarExpanded && (
+                                <motion.span 
+                                    animate={{ opacity: lo }}
+                                    style={{ fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}
+                                >
+                                    {t.label}
+                                </motion.span>
+                            )}
+                        </button>
+                    ))}
+                </motion.div>
+
                 <Link
                     href="/profile"
                     title={!isSidebarExpanded ? userName : undefined}
                     style={{ ...rowStyle, color: T.text }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.primaryLight; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.surfaceHover; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                 >
                     <IconCell>
@@ -358,6 +491,7 @@ export default function DashboardSidebar({
                                 height: ICON,
                                 borderRadius: 9,
                                 background: T.gradient,
+                                boxShadow: 'var(--sidebar-logo-shadow)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',

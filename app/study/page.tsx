@@ -26,6 +26,7 @@ import type { HintResult } from '@/app/actions/hint-engine';
 import { useStudySession } from '@/lib/hooks/useStudySession';
 
 import { AIPanel } from '@/components/ai/AIPanel';
+import { FlashcardContextBridge } from '@/components/flashcards/FlashcardContextBridge';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const HINT_LEVEL_1_DELAY_MS = 45_000;
@@ -498,6 +499,18 @@ function StudyHubContent() {
             helpPanelWidth={helpPanelWidth}
             onHelpPanelWidthChange={setHelpPanelWidth}
         >
+            {currentQuestion && (
+                <FlashcardContextBridge
+                    sourceContextType="question"
+                    sourceContextId={currentQuestion.id}
+                    topicId={currentQuestion.topicId}
+                    topicName={topicName || 'Matematik'}
+                    snippet={[
+                        currentQuestion.content?.question?.text,
+                        currentQuestion.content?.question?.math,
+                    ].filter(Boolean).join('\n')}
+                />
+            )}
             {/* ── Full-width single-column stack ───────────────────────────── */}
             <div className="space-y-6">
 
@@ -518,7 +531,7 @@ function StudyHubContent() {
                     >
                         {currentQuestion && (
                             <QuestionCard
-                                question={currentQuestion}
+                                question={currentQuestion as unknown as QuestionCardValue}
                                 questionIndex={questionIndex}
                                 totalQuestions={totalQuestions}
                                 onAnswer={(answer, isCorrect) => {
@@ -1091,22 +1104,24 @@ function StatCard({
 }
 
 // ── Question card ─────────────────────────────────────────────────────────────
+type QuestionCardValue = Record<string, unknown> & {
+    id?: string;
+    type?: string;
+    content?: {
+        question?: {
+            text?: string;
+            math?: string;
+        };
+    };
+    difficulty?: number;
+    correctAnswer?: string;
+};
+
 function QuestionCard({
     question,
     onAnswer,
 }: {
-    question: Record<string, unknown> & {
-        id?: string;
-        type?: string;
-        content?: {
-            question?: {
-                text?: string;
-                math?: string;
-            };
-        };
-        difficulty?: number;
-        correctAnswer?: string;
-    };
+    question: QuestionCardValue;
     questionIndex: number;
     totalQuestions: number;
     onAnswer: (answer: string, isCorrect: boolean) => void;
@@ -1170,7 +1185,7 @@ function QuestionCard({
             return (
                 <div className={card}>
                     <GuidedStepSession
-                        question={question as Parameters<typeof GuidedStepSession>[0]['question']}
+                        question={question as unknown as Parameters<typeof GuidedStepSession>[0]['question']}
                         onComplete={() => onAnswer('complete', true)}
                         onExit={() => { }}
                     />
@@ -1182,7 +1197,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <FillBlankInput
-                        question={question as Parameters<typeof FillBlankInput>[0]['question']}
+                        question={question as unknown as Parameters<typeof FillBlankInput>[0]['question']}
                         onAnswer={(vals, isCorrect) => onAnswer(JSON.stringify(vals), isCorrect)}
                     />
                 </div>
@@ -1193,7 +1208,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <DragDropInput
-                        question={question as Parameters<typeof DragDropInput>[0]['question']}
+                        question={question as unknown as Parameters<typeof DragDropInput>[0]['question']}
                         onAnswer={(ord, isCorrect) => onAnswer(JSON.stringify(ord), isCorrect)}
                     />
                 </div>
@@ -1204,7 +1219,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <ToggleInput
-                        question={question as Parameters<typeof ToggleInput>[0]['question']}
+                        question={question as unknown as Parameters<typeof ToggleInput>[0]['question']}
                         onAnswer={(states, isCorrect) => onAnswer(JSON.stringify(states), isCorrect)}
                     />
                 </div>
@@ -1215,7 +1230,7 @@ function QuestionCard({
                 <div className={card}>
                     {renderHeader()}
                     <ExpressionBuilderInput
-                        question={question as Parameters<typeof ExpressionBuilderInput>[0]['question']}
+                        question={question as unknown as Parameters<typeof ExpressionBuilderInput>[0]['question']}
                         onAnswer={(expr, isCorrect) => onAnswer(expr, isCorrect)}
                     />
                 </div>
@@ -1225,7 +1240,7 @@ function QuestionCard({
             return (
                 <div className={card}>
                     <SolutionBuilderInput
-                        question={question as Parameters<typeof SolutionBuilderInput>[0]['question']}
+                        question={question as unknown as Parameters<typeof SolutionBuilderInput>[0]['question']}
                         onAnswer={(isCorrect) => onAnswer(String(question.correctAnswer ?? ''), isCorrect)}
                     />
                 </div>

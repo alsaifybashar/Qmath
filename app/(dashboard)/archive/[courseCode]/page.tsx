@@ -3,7 +3,7 @@ import { exams } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, FileText, CheckCircle, Calendar, Download } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle, Calendar } from 'lucide-react';
 import { formatFileSize } from '@/lib/exam-storage';
 
 interface PageProps {
@@ -54,14 +54,16 @@ export default async function CourseArchivePage({ params }: PageProps) {
     const years = Object.keys(examsByYear).map(Number).sort((a, b) => b - a);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-zinc-950 dark:to-zinc-900">
+        <div className="liquid-page">
+            <div className="liquid-bg" />
+            <div className="liquid-sheen" />
             {/* Header */}
-            <header className="border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-10">
+            <header className="sticky top-0 z-10 border-b border-black/10 bg-white/55 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
                 <div className="max-w-6xl mx-auto px-6 py-4">
                     <div className="flex items-center gap-4">
                         <Link
                             href="/archive"
-                            className="flex items-center gap-2 text-slate-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            className="liquid-muted flex items-center gap-2 hover:text-blue-700 dark:hover:text-blue-200 transition-colors"
                         >
                             <ArrowLeft size={18} />
                             <span className="text-sm font-medium">Tillbaka till sök</span>
@@ -70,23 +72,23 @@ export default async function CourseArchivePage({ params }: PageProps) {
                 </div>
             </header>
 
-            <main className="max-w-6xl mx-auto px-6 py-10">
+            <main className="relative z-10 max-w-6xl mx-auto px-6 py-10">
                 {/* Course Header */}
-                <div className="mb-10">
+                <div className="liquid-card mb-8 p-5 sm:p-6">
                     <div className="flex items-center gap-3 mb-3">
-                        <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-mono font-bold rounded-lg text-sm">
+                        <span className="px-3 py-1 bg-blue-400/10 text-blue-700 dark:text-blue-100 font-mono font-bold rounded-lg text-sm border border-blue-300/20">
                             {code}
                         </span>
                     </div>
-                    <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+                    <h1 className="text-4xl font-bold mb-4">
                         {courseName}
                     </h1>
 
                     {/* Stats */}
                     <div className="flex items-center gap-6 text-sm">
-                        <div className="flex items-center gap-2 text-slate-600 dark:text-zinc-400">
+                        <div className="liquid-muted flex items-center gap-2">
                             <FileText size={16} />
-                            <span><strong className="text-slate-900 dark:text-white">{stats.total}</strong> tentor</span>
+                            <span><strong>{stats.total}</strong> tentor</span>
                         </div>
                         <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                             <CheckCircle size={16} />
@@ -99,7 +101,7 @@ export default async function CourseArchivePage({ params }: PageProps) {
                 <div className="space-y-8">
                     {years.map(year => (
                         <section key={year}>
-                            <h2 className="text-lg font-semibold text-slate-700 dark:text-zinc-300 mb-4 flex items-center gap-2">
+                            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                                 <Calendar size={18} />
                                 {year}
                             </h2>
@@ -109,19 +111,19 @@ export default async function CourseArchivePage({ params }: PageProps) {
                                     <Link
                                         key={exam.id}
                                         href={`/archive/${code}/${exam.id}`}
-                                        className="group flex items-center justify-between p-5 bg-white dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-200"
+                                        className="liquid-card group flex items-center justify-between p-5 transition-all duration-200 hover:-translate-y-0.5"
                                     >
                                         <div className="flex items-center gap-4">
                                             {/* File icon */}
-                                            <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
+                                            <div className="w-12 h-12 bg-rose-400/10 rounded-lg flex items-center justify-center">
                                                 <FileText className="text-red-500" size={24} />
                                             </div>
 
                                             <div>
-                                                <div className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                                <div className="font-semibold group-hover:text-blue-700 dark:group-hover:text-blue-200 transition-colors">
                                                     {exam.examType} - {new Date(exam.examDate).toLocaleDateString('sv-SE')}
                                                 </div>
-                                                <div className="text-sm text-slate-500 dark:text-zinc-500 mt-0.5">
+                                                <div className="liquid-muted text-sm mt-0.5">
                                                     {exam.fileSize ? formatFileSize(exam.fileSize) : 'PDF'}
                                                     {exam.hasSolution && (
                                                         <span className="ml-3 inline-flex items-center gap-1 text-green-600 dark:text-green-400">

@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import { Atkinson_Hyperlegible } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { Providers } from './providers';
 
 import { GlobalErrorLogger } from '@/components/GlobalErrorLogger';
+import { FlashcardDock } from '@/components/flashcards/FlashcardDock';
 
 const atkinsonHyperlegible = Atkinson_Hyperlegible({
   subsets: ['latin', 'latin-ext'],
@@ -35,8 +35,8 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-              <ThemeToggle />
               {children}
+              <FlashcardDock />
           </ThemeProvider>
         </Providers>
       </body>

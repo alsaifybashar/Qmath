@@ -4,20 +4,7 @@ import { getPublishedArticleBySlug, getPublishedArticles } from '@/app/actions/a
 import { ArticleContent, TableOfContents } from '@/components/articles/ArticleBlock';
 import type { ArticleBlock } from '@/types/articles';
 import { ArrowLeft, Clock, Eye, Calendar, Tag, BookOpen, ChevronRight } from 'lucide-react';
-
-// ── Design tokens ────────────────────────────────────────────────────────────
-const C = {
-    text:       '#1A1D2E',
-    textSec:    '#6B7194',
-    textMuted:  '#9CA3AF',
-    blue:       '#4361EE',
-    purple:     '#7C5CFC',
-    blueLight:  '#EEF1FF',
-    blueBorder: '#D6DAFB',
-    border:     '#E5E7EB',
-    surface:    '#FFFFFF',
-    surfaceAlt: '#F9FAFB',
-};
+import { FlashcardContextBridge } from '@/components/flashcards/FlashcardContextBridge';
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -53,18 +40,26 @@ export default async function ArticleReaderPage({ params }: Props) {
     const relatedFiltered = related.filter(r => r.slug !== slug).slice(0, 3);
 
     return (
-        <div className="min-h-screen" style={{ background: '#FAFBFE' }}>
+        <div className="liquid-page pb-20">
+            <FlashcardContextBridge
+                sourceContextType="article"
+                sourceContextId={article.id}
+                topicId={article.topicId}
+                topicName={article.topicTitle ?? article.title}
+                snippet={article.excerpt ?? article.title}
+            />
+            <div className="liquid-bg" />
+            <div className="liquid-sheen" />
             {/* ── Article container ──────────────────────────────────────────── */}
-            <div className="max-w-3xl mx-auto px-6 py-10">
+            <div className="relative z-10 max-w-3xl mx-auto px-6 py-10">
                 {/* ── Breadcrumb ─────────────────────────────────────────────── */}
                 <nav
-                    className="flex items-center gap-2 text-sm mb-10"
+                    className="liquid-muted flex items-center gap-2 text-sm mb-6"
                     aria-label="Brödsmulor"
-                    style={{ color: C.textMuted }}
                 >
                     <Link
                         href="/articles"
-                        className="flex items-center gap-1.5 transition-colors hover:text-[#4361EE]"
+                        className="flex items-center gap-1.5 transition-colors hover:text-blue-700 dark:hover:text-blue-200"
                     >
                         <BookOpen className="w-3.5 h-3.5" /> Artiklar
                     </Link>
@@ -73,7 +68,7 @@ export default async function ArticleReaderPage({ params }: Props) {
                             <ChevronRight className="w-3.5 h-3.5" />
                             <Link
                                 href={`/articles?courseId=${article.courseId}`}
-                                className="transition-colors hover:text-[#4361EE]"
+                                className="transition-colors hover:text-blue-700 dark:hover:text-blue-200"
                             >
                                 {article.courseCode}
                             </Link>
@@ -82,29 +77,26 @@ export default async function ArticleReaderPage({ params }: Props) {
                     {article.topicTitle && (
                         <>
                             <ChevronRight className="w-3.5 h-3.5" />
-                            <span style={{ color: C.textSec }}>{article.topicTitle}</span>
+                            <span>{article.topicTitle}</span>
                         </>
                     )}
                 </nav>
 
                 {/* ── Article header ─────────────────────────────────────────── */}
-                <header className="mb-12">
+                <header className="liquid-card mb-8 p-5 sm:p-6">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-blue-300/20 bg-blue-400/10 px-3 py-1.5 text-xs font-bold text-blue-700 dark:text-blue-100">
+                        <BookOpen className="h-3.5 w-3.5" />
+                        Artikel
+                    </div>
                     <h1
-                        className="font-bold leading-tight mb-4"
-                        style={{
-                            color: C.text,
-                            fontSize: 'clamp(28px, 5vw, 40px)',
-                            lineHeight: '1.2',
-                            letterSpacing: '-0.02em',
-                        }}
+                        className="font-bold leading-tight mb-4 text-[clamp(28px,5vw,40px)] tracking-normal"
                     >
                         {article.title}
                     </h1>
 
                     {article.titleSv && article.titleSv !== article.title && (
                         <p
-                            className="italic mb-5"
-                            style={{ color: C.textMuted, fontSize: '18px' }}
+                            className="liquid-muted italic mb-5 text-lg"
                         >
                             {article.titleSv}
                         </p>
@@ -112,13 +104,7 @@ export default async function ArticleReaderPage({ params }: Props) {
 
                     {article.excerpt && (
                         <p
-                            className="leading-relaxed pl-5 mb-6"
-                            style={{
-                                color: C.textSec,
-                                fontSize: '17px',
-                                lineHeight: '1.7',
-                                borderLeft: `3px solid ${C.blueBorder}`,
-                            }}
+                            className="liquid-muted mb-6 border-l-4 border-blue-300/40 pl-5 text-[17px] leading-7"
                         >
                             {article.excerpt}
                         </p>
@@ -126,14 +112,12 @@ export default async function ArticleReaderPage({ params }: Props) {
 
                     {/* Metadata row */}
                     <div
-                        className="flex flex-wrap items-center gap-4 text-sm"
-                        style={{ color: C.textMuted }}
+                        className="liquid-muted flex flex-wrap items-center gap-4 text-sm"
                     >
                         {article.authorName && (
                             <span>
                                 av{' '}
                                 <span
-                                    style={{ color: C.textSec }}
                                     className="font-medium"
                                 >
                                     {article.authorName}
@@ -169,12 +153,7 @@ export default async function ArticleReaderPage({ params }: Props) {
                                 <Link
                                     key={tag}
                                     href={`/articles?tag=${encodeURIComponent(tag)}`}
-                                    className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-full transition-colors hover:shadow-sm"
-                                    style={{
-                                        background: C.blueLight,
-                                        color: C.blue,
-                                        border: `1px solid ${C.blueBorder}`,
-                                    }}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-blue-300/20 bg-blue-400/10 px-2.5 py-1 text-xs font-bold text-blue-700 transition hover:shadow-sm dark:text-blue-100"
                                 >
                                     <Tag className="w-3 h-3" />
                                     {tag}
@@ -184,12 +163,10 @@ export default async function ArticleReaderPage({ params }: Props) {
                     ) : null}
 
                     {/* Separator */}
-                    <div
-                        className="mt-8 flex items-center gap-2"
-                    >
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: C.border }} />
-                        <span className="flex-1 h-px" style={{ background: C.border }} />
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: C.border }} />
+                    <div className="mt-8 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-black/10 dark:bg-white/10" />
+                        <span className="flex-1 h-px bg-black/10 dark:bg-white/10" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-black/10 dark:bg-white/10" />
                     </div>
                 </header>
 
@@ -203,10 +180,7 @@ export default async function ArticleReaderPage({ params }: Props) {
                 {/* ── Article body ───────────────────────────────────────────── */}
                 <article className="max-w-none">
                     {blocks.length === 0 ? (
-                        <p
-                            className="italic text-center py-16"
-                            style={{ color: C.textMuted }}
-                        >
+                        <p className="liquid-muted italic text-center py-16">
                             Denna artikel har inget innehåll ännu.
                         </p>
                     ) : (
@@ -216,13 +190,11 @@ export default async function ArticleReaderPage({ params }: Props) {
 
                 {/* ── Back link ───────────────────────────────────────────────── */}
                 <div
-                    className="mt-16 pt-8"
-                    style={{ borderTop: `1px solid ${C.border}` }}
+                    className="mt-16 border-t border-black/10 pt-8 dark:border-white/10"
                 >
                     <Link
                         href="/articles"
-                        className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#4361EE]"
-                        style={{ color: C.textMuted }}
+                        className="liquid-muted inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-blue-700 dark:hover:text-blue-200"
                     >
                         <ArrowLeft className="w-4 h-4" /> Tillbaka till alla artiklar
                     </Link>
@@ -231,18 +203,9 @@ export default async function ArticleReaderPage({ params }: Props) {
 
             {/* ── Related articles ────────────────────────────────────────────── */}
             {relatedFiltered.length > 0 && (
-                <div
-                    className="mt-8"
-                    style={{
-                        background: C.surfaceAlt,
-                        borderTop: `1px solid ${C.border}`,
-                    }}
-                >
+                <div className="relative z-10 mt-8 border-t border-black/10 dark:border-white/10">
                     <div className="max-w-3xl mx-auto px-6 py-10">
-                        <h2
-                            className="text-lg font-semibold mb-5"
-                            style={{ color: C.text }}
-                        >
+                        <h2 className="text-lg font-semibold mb-5">
                             Relaterade artiklar
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -250,21 +213,15 @@ export default async function ArticleReaderPage({ params }: Props) {
                                 <Link
                                     key={rel.slug}
                                     href={`/articles/${rel.slug}`}
-                                    className="group p-4 rounded-xl transition-all hover:shadow-md hover:-translate-y-0.5"
-                                    style={{
-                                        background: C.surface,
-                                        border: `1px solid ${C.border}`,
-                                    }}
+                                    className="liquid-card group p-4 transition-all hover:-translate-y-0.5"
                                 >
                                     <p
-                                        className="text-sm font-medium group-hover:text-[#4361EE] transition-colors line-clamp-2 mb-2"
-                                        style={{ color: C.text }}
+                                        className="text-sm font-medium group-hover:text-blue-700 dark:group-hover:text-blue-200 transition-colors line-clamp-2 mb-2"
                                     >
                                         {rel.title}
                                     </p>
                                     <div
-                                        className="flex items-center gap-2"
-                                        style={{ color: C.textMuted, fontSize: '11px' }}
+                                        className="liquid-muted flex items-center gap-2 text-[11px]"
                                     >
                                         {rel.readingTimeMinutes && (
                                             <span className="flex items-center gap-1">

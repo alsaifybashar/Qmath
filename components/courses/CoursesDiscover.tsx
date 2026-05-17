@@ -59,32 +59,25 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
         <div>
             {/* Section header */}
             <div className="flex items-center gap-2 mb-4">
-                <Search size={16} style={{ color: '#A0A5C0' }} />
-                <h2 className="text-base font-semibold" style={{ color: '#1A1D2E' }}>
+                <Search size={16} className="liquid-subtle" />
+                <h2 className="text-base font-bold">
                     Upptäck kurser
                 </h2>
             </div>
-            <p className="text-sm mb-4" style={{ color: '#A0A5C0' }}>
+            <p className="liquid-muted text-sm mb-4">
                 Sök efter kurskod. Om vi har gamla tentor för kursen kan du lägga till den i din lista.
             </p>
 
             {/* Search bar */}
             <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-                <div
-                    className="flex-1 flex items-center gap-2 rounded-xl px-4 py-2.5"
-                    style={{
-                        background: '#F7F8FC',
-                        border: '1.5px solid #EFF1F8',
-                    }}
-                >
-                    <Search size={15} style={{ color: '#A0A5C0', flexShrink: 0 }} />
+                <div className="liquid-card-soft flex-1 flex items-center gap-2 px-4 py-2.5">
+                    <Search size={15} className="liquid-subtle flex-shrink-0" />
                     <input
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value.toUpperCase())}
                         placeholder="t.ex. TSRT19"
-                        className="flex-1 bg-transparent border-0 outline-none text-sm font-mono"
-                        style={{ color: '#1A1D2E' }}
+                        className="flex-1 bg-transparent border-0 outline-none text-sm font-mono text-zinc-950 placeholder:text-zinc-500 dark:text-white dark:placeholder:text-white/35"
                         autoComplete="off"
                         spellCheck={false}
                     />
@@ -92,8 +85,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                 <button
                     type="submit"
                     disabled={isSearching || query.trim().length < 2}
-                    className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-40"
-                    style={{ background: '#4361EE' }}
+                    className="px-4 py-2.5 rounded-lg text-sm font-bold text-white transition-all disabled:opacity-40 bg-blue-600 hover:bg-blue-500"
                 >
                     {isSearching ? <Loader2 size={15} className="animate-spin" /> : 'Sök'}
                 </button>
@@ -101,16 +93,13 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
 
             {/* Error */}
             {error && (
-                <p className="text-sm mb-3" style={{ color: '#EF4444' }}>{error}</p>
+                <p className="text-sm mb-3 text-rose-600 dark:text-rose-300">{error}</p>
             )}
 
             {/* Results */}
             {hasSearched && !isSearching && results.length === 0 && (
-                <div
-                    className="rounded-xl p-5 text-center"
-                    style={{ background: '#F7F8FC', border: '1px dashed #EFF1F8' }}
-                >
-                    <p className="text-sm" style={{ color: '#A0A5C0' }}>
+                <div className="liquid-card-soft p-5 text-center border-dashed">
+                    <p className="liquid-muted text-sm">
                         Inga tentor hittades för &quot;{query}&quot;. Prova den exakta kurskoden.
                     </p>
                 </div>
@@ -123,42 +112,22 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                         const isAdding = addingId === course.id;
 
                         return (
-                            <div
-                                key={course.code}
-                                className="flex items-center justify-between rounded-xl px-4 py-3"
-                                style={{
-                                    background: 'white',
-                                    border: '1px solid #EFF1F8',
-                                    boxShadow: '0 1px 4px rgba(26,29,46,0.05)',
-                                }}
-                            >
+                            <div key={course.code} className="liquid-card-soft flex items-center justify-between px-4 py-3">
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div
-                                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                                        style={{ background: '#EEF1FF' }}
-                                    >
-                                        <BookOpen size={16} style={{ color: '#4361EE' }} />
+                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-400/10 text-blue-700 dark:text-blue-100">
+                                        <BookOpen size={16} />
                                     </div>
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span
-                                                className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
-                                                style={{ background: '#EEF1FF', color: '#4361EE' }}
-                                            >
+                                            <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/10 text-blue-700 dark:text-blue-100">
                                                 {course.code}
                                             </span>
-                                            <span
-                                                className="flex items-center gap-1 text-xs"
-                                                style={{ color: '#A0A5C0' }}
-                                            >
+                                            <span className="liquid-subtle flex items-center gap-1 text-xs">
                                                 <Archive size={11} />
                                                 {course.examCount} gamla tentor
                                             </span>
                                         </div>
-                                        <p
-                                            className="text-sm font-medium mt-0.5 truncate"
-                                            style={{ color: '#1A1D2E' }}
-                                        >
+                                        <p className="text-sm font-semibold mt-0.5 truncate">
                                             {course.name}
                                         </p>
                                     </div>
@@ -168,26 +137,21 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                                     {/* Always show link to archive */}
                                     <Link
                                         href={`/archive/${course.code}`}
-                                        className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all"
-                                        style={{ color: '#6B7194', background: '#F7F8FC', border: '1px solid #EFF1F8' }}
+                                        className="liquid-card-soft flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 transition-all"
                                     >
                                         Se tentor <ChevronRight size={12} />
                                     </Link>
 
                                     {course.canEnroll && (
                                         enrolled ? (
-                                            <span
-                                                className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg"
-                                                style={{ background: '#ECFDF5', color: '#059669' }}
-                                            >
+                                            <span className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-400/10 text-emerald-700 dark:text-emerald-100">
                                                 <Check size={13} /> Tillagd
                                             </span>
                                         ) : (
                                             <button
                                                 onClick={() => course.id && handleAdd(course.id)}
                                                 disabled={isAdding}
-                                                className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition-all disabled:opacity-50"
-                                                style={{ background: '#4361EE' }}
+                                                className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg text-white transition-all disabled:opacity-50 bg-blue-600 hover:bg-blue-500"
                                             >
                                                 {isAdding ? (
                                                     <Loader2 size={13} className="animate-spin" />
@@ -199,10 +163,7 @@ export default function CoursesDiscover({ enrolledIds }: Props) {
                                     )}
 
                                     {!course.canEnroll && (
-                                        <span
-                                            className="text-xs px-2.5 py-1.5 rounded-lg"
-                                            style={{ color: '#A0A5C0', background: '#F7F8FC', border: '1px solid #EFF1F8' }}
-                                        >
+                                        <span className="liquid-card-soft text-xs px-2.5 py-1.5 liquid-muted">
                                             Endast arkiv
                                         </span>
                                     )}

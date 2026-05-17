@@ -3,235 +3,152 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-    BookOpen, Clock, BarChart3, ChevronRight, Play, FileText,
-    Calendar, Target, AlertTriangle
+    AlertTriangle,
+    BarChart3,
+    BookOpen,
+    ChevronRight,
+    FileText,
+    Play,
+    Target,
 } from 'lucide-react';
 
-// Mock exam data
 const upcomingExams = [
-    {
-        id: 'calc1-final',
-        name: 'Envariabelanalys 1 Tenta',
-        course: 'SF1625',
-        date: '15 jan, 2026',
-        daysLeft: 8,
-        readiness: 72
-    },
-    {
-        id: 'linalg-mid',
-        name: 'Linjär algebra Dugga',
-        course: 'SF1624',
-        date: '22 jan, 2026',
-        daysLeft: 15,
-        readiness: 58
-    }
+    { id: 'calc1-final', name: 'Envariabelanalys 1 Tenta', course: 'SF1625', date: '15 jan, 2026', daysLeft: 8, readiness: 72 },
+    { id: 'linalg-mid', name: 'Linjär algebra Dugga', course: 'SF1624', date: '22 jan, 2026', daysLeft: 15, readiness: 58 },
 ];
 
 const pastExams = [
-    {
-        id: 'physics-mid',
-        name: 'Mekanik Dugga',
-        course: 'SG1113',
-        date: '10 dec, 2025',
-        score: 78,
-        maxScore: 100
-    },
-    {
-        id: 'calc1-mid',
-        name: 'Envariabelanalys 1 Dugga',
-        course: 'SF1625',
-        date: '15 nov, 2025',
-        score: 85,
-        maxScore: 100
-    }
+    { id: 'physics-mid', name: 'Mekanik Dugga', course: 'SG1113', date: '10 dec, 2025', score: 78 },
+    { id: 'calc1-mid', name: 'Envariabelanalys 1 Dugga', course: 'SF1625', date: '15 nov, 2025', score: 85 },
 ];
 
 const availableExams = [
     { id: 'calc1', name: 'Envariabelanalys 1', questions: 45, duration: '3 timmar' },
     { id: 'linalg', name: 'Linjär algebra', questions: 40, duration: '2.5 timmar' },
     { id: 'physics1', name: 'Mekanik', questions: 35, duration: '3 timmar' },
-    { id: 'diffeq', name: 'Differentialekvationer', questions: 38, duration: '3 timmar' }
+    { id: 'diffeq', name: 'Differentialekvationer', questions: 38, duration: '3 timmar' },
 ];
 
 export default function ExamsPage() {
+    const nextExam = upcomingExams[0];
+
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="liquid-page pb-20">
+            <div className="liquid-bg" />
+            <div className="liquid-sheen" />
 
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-8"
-            >
-                <h1 className="text-4xl font-bold mb-2">Tentamensförberedelse</h1>
-                <p className="text-zinc-500 dark:text-zinc-400">Öva med realistiska tentamenssimuleringar</p>
-            </motion.div>
-
-            {/* Upcoming Exams */}
-            {upcomingExams.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+            <div className="relative z-10 mx-auto max-w-6xl px-4 py-8">
+                <motion.section
+                    initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="mb-12"
+                    className="liquid-card p-5 sm:p-6"
                 >
-                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-orange-400" />
-                        Kommande tentor
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {upcomingExams.map((exam) => (
-                            <Link
-                                key={exam.id}
-                                href={`/exams/${exam.id}`}
-                                className="block bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 hover:border-orange-300 dark:hover:border-orange-500/30 transition-all group"
-                            >
-                                <div className="flex items-start justify-between mb-4">
-                                    <div>
-                                        <div className="text-xs text-zinc-500 mb-1">{exam.course}</div>
-                                        <h3 className="text-lg font-bold group-hover:text-orange-400 transition-colors">
-                                            {exam.name}
-                                        </h3>
-                                        <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{exam.date}</div>
-                                    </div>
-                                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${exam.daysLeft <= 7
-                                        ? 'bg-red-500/10 text-red-400'
-                                        : 'bg-orange-500/10 text-orange-400'
-                                        }`}>
-                                        {exam.daysLeft} dagar kvar
-                                    </div>
-                                </div>
+                    <div className="grid gap-6 lg:grid-cols-[1fr_280px] lg:items-center">
+                        <div>
+                            <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-blue-300/20 bg-blue-400/10 px-3 py-1.5 text-xs font-bold text-blue-700 dark:text-blue-100">
+                                <FileText className="h-3.5 w-3.5" />
+                                Tentamensläge
+                            </div>
+                            <h1 className="text-3xl font-bold tracking-normal sm:text-4xl">Träna under rätt tryck</h1>
+                            <p className="liquid-muted mt-3 max-w-2xl text-sm leading-6">
+                                Fokusera på nästa simulering, se beredskap och starta utan att drunkna i historik.
+                            </p>
+                        </div>
 
-                                <div className="mb-4">
-                                    <div className="flex items-center justify-between text-sm mb-2">
-                                        <span className="text-zinc-500">Tentamensredo</span>
-                                        <span className={`font-medium ${exam.readiness >= 70 ? 'text-green-400' : exam.readiness >= 50 ? 'text-yellow-400' : 'text-red-400'
-                                            }`}>{exam.readiness}%</span>
-                                    </div>
-                                    <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full ${exam.readiness >= 70 ? 'bg-green-500' : exam.readiness >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                                                }`}
-                                            style={{ width: `${exam.readiness}%` }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center text-sm text-orange-400 font-medium">
-                                    <Play className="w-4 h-4 mr-2" />
-                                    Starta förberedelse
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </motion.div>
-            )}
-
-            {/* Available Exam Simulations */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="mb-12"
-            >
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-blue-400" />
-                    Tentamenssimuleringar
-                </h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                    {availableExams.map((exam) => (
-                        <Link
-                            key={exam.id}
-                            href={`/exams/${exam.id}/simulate`}
-                            className="flex items-center justify-between p-5 bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:border-blue-300 dark:hover:border-blue-500/30 transition-all group"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
-                                    <BookOpen className="w-6 h-6 text-blue-400" />
+                        <div className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-4 shadow-xl shadow-emerald-500/10">
+                            <div className="mb-3 flex items-center gap-3">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-300/15 text-emerald-700 dark:text-emerald-100">
+                                    <Target className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold group-hover:text-blue-400 transition-colors">
-                                        {exam.name}
-                                    </h3>
-                                    <div className="text-sm text-zinc-500">
-                                        {exam.questions} frågor • {exam.duration}
-                                    </div>
+                                    <p className="text-xs font-bold uppercase text-emerald-700 dark:text-emerald-200">Nästa tenta</p>
+                                    <p className="text-2xl font-bold">{nextExam.readiness}%</p>
                                 </div>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
-                        </Link>
-                    ))}
-                </div>
-            </motion.div>
+                            <div className="h-2 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+                                <div className="h-full rounded-full bg-gradient-to-r from-emerald-300 to-blue-300" style={{ width: `${nextExam.readiness}%` }} />
+                            </div>
+                            <p className="liquid-muted mt-3 text-sm font-semibold">{nextExam.course} · {nextExam.daysLeft} dagar kvar</p>
+                        </div>
+                    </div>
+                </motion.section>
 
-            {/* Past Exams */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-            >
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                        <BarChart3 className="w-5 h-5 text-green-400" />
-                        Tidigare resultat
-                    </h2>
-                    <Link href="/exams/history" className="text-sm text-blue-400 hover:underline">
-                        Se all historik
-                    </Link>
-                </div>
-                <div className="bg-white dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden">
-                    {pastExams.map((exam, i) => (
+                <section className="liquid-card mt-4 p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-blue-300/25 bg-blue-400/15 text-blue-700 shadow-lg shadow-blue-500/10 dark:text-blue-100">
+                                <Play className="h-5 w-5 fill-current" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase text-blue-700 dark:text-blue-200">Gör detta först</p>
+                                <h2 className="mt-1 text-xl font-bold">{nextExam.name}</h2>
+                                <p className="liquid-muted mt-1 text-sm leading-6">
+                                    Kör en realistisk simulering och gå direkt igenom misstagen efteråt.
+                                </p>
+                            </div>
+                        </div>
                         <Link
-                            key={exam.id}
-                            href={`/exams/history/${exam.id}`}
-                            className={`flex items-center justify-between p-5 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all ${i !== pastExams.length - 1 ? 'border-b border-zinc-200 dark:border-zinc-800' : ''
-                                }`}
+                            href={`/exams/${nextExam.id}`}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700 dark:bg-white dark:text-zinc-950 dark:hover:bg-blue-100"
                         >
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${exam.score >= 80
-                                    ? 'bg-green-500/10'
-                                    : exam.score >= 60
-                                        ? 'bg-yellow-500/10'
-                                        : 'bg-red-500/10'
-                                    }`}>
-                                    <span className={`text-lg font-bold ${exam.score >= 80
-                                        ? 'text-green-400'
-                                        : exam.score >= 60
-                                            ? 'text-yellow-400'
-                                            : 'text-red-400'
-                                        }`}>
+                            Starta förberedelse
+                            <ChevronRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+                </section>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_0.8fr]">
+                    <section className="liquid-card p-4">
+                        <div className="mb-3 flex items-center gap-2">
+                            <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-200" />
+                            <h2 className="text-base font-bold">Simuleringar</h2>
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-2">
+                            {availableExams.map((exam) => (
+                                <Link key={exam.id} href={`/exams/${exam.id}/simulate`} className="liquid-card-soft group flex items-center justify-between p-3 transition hover:-translate-y-0.5">
+                                    <div>
+                                        <h3 className="text-sm font-bold group-hover:text-blue-600 dark:group-hover:text-blue-200">{exam.name}</h3>
+                                        <p className="liquid-muted mt-1 text-xs">{exam.questions} frågor · {exam.duration}</p>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 liquid-subtle transition group-hover:translate-x-0.5" />
+                                </Link>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="liquid-card p-4">
+                        <div className="mb-3 flex items-center gap-2">
+                            <BarChart3 className="h-5 w-5 text-emerald-600 dark:text-emerald-200" />
+                            <h2 className="text-base font-bold">Senaste resultat</h2>
+                        </div>
+                        <div className="space-y-2">
+                            {pastExams.map((exam) => (
+                                <Link key={exam.id} href={`/exams/history/${exam.id}`} className="liquid-card-soft flex items-center justify-between p-3 transition hover:-translate-y-0.5">
+                                    <div>
+                                        <h3 className="text-sm font-bold">{exam.name}</h3>
+                                        <p className="liquid-muted mt-1 text-xs">{exam.course} · {exam.date}</p>
+                                    </div>
+                                    <span className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 px-2 py-1 text-sm font-bold text-emerald-700 dark:text-emerald-200">
                                         {exam.score}%
                                     </span>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold">{exam.name}</h3>
-                                    <div className="text-sm text-zinc-500">{exam.course} • {exam.date}</div>
-                                </div>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-zinc-600" />
-                        </Link>
-                    ))}
+                                </Link>
+                            ))}
+                        </div>
+                    </section>
                 </div>
-            </motion.div>
 
-            {/* Tips */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="mt-12 p-6 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-500/10 dark:to-red-500/10 border border-orange-200 dark:border-orange-500/20 rounded-2xl"
-            >
-                <div className="flex items-start gap-4">
-                    <AlertTriangle className="w-6 h-6 text-orange-400 flex-shrink-0 mt-1" />
-                    <div>
-                        <h3 className="font-bold mb-2">Tentamenstips</h3>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                            För bästa resultat, simulera tentamensvillkor: inga distraktioner, tidsbestämda sessioner och inga externa hjälpmedel.
-                            Gå igenom dina misstag efter varje simulering för att identifiera svaga områden.
-                        </p>
+                <section className="liquid-card mt-4 p-4">
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-200" />
+                        <div>
+                            <h2 className="text-sm font-bold">Tentamenstips</h2>
+                            <p className="liquid-muted mt-1 text-sm leading-6">
+                                Simulera tentamensvillkor: tidsbestäm passet, undvik distraktioner och analysera bara de största misstagen efteråt.
+                            </p>
+                        </div>
                     </div>
-                </div>
-            </motion.div>
+                </section>
+            </div>
         </div>
     );
 }

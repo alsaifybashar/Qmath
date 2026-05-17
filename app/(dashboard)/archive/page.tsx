@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Upload, Search, Loader2, BookOpen, FileText, CheckCircle } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Upload, Search, Loader2, BookOpen, FileText, CheckCircle, Archive, ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -99,128 +99,158 @@ export default function ArchivePage() {
     };
 
     // Show the full course browse when: not yet searched, OR search returned zero results
-    const showBrowse = (!hasSearched || (hasSearched && results.length === 0)) && allCourses.length > 0;
+    const showBrowse = loadingCourses || ((!hasSearched || (hasSearched && results.length === 0)) && allCourses.length > 0);
+    const visibleCourses = useMemo(() => {
+        const query = searchQuery.trim().toUpperCase();
+        if (!query) return allCourses;
+
+        return allCourses.filter(course =>
+            course.courseCode.toUpperCase().includes(query)
+            || course.courseName.toUpperCase().includes(query)
+        );
+    }, [allCourses, searchQuery]);
+    const browseCourses = searchQuery.trim() ? visibleCourses : allCourses;
+    const totalExams = allCourses.reduce((sum, course) => sum + course.examCount, 0);
+    const totalSolutions = allCourses.reduce((sum, course) => sum + course.withSolutions, 0);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-zinc-950 dark:to-zinc-900">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="liquid-theme relative min-h-screen overflow-hidden bg-slate-50 pb-20 text-zinc-950 dark:bg-[#08091f] dark:text-white">
+            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(249,115,22,0.22),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(239,68,68,0.18),transparent_30%),radial-gradient(circle_at_52%_92%,rgba(251,146,60,0.14),transparent_34%),linear-gradient(135deg,#fff8f1_0%,#fff3eb_48%,#f8fbff_100%)] dark:bg-[radial-gradient(circle_at_12%_12%,rgba(249,115,22,0.40),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(239,68,68,0.32),transparent_30%),radial-gradient(circle_at_52%_92%,rgba(251,146,60,0.18),transparent_34%),linear-gradient(135deg,#120806_0%,#32110d_48%,#08091f_100%)]" />
+            <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.52),transparent_24%,rgba(255,255,255,0.20)_52%,transparent_76%)] dark:bg-[linear-gradient(115deg,rgba(255,255,255,0.09),transparent_24%,rgba(255,255,255,0.035)_52%,transparent_76%)]" />
 
-                {/* Hero / Search header */}
-                <div className={`flex flex-col items-center ${hasSearched ? 'pt-12' : showBrowse ? 'pt-16' : 'justify-center min-h-[60vh]'}`}>
-                    {/* Logo */}
-                    <div className="text-center mb-8">
-                        <Link href="/" className="inline-block">
-                            <h1 className="text-5xl font-serif font-bold text-slate-900 dark:text-white mb-2">
-                                Qmath <span className="text-blue-600">Exams</span>
-                            </h1>
-                        </Link>
-                        <p className="text-slate-600 dark:text-zinc-400 mt-2 text-lg">
-                            Sök och bläddra bland gamla tentor från ditt universitet
-                        </p>
-                    </div>
-
-                    {/* Search Bar */}
-                    <div className="w-full max-w-2xl">
-                        <form onSubmit={handleSearch}>
-                            <div className="relative flex items-center gap-3 bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 rounded-2xl px-5 py-4 hover:border-blue-500 dark:hover:border-blue-600 focus-within:border-blue-500 dark:focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-lg shadow-slate-200/50 dark:shadow-none">
-                                <Search className="w-5 h-5 text-slate-400" />
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
-                                    placeholder="Sök på kurskod (t.ex. TATA24)"
-                                    className="flex-1 bg-transparent border-0 outline-none text-lg text-slate-900 dark:text-white placeholder:text-slate-400 font-mono"
-                                    autoFocus
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={isLoading || !searchQuery.trim()}
-                                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                >
-                                    {isLoading ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            Söker...
-                                        </>
-                                    ) : (
-                                        'Sök'
-                                    )}
-                                </button>
-                            </div>
-                        </form>
-
-                        <p className="text-center text-sm text-slate-500 dark:text-zinc-500 mt-3">
-                            Tips: Ange den exakta kurskoden för att gå direkt till kurssidan
-                        </p>
-                    </div>
-
-                    {/* Upload link */}
-                    <Link
-                        href="/admin/upload-exam"
-                        className="mt-5 flex items-center gap-2 text-sm text-slate-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    >
-                        <Upload className="w-4 h-4" />
-                        Ladda upp tenta eller lösning
-                    </Link>
-                </div>
-
-                {/* ── Search Results ── */}
-                {hasSearched && (
-                    <div className="py-8">
-                        {results.length > 1 && (
-                            <>
-                                <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
-                                    Hittade {results.length} kurser
-                                </h2>
-                                <div className="grid gap-3">
-                                    {results.map(course => (
-                                        <CourseCard key={course.courseCode} course={course} />
-                                    ))}
+            <div className="relative z-10 mx-auto grid max-w-[1160px] gap-5 px-4 py-8 lg:grid-cols-[1fr_290px]">
+                <main className="min-w-0">
+                    <section className="liquid-card p-5 text-center sm:p-6">
+                        <div className="mx-auto max-w-3xl">
+                            <div className="min-w-0">
+                                <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-orange-300/25 bg-orange-400/10 px-2.5 py-1 text-[11px] font-bold text-orange-700 dark:text-orange-100">
+                                    <Archive className="h-3.5 w-3.5" />
+                                    Tentaarkiv
                                 </div>
-                            </>
-                        )}
-
-                        {!isLoading && results.length === 0 && (
-                            <div className="text-center py-16">
-                                <div className="w-16 h-16 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Search className="w-8 h-8 text-slate-400" />
-                                </div>
-                                <p className="text-xl text-slate-600 dark:text-zinc-400">
-                                    Inga tentor hittades för &quot;{searchQuery}&quot;
-                                </p>
-                                <p className="text-sm text-slate-500 dark:text-zinc-500 mt-2">
-                                    Prova en annan kurskod eller bläddra bland alla tillgängliga kurser nedan
+                                <h1 className="text-xl font-bold tracking-normal sm:text-2xl">
+                                    Hitta rätt tenta snabbare
+                                </h1>
+                                <p className="liquid-muted mx-auto mt-2 max-w-xl text-xs leading-5 sm:text-sm">
+                                    Sök på kurskod eller kursnamn. Listan filtreras direkt och exakta kurskoder kan öppnas utan extra steg.
                                 </p>
                             </div>
-                        )}
-                    </div>
-                )}
 
-                {/* ── Browse all available courses ── */}
-                {showBrowse && (
-                    <div className="py-10">
-                        <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                                Alla tillgängliga kurser
-                            </h2>
-                            <span className="text-sm text-slate-500 dark:text-zinc-400">
-                                {allCourses.length} kurs{allCourses.length !== 1 ? 'er' : ''}
-                            </span>
+                            <form onSubmit={handleSearch} className="archive-search-shell mx-auto mt-6 w-full max-w-2xl">
+                                <div className="archive-search-field relative z-10 flex items-center gap-3 rounded-lg border border-white/40 bg-white/75 px-5 py-4 shadow-2xl shadow-orange-500/10 backdrop-blur-xl transition dark:border-white/10 dark:bg-white/[0.075] dark:shadow-black/20">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500 text-white shadow-lg shadow-orange-500/25">
+                                        <Search className="h-5 w-5" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
+                                        placeholder="TATA24 eller Analys..."
+                                        className="min-w-0 flex-1 border-0 bg-transparent font-mono text-lg font-bold text-zinc-950 outline-none placeholder:font-medium placeholder:text-zinc-500 focus:outline-none focus-visible:outline-none dark:text-white dark:placeholder:text-white/35"
+                                        autoFocus
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading || !searchQuery.trim()}
+                                        className="inline-flex h-11 items-center gap-2 rounded-lg bg-zinc-950 px-4 text-sm font-bold text-white outline-none transition hover:bg-orange-600 focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45 dark:bg-white dark:text-zinc-950 dark:hover:bg-orange-100"
+                                    >
+                                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                                        <span className="hidden sm:inline">{isLoading ? 'Söker' : 'Öppna'}</span>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
+                    </section>
 
-                        {loadingCourses ? (
-                            <div className="flex justify-center py-12">
-                                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                            </div>
-                        ) : (
+                    {hasSearched && results.length > 1 && (
+                        <section className="mt-5">
+                            <ListHeader
+                                label="Sökresultat"
+                                count={`${results.length} kurser`}
+                                description="Flera kurser matchade sökningen."
+                            />
                             <div className="grid gap-3">
-                                {allCourses.map(course => (
+                                {results.map(course => (
                                     <CourseCard key={course.courseCode} course={course} />
                                 ))}
                             </div>
-                        )}
+                        </section>
+                    )}
+
+                    {hasSearched && !isLoading && results.length === 0 && (
+                        <section className="liquid-card mt-5 p-8 text-center">
+                            <div className="liquid-card-soft mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg">
+                                <Search className="h-7 w-7 liquid-subtle" />
+                            </div>
+                            <p className="font-bold">
+                                Inga tentor hittades för &quot;{searchQuery}&quot;
+                            </p>
+                            <p className="liquid-muted mt-2 text-sm">
+                                Kontrollera kurskoden eller använd listan nedan för att bläddra visuellt.
+                            </p>
+                        </section>
+                    )}
+
+                    {showBrowse && (
+                        <section className="mt-5">
+                            <ListHeader
+                                label={searchQuery.trim() ? 'Matchande kurser' : 'Tillgängliga kurser'}
+                                count={`${browseCourses.length} av ${allCourses.length}`}
+                                description={searchQuery.trim() ? 'Filtrerat medan du skriver.' : 'Skannbar översikt över arkivet.'}
+                            />
+
+                            {loadingCourses ? (
+                                <div className="liquid-card flex justify-center py-12">
+                                    <Loader2 className="h-6 w-6 animate-spin text-orange-600 dark:text-orange-300" />
+                                </div>
+                            ) : browseCourses.length > 0 ? (
+                                <div className="grid gap-3">
+                                    {browseCourses.map(course => (
+                                        <CourseCard key={course.courseCode} course={course} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="liquid-card p-8 text-center">
+                                    <p className="font-bold">Ingen kurs matchar filtret</p>
+                                    <p className="liquid-muted mt-2 text-sm">Rensa sökfältet för att se hela arkivet.</p>
+                                </div>
+                            )}
+                        </section>
+                    )}
+                </main>
+
+                <aside className="space-y-4 lg:sticky lg:top-8 lg:self-start">
+                    <div className="liquid-card p-5">
+                        <div className="mb-4 flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-orange-300/25 bg-orange-400/10 text-orange-700 dark:text-orange-100">
+                                <Sparkles className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold">Arkivstatus</p>
+                                <p className="liquid-muted text-xs">Snabb överblick</p>
+                            </div>
+                        </div>
+                        <div className="grid gap-2">
+                            <ArchiveStat label="Kurser" value={allCourses.length} />
+                            <ArchiveStat label="Tentor" value={totalExams} />
+                            <ArchiveStat label="Lösningar" value={totalSolutions} />
+                        </div>
                     </div>
-                )}
+
+                    <Link
+                        href="/admin/upload-exam"
+                        className="liquid-card group block p-5 transition hover:-translate-y-0.5"
+                    >
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <p className="font-bold">Saknas något?</p>
+                                <p className="liquid-muted mt-1 text-sm leading-5">Ladda upp tenta eller lösning till arkivet.</p>
+                            </div>
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500 text-white shadow-lg shadow-orange-500/20">
+                                <Upload className="h-4 w-4" />
+                            </div>
+                        </div>
+                    </Link>
+                </aside>
             </div>
         </div>
     );
@@ -228,44 +258,85 @@ export default function ArchivePage() {
 
 // ── Shared course card ────────────────────────────────────────────────────────
 
+function ListHeader({
+    label,
+    count,
+    description,
+}: {
+    label: string;
+    count: string;
+    description: string;
+}) {
+    return (
+        <div className="mb-3 flex items-end justify-between gap-4">
+            <div>
+                <p className="text-sm font-bold">{label}</p>
+                <p className="liquid-muted mt-1 text-xs">{description}</p>
+            </div>
+            <span className="rounded-lg border border-orange-300/25 bg-orange-400/10 px-2.5 py-1 text-xs font-bold text-orange-700 dark:text-orange-100">
+                {count}
+            </span>
+        </div>
+    );
+}
+
+function ArchiveStat({ label, value }: { label: string; value: number }) {
+    return (
+        <div className="liquid-card-soft flex items-center justify-between px-3 py-2.5">
+            <span className="liquid-muted text-sm">{label}</span>
+            <span className="font-mono text-sm font-bold">{value}</span>
+        </div>
+    );
+}
+
 function CourseCard({ course }: { course: CourseResult }) {
+    const latestExam = course.latestExamDate
+        ? new Date(course.latestExamDate).getFullYear()
+        : null;
+
     return (
         <Link
             href={`/archive/${course.courseCode}`}
-            className="group flex items-center justify-between p-5 bg-white dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg transition-all"
+            className="liquid-card group flex items-center justify-between gap-4 p-4 transition-all hover:-translate-y-0.5"
         >
-            <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <BookOpen className="text-blue-600 dark:text-blue-400" size={22} />
+            <div className="flex min-w-0 items-center gap-4">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border border-orange-300/20 bg-orange-400/10">
+                    <BookOpen className="text-orange-700 dark:text-orange-200" size={22} />
                 </div>
-                <div>
-                    <div className="font-mono font-bold text-slate-900 dark:text-white">
+                <div className="min-w-0">
+                    <div className="font-mono font-bold tracking-normal">
                         {course.courseCode}
                     </div>
-                    <div className="text-sm text-slate-600 dark:text-zinc-400">
+                    <div className="liquid-muted truncate text-sm">
                         {course.courseName}
                     </div>
                 </div>
             </div>
-            <div className="flex items-center gap-6 text-right">
-                <div className="hidden sm:flex items-center gap-1.5 text-sm text-slate-500 dark:text-zinc-400">
+            <div className="flex shrink-0 items-center gap-5 text-right">
+                {latestExam && (
+                    <div className="liquid-subtle hidden text-xs md:block">
+                        Senast {latestExam}
+                    </div>
+                )}
+                <div className="liquid-muted hidden sm:flex items-center gap-1.5 text-sm">
                     <FileText className="w-4 h-4" />
                     <span>{course.examCount} tentor</span>
                 </div>
                 {course.withSolutions > 0 && (
-                    <div className="hidden sm:flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+                    <div className="hidden sm:flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-300">
                         <CheckCircle className="w-4 h-4" />
                         <span>{course.withSolutions} med lösningar</span>
                     </div>
                 )}
                 <div className="sm:hidden text-right text-sm">
-                    <div className="font-medium text-slate-900 dark:text-white">
+                    <div className="font-medium">
                         {course.examCount} tentor
                     </div>
-                    <div className="text-slate-500 dark:text-zinc-500">
+                    <div className="liquid-subtle">
                         {course.withSolutions} med lösningar
                     </div>
                 </div>
+                <ArrowRight className="hidden h-4 w-4 text-orange-700 opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100 dark:text-orange-200 sm:block" />
             </div>
         </Link>
     );

@@ -11,6 +11,7 @@ import { courses, topics, enrollments } from '@/db/schema';
 
 import { checkAndMaintainStreak } from '@/lib/dashboard/streak-system';
 import { getExamReadiness } from '@/app/actions/dashboard-insights';
+import { Command, Sparkles } from 'lucide-react';
 import {
     WeeklyActivityChart,
     StreakCard,
@@ -24,14 +25,6 @@ import { ExamReadinessBar } from '@/components/dashboard/ExamReadinessBar';
 export const metadata = {
     title: 'Dashboard | Qmath',
     description: 'Din personliga lärplattform',
-};
-
-const C = {
-    bg: '#F0F2F8',
-    text: '#1A1D2E',
-    textMuted: '#A0A5C0',
-    blue: '#4361EE',
-    green: '#22C55E',
 };
 
 export default async function DashboardPage() {
@@ -183,27 +176,49 @@ export default async function DashboardPage() {
     const greeting = hour < 12 ? 'God morgon' : hour < 18 ? 'God eftermiddag' : 'God kväll';
 
     return (
-        <div className="p-7 max-w-[1060px] min-w-0 mx-auto">
+        <div className="dashboard-command">
+            <div className="dashboard-command-bg" />
+            <div className="dashboard-command-sheen" />
+            <div className="relative z-10 p-7 max-w-[1060px] min-w-0 mx-auto">
 
             {/* ── Header ── */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-semibold" style={{ color: C.text }}>
-                    {greeting}, {user.name || 'Student'}
-                </h1>
-                <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>
-                    Välkommen tillbaka — fortsätt studera!
-                </p>
+            <div className="dashboard-card mb-6 p-5 sm:p-6">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-teal-300/25 bg-teal-400/10 px-3 py-1.5 text-xs font-bold text-teal-700 dark:text-teal-100">
+                            <Command className="h-3.5 w-3.5" />
+                            Kontrollcenter
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-normal sm:text-4xl">
+                            {greeting}, {user.name || 'Student'}
+                        </h1>
+                        <p className="dashboard-muted mt-2 max-w-2xl text-sm leading-6">
+                            Dagens läge, dina kurser och snabbaste vägen tillbaka till momentum.
+                        </p>
+                    </div>
+                    <div className="rounded-lg border border-orange-300/25 bg-orange-400/10 p-4 shadow-xl shadow-orange-500/10">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-300/15 text-orange-700 dark:text-orange-100">
+                                <Sparkles className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase text-orange-700 dark:text-orange-200">Dagens signal</p>
+                                <p className="text-sm font-bold">{accuracy}% träffsäkerhet · nivå {userLevel}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
 
             {/* ── Row 2: Active Courses ── */}
             <div className="mb-6">
                 <div className="flex justify-between items-center mb-3">
-                    <h2 className="text-base font-semibold" style={{ color: C.text }}>
+                    <h2 className="text-base font-semibold">
                         Dina kurser
                     </h2>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     {userCourses.slice(0, 3).map((course, idx) => {
                         const courseMastery = masteryData.filter((m) => {
                             const topic = topicsData.find((t) => t.id === m.topicId);
@@ -229,10 +244,9 @@ export default async function DashboardPage() {
                     })}
                     {userCourses.length === 0 && (
                         <div
-                            className="col-span-3 rounded-2xl p-8 text-center"
-                            style={{ background: 'white', border: '1px solid #EFF1F8' }}
+                            className="dashboard-card col-span-3 p-8 text-center"
                         >
-                            <p style={{ color: C.textMuted }}>Inga kurser än. Bläddra i kurskatalogen för att komma igång!</p>
+                            <p className="dashboard-muted">Inga kurser än. Bläddra i kurskatalogen för att komma igång!</p>
                         </div>
                     )}
                 </div>
@@ -255,7 +269,7 @@ export default async function DashboardPage() {
             {/* ── Row 4: Exam Readiness ── */}
             {examReadiness.length > 0 && (
                 <div className="mb-6">
-                    <h2 className="text-base font-semibold mb-3" style={{ color: C.text }}>
+                    <h2 className="text-base font-semibold mb-3">
                         Tentamensredo
                     </h2>
                     <div className="space-y-3">
@@ -278,20 +292,13 @@ export default async function DashboardPage() {
             )}
 
             {/* ── Row 5: Knowledge Map ── */}
-            <div
-                className="rounded-2xl p-6"
-                style={{
-                    background: 'white',
-                    border: '1px solid #EFF1F8',
-                    boxShadow: '0 2px 12px rgba(26,29,46,0.06)',
-                }}
-            >
+            <div className="dashboard-card p-6">
                 <div className="flex justify-between items-center mb-5">
                     <div>
-                        <h3 className="text-base font-semibold" style={{ color: C.text }}>
+                        <h3 className="text-base font-semibold">
                             Kunskapskarta
                         </h3>
-                        <p className="text-xs mt-0.5" style={{ color: C.textMuted }}>
+                        <p className="dashboard-muted text-xs mt-0.5">
                             Din mästerskapsnivå över alla områden
                         </p>
                     </div>
@@ -306,7 +313,7 @@ export default async function DashboardPage() {
                         ].map((l, i) => (
                             <div key={i} className="flex items-center gap-1.5">
                                 <div className="w-2 h-2 rounded-sm" style={{ background: l.color }} />
-                                <span className="text-xs" style={{ color: C.textMuted }}>
+                                <span className="dashboard-subtle text-xs">
                                     {l.label}
                                 </span>
                             </div>
@@ -325,7 +332,7 @@ export default async function DashboardPage() {
                         />
                     ))}
                     {masteryTopics.length === 0 && (
-                        <div className="col-span-full text-center py-8" style={{ color: C.textMuted }}>
+                        <div className="dashboard-muted col-span-full text-center py-8">
                             Börja öva för att se din kunskapskarta!
                         </div>
                     )}
@@ -335,6 +342,7 @@ export default async function DashboardPage() {
             {/* ── Row 6: All Tools & Navigation ── */}
             <div className="mt-8">
                 <QuickNavigation />
+            </div>
             </div>
         </div>
     );

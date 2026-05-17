@@ -3,12 +3,12 @@
 /**
  * Module 3 – Behavioural Patterns
  *
- * Design principle: Data Storytelling & Enkelhet
- *   • ConcentrationTimeline   – focus vs distracted vs stressed segments (AreaChart)
- *   • StressHeatmap           – per-question stress intensity grid
- *   • NarrativeInsightCard    – human-readable insight cards from computed stats
- *
- * No external legend blocks: all labels live inside the chart area.
+ * Design principles (psykologisk medvetenhet):
+ *  - Glassmorphic chrome matching the rest of /analytics.
+ *  - Minimal red — stress shown in amber gradients; red reserved for the peak marker.
+ *  - "Sessionsrytm" framing (was "Stressvärmekarta") to lower aggression.
+ *  - Session-win celebration when focus > 70%.
+ *  - Gradient-text stat tiles with scale-in-bounce entrance.
  */
 
 import React, { useMemo } from 'react';
@@ -25,6 +25,7 @@ import {
     Scatter,
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { Sparkles, Brain } from 'lucide-react';
 import {
     BehaviouralMetrics,
     BehaviouralDataPoint,
@@ -32,59 +33,63 @@ import {
     RAPID_GUESS_THRESHOLD_MS,
     FocusState,
 } from '@/types/analytics';
+import MilestoneCelebration from './MilestoneCelebration';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
+const GLASS_CARD =
+    'bg-white/55 dark:bg-zinc-950/55 backdrop-blur-2xl border border-white/60 dark:border-white/10 rounded-3xl shadow-elevation-3';
+
 const FOCUS_COLORS: Record<FocusState, string> = {
-    focused: '#10b981',     // emerald-500
-    distracted: '#f59e0b',  // amber-500
-    stressed: '#ef4444',    // red-500
+    focused: '#10b981',
+    distracted: '#f59e0b',
+    stressed: '#f59e0b',
 };
 
 const FOCUS_BG: Record<FocusState, string> = {
     focused: 'rgba(16, 185, 129, 0.08)',
     distracted: 'rgba(245, 158, 11, 0.08)',
-    stressed: 'rgba(239, 68, 68, 0.08)',
+    stressed: 'rgba(245, 158, 11, 0.14)',
 };
 
 const FOCUS_LABELS: Record<FocusState, string> = {
     focused: 'Fokuserad',
     distracted: 'Distraherad',
-    stressed: 'Stressad',
+    stressed: 'Spänd',
 };
 
 const ACCENT_CLASSES: Record<NarrativeInsight['accent'], {
     border: string; bg: string; icon: string; headline: string;
 }> = {
     emerald: {
-        border: 'border-emerald-200 dark:border-emerald-800',
-        bg: 'bg-emerald-50 dark:bg-emerald-950/30',
+        border: 'border-emerald-200/60 dark:border-emerald-700/40',
+        bg: 'bg-emerald-50/60 dark:bg-emerald-950/30',
         icon: 'text-emerald-500',
         headline: 'text-emerald-700 dark:text-emerald-300',
     },
     amber: {
-        border: 'border-amber-200 dark:border-amber-800',
-        bg: 'bg-amber-50 dark:bg-amber-950/30',
+        border: 'border-amber-200/60 dark:border-amber-700/40',
+        bg: 'bg-amber-50/60 dark:bg-amber-950/30',
         icon: 'text-amber-500',
         headline: 'text-amber-700 dark:text-amber-300',
     },
     red: {
-        border: 'border-red-200 dark:border-red-800',
-        bg: 'bg-red-50 dark:bg-red-950/30',
+        border: 'border-red-200/60 dark:border-red-700/40',
+        bg: 'bg-red-50/60 dark:bg-red-950/30',
         icon: 'text-red-500',
         headline: 'text-red-700 dark:text-red-300',
     },
     blue: {
-        border: 'border-blue-200 dark:border-blue-800',
-        bg: 'bg-blue-50 dark:bg-blue-950/30',
+        border: 'border-blue-200/60 dark:border-blue-700/40',
+        bg: 'bg-blue-50/60 dark:bg-blue-950/30',
         icon: 'text-blue-500',
         headline: 'text-blue-700 dark:text-blue-300',
     },
     purple: {
-        border: 'border-purple-200 dark:border-purple-800',
-        bg: 'bg-purple-50 dark:bg-purple-950/30',
+        border: 'border-purple-200/60 dark:border-purple-700/40',
+        bg: 'bg-purple-50/60 dark:bg-purple-950/30',
         icon: 'text-purple-500',
         headline: 'text-purple-700 dark:text-purple-300',
     },
@@ -105,7 +110,6 @@ function formatMs(ms: number): string {
     return `${(ms / 1000).toFixed(1)}s`;
 }
 
-/** Infer contiguous focus segments from the data-point array */
 function extractSegments(
     points: BehaviouralDataPoint[],
 ): Array<{ state: FocusState; start: number; end: number }> {
@@ -123,7 +127,6 @@ function extractSegments(
             segStart = pt.elapsedSeconds;
         }
     }
-    // close final segment
     segments.push({
         state: current,
         start: segStart,
@@ -132,23 +135,21 @@ function extractSegments(
     return segments;
 }
 
-/** Build narrative cards from aggregated session metrics */
 export function buildNarrativeInsights(metrics: BehaviouralMetrics): NarrativeInsight[] {
     const { summary, dataPoints } = metrics;
     const insights: NarrativeInsight[] = [];
 
-    // 1. Rapid-guess warning
+    // Rapid-guess warning — amber, not red
     if (summary.rapidGuessShare > 0.2) {
         insights.push({
             icon: '⚡',
-            headline: 'Du gissade på många svar',
-            body: `${Math.round(summary.rapidGuessShare * 100)}% av dina svar skickades på under ${RAPID_GUESS_THRESHOLD_MS / 1000} sekunder. Snabba gissningar minskar lärandeeffekten – försök att ta dig tid att tänka igenom varje steg.`,
-            accent: 'red',
+            headline: 'Snabba svar tar över ibland',
+            body: `${Math.round(summary.rapidGuessShare * 100)}% av dina svar skickades på under ${RAPID_GUESS_THRESHOLD_MS / 1000} sekunder. En lugnare takt brukar ge bättre inlärning.`,
+            accent: 'amber',
             cta: { label: 'Öva metodiskt', href: '/practice' },
         });
     }
 
-    // 2. Average response time story
     const avgSec = summary.avgResponseMs / 1000;
     const lastFive = dataPoints.slice(-5);
     const avgLastFiveSec = lastFive.length > 0
@@ -161,47 +162,44 @@ export function buildNarrativeInsights(metrics: BehaviouralMetrics): NarrativeIn
             insights.push({
                 icon: '⏱️',
                 headline: 'Du saktar ner mot slutet',
-                body: `Du la i snitt ${avgLastFiveSec.toFixed(1)}s per fråga på de sista fem uppgifterna – ${delta.toFixed(1)}s mer än snittet (${avgSec.toFixed(1)}s). Det kan vara ett tecken på mental trötthet.`,
+                body: `Du la i snitt ${avgLastFiveSec.toFixed(1)}s per fråga på de sista fem uppgifterna – ${delta.toFixed(1)}s mer än snittet (${avgSec.toFixed(1)}s). Kan vara dags för en kort paus.`,
                 accent: 'amber',
             });
         } else if (delta < -5) {
             insights.push({
                 icon: '🚀',
-                headline: 'Du accelererar – kontrollera noggrannheten!',
-                body: `Svarstiden sjönk till ${avgLastFiveSec.toFixed(1)}s på de sista fem uppgifterna. Om noggrannheten är hög är det fantastiskt. Om inte – ta ett extra varv.`,
+                headline: 'Du accelererar — håll koll på noggrannheten',
+                body: `Svarstiden sjönk till ${avgLastFiveSec.toFixed(1)}s på de sista fem uppgifterna. Snabbt och rätt? Toppen. Annars — ta ett extra varv.`,
                 accent: 'blue',
             });
         }
     }
 
-    // 3. Peak-stress callout
     if (summary.avgStressLevel > 0.6) {
         insights.push({
-            icon: '🔥',
-            headline: 'Hög stressnivå under sessionen',
-            body: `Genomsnittlig stressnivå: ${Math.round(summary.avgStressLevel * 100)}%. Toppad vid ${formatSeconds(summary.peakStressAt)} in i sessionen. Korta pauser och andningsövningar kan hjälpa.`,
-            accent: 'red',
+            icon: '🌬️',
+            headline: 'Lite spänt under sessionen',
+            body: `Genomsnittlig spänning: ${Math.round(summary.avgStressLevel * 100)}%. Toppad vid ${formatSeconds(summary.peakStressAt)} in. Korta pauser och andningsövningar gör skillnad.`,
+            accent: 'amber',
         });
     } else if (summary.avgStressLevel < 0.3 && summary.focusedShare > 0.7) {
         insights.push({
             icon: '🎯',
-            headline: 'Utmärkt fokus under hela sessionen',
-            body: `Du var i fokusläge ${Math.round(summary.focusedShare * 100)}% av sessionen med låg stressnivå (${Math.round(summary.avgStressLevel * 100)}%). Fortsätt på samma sätt!`,
+            headline: 'Utmärkt fokus genom hela sessionen',
+            body: `Du var i fokusläge ${Math.round(summary.focusedShare * 100)}% av sessionen med låg spänning (${Math.round(summary.avgStressLevel * 100)}%). Fortsätt på samma sätt!`,
             accent: 'emerald',
         });
     }
 
-    // 4. Distraction pattern
     if (summary.distractedShare > 0.35) {
         insights.push({
             icon: '🌊',
-            headline: 'Distraherad under en stor del av sessionen',
-            body: `Du var distraherad ${Math.round(summary.distractedShare * 100)}% av sessionen. Prova att stänga av notifieringar eller byta miljö för nästa session.`,
+            headline: 'Distraherad större delen av tiden',
+            body: `Du var distraherad ${Math.round(summary.distractedShare * 100)}% av sessionen. Stäng av notifieringar eller byt miljö för nästa pass.`,
             accent: 'purple',
         });
     }
 
-    // Always provide at least one insight
     if (insights.length === 0) {
         insights.push({
             icon: '📊',
@@ -215,36 +213,40 @@ export function buildNarrativeInsights(metrics: BehaviouralMetrics): NarrativeIn
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Custom Tooltip for Concentration Timeline
+// Custom Tooltip
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ConcentrationTooltip({ active, payload }: { active?: boolean; payload?: any[] }) {
+interface RechartsTooltipPayload {
+    payload: BehaviouralDataPoint & { x: number };
+}
+
+function ConcentrationTooltip({ active, payload }: { active?: boolean; payload?: RechartsTooltipPayload[] }) {
     if (!active || !payload?.length) return null;
 
-    const data = payload[0]?.payload as BehaviouralDataPoint & { x: number };
+    const data = payload[0]?.payload;
     if (!data) return null;
 
     const state = data.focusState;
     const stateColor = FOCUS_COLORS[state];
 
     return (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg text-sm max-w-[200px]">
+        <div className="bg-white/85 dark:bg-zinc-950/85 backdrop-blur-2xl border border-white/60 dark:border-white/10 rounded-2xl p-3 shadow-elevation-3 text-sm max-w-[220px]">
             <p className="font-semibold mb-1" style={{ color: stateColor }}>
                 {FOCUS_LABELS[state]}
             </p>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-zinc-600 dark:text-zinc-400 text-xs">
                 Tid: {formatSeconds(data.elapsedSeconds)}
             </p>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-zinc-600 dark:text-zinc-400 text-xs">
                 Svarstid: {formatMs(data.responseTimeMs)}
             </p>
-            <p className="text-gray-600 dark:text-gray-400">
-                Stressnivå: {Math.round(data.stressLevel * 100)}%
+            <p className="text-zinc-600 dark:text-zinc-400 text-xs">
+                Spänning: {Math.round(data.stressLevel * 100)}%
             </p>
             {data.isRapidGuess && (
-                <p className="text-amber-600 dark:text-amber-400 font-medium mt-1">⚡ Snabb gissning</p>
+                <p className="text-amber-600 dark:text-amber-400 font-medium mt-1 text-xs">⚡ Snabb gissning</p>
             )}
-            <p className={`mt-1 font-medium ${data.isCorrect ? 'text-emerald-600' : 'text-red-500'}`}>
+            <p className={`mt-1 font-medium text-xs ${data.isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {data.isCorrect ? '✓ Rätt' : '✗ Fel'}
             </p>
         </div>
@@ -252,18 +254,18 @@ function ConcentrationTooltip({ active, payload }: { active?: boolean; payload?:
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENT: ConcentrationTimeline
+// Concentration Timeline
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface ConcentrationTimelineProps {
+function ConcentrationTimeline({
+    dataPoints,
+    peakStressAt,
+}: {
     dataPoints: BehaviouralDataPoint[];
     peakStressAt: number;
-}
-
-function ConcentrationTimeline({ dataPoints, peakStressAt }: ConcentrationTimelineProps) {
+}) {
     const segments = useMemo(() => extractSegments(dataPoints), [dataPoints]);
 
-    // Normalise response times to 0–1 for the area chart
     const maxRt = useMemo(
         () => Math.max(...dataPoints.map(p => p.responseTimeMs), 1),
         [dataPoints],
@@ -275,7 +277,6 @@ function ConcentrationTimeline({ dataPoints, peakStressAt }: ConcentrationTimeli
             x: p.elapsedSeconds,
             normRt: p.responseTimeMs / maxRt,
             stress: p.stressLevel,
-            // Scatter position for rapid guesses
             rapidGuess: p.isRapidGuess ? p.responseTimeMs / maxRt : null,
         })),
         [dataPoints, maxRt],
@@ -283,7 +284,6 @@ function ConcentrationTimeline({ dataPoints, peakStressAt }: ConcentrationTimeli
 
     const totalSeconds = dataPoints.at(-1)?.elapsedSeconds ?? 0;
 
-    // Build x-axis ticks every minute
     const xTicks = useMemo(() => {
         const ticks: number[] = [];
         for (let s = 0; s <= totalSeconds; s += 60) ticks.push(s);
@@ -292,10 +292,9 @@ function ConcentrationTimeline({ dataPoints, peakStressAt }: ConcentrationTimeli
 
     return (
         <div>
-            {/* Inline legend — no external legend block */}
             <div className="flex items-center gap-4 mb-3 flex-wrap">
                 {(Object.keys(FOCUS_LABELS) as FocusState[]).map(state => (
-                    <div key={state} className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                    <div key={state} className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
                         <span
                             className="inline-block w-3 h-3 rounded-sm"
                             style={{ background: FOCUS_COLORS[state] }}
@@ -303,7 +302,7 @@ function ConcentrationTimeline({ dataPoints, peakStressAt }: ConcentrationTimeli
                         {FOCUS_LABELS[state]}
                     </div>
                 ))}
-                <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
                     <span className="inline-block w-3 h-3 rounded-sm bg-amber-400 opacity-80" />
                     ⚡ Snabb gissning
                 </div>
@@ -313,7 +312,6 @@ function ConcentrationTimeline({ dataPoints, peakStressAt }: ConcentrationTimeli
                 <ComposedChart data={chartData} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(156,163,175,0.2)" />
 
-                    {/* Coloured background segments per focus state */}
                     {segments.map((seg, i) => (
                         <ReferenceArea
                             key={i}
@@ -325,14 +323,13 @@ function ConcentrationTimeline({ dataPoints, peakStressAt }: ConcentrationTimeli
                         />
                     ))}
 
-                    {/* Peak stress marker */}
                     {peakStressAt > 0 && (
                         <ReferenceLine
                             x={peakStressAt}
                             stroke="#ef4444"
                             strokeDasharray="4 3"
                             label={{
-                                value: '⚑ Toppad stress',
+                                value: '⚑ Toppad spänning',
                                 position: 'top',
                                 fill: '#ef4444',
                                 fontSize: 10,
@@ -371,41 +368,40 @@ function ConcentrationTimeline({ dataPoints, peakStressAt }: ConcentrationTimeli
 
                     <Tooltip content={<ConcentrationTooltip />} />
 
-                    {/* Stress area */}
+                    {/* Spänning area — amber, not red */}
                     <Area
                         yAxisId="stress"
                         type="monotone"
                         dataKey="stress"
-                        stroke="#ef4444"
+                        stroke="#f59e0b"
                         strokeWidth={1.5}
-                        fill="rgba(239,68,68,0.1)"
+                        fill="rgba(245,158,11,0.12)"
                         dot={false}
-                        name="Stressnivå"
+                        name="Spänning"
                     />
 
-                    {/* Response-time area */}
                     <Area
                         yAxisId="rt"
                         type="monotone"
                         dataKey="normRt"
                         stroke="#6366f1"
                         strokeWidth={2}
-                        fill="rgba(99,102,241,0.08)"
+                        fill="rgba(99,102,241,0.10)"
                         dot={{ r: 3, fill: '#6366f1', strokeWidth: 0 }}
                         activeDot={{ r: 5 }}
                         name="Svarstid"
                     />
 
-                    {/* Rapid-guess markers */}
                     <Scatter
                         yAxisId="rt"
                         dataKey="rapidGuess"
                         fill="#f59e0b"
-                        shape={(props: any) => {
-                            if (props.rapidGuess == null) return <></>;
+                        shape={(props: { cx?: number; cy?: number; rapidGuess?: number | null }) => {
+                            const { cx, cy, rapidGuess } = props;
+                            if (rapidGuess == null || cx == null || cy == null) return <></>;
                             return (
                                 <polygon
-                                    points={`${props.cx},${props.cy - 6} ${props.cx - 5},${props.cy + 4} ${props.cx + 5},${props.cy + 4}`}
+                                    points={`${cx},${cy - 6} ${cx - 5},${cy + 4} ${cx + 5},${cy + 4}`}
                                     fill="#f59e0b"
                                 />
                             );
@@ -414,33 +410,26 @@ function ConcentrationTimeline({ dataPoints, peakStressAt }: ConcentrationTimeli
                 </ComposedChart>
             </ResponsiveContainer>
 
-            {/* Inline label row below chart — no split attention */}
-            <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-9">
+            <div className="flex justify-between text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 px-9">
                 <span className="text-indigo-500">— Svarstid</span>
-                <span className="text-red-400">— Stressnivå</span>
+                <span className="text-amber-500">— Spänning</span>
             </div>
         </div>
     );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENT: StressHeatmap
+// Sessionsrytm (was StressHeatmap)
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface StressHeatmapProps {
-    dataPoints: BehaviouralDataPoint[];
-}
-
-function StressHeatmap({ dataPoints }: StressHeatmapProps) {
-    /** Map stress 0–1 to a Tailwind-compatible rgba colour */
-    function stressColor(level: number): string {
-        // low → green, mid → amber, high → red
-        if (level < 0.3) return `rgba(16, 185, 129, ${0.2 + level * 0.8})`;
-        if (level < 0.65) return `rgba(245, 158, 11, ${0.2 + level * 0.8})`;
-        return `rgba(239, 68, 68, ${0.2 + level * 0.8})`;
+function Sessionsrytm({ dataPoints }: { dataPoints: BehaviouralDataPoint[] }) {
+    /** Map stress 0–1 to emerald→amber gradient (no red). */
+    function rhythmColor(level: number): string {
+        if (level < 0.3) return `rgba(16, 185, 129, ${0.25 + level * 0.7})`;
+        if (level < 0.65) return `rgba(132, 178, 80, ${0.3 + level * 0.6})`;
+        return `rgba(245, 158, 11, ${0.35 + level * 0.55})`;
     }
 
-    // Group into rows of 10 for a grid layout
     const COLS = 10;
     const rows: BehaviouralDataPoint[][] = [];
     for (let i = 0; i < dataPoints.length; i += COLS) {
@@ -449,8 +438,8 @@ function StressHeatmap({ dataPoints }: StressHeatmapProps) {
 
     return (
         <div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                Varje ruta = en fråga · Färg = stressnivå · Kant = snabb gissning
+            <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
+                Varje ruta = en fråga · Färg = energinivå · Kant = snabb gissning
             </div>
             <div className="flex flex-col gap-1">
                 {rows.map((row, ri) => (
@@ -461,45 +450,46 @@ function StressHeatmap({ dataPoints }: StressHeatmapProps) {
                                 ? '2px solid #f59e0b'
                                 : pt.isCorrect
                                     ? '2px solid rgba(16,185,129,0.4)'
-                                    : '2px solid rgba(239,68,68,0.4)';
+                                    : '2px solid rgba(245,158,11,0.4)';
 
                             return (
-                                <div
+                                <motion.div
                                     key={ci}
+                                    initial={{ scale: 0.6, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ delay: (ri * COLS + ci) * 0.015, duration: 0.3 }}
                                     className="relative group"
-                                    title={`Fråga ${qNum}: ${Math.round(pt.stressLevel * 100)}% stress, ${formatMs(pt.responseTimeMs)}, ${pt.isCorrect ? 'rätt' : 'fel'}${pt.isRapidGuess ? ', ⚡ gissning' : ''}`}
+                                    title={`Fråga ${qNum}: ${Math.round(pt.stressLevel * 100)}% energi, ${formatMs(pt.responseTimeMs)}, ${pt.isCorrect ? 'rätt' : 'fel'}${pt.isRapidGuess ? ', ⚡ gissning' : ''}`}
                                 >
                                     <div
-                                        className="w-7 h-7 rounded-sm cursor-default transition-transform group-hover:scale-125"
+                                        className="w-7 h-7 rounded-lg cursor-default transition-transform group-hover:scale-125"
                                         style={{
-                                            background: stressColor(pt.stressLevel),
+                                            background: rhythmColor(pt.stressLevel),
                                             border: borderStyle,
                                         }}
                                     />
-                                    {/* Tiny question number */}
                                     <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white/70 pointer-events-none">
                                         {qNum}
                                     </span>
-                                </div>
+                                </motion.div>
                             );
                         })}
                     </div>
                 ))}
             </div>
 
-            {/* Inline colour legend below grid */}
-            <div className="flex items-center gap-3 mt-3 text-[10px] text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-3 mt-3 text-[10px] text-zinc-500 dark:text-zinc-400">
                 <div className="flex items-center gap-1">
                     <span className="inline-block w-3 h-3 rounded-sm bg-emerald-400" />
-                    Låg stress
+                    Lugn
+                </div>
+                <div className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 rounded-sm bg-lime-500" />
+                    I farten
                 </div>
                 <div className="flex items-center gap-1">
                     <span className="inline-block w-3 h-3 rounded-sm bg-amber-400" />
-                    Medel stress
-                </div>
-                <div className="flex items-center gap-1">
-                    <span className="inline-block w-3 h-3 rounded-sm bg-red-400" />
-                    Hög stress
+                    Spänd
                 </div>
                 <div className="flex items-center gap-1">
                     <span className="inline-block w-3 h-3 rounded-sm border-2 border-amber-500 bg-transparent" />
@@ -511,7 +501,7 @@ function StressHeatmap({ dataPoints }: StressHeatmapProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENT: NarrativeInsightCard
+// Narrative Insight Card
 // ─────────────────────────────────────────────────────────────────────────────
 
 function NarrativeInsightCard({ insight, index }: { insight: NarrativeInsight; index: number }) {
@@ -521,14 +511,14 @@ function NarrativeInsightCard({ insight, index }: { insight: NarrativeInsight; i
         <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.08, duration: 0.35 }}
-            className={`rounded-xl border p-4 ${cls.border} ${cls.bg}`}
+            transition={{ delay: index * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className={`rounded-2xl border backdrop-blur-xl p-4 ${cls.border} ${cls.bg}`}
         >
             <div className="flex items-start gap-3">
                 <span className={`text-2xl leading-none mt-0.5 ${cls.icon}`}>{insight.icon}</span>
                 <div className="flex-1 min-w-0">
                     <p className={`font-semibold text-sm mb-1 ${cls.headline}`}>{insight.headline}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{insight.body}</p>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">{insight.body}</p>
                     {insight.cta && (
                         <a
                             href={insight.cta.href}
@@ -544,67 +534,67 @@ function NarrativeInsightCard({ insight, index }: { insight: NarrativeInsight; i
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENT: SessionStats (summary row)
+// SessionStats — glassmorphic tiles with gradient text
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SessionStats({ metrics }: { metrics: BehaviouralMetrics }) {
     const { summary, dataPoints, durationSeconds } = metrics;
 
-    const stats = [
+    const stats: Array<{ label: string; value: string | number; sub: string | null; tone: 'primary' | 'success' | 'amber' }> = [
         {
             label: 'Besvarade frågor',
             value: dataPoints.length,
             sub: null,
-            color: 'text-gray-800 dark:text-gray-100',
+            tone: 'primary',
         },
         {
             label: 'Snitt svarstid',
             value: formatMs(summary.avgResponseMs),
             sub: null,
-            color: 'text-indigo-600 dark:text-indigo-400',
+            tone: 'primary',
         },
         {
             label: 'Snabba gissningar',
             value: summary.rapidGuessCount,
             sub: `${Math.round(summary.rapidGuessShare * 100)}% av svaren`,
-            color: summary.rapidGuessShare > 0.2
-                ? 'text-amber-600 dark:text-amber-400'
-                : 'text-emerald-600 dark:text-emerald-400',
+            tone: summary.rapidGuessShare > 0.2 ? 'amber' : 'success',
         },
         {
             label: 'Fokus',
             value: `${Math.round(summary.focusedShare * 100)}%`,
             sub: `av ${formatSeconds(durationSeconds)}`,
-            color: summary.focusedShare > 0.6
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-amber-600 dark:text-amber-400',
+            tone: summary.focusedShare > 0.6 ? 'success' : 'amber',
         },
         {
-            label: 'Snitt stressnivå',
+            label: 'Energinivå',
             value: `${Math.round(summary.avgStressLevel * 100)}%`,
             sub: null,
-            color: summary.avgStressLevel > 0.6
-                ? 'text-red-600 dark:text-red-400'
-                : summary.avgStressLevel > 0.35
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-emerald-600 dark:text-emerald-400',
+            tone: summary.avgStressLevel > 0.6 ? 'amber' : 'success',
         },
     ];
+
+    const toneClasses: Record<'primary' | 'success' | 'amber', string> = {
+        primary: 'from-primary-600 to-accent-600 dark:from-primary-300 dark:to-accent-300',
+        success: 'from-emerald-500 to-teal-500 dark:from-emerald-300 dark:to-teal-300',
+        amber: 'from-amber-500 to-orange-500 dark:from-amber-300 dark:to-orange-300',
+    };
 
     return (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {stats.map((s, i) => (
                 <motion.div
                     key={i}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06, duration: 0.3 }}
-                    className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 text-center"
+                    initial={{ opacity: 0, scale: 0.85, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ delay: i * 0.07, type: 'spring', damping: 18, stiffness: 240 }}
+                    className="bg-white/55 dark:bg-zinc-950/55 backdrop-blur-2xl border border-white/60 dark:border-white/10 rounded-2xl p-3 text-center shadow-elevation-2"
                 >
-                    <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-tight">{s.label}</p>
+                    <p className={`text-2xl font-bold tabular-nums bg-clip-text text-transparent bg-gradient-to-br ${toneClasses[s.tone]}`}>
+                        {s.value}
+                    </p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-tight">{s.label}</p>
                     {s.sub && (
-                        <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{s.sub}</p>
+                        <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">{s.sub}</p>
                     )}
                 </motion.div>
             ))}
@@ -613,12 +603,46 @@ function SessionStats({ metrics }: { metrics: BehaviouralMetrics }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MAIN EXPORT: BehavioralSection
+// Session-win celebration card
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SessionWinCard({ focusedShare }: { focusedShare: number }) {
+    const pct = Math.round(focusedShare * 100);
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="relative overflow-hidden rounded-3xl border border-emerald-200/60 dark:border-emerald-700/40 backdrop-blur-2xl bg-gradient-to-br from-emerald-500/15 via-primary-500/8 to-emerald-500/15 p-5 md:p-6 shadow-elevation-3"
+        >
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none" />
+            <div className="relative flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-elevation-2 animate-glow-pulse">
+                    <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-semibold tracking-[0.2em] uppercase text-emerald-700 dark:text-emerald-300">
+                        Stark session
+                    </div>
+                    <h4 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white leading-tight mt-0.5">
+                        {pct}% i fokus — bra jobbat!
+                    </h4>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                        Du höll koncentrationen igenom större delen av sessionen. Notera vad som funkade — det här är ditt mönster.
+                    </p>
+                </div>
+            </div>
+            <MilestoneCelebration trigger={true} />
+        </motion.div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN EXPORT
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface BehavioralSectionProps {
     metrics: BehaviouralMetrics;
-    /** Override narrative insights (if null, auto-generated from metrics) */
     narrativeInsights?: NarrativeInsight[];
 }
 
@@ -636,31 +660,37 @@ export default function BehavioralSection({ metrics, narrativeInsights }: Behavi
         minute: '2-digit',
     });
 
+    const isStrongSession = metrics.summary.focusedShare > 0.7;
+
     return (
         <section className="space-y-6">
             {/* Section header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center shadow-elevation-2">
+                    <Brain className="w-4 h-4 text-white" />
+                </div>
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        Beteendemönster
-                    </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                    <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+                        Hur du arbetar
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
                         Session {sessionDate} · {formatSeconds(metrics.durationSeconds)}
                     </p>
                 </div>
             </div>
 
-            {/* Stats row */}
+            {isStrongSession && <SessionWinCard focusedShare={metrics.summary.focusedShare} />}
+
             <SessionStats metrics={metrics} />
 
             {/* Concentration timeline */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+            <div className={`${GLASS_CARD} p-6`}>
                 <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    <h3 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
                         Koncentrationsgraf
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        Svarstid (lila) och stressnivå (röd) per fråga · Bakgrundsfärg = fokustillstånd
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                        Svarstid (lila) och spänning (amber) per fråga · Bakgrund = fokustillstånd
                     </p>
                 </div>
                 <ConcentrationTimeline
@@ -669,22 +699,20 @@ export default function BehavioralSection({ metrics, narrativeInsights }: Behavi
                 />
             </div>
 
-            {/* Stress heatmap + narrative — side by side on wider screens */}
+            {/* Sessionsrytm + narrative */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Stress heatmap */}
-                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
-                    <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">
-                        Stressvärmekarta
+                <div className={`${GLASS_CARD} p-6`}>
+                    <h3 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1">
+                        Sessionsrytm
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                        Per fråga – hover för detaljer
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">
+                        Per fråga — håll musen över för detaljer
                     </p>
-                    <StressHeatmap dataPoints={metrics.dataPoints} />
+                    <Sessionsrytm dataPoints={metrics.dataPoints} />
                 </div>
 
-                {/* Narrative insights */}
                 <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    <h3 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider px-1">
                         Sessionens insikter
                     </h3>
                     {insights.map((insight, i) => (
