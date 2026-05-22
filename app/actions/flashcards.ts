@@ -20,6 +20,15 @@ import { bucketFor, BUCKET_LABEL_SV, type StateBucket } from '@/lib/flashcards/s
 import { and, asc, desc, eq, lte, sql } from 'drizzle-orm';
 
 export type FlashcardSourceContextType = 'manual' | 'question' | 'article' | 'ai_draft';
+export type FlashcardType = 'basic' | 'image_occlusion';
+
+export interface OcclusionMask {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    label?: string;
+}
 
 export interface FlashcardDeckSummary {
     id: string;
@@ -36,10 +45,13 @@ export interface FlashcardWithState {
     id: string;
     deckId: string;
     topicId: string | null;
+    type: FlashcardType;
     front: string;
     back: string;
     frontMath: string | null;
     backMath: string | null;
+    imageUrl: string | null;
+    occlusionMasks: OcclusionMask[] | null;
     sourceContextType: string | null;
     sourceContextId: string | null;
     createdAt: Date;
@@ -60,16 +72,21 @@ export interface FlashcardDashboard {
         currentStreak: number;
         longTermCards: number;
     };
+    upcomingByDay: Array<{ date: string; due: number }>;
+    bucketCounts: Record<StateBucket, number>;
 }
 
 export interface CreateFlashcardInput {
     deckId?: string;
     deckName?: string;
     topicId?: string | null;
-    front: string;
-    back: string;
+    type?: FlashcardType;
+    front?: string;
+    back?: string;
     frontMath?: string | null;
     backMath?: string | null;
+    imageUrl?: string | null;
+    occlusionMasks?: OcclusionMask[] | null;
     sourceContextType?: FlashcardSourceContextType;
     sourceContextId?: string | null;
 }
@@ -110,6 +127,20 @@ function rowToState(row: typeof flashcardCardState.$inferSelect): CardStateRow {
     };
 }
 
+function deserialiseMasks(raw: unknown): OcclusionMask[] | null {
+    if (raw == null) return null;
+    if (Array.isArray(raw)) return raw as OcclusionMask[];
+    if (typeof raw === 'string') {
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? (parsed as OcclusionMask[]) : null;
+        } catch {
+            return null;
+        }
+    }
+    return null;
+}
+
 function toFlashcardWithState(row: {
     card: typeof flashcards.$inferSelect;
     state: typeof flashcardCardState.$inferSelect;
@@ -120,10 +151,13 @@ function toFlashcardWithState(row: {
         id: row.card.id,
         deckId: row.card.deckId,
         topicId: row.card.topicId,
+        type: (row.card.type ?? 'basic') as FlashcardType,
         front: row.card.front ?? '',
         back: row.card.back ?? '',
         frontMath: row.card.frontMath,
         backMath: row.card.backMath,
+        imageUrl: row.card.imageUrl,
+        occlusionMasks: deserialiseMasks(row.card.occlusionMasks),
         sourceContextType: row.card.sourceContextType,
         sourceContextId: row.card.sourceContextId,
         createdAt: row.card.createdAt,
@@ -306,6 +340,31 @@ export async function getFlashcardDashboard(): Promise<FlashcardDashboard | null
         lastReviewedAt: row.lastReviewedAt ? new Date(row.lastReviewedAt) : null,
     }));
 
+    // Upcoming due cards per day for the next 30 days
+    const dayBuckets = new Map<string, number>();
+    for (let i = 0; i < 30; i++) {
+        const d = new Date(today.getTime() + i * 86400000);
+        dayBuckets.set(d.toISOString().slice(0, 10), 0);
+    }
+    for (const c of cards) {
+        const key = c.state.nextReview.toISOString().slice(0, 10);
+        if (dayBuckets.has(key)) {
+            dayBuckets.set(key, (dayBuckets.get(key) ?? 0) + 1);
+        }
+    }
+    const upcomingByDay = Array.from(dayBuckets.entries()).map(([date, due]) => ({
+        date,
+        due,
+    }));
+
+    const bucketCounts: Record<StateBucket, number> = {
+        ny: 0,
+        repetera_snart: 0,
+        stabil: 0,
+        langtidsminne: 0,
+    };
+    for (const c of cards) bucketCounts[c.bucket] += 1;
+
     return {
         decks,
         dueCards,
@@ -318,8 +377,10 @@ export async function getFlashcardDashboard(): Promise<FlashcardDashboard | null
             cardsReviewedToday: Number(reviewedToday[0]?.count ?? 0),
             averageRecall: Math.round(((Number(reviewedToday[0]?.avgRating ?? 0) - 1) / 3) * 100) || 0,
             currentStreak: streakRow[0]?.currentStreak ?? 0,
-            longTermCards: cards.filter((card) => card.bucket === 'langtidsminne').length,
+            longTermCards: bucketCounts.langtidsminne,
         },
+        upcomingByDay,
+        bucketCounts,
     };
 }
 
@@ -355,10 +416,18 @@ export async function createFlashcardDeck(input: {
 
 export async function createFlashcard(input: CreateFlashcardInput): Promise<FlashcardWithState> {
     const userId = await requireUserId();
-    const front = input.front.trim();
-    const back = input.back.trim();
-    if (!front || !back) {
-        throw new Error('Front and back are required');
+    const type = input.type ?? 'basic';
+    const front = input.front?.trim() ?? '';
+    const back = input.back?.trim() ?? '';
+
+    if (type === 'basic') {
+        if (!front || !back) {
+            throw new Error('Front and back are required');
+        }
+    } else if (type === 'image_occlusion') {
+        if (!input.imageUrl || !input.occlusionMasks?.length) {
+            throw new Error('Image and at least one occlusion region are required');
+        }
     }
 
     const deck = await getOrCreateDeck(userId, input);
@@ -371,11 +440,15 @@ export async function createFlashcard(input: CreateFlashcardInput): Promise<Flas
         userId,
         deckId: deck.id,
         topicId: input.topicId ?? deck.topicId ?? null,
-        type: 'basic',
-        front,
-        back,
+        type,
+        front: type === 'basic' ? front : front || null,
+        back: type === 'basic' ? back : back || null,
         frontMath: input.frontMath?.trim() || null,
         backMath: input.backMath?.trim() || null,
+        imageUrl: input.imageUrl ?? null,
+        occlusionMasks: input.occlusionMasks?.length
+            ? JSON.stringify(input.occlusionMasks)
+            : null,
         sourceContextType: input.sourceContextType ?? 'manual',
         sourceContextId: input.sourceContextId ?? null,
         createdAt: now,

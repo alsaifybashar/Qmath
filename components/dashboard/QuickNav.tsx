@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
     LayoutGrid,
     BookOpen,
@@ -16,16 +17,19 @@ import {
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-    { href: '/exams', label: 'Tentor', icon: GraduationCap, color: 'text-blue-500' },
-    { href: '/flashcards', label: 'Flashcards', icon: BookOpen, color: 'text-emerald-500' },
-    { href: '/courses', label: 'Mina Kurser', icon: LayoutGrid, color: 'text-purple-500' },
-    { href: '/profile', label: 'Profil', icon: User, color: 'text-orange-500' },
-    { href: '/settings', label: 'Inställningar', icon: Settings, color: 'text-zinc-500' },
-    { href: '/help', label: 'Hjälp & Support', icon: HelpCircle, color: 'text-cyan-500' },
+    { href: '/exams', label: 'Tentor', icon: GraduationCap, accent: '#3B82F6', bg: 'rgba(59, 130, 246, 0.12)' },
+    { href: '/flashcards', label: 'Flashcards', icon: BookOpen, accent: '#10B981', bg: 'rgba(16, 185, 129, 0.12)' },
+    { href: '/courses', label: 'Mina Kurser', icon: LayoutGrid, accent: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.12)' },
+    { href: '/profile', label: 'Profil', icon: User, accent: '#F97316', bg: 'rgba(249, 115, 22, 0.12)' },
+    { href: '/settings', label: 'Inställningar', icon: Settings, accent: '#64748B', bg: 'rgba(100, 116, 139, 0.12)' },
+    { href: '/help', label: 'Hjälp & Support', icon: HelpCircle, accent: '#06B6D4', bg: 'rgba(6, 182, 212, 0.12)' },
 ];
 
 export default function QuickNav() {
     const [isOpen, setIsOpen] = useState(false);
+    const pathname = usePathname();
+    const currentItem = NAV_ITEMS.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
+    const currentAccent = currentItem?.accent ?? '#14B8A6';
 
     return (
         <>
@@ -37,7 +41,7 @@ export default function QuickNav() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setIsOpen(false)}
-                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                        className="fixed inset-0 bg-black/15 backdrop-blur-sm z-40"
                     />
                 )}
             </AnimatePresence>
@@ -47,45 +51,82 @@ export default function QuickNav() {
                 initial={{ x: '100%' }}
                 animate={{ x: isOpen ? 0 : '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed right-0 top-0 bottom-0 w-72 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-l border-zinc-200 dark:border-zinc-800 shadow-2xl z-50 p-6 flex flex-col"
+                className="fixed right-0 top-0 bottom-0 w-72 backdrop-blur-xl z-50 p-6 flex flex-col"
+                style={{
+                    background: 'linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-soft))',
+                    borderLeft: '1px solid var(--sidebar-border)',
+                    boxShadow: '-24px 0 44px rgba(17, 32, 42, 0.10)',
+                }}
             >
                 {/* Toggle Button attached to the drawer */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="absolute -left-12 top-1/2 -translate-y-1/2 bg-white dark:bg-zinc-800 p-3 rounded-l-2xl shadow-[-4px_0_12px_rgba(0,0,0,0.1)] border-y border-l border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    className="absolute -left-12 top-1/2 -translate-y-1/2 p-3 rounded-l-2xl shadow-[-4px_0_18px_rgba(17,32,42,0.10)] border-y border-l transition-colors"
+                    style={{
+                        background: 'var(--sidebar-bg)',
+                        borderColor: 'var(--sidebar-border)',
+                        color: currentAccent,
+                    }}
                 >
                     {isOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
                 </button>
 
                 <div className="mb-8">
-                    <h3 className="font-bold text-xl flex items-center gap-2 mb-1">
-                        <span className="p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                    <h3 className="font-bold text-xl flex items-center gap-2 mb-1" style={{ color: 'var(--sidebar-text)' }}>
+                        <span
+                            className="p-1.5 rounded-lg text-white"
+                            style={{ background: 'var(--sidebar-active)' }}
+                        >
                             <Menu size={18} />
                         </span>
                         Snabbåtkomst
                     </h3>
-                    <p className="text-xs text-zinc-500 pl-10">Hoppa till andra sektioner</p>
+                    <p className="text-xs pl-10" style={{ color: 'var(--sidebar-muted)' }}>
+                        Hoppa till andra sektioner
+                    </p>
                 </div>
 
                 <div className="flex flex-col gap-2 overflow-y-auto flex-1">
-                    {NAV_ITEMS.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setIsOpen(false)}
-                            className="flex items-center gap-4 p-3.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all group border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700/50"
-                        >
-                            <div className={`p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 group-hover:bg-white dark:group-hover:bg-zinc-700 transition-colors shadow-sm ${item.color}`}>
-                                <item.icon size={20} />
-                            </div>
-                            <span className="font-semibold text-zinc-700 dark:text-zinc-200 group-hover:translate-x-1 transition-transform">{item.label}</span>
-                        </Link>
-                    ))}
+                    {NAV_ITEMS.map((item) => {
+                        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => setIsOpen(false)}
+                                className="relative flex items-center gap-4 p-3.5 rounded-xl transition-all group border"
+                                style={{
+                                    background: isActive ? item.bg : 'transparent',
+                                    borderColor: isActive ? item.accent : 'transparent',
+                                    color: isActive ? item.accent : 'var(--sidebar-text)',
+                                }}
+                            >
+                                {isActive && (
+                                    <span
+                                        className="absolute right-2 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full"
+                                        style={{ background: item.accent }}
+                                    />
+                                )}
+                                <div
+                                    className="p-2.5 rounded-xl transition-colors shadow-sm"
+                                    style={{
+                                        background: isActive ? item.accent : 'var(--sidebar-hover)',
+                                        color: isActive ? '#fff' : item.accent,
+                                    }}
+                                >
+                                    <item.icon size={20} />
+                                </div>
+                                <span className="font-semibold transition-transform group-hover:translate-x-1">
+                                    {item.label}
+                                </span>
+                            </Link>
+                        );
+                    })}
                 </div>
 
                 {/* Footer Info */}
-                <div className="mt-auto pt-6 border-t border-zinc-100 dark:border-zinc-800">
-                    <div className="text-xs text-center text-zinc-400">
+                <div className="mt-auto pt-6 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
+                    <div className="text-xs text-center" style={{ color: 'var(--sidebar-subtle)' }}>
                         Qmath Studentportal v1.0
                     </div>
                 </div>

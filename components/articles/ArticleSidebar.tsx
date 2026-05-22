@@ -11,17 +11,19 @@ import type { ArticleNavigation, NavCourse, NavTopic, NavArticle } from '@/app/a
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const C = {
-    text:       '#1A1D2E',
-    textSec:    '#6B7194',
-    textMuted:  '#A0A5C0',
-    blue:       '#4361EE',
-    purple:     '#7C5CFC',
-    blueLight:  '#EEF1FF',
-    blueBorder: '#D6DAFB',
-    border:     '#EFF1F8',
-    surface:    '#FFFFFF',
-    surfaceAlt: '#F7F8FC',
-    surfaceHov: '#F0F2FA',
+    text:       'var(--article-sidebar-text)',
+    textSec:    'var(--article-sidebar-muted)',
+    textMuted:  'var(--article-sidebar-subtle)',
+    accent:     'var(--article-sidebar-accent)',
+    active:     'var(--article-sidebar-active)',
+    activeBg:   'var(--article-sidebar-active-bg)',
+    border:     'var(--article-sidebar-border)',
+    surface:    'var(--article-sidebar-surface)',
+    surfaceAlt: 'var(--article-sidebar-surface-alt)',
+    surfaceHov: 'var(--article-sidebar-hover)',
+    bg:         'var(--article-sidebar-bg)',
+    bgSoft:     'var(--article-sidebar-bg-soft)',
+    shadow:     'var(--article-sidebar-shadow)',
 };
 
 // ── Article link ─────────────────────────────────────────────────────────────
@@ -29,15 +31,25 @@ function ArticleLink({ article, isActive }: { article: NavArticle; isActive: boo
     return (
         <Link
             href={`/articles/${article.slug}`}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-[13px] leading-snug"
+            className="group relative flex items-center gap-2 px-3 py-2 rounded-lg border transition-all text-[13px] leading-snug"
             style={{
-                color: isActive ? '#fff' : C.textSec,
-                background: isActive ? C.blue : 'transparent',
+                color: isActive ? C.text : C.textSec,
+                background: isActive ? C.activeBg : 'transparent',
+                borderColor: isActive ? C.border : 'transparent',
                 fontWeight: isActive ? 600 : 400,
             }}
             title={article.title}
         >
-            <FileText className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
+            {isActive && (
+                <span
+                    className="absolute left-1 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full"
+                    style={{ background: C.active }}
+                />
+            )}
+            <FileText
+                className="w-3.5 h-3.5 flex-shrink-0 opacity-70"
+                style={{ color: isActive ? C.accent : 'currentColor' }}
+            />
             <span className="truncate">{article.title}</span>
         </Link>
     );
@@ -60,15 +72,23 @@ function TopicSection({
         <div>
             <button
                 onClick={() => setOpen(v => !v)}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-semibold uppercase tracking-wider transition-colors hover:bg-[#F0F2FA]"
-                style={{ color: hasActive ? C.blue : C.textMuted }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-[12px] font-semibold uppercase tracking-wider transition-colors"
+                style={{
+                    color: hasActive ? C.accent : C.textMuted,
+                    background: hasActive ? C.surfaceHov : 'transparent',
+                    borderColor: hasActive ? C.border : 'transparent',
+                }}
             >
                 {open ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                 <Layers className="w-3 h-3" />
                 <span className="truncate">{topic.title}</span>
                 <span
                     className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-md"
-                    style={{ background: C.surfaceAlt, color: C.textMuted }}
+                    style={{
+                        background: C.surfaceAlt,
+                        color: hasActive ? C.accent : C.textMuted,
+                        border: `1px solid ${C.border}`,
+                    }}
                 >
                     {topic.articles.length}
                 </span>
@@ -107,16 +127,17 @@ function CourseSection({
         <div className="mb-1">
             <button
                 onClick={() => setOpen(v => !v)}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-[#F0F2FA]"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-colors"
                 style={{
-                    background: hasActive ? C.blueLight : 'transparent',
+                    background: hasActive ? C.activeBg : 'transparent',
+                    borderColor: hasActive ? C.border : 'transparent',
                 }}
             >
                 <div
                     className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{
                         background: hasActive
-                            ? `linear-gradient(135deg, ${C.blue}, ${C.purple})`
+                            ? C.active
                             : C.surfaceAlt,
                         border: hasActive ? 'none' : `1px solid ${C.border}`,
                     }}
@@ -129,7 +150,7 @@ function CourseSection({
                 <div className="flex-1 min-w-0">
                     <p
                         className="text-[13px] font-semibold truncate"
-                        style={{ color: hasActive ? C.blue : C.text }}
+                        style={{ color: hasActive ? C.accent : C.text }}
                     >
                         {course.code}
                     </p>
@@ -236,8 +257,10 @@ export default function ArticleSidebar({ navigation, userName, userLevel }: Arti
                 display: 'flex',
                 flexDirection: 'column',
                 background: 'rgba(255,255,255,0.90)',
+                backgroundImage: `linear-gradient(180deg, ${C.bg}, ${C.bgSoft})`,
                 backdropFilter: 'blur(20px)',
                 borderRight: `1px solid ${C.border}`,
+                boxShadow: C.shadow,
                 zIndex: 10,
             }}
         >
@@ -250,22 +273,22 @@ export default function ArticleSidebar({ navigation, userName, userLevel }: Arti
                     <div
                         className="w-9 h-9 rounded-full flex items-center justify-center"
                         style={{
-                            background: `linear-gradient(135deg, ${C.blue}, ${C.purple})`,
-                            boxShadow: `0 4px 14px ${C.blue}30`,
+                            background: C.active,
+                            boxShadow: '0 10px 24px rgba(20, 184, 166, 0.20)',
                         }}
                     >
                         <span className="text-white font-extrabold text-base">Q</span>
                     </div>
                     <span
                         className="font-bold text-xl"
-                        style={{ color: C.text, letterSpacing: '-0.03em' }}
+                        style={{ color: C.text, letterSpacing: 0 }}
                     >
                         Qmath
                     </span>
                 </Link>
                 <Link
                     href="/dashboard"
-                    className="flex items-center gap-1.5 text-[12px] font-medium transition-colors hover:text-[#4361EE]"
+                    className="flex items-center gap-1.5 text-[12px] font-medium transition-colors"
                     style={{ color: C.textMuted }}
                 >
                     <ArrowLeft className="w-3.5 h-3.5" /> Tillbaka till dashboard
@@ -275,7 +298,7 @@ export default function ArticleSidebar({ navigation, userName, userLevel }: Arti
             {/* ── Header ───────────────────────────────────────────────────── */}
             <div className="px-4 py-3" style={{ borderTop: `1px solid ${C.border}` }}>
                 <div className="flex items-center gap-2 mb-3">
-                    <BookOpen className="w-4 h-4" style={{ color: C.blue }} />
+                    <BookOpen className="w-4 h-4" style={{ color: C.accent }} />
                     <h2
                         className="text-sm font-bold"
                         style={{ color: C.text }}
@@ -294,9 +317,9 @@ export default function ArticleSidebar({ navigation, userName, userLevel }: Arti
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Sök artiklar..."
-                        className="w-full pl-8 pr-3 py-2 rounded-lg text-[12px] outline-none transition-all focus:ring-2 focus:ring-[#4361EE]/20"
+                        className="w-full pl-8 pr-3 py-2 rounded-lg text-[12px] outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
                         style={{
-                            background: C.surfaceAlt,
+                            background: C.surface,
                             color: C.text,
                             border: `1px solid ${C.border}`,
                         }}
@@ -309,13 +332,20 @@ export default function ArticleSidebar({ navigation, userName, userLevel }: Arti
                 {/* Browse all link */}
                 <Link
                     href="/articles"
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors"
+                    className="relative flex items-center gap-2 px-3 py-2.5 rounded-lg border text-[13px] font-medium transition-colors"
                     style={{
-                        color: pathname === '/articles' ? '#fff' : C.textSec,
-                        background: pathname === '/articles' ? C.blue : 'transparent',
+                        color: pathname === '/articles' ? C.text : C.textSec,
+                        background: pathname === '/articles' ? C.activeBg : 'transparent',
+                        borderColor: pathname === '/articles' ? C.border : 'transparent',
                     }}
                 >
-                    <BookOpen className="w-4 h-4" />
+                    {pathname === '/articles' && (
+                        <span
+                            className="absolute left-1 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full"
+                            style={{ background: C.active }}
+                        />
+                    )}
+                    <BookOpen className="w-4 h-4" style={{ color: pathname === '/articles' ? C.accent : 'currentColor' }} />
                     Alla artiklar
                 </Link>
 
@@ -368,12 +398,15 @@ export default function ArticleSidebar({ navigation, userName, userLevel }: Arti
             {/* ── User card ────────────────────────────────────────────────── */}
             <Link
                 href="/profile"
-                className="mx-3 mb-4 p-3 rounded-xl flex items-center gap-2.5 no-underline transition-all hover:ring-2 hover:ring-blue-200"
-                style={{ background: C.surfaceAlt }}
+                className="mx-3 mb-4 p-3 rounded-xl flex items-center gap-2.5 no-underline transition-all hover:ring-2 hover:ring-teal-500/15"
+                style={{
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
+                }}
             >
                 <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                    style={{ background: `linear-gradient(135deg, ${C.blue}, ${C.purple})` }}
+                    style={{ background: C.active }}
                 >
                     {userName.charAt(0).toUpperCase()}
                 </div>

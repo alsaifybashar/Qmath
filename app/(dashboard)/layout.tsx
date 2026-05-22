@@ -5,8 +5,8 @@ import { eq } from 'drizzle-orm';
 import { questionAttempts } from '@/db/dashboard-schema';
 import { courses, enrollments } from '@/db/schema';
 
-import ConstellationBG from '@/components/dashboard/ConstellationBG';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { PageTransition } from '@/components/PageTransition';
 
 export default async function DashboardLayout({
     children,
@@ -44,14 +44,13 @@ export default async function DashboardLayout({
     const userLevel = Math.floor(totalXP / 500) + 1;
 
     return (
-        <div className="min-h-screen relative" style={{ background: '#F0F2F8' }}>
-            <ConstellationBG />
-            <DashboardShell
-                userName={user.name || 'Student'}
-                userLevel={userLevel}
-            >
+        <DashboardShell
+            userName={user.name || 'Student'}
+            userLevel={userLevel}
+        >
+            <PageTransition>
                 {children}
-            </DashboardShell>
-        </div>
+            </PageTransition>
+        </DashboardShell>
     );
 }

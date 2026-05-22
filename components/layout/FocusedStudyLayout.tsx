@@ -4,6 +4,7 @@ import { useState, ReactNode, useCallback, type CSSProperties, type PointerEvent
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ChevronLeft, X, HelpCircle, Zap, Flame, Sparkles, Brain, Star } from 'lucide-react';
+import QuickAddTrigger from '@/components/flashcards/QuickAddTrigger';
 
 interface FocusedStudyLayoutProps {
     children: ReactNode;
@@ -11,6 +12,9 @@ interface FocusedStudyLayoutProps {
     isHelpOpen?: boolean;
     onHelpToggle?: (open: boolean) => void;
     topicName?: string;
+    topicId?: string;
+    questionId?: string;
+    questionText?: string;
     questionNumber?: number;
     totalQuestions?: number;
     xpEarned?: number;
@@ -25,6 +29,9 @@ export function FocusedStudyLayout({
     isHelpOpen = false,
     onHelpToggle,
     topicName,
+    topicId,
+    questionId,
+    questionText,
     questionNumber = 1,
     totalQuestions = 10,
     xpEarned = 0,
@@ -133,6 +140,14 @@ export function FocusedStudyLayout({
                                 <span className="text-xs font-bold text-orange-600 dark:text-orange-400">{streak}</span>
                             </motion.div>
                         )}
+
+                        {/* Quick-add flashcard */}
+                        <QuickAddTrigger
+                            topicName={topicName}
+                            topicId={topicId}
+                            sourceContextId={questionId}
+                            prefillFront={questionText}
+                        />
 
                         {/* Help toggle — desktop */}
                         <button
