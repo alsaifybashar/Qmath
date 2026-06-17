@@ -19,6 +19,12 @@ agent
 
 # testing
 /coverage
+__pycache__/
+*.py[cod]
+
+# local Python sidecar environments
+math-engine/venv/
+math-engine/.venv/
 
 # next.js
 /.next/

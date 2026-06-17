@@ -7,6 +7,7 @@ import {
     History, FlaskConical
 } from 'lucide-react';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 const C = {
     surface: '#FFFFFF',
@@ -294,7 +295,15 @@ export function MasteryTopicCard({ name, course, mastery }: MasteryTopicProps) {
 // ========== Quick Actions ==========
 
 export function QuickActions() {
-    const actions = [
+    const actions: Array<{
+        icon: ReactNode;
+        label: string;
+        desc: string;
+        color: string;
+        href: string;
+        primary?: boolean;
+        badge?: number;
+    }> = [
         {
             icon: <Brain size={20} />,
             label: 'Adaptiv övning',

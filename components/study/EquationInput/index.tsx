@@ -55,6 +55,7 @@ export interface MathCASInputProps {
     disabled?: boolean;
     /** Show the virtual keyboard by default */
     showKeyboard?: boolean;
+    placeholder?: string;
 }
 
 // ── Live KaTeX preview ─────────────────────────────────────────────────────────
@@ -138,6 +139,7 @@ export default function MathCASInput({
     onAnswer,
     disabled = false,
     showKeyboard = true,
+    placeholder = 't.ex.  x^2 + C  eller  sin(x)/2',
 }: MathCASInputProps) {
     const [value, setValue] = useState('');
     const [parsedPreview, setParsedPreview] = useState('');
@@ -276,7 +278,7 @@ export default function MathCASInput({
                         if (e.key === 'Enter') handleSubmit();
                     }}
                     disabled={isSubmitted || disabled}
-                    placeholder="t.ex.  x^2 + C  eller  sin(x)/2"
+                    placeholder={placeholder}
                     className="flex-1 px-4 py-2.5 rounded-xl text-sm font-mono border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     autoComplete="off"
                     autoCorrect="off"

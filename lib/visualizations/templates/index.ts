@@ -2,14 +2,14 @@
  * Central template registry.
  * Import `getTemplate`, `allTemplates`, `TEMPLATE_IDS` anywhere in the app.
  */
-import { JSXTemplateDef } from './types';
+import type { JSXTemplateDef } from './types';
 import { functionTemplates } from './functions';
 import { calculusTemplates } from './calculus';
 import { seriesTemplates } from './series';
 import { analysisTemplates } from './analysis';
 import { threeDTemplates } from './3d';
 
-export { JSXTemplateDef } from './types';
+export type { JSXTemplateDef } from './types';
 
 /** Every registered template in one flat list. */
 export const allTemplates: JSXTemplateDef[] = [

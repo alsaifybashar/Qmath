@@ -61,7 +61,7 @@ export default function JSXGraphBoard({
                     // ── Enable scroll-wheel zoom and drag-to-pan globally ──────────────
                     // Individual templates call initBoard without zoom settings, so we
                     // set the defaults here before any board is created.
-                    JXG.Options.board.zoom = {
+                    JXG.Options.board.zoom = Object.assign({}, JXG.Options.board.zoom, {
                         enabled: true,
                         wheel: true,       // scroll wheel zooms the board
                         needShift: false,  // no modifier key required
@@ -70,7 +70,7 @@ export default function JSXGraphBoard({
                         factorX: 1.25,
                         factorY: 1.25,
                         center: 'auto',
-                    };
+                    }) as typeof JXG.Options.board.zoom & { enabled: boolean };
                     JXG.Options.board.pan = {
                         enabled: true,
                         needShift: false,  // drag on empty space pans

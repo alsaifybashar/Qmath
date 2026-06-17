@@ -7,7 +7,134 @@ export type QuestionType =
     | 'drag_drop'
     | 'toggle'
     | 'expression_builder'
-    | 'cas_steps';
+    | 'cas_steps'
+    | 'symbolic_input'
+    | 'matrix_grid'
+    | 'solution_steps'
+    | 'rich_math_text'
+    | 'solution_builder';
+
+export type AnswerMode = QuestionType | 'numeric' | 'free_response' | 'free_form_symbolic';
+
+export type SymbolicQuestionType =
+    | 'algebra'
+    | 'derivative'
+    | 'integral'
+    | 'limit'
+    | 'other'
+    | 'series'
+    | 'trigonometry';
+
+export interface SymbolicInputAnswerConfig {
+    questionType?: SymbolicQuestionType;
+    placeholder?: string;
+    ignoreConstant?: boolean;
+    showKeyboard?: boolean;
+}
+
+export interface SymbolicInputGradingConfig {
+    exact?: string;
+    acceptedForms?: string[];
+    ignoreConstant?: boolean;
+}
+
+export type MatrixPresentationMode = 'matrix' | 'row_vector' | 'column_vector';
+
+export interface MatrixGridAnswerConfig {
+    initialRows?: number;
+    initialCols?: number;
+    minRows?: number;
+    maxRows?: number;
+    minCols?: number;
+    maxCols?: number;
+    allowResize?: boolean;
+    placeholder?: string;
+    presentation?: MatrixPresentationMode;
+}
+
+export interface MatrixGridGradingConfig {
+    expectedValues: string[][];
+    requireExactDimensions?: boolean;
+}
+
+export interface MatrixGridAnswerPayload {
+    mode: 'matrix_grid';
+    rows: number;
+    cols: number;
+    values: string[][];
+}
+
+export interface SolutionStepRule {
+    prompt?: string;
+    expectedAnswer: string;
+    alternativeForms?: string[];
+    hint?: string;
+}
+
+export interface SolutionStepsAnswerConfig {
+    initialLineCount?: number;
+    maxLines?: number;
+    allowAddLine?: boolean;
+    allowRemoveLine?: boolean;
+    immediateValidation?: boolean;
+    placeholder?: string;
+}
+
+export interface SolutionStepsGradingConfig {
+    steps: SolutionStepRule[];
+    requireAllSteps?: boolean;
+    requireFinalAnswer?: boolean;
+    finalAnswer?: string;
+    finalAnswerAlternatives?: string[];
+}
+
+export interface SolutionStepsAnswerPayload {
+    mode: 'solution_steps';
+    lines: Array<{ id: string; value: string }>;
+    finalAnswer?: string;
+}
+
+export type RichMathToolbarActionId =
+    | 'bold'
+    | 'italic'
+    | 'bullet'
+    | 'inline_math'
+    | 'block_math'
+    | 'fraction'
+    | 'sqrt'
+    | 'matrix';
+
+export interface RichMathToolbarAction {
+    id: RichMathToolbarActionId;
+    label: string;
+    snippet: string;
+}
+
+export interface RichMathTextAnswerConfig {
+    toolbar?: RichMathToolbarAction[];
+    requireFinalAnswer?: boolean;
+    workingPlaceholder?: string;
+    finalAnswerPlaceholder?: string;
+}
+
+export interface RichMathTextGradingConfig {
+    finalAnswer?: string;
+    acceptedForms?: string[];
+}
+
+export interface RichMathTextAnswerPayload {
+    mode: 'rich_math_text';
+    content: string;
+    finalAnswer?: string;
+}
+
+export type StudentAnswerPayload =
+    | string
+    | string[]
+    | Record<string, boolean>
+    | MatrixGridAnswerPayload
+    | SolutionStepsAnswerPayload
+    | RichMathTextAnswerPayload;
 
 // ============================================================================
 // SHARED

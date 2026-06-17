@@ -108,7 +108,10 @@
       "Bash(sqlite3 qmath.db \"SELECT count\\(*\\) FROM api_keys;\")",
       "Bash(sqlite3 qmath.db \"SELECT count\\(*\\) FROM audit_logs;\")",
       "Bash(sqlite3 /home/kali/github/Qmath/qmath.db)",
-      "Bash(sqlite3 /home/kali/github/Qmath/qmath.db \".tables flashcard%\")"
+      "Bash(sqlite3 /home/kali/github/Qmath/qmath.db \".tables flashcard%\")",
+      "Bash(sudo apt-get install -y poppler-utils)",
+      "Bash([ -f \"/home/kali/github/Qmath/$file\" ])",
+      "Bash([ -f \"/home/kali/github/Qmath/$f\" ])"
     ]
   }
 }
