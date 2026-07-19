@@ -41,12 +41,16 @@ export default function RegisterPage() {
         data.append('password', formData.password);
 
         startTransition(async () => {
-            const result = await register(null, data);
-            if (result?.message) {
-                setError(result.message);
-            } else if (result?.errors) {
-                const first = Object.values(result.errors).flat()[0];
-                setError(typeof first === 'string' ? first : 'Something went wrong.');
+            try {
+                const result = await register(null, data);
+                if (result?.message) {
+                    setError(result.message);
+                } else if (result?.errors) {
+                    const first = Object.values(result.errors).flat()[0];
+                    setError(typeof first === 'string' ? first : 'Something went wrong.');
+                }
+            } catch (err) {
+                setError('A server error occurred. Please try again or sign in if your account was created.');
             }
         });
     };

@@ -89,12 +89,19 @@ export async function register(prevState: unknown, formData: FormData) {
         return { message: 'Unable to create an account with the provided details.' };
     }
 
-    // Auto-login and redirect to onboarding
-    await signIn('credentials', {
-        email,
-        password,
-        redirectTo: '/onboarding/welcome',
-    });
+    try {
+        // Auto-login and redirect to onboarding
+        await signIn('credentials', {
+            email,
+            password,
+            redirectTo: '/onboarding/welcome',
+        });
+    } catch (error) {
+        if (error instanceof AuthError) {
+            return { message: 'Account created successfully, but automatic login failed. Please sign in.' };
+        }
+        throw error; // Re-throw NEXT_REDIRECT or other unhandled errors
+    }
 }
 
 export async function forgotPassword(prevState: unknown, formData: FormData) {
