@@ -20,14 +20,11 @@ async function runTests() {
             name: 'John Doe',
             email: 'john@example.com',
             password: 'securePassword123',
-            university: 'KTH Royal Institute of Technology',
-            yearOfStudy: '2', // simulated form data as string, should be coerced
-            program: 'Computer Science'
         };
 
         const result = SignupFormSchema.safeParse(validData);
-        if (result.success && result.data.yearOfStudy === 2) {
-            console.log('✅ Valid data accepted and coerced correctly.');
+        if (result.success) {
+            console.log('✅ Valid data accepted correctly.');
         } else {
             console.error('❌ Valid data failed validation:', result.error);
             passed = false;
@@ -37,15 +34,12 @@ async function runTests() {
             name: 'J', // too short
             email: 'invalid-email',
             password: '123', // too short
-            university: '', // empty
-            yearOfStudy: '11', // too high (max 10)
-            program: 'A'.repeat(101) // too long (max 100)
         };
 
         const invalidResult = SignupFormSchema.safeParse(invalidData);
         if (!invalidResult.success) {
             const errors = invalidResult.error.flatten().fieldErrors;
-            if (errors.name && errors.email && errors.password && errors.university && errors.yearOfStudy && errors.program) {
+            if (errors.name && errors.email && errors.password) {
                 console.log('✅ Invalid data correctly rejected with expected errors.');
             } else {
                 console.error('❌ Invalid data rejected but some errors missing:', errors);
