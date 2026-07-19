@@ -35,6 +35,7 @@ export default async function RootLayout({
             defaultTheme="light"
             enableSystem={false}
             disableTransitionOnChange
+            nonce={nonce}
           >
               {children}
               <FlashcardDock />

@@ -66,7 +66,7 @@ export async function register(prevState: unknown, formData: FormData) {
             where: eq(users.email, email)
         });
 
-        if (existingUser) return { message: 'Unable to create an account with the provided details.' };
+        if (existingUser) return { message: 'An account with this email already exists. Please sign in instead.' };
 
         const [newUser] = await db.insert(users).values({
             name,
