@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "regions": ["dub1"],
-  "nodeVersion": "22.x",
   "installCommand": "npm ci",
   "buildCommand": "npm run vercel-build"
 }
