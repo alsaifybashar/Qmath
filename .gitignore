@@ -6,6 +6,10 @@ agent
 ./agent
 /home/wsl-bashar/Qmath/.claude
 
+# local tooling - never commit these
+.nvm/
+Qmath-env/
+qmath-env/
 
 # dependencies
 /node_modules
@@ -28,6 +32,9 @@ math-engine/.venv/
 
 # next.js
 /.next/
+/.next-local/
+/.next-dev-*/
+/.next-vercel-test*/
 /out/
 
 # production
@@ -45,6 +52,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.vercel.example
 
 # vercel
 .vercel
