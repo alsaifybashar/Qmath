@@ -111,8 +111,9 @@ export async function checkRateLimit(
                 severity: 'critical',
                 reason: 'distributed_store_unavailable',
             });
-            // Authentication, administrative, grading, and paid AI operations fail closed.
-            return { allowed: false, remaining: 0, resetAt: Date.now() + 60_000, limit: 0 };
+            // Gracefully fall back to local (in-memory) limiting if Redis isn't configured
+            // instead of failing closed and blocking all logins/registrations.
+            return localLimit(policy, normalizedIdentifier);
         }
         return localLimit(policy, normalizedIdentifier);
     }
