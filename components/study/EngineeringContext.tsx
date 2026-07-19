@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
 import { MathRenderer } from './MathRenderer';
 
@@ -31,11 +30,7 @@ export function EngineeringContext({
     if (!engineeringContext) return null;
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/15 rounded-2xl overflow-hidden"
-        >
+        <div className="bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/15 rounded-2xl overflow-hidden">
             <button
                 onClick={() => setExpanded(!expanded)}
                 className="w-full p-4 flex items-center gap-3 text-left hover:bg-emerald-100/50 dark:hover:bg-emerald-500/10 transition-colors"
@@ -58,15 +53,8 @@ export function EngineeringContext({
                 </div>
             </button>
 
-            <AnimatePresence>
-                {expanded && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                    >
+            {expanded && (
+                    <div className="overflow-hidden">
                         <div className="px-4 pb-4">
                             <div className="p-4 bg-white/50 dark:bg-zinc-800/30 rounded-xl">
                                 <div className="flex items-start gap-3">
@@ -77,9 +65,8 @@ export function EngineeringContext({
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </motion.div>
+                    </div>
+            )}
+        </div>
     );
 }

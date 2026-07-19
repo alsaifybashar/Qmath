@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { CheckCircle, Lock, ChevronRight, Loader2 } from 'lucide-react';
 import type { RevealedStep } from '@/lib/math/fade-logic';
+import { motionDuration, motionEase } from '@/lib/motion';
 
 interface StepRendererProps {
-    steps: RevealedStep[];
+    steps: Array<RevealedStep & { hintNudge?: string | null }>;
     onStepSubmit: (stepId: string, input: string) => Promise<{ isCorrect: boolean; feedback?: string }>;
     disabled?: boolean;
 }
@@ -16,6 +18,7 @@ interface StepState {
     feedback: string | undefined;
     submitting: boolean;
     error: boolean;
+    animateError: boolean;
 }
 
 // Lazy-load KaTeX to avoid SSR issues
@@ -53,12 +56,13 @@ export function StepRenderer({ steps, onStepSubmit, disabled }: StepRendererProp
     const [activeStep, setActiveStep] = useState(0);
     const [allDone, setAllDone] = useState(false);
     const [stepStates, setStepStates] = useState<StepState[]>(() =>
-        steps.map(() => ({ done: false, input: '', feedback: undefined, submitting: false, error: false }))
+        steps.map(() => ({ done: false, input: '', feedback: undefined, submitting: false, error: false, animateError: false }))
     );
+    const reduceMotion = useReducedMotion();
 
     // Reset when steps array changes (e.g. after mastery update)
     useEffect(() => {
-        setStepStates(steps.map(() => ({ done: false, input: '', feedback: undefined, submitting: false, error: false })));
+        setStepStates(steps.map(() => ({ done: false, input: '', feedback: undefined, submitting: false, error: false, animateError: false })));
         setActiveStep(0);
         setAllDone(false);
     }, [steps.length]);
@@ -66,13 +70,13 @@ export function StepRenderer({ steps, onStepSubmit, disabled }: StepRendererProp
     const revealedSteps = steps.filter((s) => s.revealed);
     const hiddenSteps = steps.filter((s) => !s.revealed);
 
-    const handleSubmit = async (stepIndex: number) => {
+    const handleSubmit = async (stepIndex: number, pointerInitiated: boolean) => {
         const step = revealedSteps[stepIndex];
         const input = stepStates[stepIndex]?.input.trim();
         if (!input || stepStates[stepIndex]?.submitting || stepStates[stepIndex]?.done) return;
 
         setStepStates((prev) =>
-            prev.map((s, i) => i === stepIndex ? { ...s, submitting: true, feedback: undefined, error: false } : s)
+            prev.map((s, i) => i === stepIndex ? { ...s, submitting: true, feedback: undefined, error: false, animateError: false } : s)
         );
 
         try {
@@ -92,7 +96,13 @@ export function StepRenderer({ steps, onStepSubmit, disabled }: StepRendererProp
                 setStepStates((prev) =>
                     prev.map((s, i) =>
                         i === stepIndex
-                            ? { ...s, submitting: false, feedback: result.feedback ?? 'Inte riktigt — titta på steget igen.', error: true }
+                            ? {
+                                ...s,
+                                submitting: false,
+                                feedback: result.feedback ?? 'Inte riktigt — titta på steget igen.',
+                                error: true,
+                                animateError: pointerInitiated && !reduceMotion,
+                            }
                             : s
                     )
                 );
@@ -101,7 +111,7 @@ export function StepRenderer({ steps, onStepSubmit, disabled }: StepRendererProp
             setStepStates((prev) =>
                 prev.map((s, i) =>
                     i === stepIndex
-                        ? { ...s, submitting: false, feedback: 'Något gick fel — ladda om sidan.', error: true }
+                        ? { ...s, submitting: false, feedback: 'Något gick fel — ladda om sidan.', error: true, animateError: false }
                         : s
                 )
             );
@@ -126,36 +136,47 @@ export function StepRenderer({ steps, onStepSubmit, disabled }: StepRendererProp
         <div className="space-y-3">
             {/* Revealed steps */}
             {revealedSteps.map((step, index) => {
-                const state = stepStates[index] ?? { done: false, input: '', feedback: undefined, submitting: false, error: false };
+                const state = stepStates[index] ?? { done: false, input: '', feedback: undefined, submitting: false, error: false, animateError: false };
                 const isActive = index === activeStep && !state.done;
                 const isPast = state.done;
                 const isFuture = index > activeStep && !state.done;
 
                 return (
-                    <div
+                    <motion.div
                         key={step.id}
-                        className={`rounded-xl border p-4 transition-all ${
+                        animate={state.animateError ? { x: [-4, 4, -3, 3, 0] } : { x: 0 }}
+                        transition={{ duration: motionDuration.wrong, ease: motionEase.out }}
+                        className={`rounded-2xl border p-4 transition-[opacity,box-shadow] duration-200 ${
                             isPast
-                                ? 'border-emerald-200 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-500/5 opacity-70'
+                                ? 'border-[var(--border-light)] bg-[var(--background-alt)] opacity-70'
                                 : isActive
-                                ? 'border-blue-300 dark:border-blue-600 bg-white dark:bg-zinc-900 shadow-sm'
-                                : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 opacity-50'
+                                ? 'border-[var(--accent-border)] bg-[var(--surface)] shadow-[var(--shadow-lg)]'
+                                : 'border-[var(--border-light)] bg-[var(--background-alt)] opacity-50'
                         }`}
                     >
                         <div className="flex items-start gap-3">
-                            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${
                                 isPast
-                                    ? 'bg-emerald-500 text-white'
+                                    ? 'bg-[var(--success-500)] text-white'
                                     : isActive
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-zinc-300 dark:bg-zinc-600 text-zinc-600 dark:text-zinc-300'
+                                    ? 'bg-[var(--accent-500)] text-white'
+                                    : 'bg-[var(--neutral-300)] text-[var(--foreground-muted)]'
                             }`}>
-                                {isPast ? <CheckCircle className="h-4 w-4" /> : step.stepNumber}
+                                {isPast ? (
+                                    <motion.span
+                                        initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: reduceMotion ? 0 : motionDuration.correct, ease: motionEase.out }}
+                                        className="inline-flex"
+                                    >
+                                        <CheckCircle className="h-4 w-4" />
+                                    </motion.span>
+                                ) : step.stepNumber}
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-medium ${
-                                    isPast ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'
+                                <p className={`text-sm font-medium [text-wrap:pretty] ${
+                                    isPast ? 'text-[var(--foreground-subtle)]' : 'text-[var(--foreground)]'
                                 }`}>
                                     {step.instruction}
                                 </p>
@@ -172,24 +193,24 @@ export function StepRenderer({ steps, onStepSubmit, disabled }: StepRendererProp
                                                 value={state.input}
                                                 onChange={(e) =>
                                                     setStepStates((prev) =>
-                                                        prev.map((s, i) => i === index ? { ...s, input: e.target.value, error: false } : s)
+                                                        prev.map((s, i) => i === index ? { ...s, input: e.target.value, error: false, animateError: false } : s)
                                                     )
                                                 }
                                                 onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') handleSubmit(index);
+                                                    if (e.key === 'Enter') handleSubmit(index, false);
                                                 }}
                                                 disabled={disabled || state.submitting || state.done}
                                                 placeholder="Skriv ditt svar…"
-                                                className={`flex-1 rounded-lg border px-3 py-2 text-sm font-mono transition-colors focus:outline-none focus:ring-2 ${
+                                                className={`flex-1 rounded-xl border px-3 py-2 text-sm font-mono transition-[border-color,box-shadow] duration-150 focus:outline-none focus:ring-2 ${
                                                     state.error
-                                                        ? 'border-orange-400 bg-orange-50 dark:bg-orange-500/10 focus:ring-orange-300'
-                                                        : 'border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:ring-blue-400 dark:focus:ring-blue-500 placeholder:text-zinc-400 dark:placeholder:text-zinc-500'
+                                                        ? 'border-[var(--warning-400)] bg-[var(--surface)] focus:ring-[var(--warning-400)]'
+                                                        : 'border-[var(--border-medium)] bg-[var(--surface)] text-[var(--foreground)] focus:ring-[var(--border-focus)] placeholder:text-[var(--foreground-subtle)]'
                                                 }`}
                                             />
                                             <button
-                                                onClick={() => handleSubmit(index)}
+                                                onClick={(event) => handleSubmit(index, event.detail > 0)}
                                                 disabled={!state.input.trim() || disabled || state.submitting || state.done}
-                                                className="flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-zinc-200 dark:disabled:bg-zinc-700 disabled:text-zinc-400 shadow-sm"
+                                                className="flex items-center gap-1 rounded-xl bg-[var(--primary-700)] px-4 py-2 text-sm font-semibold text-[var(--surface)] transition-colors duration-150 hover:bg-[var(--primary-600)] disabled:cursor-not-allowed disabled:bg-[var(--neutral-200)] disabled:text-[var(--foreground-subtle)] shadow-[var(--shadow-sm)]"
                                             >
                                                 {state.submitting ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -201,21 +222,21 @@ export function StepRenderer({ steps, onStepSubmit, disabled }: StepRendererProp
                                         </div>
 
                                         {state.feedback && (
-                                            <p className="rounded-lg bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-700 px-3 py-2 text-sm text-orange-700 dark:text-orange-300">
+                                            <p className="rounded-xl border border-[var(--warning-400)]/40 bg-[var(--warning-400)]/10 px-3 py-2 text-sm text-[var(--foreground)] [text-wrap:pretty]">
                                                 {state.feedback}
                                             </p>
                                         )}
 
-                                        {step.hint && (
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 italic">
-                                                Tips: {step.hint}
+                                        {(step.hintNudge || step.hint) && (
+                                            <p className="text-xs italic text-[var(--foreground-subtle)]">
+                                                Tips: {step.hintNudge ?? step.hint}
                                             </p>
                                         )}
                                     </div>
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 );
             })}
 

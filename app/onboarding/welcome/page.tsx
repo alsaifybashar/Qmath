@@ -67,7 +67,7 @@ export default function OnboardingWelcome() {
                     >
                         {[
                             { icon: Target, text: 'Select your university and program' },
-                            { icon: Brain, text: 'Choose your courses' },
+                            { icon: Brain, text: 'Pick courses from the full catalog' },
                             { icon: Sparkles, text: 'Take a quick diagnostic test' }
                         ].map((item, i) => (
                             <div key={i} className="flex items-center gap-4 p-4 bg-zinc-800/50 rounded-xl border border-zinc-800">
@@ -117,7 +117,6 @@ export default function OnboardingWelcome() {
                 {/* Progress indicator */}
                 <div className="flex justify-center gap-2 mt-8">
                     <div className="w-8 h-1 rounded-full bg-blue-500"></div>
-                    <div className="w-8 h-1 rounded-full bg-zinc-700"></div>
                     <div className="w-8 h-1 rounded-full bg-zinc-700"></div>
                     <div className="w-8 h-1 rounded-full bg-zinc-700"></div>
                     <div className="w-8 h-1 rounded-full bg-zinc-700"></div>

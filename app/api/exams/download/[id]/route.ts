@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
 import { db } from '@/db/drizzle';
-import { exams } from '@/db/schema';
+import { courses, exams } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import fs from 'fs/promises';
-import path from 'path';
+import { openExamFile } from '@/lib/exam-storage';
+import { requireCourseViewer } from '@/lib/auth';
+import { problem } from '@/lib/security/request';
 
 /**
  * Protected API endpoint for downloading exam PDFs
@@ -17,19 +17,6 @@ export async function GET(
 ) {
     try {
         const resolvedParams = await params;
-        // Check authentication
-        const session = await auth();
-
-        if (!session || !session.user) {
-            return NextResponse.json(
-                {
-                    error: 'Authentication required',
-                    message: 'Please log in to download exams'
-                },
-                { status: 401 }
-            );
-        }
-
         // Get exam metadata from database
         const [exam] = await db
             .select()
@@ -44,18 +31,32 @@ export async function GET(
             );
         }
 
-        // Read the PDF file from storage
-        const filePath = path.join(process.cwd(), exam.filePath);
-
+        const course = await db.query.courses.findFirst({
+            columns: { id: true },
+            where: eq(courses.code, exam.courseCode),
+        });
+        if (!course) return problem(404, 'course_not_found');
         try {
-            const fileBuffer = await fs.readFile(filePath);
+            await requireCourseViewer(course.id);
+        } catch (error) {
+            const status = error instanceof Error && 'status' in error ? Number(error.status) : 403;
+            return problem(status === 401 ? 401 : 403, status === 401 ? 'authentication_required' : 'course_access_required');
+        }
+
+        // Read the PDF file from storage
+        try {
+            const opened = await openExamFile(exam.filePath);
+            if (!opened) throw new Error('Exam file not found');
+            const safeFileName = exam.fileName.replace(/[\r\n"\\/]/g, '_').slice(0, 180);
 
             // Return PDF with proper headers
-            return new NextResponse(fileBuffer, {
+            return new NextResponse(opened.body, {
                 headers: {
                     'Content-Type': 'application/pdf',
-                    'Content-Disposition': `attachment; filename="${exam.fileName}"`,
-                    'Content-Length': fileBuffer.length.toString(),
+                    'Content-Disposition': `attachment; filename="${safeFileName}"`,
+                    'Content-Length': opened.size.toString(),
+                    'Cache-Control': 'private, max-age=3600',
+                    'X-Content-Type-Options': 'nosniff',
                 },
             });
         } catch (fileError) {

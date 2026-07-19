@@ -1,19 +1,24 @@
 'use server';
 
-import Anthropic from '@anthropic-ai/sdk';
-import fs from 'fs/promises';
-import path from 'path';
+import type Anthropic from '@anthropic-ai/sdk';
 import crypto from 'crypto';
 import { db } from '@/db/drizzle';
-import { courseExamAnalysisCache } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { courseExamAnalysisCache, courses, exams } from '@/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
 import { logAIRequest } from '@/lib/ai-logger';
+import { requireAdmin, requireCourseViewer } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { readExamFile } from '@/lib/exam-storage';
+import { z } from 'zod';
+import {
+    anthropicModel,
+    createAnthropicClient,
+    isAnthropicConfigured,
+} from '@/lib/ai/anthropic-client';
 
 // ============ ANTHROPIC CLIENT ============
 
-const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
+const anthropic = createAnthropicClient();
 
 // ============ TYPES ============
 
@@ -22,6 +27,47 @@ interface ExamMeta {
     solutionFilePath?: string | null;
     year: string;
     type: string;
+}
+
+const courseCodeSchema = z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{2,24}$/);
+const shortTextSchema = z.string().trim().min(1).max(200);
+
+async function getCanonicalCourseData(rawCourseCode: string): Promise<{
+    id: string;
+    name: string;
+    code: string;
+    examData: ExamMeta[];
+}> {
+    const courseCode = courseCodeSchema.parse(rawCourseCode);
+    const course = await db
+        .select({ id: courses.id, name: courses.name, code: courses.code })
+        .from(courses)
+        .where(eq(courses.code, courseCode))
+        .limit(1)
+        .get();
+    if (!course) throw new Error('Course not found');
+
+    const storedExams = await db
+        .select({
+            filePath: exams.filePath,
+            solutionFilePath: exams.solutionFilePath,
+            examDate: exams.examDate,
+            type: exams.examType,
+        })
+        .from(exams)
+        .where(eq(exams.courseCode, courseCode))
+        .orderBy(desc(exams.examDate))
+        .limit(10);
+
+    return {
+        ...course,
+        examData: storedExams.map((exam) => ({
+            filePath: exam.filePath,
+            solutionFilePath: exam.solutionFilePath,
+            year: String(exam.examDate.getUTCFullYear()),
+            type: exam.type.slice(0, 64),
+        })),
+    };
 }
 
 // ── Legacy types (kept for backwards-compat) ──────────────────────────────────
@@ -190,6 +236,8 @@ async function writeDbCache(
  * triggers a fresh Claude API request with the updated exam set.
  */
 export async function invalidateExamAnalysisCache(courseCode: string): Promise<void> {
+    await requireAdmin();
+    courseCode = courseCodeSchema.parse(courseCode);
     try {
         await db
             .delete(courseExamAnalysisCache)
@@ -239,8 +287,17 @@ const MAX_SOLUTION_PDFS_PER_REQUEST = 2;
 export async function generateExamAnalysis(
     courseName: string,
     courseCode: string,
-    examData: ExamMeta[] = []
+    _examData: ExamMeta[] = []
 ): Promise<AIExamAnalysisResult> {
+    void _examData;
+
+    const course = await getCanonicalCourseData(courseCode);
+    const user = await requireCourseViewer(course.id);
+    const rateLimit = await checkRateLimit(user.id, 'ai');
+    if (!rateLimit.allowed) throw new Error('Rate limit exceeded');
+    courseName = course.name;
+    courseCode = course.code;
+    const examData = course.examData;
 
     console.log(`[AI] === generateExamAnalysis called ===`);
     console.log(`[AI] Course: ${courseCode} (${courseName})`);
@@ -269,9 +326,8 @@ export async function generateExamAnalysis(
     console.log(`[AI] Cache MISS (L1+L2) for ${courseCode} — calling Claude API`);
 
     // --- Validate API key ---
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-        console.warn('[AI] No ANTHROPIC_API_KEY — returning fallback exam analysis');
+    if (!isAnthropicConfigured()) {
+        console.warn('[AI] No managed Anthropic credential — returning fallback exam analysis');
         return getExamAnalysisFallback(courseCode, 0);
     }
 
@@ -301,7 +357,7 @@ export async function generateExamAnalysis(
             } else {
                 contentBlocks.push({
                     type: 'text',
-                    text: `[ADDITIONAL EXAM – not attached] ${exam.type} (${exam.year}) – ${exam.filePath}${exam.solutionFilePath ? '. Solution available.' : ''}`
+                    text: `[ADDITIONAL EXAM – not attached] ${exam.type} (${exam.year})${exam.solutionFilePath ? '. Solution available.' : ''}`
                 });
             }
         }
@@ -378,7 +434,7 @@ Rules for topics:
         const startTime = Date.now();
 
         const message = await anthropic.messages.create({
-            model: 'claude-sonnet-4-20250514',
+            model: anthropicModel('claude-sonnet-4-20250514'),
             max_tokens: 6000,
             temperature: 0.2,
             system: `Du är expert på att analysera universitetstentor inom alla STEM-ämnen — matematik, datavetenskap, statistik, fysik och teknik. Ditt jobb är att läsa faktiska tentamensfiler och extrahera precis, studentanpassad analys.
@@ -407,7 +463,7 @@ Svara alltid på svenska — alla ämnesnamn (topics.name), studyTips, commonMis
         const parsed = parseExamAnalysisJson(raw);
 
         if (!parsed) {
-            console.error('[AI] ❌ Failed to parse exam analysis JSON:', raw.slice(0, 300));
+            console.error('[AI] Failed to parse exam analysis JSON response');
             return getExamAnalysisFallback(courseCode, loadedExamCount);
         }
 
@@ -445,8 +501,18 @@ export async function generateStudyPlan(
     courseName: string,
     courseCode: string,
     topicsList: string[] = [],
-    examData: ExamMeta[] = []
+    _examData: ExamMeta[] = []
 ): Promise<StudyPlanResult> {
+    void _examData;
+
+    const course = await getCanonicalCourseData(courseCode);
+    const user = await requireCourseViewer(course.id);
+    const rateLimit = await checkRateLimit(user.id, 'ai');
+    if (!rateLimit.allowed) throw new Error('Rate limit exceeded');
+    courseName = course.name;
+    courseCode = course.code;
+    const examData = course.examData;
+    topicsList = z.array(shortTextSchema).max(100).parse(topicsList);
 
     console.log(`[AI] === generateStudyPlan called ===`);
     console.log(`[AI] Course: ${courseCode} (${courseName})`);
@@ -464,12 +530,11 @@ export async function generateStudyPlan(
     console.log(`[AI] Cache MISS for ${courseCode}`);
 
     // --- 2. Validate API key ---
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-        console.warn('[AI] No ANTHROPIC_API_KEY — returning fallback');
+    if (!isAnthropicConfigured()) {
+        console.warn('[AI] No managed Anthropic credential — returning fallback');
         return getFallbackPlan(courseCode, 0);
     }
-    console.log(`[AI] API key: SET (${apiKey.slice(0, 15)}...)`);
+    console.log('[AI] API credential is configured');
 
     try {
         // --- 3. Smart PDF Selection ---
@@ -512,7 +577,7 @@ export async function generateStudyPlan(
                 // Beyond the PDF limit — describe as text metadata
                 contentBlocks.push({
                     type: 'text',
-                    text: `[ADDITIONAL EXAM – not attached as PDF] ${exam.type} (${exam.year}) – file: ${exam.filePath}${exam.solutionFilePath ? '. Solution available.' : ''}`
+                    text: `[ADDITIONAL EXAM – not attached as PDF] ${exam.type} (${exam.year})${exam.solutionFilePath ? '. Solution available.' : ''}`
                 });
             }
         }
@@ -556,7 +621,7 @@ Return ONLY raw JSON (no markdown, no code fences):
         const startTime = Date.now();
 
         const message = await anthropic.messages.create({
-            model: 'claude-sonnet-4-20250514',
+            model: anthropicModel('claude-sonnet-4-20250514'),
             max_tokens: 4000,
             temperature: 0.3,
             system: 'Du är en expert på universitetsundervisning med specialisering inom matematik. Du analyserar riktiga tentamenspapper för att skapa precisa, handlingsbara studieplaner. Svara alltid på svenska — alla ämnesnamn, reasoning, activity och strategy ska vara på svenska. Svara med råa JSON endast — ingen markdown, inga kodramar.',
@@ -582,7 +647,7 @@ Return ONLY raw JSON (no markdown, no code fences):
         // --- 6. Parse ---
         const parsed = parseAIJson(raw);
         if (!parsed) {
-            console.error('[AI] ❌ Failed to parse JSON:', raw.slice(0, 300));
+            console.error('[AI] Failed to parse study-plan JSON response');
             return getFallbackPlan(courseCode, loadedExamCount);
         }
         console.log(`[AI] ✅ Parsed: ${parsed.areas.length} areas, ${parsed.study_schedule.length} weeks`);
@@ -602,10 +667,7 @@ Return ONLY raw JSON (no markdown, no code fences):
 
         return result;
 
-    } catch (error: any) {
-        console.error('[AI] ❌ Error:', error?.message || error);
-        if (error?.status) console.error('[AI] HTTP Status:', error.status);
-        if (error?.error?.error?.message) console.error('[AI] Detail:', error.error.error.message);
+    } catch {
         return getFallbackPlan(courseCode, 0);
     }
 }
@@ -614,16 +676,14 @@ Return ONLY raw JSON (no markdown, no code fences):
 
 async function loadPdfAsBase64(filePath: string): Promise<Anthropic.Messages.DocumentBlockParam | null> {
     try {
-        const absolutePath = path.join(process.cwd(), filePath);
-        await fs.access(absolutePath);
-        const buffer = await fs.readFile(absolutePath);
+        const buffer = await readExamFile(filePath);
 
         if (buffer.length > 25 * 1024 * 1024) {
-            console.warn(`[AI] Skipping oversized PDF (${(buffer.length / 1024 / 1024).toFixed(1)}MB): ${filePath}`);
+            console.warn(`[AI] Skipping oversized PDF (${(buffer.length / 1024 / 1024).toFixed(1)}MB)`);
             return null;
         }
 
-        console.log(`[AI] 📄 Loaded: ${filePath} (${(buffer.length / 1024).toFixed(0)} KB)`);
+        console.log(`[AI] Loaded authorized PDF (${(buffer.length / 1024).toFixed(0)} KB)`);
 
         return {
             type: 'document',
@@ -633,8 +693,8 @@ async function loadPdfAsBase64(filePath: string): Promise<Anthropic.Messages.Doc
                 data: buffer.toString('base64'),
             },
         };
-    } catch (err) {
-        console.warn(`[AI] ⚠️ Could not load: ${filePath}`);
+    } catch {
+        console.warn('[AI] Could not load authorized PDF');
         return null;
     }
 }

@@ -29,16 +29,16 @@ const urgencyConfig = {
     },
     due_today: {
         label: 'Idag',
-        color: '#F59E0B',
+        color: '#dfa81b',
         bgColor: '#FEF3C7',
-        darkBg: 'rgba(245,158,11,0.15)',
+        darkBg: 'rgba(223, 168, 27,0.15)',
         icon: Clock,
     },
     upcoming: {
         label: 'Kommande',
-        color: '#3B82F6',
+        color: '#3585a3',
         bgColor: '#DBEAFE',
-        darkBg: 'rgba(59,130,246,0.15)',
+        darkBg: 'rgba(53, 133, 163,0.15)',
         icon: Calendar,
     },
 };
@@ -121,7 +121,7 @@ function NotificationCard({
                     <AlarmClockOff className="w-4 h-4" />
                 </button>
                 <Link
-                    href={`/study?topic=${notification.topicId}`}
+                    href={`/practice?topic=${notification.topicId}`}
                     className="p-1.5 rounded-lg text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition"
                     title="Starta repetition"
                 >
@@ -201,7 +201,7 @@ export function ReviewWidget({
                     return (
                         <Link
                             key={n.id}
-                            href={`/study?topic=${n.topicId}`}
+                            href={`/practice?topic=${n.topicId}`}
                             className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition group"
                         >
                             <div
@@ -266,8 +266,8 @@ export function NotificationsPage({ summary }: { summary: { overdue: number; due
                 <div className="grid grid-cols-3 gap-3 mb-8">
                     {[
                         { label: 'Försenade', count: summary.overdue, color: '#EF4444', bg: '#FEE2E2' },
-                        { label: 'Idag', count: summary.dueToday, color: '#F59E0B', bg: '#FEF3C7' },
-                        { label: 'Kommande', count: summary.upcoming, color: '#3B82F6', bg: '#DBEAFE' },
+                        { label: 'Idag', count: summary.dueToday, color: '#dfa81b', bg: '#FEF3C7' },
+                        { label: 'Kommande', count: summary.upcoming, color: '#3585a3', bg: '#DBEAFE' },
                     ].map(s => (
                         <div
                             key={s.label}

@@ -8,7 +8,6 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
 // ── SVG icon primitives ────────────────────────────────────────────────────────
@@ -665,7 +664,7 @@ export function MathInputWithToolbar({
 
   if (!mounted) {
     return (
-      <div className="space-y-2 animate-pulse">
+      <div className="space-y-2">
         <div className="h-14 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40" />
         <div className="h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40" />
       </div>
@@ -695,8 +694,8 @@ export function MathInputWithToolbar({
             smart-fence="on"
             style={{
               fontFamily: 'inherit',
-              '--caret-color': 'rgb(59,130,246)',
-              '--selection-background-color': 'rgba(59,130,246,0.15)',
+              '--caret-color': 'rgb(53, 133, 163)',
+              '--selection-background-color': 'rgba(53, 133, 163,0.15)',
               '--selection-color': 'inherit',
             } as React.CSSProperties}
           />
@@ -716,20 +715,13 @@ export function MathInputWithToolbar({
             <span className="text-sm leading-none">∑</span>
             Matematiska verktyg
           </span>
-          <motion.span animate={{ rotate: toolbarOpen ? 180 : 0 }} transition={{ duration: 0.18 }}>
+          <span className={toolbarOpen ? 'rotate-180' : undefined}>
             <ChevronDown className="h-3.5 w-3.5" />
-          </motion.span>
+          </span>
         </button>
 
-        <AnimatePresence initial={false}>
-          {toolbarOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: 'easeInOut' }}
-              className="overflow-hidden"
-            >
+        {toolbarOpen && (
+            <div className="overflow-hidden">
               <div className="border-t border-zinc-100 dark:border-zinc-700/60 px-3 pt-2.5 pb-3 space-y-2.5">
 
                 {/* Tab strip */}
@@ -763,9 +755,8 @@ export function MathInputWithToolbar({
                 </div>
 
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+        )}
       </div>
     </div>
   );
@@ -792,7 +783,7 @@ function ToolButton({
         inline-flex items-center justify-center
         h-10 min-w-[2.5rem] px-2 rounded-lg
         border select-none
-        transition-all duration-100 active:scale-95
+        transition-colors duration-100
         disabled:opacity-40 disabled:cursor-not-allowed
         bg-white dark:bg-zinc-900
         border-zinc-200 dark:border-zinc-700

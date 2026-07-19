@@ -18,15 +18,15 @@ import type {
 
 const PRIORITY_STYLE = {
     critical: { badge: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300', hex: '#EF4444' },
-    high:     { badge: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300', hex: '#F59E0B' },
-    medium:   { badge: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300', hex: '#3B82F6' },
+    high:     { badge: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300', hex: '#dfa81b' },
+    medium:   { badge: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300', hex: '#3585a3' },
     low:      { badge: 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-400', hex: '#9CA3AF' },
 } as const;
 
 const DIFFICULTY_STYLE = {
     easy:   { label: 'Grundläggande', bg: '#D1FAE5', text: '#065F46' },
     medium: { label: 'Medel',         bg: '#FEF3C7', text: '#92400E' },
-    hard:   { label: 'Avancerad',     bg: '#EDE9FE', text: '#5B21B6' },
+    hard:   { label: 'Avancerad',     bg: '#dcedf2', text: '#5B21B6' },
 } as const;
 
 const PHASE_CONFIG = {
@@ -41,7 +41,7 @@ const PHASE_CONFIG = {
     },
     core: {
         label: 'Kärna',
-        color: '#3B82F6',
+        color: '#3585a3',
         bgClass: 'bg-blue-50 dark:bg-blue-500/8',
         borderClass: 'border-blue-200 dark:border-blue-800/40',
         textClass: 'text-blue-700 dark:text-blue-400',
@@ -50,7 +50,7 @@ const PHASE_CONFIG = {
     },
     advanced: {
         label: 'Fördjupning',
-        color: '#8B5CF6',
+        color: '#19647e',
         bgClass: 'bg-violet-50 dark:bg-violet-500/8',
         borderClass: 'border-violet-200 dark:border-violet-800/40',
         textClass: 'text-violet-700 dark:text-violet-400',
@@ -265,8 +265,8 @@ function TopicNodeCard({
 }) {
     const phase = PHASE_CONFIG[node.phase];
     const importanceColor = node.aiImportance >= 8 ? '#EF4444' :
-                            node.aiImportance >= 6 ? '#F59E0B' :
-                            node.aiImportance >= 4 ? '#3B82F6' : '#9CA3AF';
+                            node.aiImportance >= 6 ? '#dfa81b' :
+                            node.aiImportance >= 4 ? '#3585a3' : '#9CA3AF';
 
     return (
         <motion.div
@@ -597,8 +597,8 @@ function TopicRankedList({ nodes, profile }: { nodes: ExamTopicNode[]; profile: 
             <div className="space-y-2">
                 {ranked.map((node, i) => {
                     const importanceColor = node.aiImportance >= 8 ? '#EF4444' :
-                                           node.aiImportance >= 6 ? '#F59E0B' :
-                                           node.aiImportance >= 4 ? '#3B82F6' : '#9CA3AF';
+                                           node.aiImportance >= 6 ? '#dfa81b' :
+                                           node.aiImportance >= 4 ? '#3585a3' : '#9CA3AF';
                     const pStyle = PRIORITY_STYLE[node.priority];
                     const diff = DIFFICULTY_STYLE[node.aiDifficulty];
                     const phase = PHASE_CONFIG[node.phase];

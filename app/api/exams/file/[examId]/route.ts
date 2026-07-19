@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/drizzle';
-import { exams } from '@/db/schema';
+import { courses, exams } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { readFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { requireCourseViewer } from '@/lib/auth';
+import { openExamFile } from '@/lib/exam-storage';
+import { problem } from '@/lib/security/request';
 
 /**
  * Serve exam or solution PDF files
@@ -15,6 +16,7 @@ export async function GET(
 ) {
     try {
         const { examId } = await params;
+        if (!/^[0-9a-f-]{36}$/i.test(examId)) return problem(400, 'invalid_exam_id');
         const searchParams = request.nextUrl.searchParams;
         const type = searchParams.get('type') || 'exam';
 
@@ -38,6 +40,18 @@ export async function GET(
             );
         }
 
+        const course = await db.query.courses.findFirst({
+            columns: { id: true },
+            where: eq(courses.code, exam.courseCode),
+        });
+        if (!course) return problem(404, 'course_not_found');
+        try {
+            await requireCourseViewer(course.id);
+        } catch (error) {
+            const status = error instanceof Error && 'status' in error ? Number(error.status) : 403;
+            return problem(status === 401 ? 401 : 403, status === 401 ? 'authentication_required' : 'course_access_required');
+        }
+
         // Get the appropriate file path
         let filePath: string | null;
         let fileName: string;
@@ -58,7 +72,8 @@ export async function GET(
         }
 
         // Check if file exists
-        if (!filePath || !existsSync(filePath)) {
+        const opened = filePath ? await openExamFile(filePath) : null;
+        if (!opened) {
             return NextResponse.json(
                 { error: 'File not found on server' },
                 { status: 404 }
@@ -66,16 +81,17 @@ export async function GET(
         }
 
         // Read the file
-        const fileBuffer = await readFile(filePath);
+        const safeFileName = fileName.replace(/[\r\n"\\/]/g, '_').slice(0, 180);
 
         // Return the PDF with appropriate headers
-        return new NextResponse(fileBuffer, {
+        return new NextResponse(opened.body, {
             status: 200,
             headers: {
                 'Content-Type': 'application/pdf',
-                'Content-Disposition': `inline; filename="${fileName}"`,
-                'Content-Length': fileBuffer.length.toString(),
-                'Cache-Control': 'public, max-age=31536000, immutable', // Cache for 1 year
+                'Content-Disposition': `attachment; filename="${safeFileName}"`,
+                'Content-Length': opened.size.toString(),
+                'Cache-Control': 'private, max-age=3600',
+                'X-Content-Type-Options': 'nosniff',
             },
         });
     } catch (error) {

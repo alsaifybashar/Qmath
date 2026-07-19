@@ -503,8 +503,8 @@ function ExamScreen({
 function ResultsScreen({ result }: { result: ExamResult }) {
     const gradeColors: Record<string, string> = {
         'A': '#10B981', 'A-': '#10B981',
-        'B+': '#3B82F6', 'B': '#3B82F6', 'B-': '#3B82F6',
-        'C+': '#F59E0B', 'C': '#F59E0B', 'C-': '#F59E0B',
+        'B+': '#3585a3', 'B': '#3585a3', 'B-': '#3585a3',
+        'C+': '#dfa81b', 'C': '#dfa81b', 'C-': '#dfa81b',
         'D': '#EF4444', 'F': '#EF4444',
     };
     const gradeColor = gradeColors[result.estimatedGrade] || '#6B7280';
@@ -601,7 +601,7 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                                             className="h-full rounded-full"
                                             style={{
                                                 background: tp.accuracy >= 0.8 ? '#10B981'
-                                                    : tp.accuracy >= 0.5 ? '#3B82F6'
+                                                    : tp.accuracy >= 0.5 ? '#3585a3'
                                                         : '#EF4444',
                                             }}
                                         />
@@ -623,7 +623,7 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                     <div className="flex items-center gap-2 mb-4">
                         <div
                             className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: 'rgba(99,102,241,0.2)' }}
+                            style={{ background: 'rgba(40, 175, 176,0.2)' }}
                         >
                             <Sparkles className="w-4 h-4 text-indigo-300" />
                         </div>
@@ -636,7 +636,7 @@ function ResultsScreen({ result }: { result: ExamResult }) {
                             <div key={i} className="flex items-start gap-3">
                                 <div
                                     className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5"
-                                    style={{ background: 'rgba(99,102,241,0.3)', color: '#a5b4fc' }}
+                                    style={{ background: 'rgba(40, 175, 176,0.3)', color: '#7cd6d6' }}
                                 >
                                     {i + 1}
                                 </div>

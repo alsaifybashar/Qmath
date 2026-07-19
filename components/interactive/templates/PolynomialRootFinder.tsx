@@ -19,7 +19,7 @@ export function PolynomialRootFinder({
             showNavigation: false,
         });
 
-        const r1 = board.create('glider', [initialRoot1, 0, board.defaultAxes.x], { name: 'r_1', size: 5, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        const r1 = board.create('glider', [initialRoot1, 0, board.defaultAxes.x], { name: 'r_1', size: 5, fillColor: '#3585a3', strokeColor: '#24718e' });
         const r2 = board.create('glider', [initialRoot2, 0, board.defaultAxes.x], { name: 'r_2', size: 5, fillColor: '#ef4444', strokeColor: '#dc2626' });
 
         board.create('functiongraph', [

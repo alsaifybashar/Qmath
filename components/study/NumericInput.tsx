@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Delete, Check, ArrowRight } from 'lucide-react';
+import { Delete, ArrowRight } from 'lucide-react';
 import { NumericInputQuestion } from '@/types/study';
 import { MathRenderer } from './MathRenderer';
 import { evaluateToNumber, checkMathEquivalence } from '@/lib/utils/mathEquivalence';
@@ -140,11 +139,7 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
                 `}>
                     {value || <span className="text-zinc-400/50">_</span>}
                     {!isSubmitted && (
-                        <motion.span
-                            animate={{ opacity: [1, 0] }}
-                            transition={{ repeat: Infinity, duration: 0.8 }}
-                            className="inline-block w-0.5 h-8 bg-blue-500 ml-1 align-middle"
-                        />
+                        <span className="ml-1 inline-block h-8 w-0.5 bg-blue-500 align-middle" />
                     )}
                 </div>
             </div>
@@ -157,7 +152,7 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
                             key={key}
                             onClick={() => handleKeyPress(key)}
                             disabled={isSubmitted || disabled}
-                            className="h-14 rounded-xl bg-white dark:bg-zinc-800 shadow-sm border-b-2 border-zinc-200 dark:border-zinc-950 active:border-b-0 active:translate-y-[2px] transition-all text-xl font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                            className="h-14 rounded-xl bg-white dark:bg-zinc-800 shadow-sm border-b-2 border-zinc-200 dark:border-zinc-950 transition-colors text-xl font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700"
                         >
                             {key}
                         </button>
@@ -165,7 +160,7 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
                     <button
                         onClick={() => handleKeyPress('BACKSPACE')}
                         disabled={isSubmitted || disabled}
-                        className="h-14 rounded-xl bg-zinc-200 dark:bg-zinc-800/50 shadow-sm border-b-2 border-zinc-300 dark:border-zinc-950 active:border-b-0 active:translate-y-[2px] transition-all flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700"
+                        className="h-14 rounded-xl bg-zinc-200 dark:bg-zinc-800/50 shadow-sm border-b-2 border-zinc-300 dark:border-zinc-950 transition-colors flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700"
                     >
                         <Delete className="w-6 h-6" />
                     </button>
@@ -177,7 +172,7 @@ export function NumericInput({ question, onAnswer, disabled }: NumericInputProps
                     className={`w-full h-14 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg
                         ${!value
                             ? 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                            : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25 active:scale-95'
+                            : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25'
                         }
                     `}
                 >

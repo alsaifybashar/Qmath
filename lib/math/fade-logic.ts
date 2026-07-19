@@ -20,8 +20,9 @@ export function fadePhase(mastery: number): 1 | 2 | 3 | 4 {
     return 4;
 }
 
-// Core fade function - pure, no side effects
-export function getRevealedSteps(steps: QuestionStep[], mastery: number): RevealedStep[] {
+// Core fade function - pure, no side effects.
+// Generic so callers with richer step shapes keep their extra fields.
+export function getRevealedSteps<T extends QuestionStep>(steps: T[], mastery: number): (T & { revealed: boolean })[] {
     const n = steps.length;
     const revealCount =
         mastery < 0.35 ? n :

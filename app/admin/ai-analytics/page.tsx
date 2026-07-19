@@ -243,7 +243,7 @@ export default function AIAnalyticsPage() {
                                 <Line
                                     type="monotone"
                                     dataKey="requests"
-                                    stroke="#3b82f6"
+                                    stroke="#3585a3"
                                     strokeWidth={2}
                                     dot={false}
                                     name="Requests"

@@ -445,8 +445,8 @@ function QuizResults({
                         />
                         <defs>
                             <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stopColor={scorePercent >= 70 ? "#10B981" : scorePercent >= 50 ? "#F59E0B" : "#EF4444"} />
-                                <stop offset="100%" stopColor={scorePercent >= 70 ? "#06B6D4" : scorePercent >= 50 ? "#F97316" : "#DC2626"} />
+                                <stop offset="0%" stopColor={scorePercent >= 70 ? "#10B981" : scorePercent >= 50 ? "#dfa81b" : "#EF4444"} />
+                                <stop offset="100%" stopColor={scorePercent >= 70 ? "#06B6D4" : scorePercent >= 50 ? "#e87c2b" : "#DC2626"} />
                             </linearGradient>
                         </defs>
                     </svg>

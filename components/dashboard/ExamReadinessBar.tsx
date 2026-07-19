@@ -45,17 +45,10 @@ function getStageIndex(readiness: number): number {
 }
 
 function getReadinessColor(readiness: number): string {
-    if (readiness >= 80) return '#22C55E';
-    if (readiness >= 60) return '#3B82F6';
-    if (readiness >= 35) return '#EAB308';
-    return '#94A3B8'; // subdued, not alarming red
-}
-
-function getReadinessGradient(readiness: number): string {
-    if (readiness >= 80) return 'linear-gradient(135deg, #22C55E, #16A34A)';
-    if (readiness >= 60) return 'linear-gradient(135deg, #3B82F6, #2563EB)';
-    if (readiness >= 35) return 'linear-gradient(135deg, #EAB308, #CA8A04)';
-    return 'linear-gradient(135deg, #94A3B8, #64748B)';
+    if (readiness >= 80) return 'var(--accent-500)';
+    if (readiness >= 60) return '#667b45';
+    if (readiness >= 35) return '#c27838';
+    return '#c65d4b';
 }
 
 // ─── Circular ring ────────────────────────────────────────────────────────────
@@ -76,7 +69,7 @@ function CircularReadiness({ readiness }: { readiness: number }) {
                 <circle
                     cx={70} cy={70} r={RADIUS}
                     fill="none" strokeWidth={10}
-                    className="stroke-teal-950/10 dark:stroke-white/10"
+                    className="stroke-black/10 dark:stroke-white/10"
                 />
                 {/* Progress */}
                 <motion.circle
@@ -173,7 +166,6 @@ export function ExamReadinessBar({
     questionsThisWeek,
 }: ExamReadinessBarProps) {
     const [expanded, setExpanded] = useState(false);
-    const gradient = getReadinessGradient(overallReadiness);
     const reviewTopics = topicBreakdown.filter(t => t.needsReview);
     const color = getReadinessColor(overallReadiness);
 
@@ -183,11 +175,11 @@ export function ExamReadinessBar({
     return (
         <motion.div
             layout
-            className="dashboard-card overflow-hidden"
+            className="dashboard-card dashboard-panel dashboard-panel-readiness overflow-hidden"
         >
             {/* ── Header ── */}
             <div className="p-5">
-                <div className="flex items-start gap-5">
+                <div className="flex flex-col gap-5 md:flex-row md:items-start">
                     {/* Circular readiness ring */}
                     <div className="flex flex-col items-center">
                         <CircularReadiness readiness={overallReadiness} />
@@ -199,8 +191,7 @@ export function ExamReadinessBar({
                         {/* Course badge + name */}
                         <div className="flex items-center gap-2 mb-3">
                             <span
-                                className="text-xs font-bold px-2.5 py-1 rounded-md text-white"
-                                style={{ background: gradient }}
+                                className="rounded-md bg-black/[0.055] px-2.5 py-1 text-xs font-bold text-[var(--foreground)] dark:bg-white/10"
                             >
                                 {courseCode}
                             </span>
@@ -210,7 +201,7 @@ export function ExamReadinessBar({
                         </div>
 
                         {/* Stats row */}
-                        <div className="grid grid-cols-3 gap-3 mb-3">
+                        <div className="grid grid-cols-1 gap-3 mb-3 sm:grid-cols-3">
                             <div className="dashboard-card-soft p-3 text-center">
                                 <div className="dashboard-muted mb-1 text-xs">Beräknat betyg</div>
                                 <div className="text-lg font-extrabold text-slate-950 dark:text-white">{estimatedGrade}</div>
@@ -250,7 +241,7 @@ export function ExamReadinessBar({
                 {/* Expand toggle */}
                 <button
                     onClick={() => setExpanded(!expanded)}
-                    className="mt-3 flex items-center gap-1 text-xs font-semibold text-teal-700 transition-opacity hover:opacity-80 dark:text-teal-200"
+                    className="mt-3 flex min-h-10 items-center gap-1 rounded-full px-2 text-xs font-semibold text-[var(--accent-500)] transition-opacity hover:opacity-80 active:scale-[0.96]"
                 >
                     {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     {expanded ? 'Dölj detaljer' : 'Visa ämnesöversikt'}
@@ -258,7 +249,7 @@ export function ExamReadinessBar({
             </div>
 
             {/* ── Expanded topic breakdown ── */}
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
                 {expanded && (
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
@@ -267,7 +258,7 @@ export function ExamReadinessBar({
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                     >
-                        <div className="border-t border-teal-950/10 px-5 pb-5 dark:border-white/10">
+                        <div className="border-t border-black/10 px-5 pb-5 dark:border-white/10">
                             {/* Topic list */}
                             <div className="space-y-2">
                                 {topicBreakdown.slice(0, 10).map(topic => (
@@ -275,7 +266,7 @@ export function ExamReadinessBar({
                                         key={topic.topicId}
                                         className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${topic.needsReview
                                             ? 'border-amber-300/70 bg-amber-100/70 dark:border-amber-200/20 dark:bg-amber-300/10'
-                                            : 'border-teal-950/10 bg-white/45 dark:border-white/10 dark:bg-white/[0.04]'
+                                            : 'border-black/10 bg-white/45 dark:border-white/10 dark:bg-white/[0.04]'
                                             }`}
                                     >
                                         <TrendIcon trend={topic.trend} />
@@ -285,11 +276,11 @@ export function ExamReadinessBar({
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-teal-950/10 dark:bg-white/10">
+                                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
                                                 <div
-                                                    className="h-full rounded-full"
+                                                    className="h-full origin-left rounded-full transition-transform duration-500 ease-out"
                                                     style={{
-                                                        width: `${topic.mastery * 100}%`,
+                                                        transform: `scaleX(${topic.mastery})`,
                                                         background: getReadinessColor(topic.mastery * 100),
                                                     }}
                                                 />

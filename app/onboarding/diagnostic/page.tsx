@@ -280,18 +280,15 @@ export default function DiagnosticPage() {
                                     <span>{currentQuestion.prerequisiteLevel.replace('gy_', 'Matematik ')}</span>
                                 </div>
                                 <h2 className="text-2xl font-bold leading-relaxed">
-                                    {currentQuestion.question.split('\\').length > 1
-                                        ? <span dangerouslySetInnerHTML={{
-                                            __html: currentQuestion.question
-                                                .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '<span class="inline-flex flex-col items-center align-middle mx-1"><span class="border-b border-zinc-500 px-1">$1</span><span class="px-1">$2</span></span>')
-                                                .replace(/\\sin/g, 'sin')
-                                                .replace(/\\ln/g, 'ln')
-                                                .replace(/\\pi/g, 'π')
-                                                .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
-                                                .replace(/\^(\{[^}]+\}|[0-9])/g, (_, exp) => `<sup>${exp.replace(/[{}]/g, '')}</sup>`)
-                                        }} />
-                                        : currentQuestion.question
-                                    }
+                                    <span className="whitespace-pre-wrap">
+                                        {currentQuestion.question
+                                            .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+                                            .replace(/\\sin/g, 'sin')
+                                            .replace(/\\ln/g, 'ln')
+                                            .replace(/\\pi/g, 'π')
+                                            .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
+                                            .replace(/\^(\{[^}]+\}|[0-9])/g, (_, exp) => `^${exp.replace(/[{}]/g, '')}`)}
+                                    </span>
                                 </h2>
                             </div>
 

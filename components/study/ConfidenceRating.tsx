@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 
 interface ConfidenceRatingProps {
     value: number;
@@ -23,15 +22,13 @@ export function ConfidenceRating({ value, onChange, disabled }: ConfidenceRating
             </span>
             <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((level) => (
-                    <motion.button
+                    <button
                         key={level}
                         type="button"
                         disabled={disabled}
                         onClick={() => onChange(level)}
                         onMouseEnter={() => setHovered(level)}
                         onMouseLeave={() => setHovered(null)}
-                        whileHover={!disabled ? { scale: 1.15 } : {}}
-                        whileTap={!disabled ? { scale: 0.95 } : {}}
                         className={`
                             w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all
                             ${level <= displayValue
@@ -42,20 +39,17 @@ export function ConfidenceRating({ value, onChange, disabled }: ConfidenceRating
                         `}
                     >
                         {level}
-                    </motion.button>
+                    </button>
                 ))}
             </div>
-            <motion.span
-                key={displayValue}
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`text-sm font-medium ${displayValue <= 2 ? 'text-amber-600 dark:text-amber-400' :
+            <span
+                className={`text-sm font-medium transition-colors duration-150 ${displayValue <= 2 ? 'text-amber-600 dark:text-amber-400' :
                     displayValue <= 3 ? 'text-blue-600 dark:text-blue-400' :
                         'text-green-600 dark:text-green-400'
                     }`}
             >
                 {labels[displayValue - 1] || 'Select'}
-            </motion.span>
+            </span>
         </div>
     );
 }

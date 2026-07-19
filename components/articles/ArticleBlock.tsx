@@ -342,10 +342,10 @@ const calloutConfig: Record<string, {
     iconBg: string;
     label: string;
 }> = {
-    info:       { icon: Info,           bg: '#EFF6FF', border: '#BFDBFE', iconColor: '#3B82F6', iconBg: '#DBEAFE', label: 'Info' },
-    warning:    { icon: AlertCircle,    bg: '#FFFBEB', border: '#FDE68A', iconColor: '#D97706', iconBg: '#FEF3C7', label: 'Observera' },
+    info:       { icon: Info,           bg: '#EFF6FF', border: '#BFDBFE', iconColor: '#3585a3', iconBg: '#DBEAFE', label: 'Info' },
+    warning:    { icon: AlertCircle,    bg: '#FFFBEB', border: '#FDE68A', iconColor: '#c08414', iconBg: '#FEF3C7', label: 'Observera' },
     tip:        { icon: Lightbulb,      bg: '#ECFDF5', border: '#A7F3D0', iconColor: '#059669', iconBg: '#D1FAE5', label: 'Tips' },
-    example:    { icon: BookOpen,       bg: '#F5F3FF', border: '#DDD6FE', iconColor: '#7C3AED', iconBg: '#EDE9FE', label: 'Exempel' },
+    example:    { icon: BookOpen,       bg: '#F5F3FF', border: '#DDD6FE', iconColor: '#24718e', iconBg: '#dcedf2', label: 'Exempel' },
     definition: { icon: FileText,       bg: '#ECFEFF', border: '#A5F3FC', iconColor: '#0891B2', iconBg: '#CFFAFE', label: 'Definition' },
     success:    { icon: CheckCircle2,   bg: '#F0FDF4', border: '#BBF7D0', iconColor: '#16A34A', iconBg: '#DCFCE7', label: 'Svar' },
 };

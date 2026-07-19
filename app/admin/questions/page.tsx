@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 import { MarkdownMessage } from '@/components/ui/MarkdownMessage';
+import { StepEditor } from '@/components/admin/StepEditor';
+import { StudentPreview } from '@/components/admin/StudentPreview';
 import {
     getAdminCourses,
     getAdminTopics,
@@ -95,6 +97,10 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
     { key: 'published', label: 'Publicerad', icon: <CheckCircle2 className="w-4 h-4" /> },
 ];
 
+const UI_TRANSITION = 'transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]';
+const PRESSABLE = `${UI_TRANSITION} active:scale-[0.96]`;
+const ICON_BUTTON = `inline-flex h-10 w-10 items-center justify-center rounded-xl ${PRESSABLE}`;
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function stepsToMarkdown(steps: SolutionStep[]): string {
@@ -150,12 +156,12 @@ function LatexEditor({
                 <label className="block text-sm font-medium text-zinc-700 mb-1">{label}</label>
             )}
             {hint && <p className="text-xs text-zinc-500 mb-2">{hint}</p>}
-            <div className="flex flex-col gap-0 border border-zinc-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+            <div className={`flex flex-col gap-0 overflow-hidden rounded-xl border border-zinc-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500 ${UI_TRANSITION}`}>
                 <textarea
                     value={value}
                     onChange={e => onChange(e.target.value)}
                     rows={rows}
-                    className="w-full p-3 bg-white text-zinc-900 font-mono text-sm resize-y focus:outline-none border-b border-zinc-200"
+                    className="w-full resize-y border-b border-zinc-200 bg-white p-3 font-mono text-sm text-zinc-900 focus:outline-none"
                     placeholder={placeholder}
                 />
                 <div
@@ -324,7 +330,7 @@ function AISolutionReviewPanel({
     const okSteps = review.stepReviews.filter(s => s.verdict === 'ok');
 
     return (
-        <div className="border border-purple-200 bg-gradient-to-br from-purple-50/80 to-blue-50/40 rounded-xl p-5 space-y-5 animate-in fade-in duration-300">
+        <div className="enter space-y-5 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50/80 to-blue-50/40 p-5 shadow-[0_18px_50px_-38px_rgba(88,28,135,0.45)]">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -350,7 +356,7 @@ function AISolutionReviewPanel({
                 </div>
                 <button
                     onClick={onDismiss}
-                    className="text-zinc-400 hover:text-zinc-600 transition-colors"
+                    className={`${ICON_BUTTON} text-zinc-400 hover:bg-white hover:text-zinc-600`}
                     title="Stäng granskning"
                 >
                     <X className="w-5 h-5" />
@@ -396,7 +402,7 @@ function AISolutionReviewPanel({
                         return (
                             <div
                                 key={sr.stepIndex}
-                                className={`rounded-lg border p-4 transition-all ${sr.verdict === 'ok'
+                                className={`rounded-xl border p-4 ${UI_TRANSITION} ${sr.verdict === 'ok'
                                     ? 'border-emerald-200 bg-emerald-50/50'
                                     : isAccepted
                                         ? 'border-emerald-300 bg-emerald-50 ring-1 ring-emerald-200'
@@ -452,7 +458,7 @@ function AISolutionReviewPanel({
                                                 <button
                                                     type="button"
                                                     onClick={() => onAcceptStep(sr.stepIndex)}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                                    className={`flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700 ${PRESSABLE}`}
                                                 >
                                                     <ThumbsUp className="w-3 h-3" />
                                                     Acceptera förslag
@@ -460,7 +466,7 @@ function AISolutionReviewPanel({
                                                 <button
                                                     type="button"
                                                     onClick={() => onRejectStep(sr.stepIndex)}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-50 text-zinc-600 border border-zinc-200 rounded-lg text-xs font-medium transition-colors"
+                                                    className={`flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-50 ${PRESSABLE}`}
                                                 >
                                                     <ThumbsDown className="w-3 h-3" />
                                                     Behåll original
@@ -485,7 +491,7 @@ function AISolutionReviewPanel({
                         return (
                             <div
                                 key={idx}
-                                className={`rounded-lg border p-4 transition-all ${isAccepted
+                                className={`rounded-xl border p-4 ${UI_TRANSITION} ${isAccepted
                                     ? 'border-emerald-300 bg-emerald-50 ring-1 ring-emerald-200'
                                     : 'border-blue-200 bg-blue-50/50'
                                     }`}
@@ -515,7 +521,7 @@ function AISolutionReviewPanel({
                                     <button
                                         type="button"
                                         onClick={() => onAcceptAdditionalStep(idx)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                        className={`flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 ${PRESSABLE}`}
                                     >
                                         <PlusCircle className="w-3 h-3" />
                                         Lägg till detta steg
@@ -552,6 +558,7 @@ export default function AdminQuestionsPage() {
     const [isCreatingQuestion, setIsCreatingQuestion] = useState(false);
     const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
     const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+    const [stepPreviewNonce, setStepPreviewNonce] = useState(0);
 
     // New topic form
     const [newTopicTitle, setNewTopicTitle] = useState('');
@@ -1187,11 +1194,11 @@ export default function AdminQuestionsPage() {
     return (
         <AdminLayout>
             <div className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_30%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.08),transparent_26%),linear-gradient(180deg,#f8fbff_0%,#f5f7fb_45%,#f8fafc_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(53, 133, 163,0.12),transparent_30%),radial-gradient(circle_at_top_right,rgba(25, 100, 126,0.08),transparent_26%),linear-gradient(180deg,#f8fbff_0%,#f5f7fb_45%,#f8fafc_100%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:42px_42px] opacity-40" />
 
-                <div className="relative max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-                    <section className="overflow-hidden rounded-[30px] border border-white/70 bg-white/90 shadow-[0_24px_80px_-32px_rgba(37,99,235,0.28)] backdrop-blur">
+                <div className="relative mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+                    <section className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 shadow-[0_24px_80px_-32px_rgba(36, 113, 142,0.28)] backdrop-blur">
                         <div className="relative border-b border-blue-100/80 px-6 py-7 sm:px-8">
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-violet-500 opacity-[0.08]" />
                             <div className="absolute -left-16 top-0 h-40 w-40 rounded-full bg-blue-400/20 blur-3xl" />
@@ -1204,10 +1211,10 @@ export default function AdminQuestionsPage() {
                                         Frågeverkstad
                                     </div>
                                     <div>
-                                        <h1 className="text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl">
+                                        <h1 className="text-balance text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl">
                                             Frågehantering för lärare och admin
                                         </h1>
-                                        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
+                                        <p className="mt-3 max-w-2xl text-pretty text-sm leading-6 text-zinc-600 sm:text-base">
                                             Ett lugnare arbetsflöde för att välja kurs, skapa frågor, granska lösningar och publicera utan att flera paneler konkurrerar om uppmärksamheten samtidigt.
                                         </p>
                                     </div>
@@ -1216,17 +1223,17 @@ export default function AdminQuestionsPage() {
                                 <div className="grid gap-3 sm:grid-cols-3">
                                     <div className="rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-sm">
                                         <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Kurs</p>
-                                        <p className="mt-2 text-lg font-semibold text-zinc-900">{selectedCourse?.code ?? 'Ingen vald'}</p>
+                                        <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-900">{selectedCourse?.code ?? 'Ingen vald'}</p>
                                         <p className="text-xs text-zinc-500">{selectedCourse?.name ?? 'Börja med att välja kurs.'}</p>
                                     </div>
                                     <div className="rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-sm">
                                         <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Ämne</p>
-                                        <p className="mt-2 text-lg font-semibold text-zinc-900">{selectedTopic?.title ?? 'Väntar'}</p>
+                                        <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-900">{selectedTopic?.title ?? 'Väntar'}</p>
                                         <p className="text-xs text-zinc-500">{selectedCourse ? `${topics.length} ämnen i kursen` : 'Välj kurs först.'}</p>
                                     </div>
                                     <div className="rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-sm">
                                         <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Produktion</p>
-                                        <p className="mt-2 text-lg font-semibold text-zinc-900">{selectedTopicId ? allQuestions.length : courses.length}</p>
+                                        <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-900">{selectedTopicId ? allQuestions.length : courses.length}</p>
                                         <p className="text-xs text-zinc-500">{selectedTopicId ? 'Frågor i valt ämne' : 'Kurser tillgängliga'}</p>
                                     </div>
                                 </div>
@@ -1252,11 +1259,24 @@ export default function AdminQuestionsPage() {
                         </div>
                     </section>
 
+                    <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
+                        <aside className="space-y-5 lg:sticky lg:top-6">
                 {/* ── Step 1: Course selection ── */}
-                <section className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.25)] backdrop-blur mb-6">
-                    <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
-                        <BookOpen className="w-4 h-4" /> Steg 1 — Välj kurs
-                    </h2>
+                <section className="rounded-[24px] border border-white/70 bg-white/92 p-4 shadow-[0_18px_60px_-38px_rgba(15,23,42,0.35)] backdrop-blur">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                        <div>
+                            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-zinc-500">
+                                <BookOpen className="w-4 h-4" /> Kurs
+                            </h2>
+                            <p className="mt-1 text-xs leading-5 text-zinc-500">Välj undervisningskontext först. Listan är kompakt så många kurser fungerar utan att sidan växer okontrollerat.</p>
+                        </div>
+                        <a
+                            href="/admin/courses"
+                            className={`inline-flex h-10 shrink-0 items-center rounded-xl border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-600 hover:border-blue-200 hover:text-blue-700 ${PRESSABLE}`}
+                        >
+                            Hantera
+                        </a>
+                    </div>
 
                     {loadingCourses ? (
                         <p className="text-zinc-500 text-sm">Laddar kurser...</p>
@@ -1266,12 +1286,12 @@ export default function AdminQuestionsPage() {
                             <a href="/admin/upload-exam" className="underline font-medium">Ladda upp tenta</a>.
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
                             {courses.map(course => (
                                 <div
                                     key={course.id}
-                                    className={`relative rounded-2xl border transition-all ${selectedCourse?.id === course.id
-                                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white ring-2 ring-blue-500/15 shadow-[0_18px_45px_-30px_rgba(37,99,235,0.7)]'
+                                    className={`group relative rounded-2xl border ${UI_TRANSITION} ${selectedCourse?.id === course.id
+                                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/10'
                                         : 'border-zinc-200 bg-zinc-50/70 hover:border-blue-300 hover:bg-white'
                                         }`}
                                 >
@@ -1283,18 +1303,18 @@ export default function AdminQuestionsPage() {
                                             setIsCreatingQuestion(false);
                                             setIsCreatingTopic(false);
                                         }}
-                                        className="w-full text-left p-4 pr-12"
+                                        className={`w-full p-3 pr-12 text-left ${PRESSABLE}`}
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
-                                                <div className="font-mono font-bold text-zinc-900 text-lg">
+                                                <div className="font-mono text-base font-bold text-zinc-900">
                                                     {course.code}
                                                 </div>
-                                                <div className="text-sm text-zinc-600 truncate">
+                                                <div className="truncate text-sm text-zinc-600">
                                                     {course.name}
                                                 </div>
                                             </div>
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${selectedCourse?.id === course.id ? 'border-blue-200 bg-blue-600 text-white' : 'border-zinc-200 bg-white text-zinc-300'}`}>
+                                            <div className={`flex h-8 w-8 items-center justify-center rounded-full border ${selectedCourse?.id === course.id ? 'border-blue-200 bg-blue-600 text-white' : 'border-zinc-200 bg-white text-zinc-300'}`}>
                                                 <Check className="w-4 h-4" />
                                             </div>
                                         </div>
@@ -1303,7 +1323,7 @@ export default function AdminQuestionsPage() {
                                         type="button"
                                         onClick={() => handleDeleteCourse(course)}
                                         disabled={deletingCourseId === course.id}
-                                        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-red-200 bg-white text-red-500 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className={`absolute right-2 top-2 ${ICON_BUTTON} border border-red-200 bg-white text-red-500 opacity-0 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 group-hover:opacity-100`}
                                         title={`Remove ${course.code}`}
                                     >
                                         {deletingCourseId === course.id ? (
@@ -1320,15 +1340,18 @@ export default function AdminQuestionsPage() {
 
                 {/* ── Step 2: Topic selection ── */}
                 {selectedCourse && (
-                    <section className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.25)] backdrop-blur mb-6">
-                        <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                                <Layers className="w-4 h-4" /> Steg 2 — Välj eller skapa ämne
-                            </h2>
+                    <section className="rounded-[24px] border border-white/70 bg-white/92 p-4 shadow-[0_18px_60px_-38px_rgba(15,23,42,0.35)] backdrop-blur">
+                        <div className="mb-4 flex items-start justify-between gap-3">
+                            <div>
+                                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-zinc-500">
+                                    <Layers className="w-4 h-4" /> Subdomain
+                                </h2>
+                                <p className="mt-1 text-xs leading-5 text-zinc-500">Dela upp kursen i tydliga arbetsområden. Frågorna laddas bara för valt område.</p>
+                            </div>
                             {!isCreatingTopic && (
                                 <button
                                     onClick={() => setIsCreatingTopic(true)}
-                                    className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                    className={`inline-flex h-10 shrink-0 items-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-semibold text-white hover:bg-blue-700 ${PRESSABLE}`}
                                 >
                                     <Plus className="w-3 h-3" /> Nytt ämne
                                 </button>
@@ -1384,17 +1407,17 @@ export default function AdminQuestionsPage() {
                                 Inga ämnen för denna kurs. Skapa ett ovan.
                             </p>
                         ) : (
-                            <div className="flex flex-wrap gap-2">
+                            <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
                                 {topics.map(topic => (
-                                    <div key={topic.id} className="group relative flex items-center">
+                                    <div key={topic.id} className="group relative">
                                         <button
                                             onClick={() => {
                                                 setSelectedTopicId(topic.id);
                                                 setIsCreatingQuestion(false);
                                                 setActiveTab('draft');
                                             }}
-                                            className={`pl-4 pr-10 py-2 rounded-full border text-sm font-medium transition-all ${selectedTopicId === topic.id
-                                                ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                            className={`w-full rounded-2xl border py-3 pl-4 pr-12 text-left text-sm font-medium ${PRESSABLE} ${selectedTopicId === topic.id
+                                                ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-600/15'
                                                 : 'border-zinc-200 bg-zinc-50/80 text-zinc-700 hover:border-blue-300 hover:bg-white'
                                                 }`}
                                         >
@@ -1406,7 +1429,7 @@ export default function AdminQuestionsPage() {
                                                 handleDeleteTopic(topic.id);
                                             }}
                                             disabled={deletingTopicId === topic.id}
-                                            className={`absolute right-2 p-1.5 rounded-full transition-all ${selectedTopicId === topic.id
+                                            className={`absolute right-1 top-1/2 -translate-y-1/2 ${ICON_BUTTON} ${selectedTopicId === topic.id
                                                 ? 'text-blue-200 hover:text-white hover:bg-white/10'
                                                 : 'text-zinc-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100'
                                                 }`}
@@ -1425,20 +1448,22 @@ export default function AdminQuestionsPage() {
                     </section>
                 )}
 
+                        </aside>
+                        <main className="min-w-0 space-y-5">
                 {/* ── Step 3: Questions with workflow tabs ── */}
                 {selectedTopicId && (
-                    <section className="rounded-[28px] border border-white/70 bg-white/92 p-5 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.3)] backdrop-blur">
+                    <section className="rounded-[24px] border border-white/70 bg-white/92 p-5 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.3)] backdrop-blur">
                         <div className="flex flex-col gap-4 border-b border-zinc-100 pb-5 mb-5 lg:flex-row lg:items-center lg:justify-between">
                             <div>
-                                <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-zinc-500">
                                     <HelpCircle className="w-4 h-4" /> Steg 3 — Frågor
                                     {allQuestions.length > 0 && (
-                                        <span className="ml-1 px-2 py-0.5 bg-zinc-100 rounded-full text-xs text-zinc-600">
+                                        <span className="ml-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs tabular-nums text-zinc-600">
                                             {allQuestions.length}
                                         </span>
                                     )}
                                 </h2>
-                                <p className="mt-2 text-sm text-zinc-600">
+                                <p className="mt-2 text-pretty text-sm text-zinc-600">
                                     Arbeta i ett ämne i taget. Skapa eller redigera frågor ovanför listan och hantera publiceringsflödet nedan.
                                 </p>
                             </div>
@@ -1450,7 +1475,7 @@ export default function AdminQuestionsPage() {
                                         setFormData(DEFAULT_FORM);
                                         setFormSection('question');
                                     }}
-                                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-2xl text-sm font-semibold transition-all shadow-lg shadow-blue-600/20"
+                                    className={`flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_34px_-22px_rgba(36, 113, 142,0.85)] hover:bg-blue-700 ${PRESSABLE}`}
                                 >
                                     <Plus className="w-4 h-4" /> Ny fråga
                                 </button>
@@ -1459,22 +1484,22 @@ export default function AdminQuestionsPage() {
 
                         {/* ── Question creation form ── */}
                         {isCreatingQuestion && (
-                            <div className="bg-gradient-to-br from-white via-white to-blue-50/50 border border-zinc-200 rounded-[28px] p-6 mb-6 space-y-6 shadow-[0_24px_80px_-48px_rgba(37,99,235,0.35)]">
+                            <div className="mb-6 space-y-6 rounded-[28px] border border-zinc-200 bg-white p-6 shadow-[0_24px_80px_-48px_rgba(36, 113, 142,0.35)]">
                                 <div className="flex justify-between items-start gap-4">
                                     <div>
                                         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
                                             {editingQuestionId ? 'Redigerar fråga' : 'Ny fråga'}
                                         </p>
-                                        <h3 className="mt-1 text-2xl font-bold tracking-tight text-zinc-900">
+                                        <h3 className="mt-1 text-balance text-2xl font-bold tracking-tight text-zinc-900">
                                             {editingQuestionId ? 'Förfina innehållet och spara igen' : 'Bygg frågan i tre fokuserade steg'}
                                         </h3>
-                                        <p className="mt-2 text-sm text-zinc-600">
+                                        <p className="mt-2 text-pretty text-sm text-zinc-600">
                                             Endast ett redigeringsområde är öppet åt gången för att hålla arbetsytan lugn.
                                         </p>
                                     </div>
                                     <button
                                         onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); setFormSection('question'); }}
-                                        className="text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200 bg-white p-2"
+                                        className={`${ICON_BUTTON} border border-zinc-200 bg-white text-zinc-400 hover:bg-zinc-50 hover:text-zinc-600`}
                                     >
                                         <X className="w-5 h-5" />
                                     </button>
@@ -1489,30 +1514,30 @@ export default function AdminQuestionsPage() {
                                         </div>
                                         <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3">
                                             <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Framsteg</p>
-                                            <p className="mt-2 text-sm font-semibold text-zinc-900">{completedFormSections}/3 sektioner</p>
+                                            <p className="mt-2 text-sm font-semibold tabular-nums text-zinc-900">{completedFormSections}/3 sektioner</p>
                                             <p className="text-xs text-zinc-500">Fråga, lösning och vägledning</p>
                                         </div>
                                         <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3">
                                             <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Lösning</p>
-                                            <p className="mt-2 text-sm font-semibold text-zinc-900">{filledSolutionSteps} steg klara</p>
+                                            <p className="mt-2 text-sm font-semibold tabular-nums text-zinc-900">{filledSolutionSteps} steg klara</p>
                                             <p className="text-xs text-zinc-500">AI-granskning finns under steg 2</p>
                                         </div>
                                         <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3">
                                             <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Vägledning</p>
-                                            <p className="mt-2 text-sm font-semibold text-zinc-900">{filledGuidanceSteps} ledtrådar</p>
+                                            <p className="mt-2 text-sm font-semibold tabular-nums text-zinc-900">{filledGuidanceSteps} ledtrådar</p>
                                             <p className="text-xs text-zinc-500">Valfritt men tidsbesparande för elever</p>
                                         </div>
                                     </div>
 
                                     {/* ── Section 1: Question ── */}
-                                    <div className={`border rounded-3xl overflow-hidden transition-colors ${formSection === 'question' ? 'border-blue-400 ring-1 ring-blue-400 shadow-[0_18px_45px_-34px_rgba(37,99,235,0.6)]' : 'border-zinc-200 bg-white/80'}`}>
+                                    <div className={`overflow-hidden rounded-3xl border ${UI_TRANSITION} ${formSection === 'question' ? 'border-blue-400 ring-1 ring-blue-400 shadow-[0_18px_45px_-34px_rgba(36, 113, 142,0.6)]' : 'border-zinc-200 bg-white/80'}`}>
                                         <button
                                             type="button"
                                             onClick={() => setFormSection('question')}
-                                            className="w-full flex items-center justify-between p-4 bg-zinc-50/90 hover:bg-zinc-100 transition-colors"
+                                            className={`flex w-full items-center justify-between bg-zinc-50/90 p-4 text-left hover:bg-zinc-100 ${PRESSABLE}`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${formData.contentMarkdown.trim() ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${UI_TRANSITION} ${formData.contentMarkdown.trim() ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
                                                     {formData.contentMarkdown.trim() ? <Check className="w-3.5 h-3.5" /> : '1'}
                                                 </div>
                                                 <h4 className="font-semibold text-zinc-900">Fråga</h4>
@@ -1526,7 +1551,7 @@ export default function AdminQuestionsPage() {
                                         </button>
 
                                         {formSection === 'question' && (
-                                            <div className="p-5 pt-4 border-t border-zinc-200 bg-white space-y-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                                            <div className="enter p-5 pt-4 border-t border-zinc-200 bg-white space-y-6">
                                                 <LatexEditor
                                                     label="Frågetext (Markdown + LaTeX)"
                                                     hint="Använd $$...$$ för block-ekvationer och $...$ för inline-matte."
@@ -1597,7 +1622,7 @@ export default function AdminQuestionsPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setFormSection('solution')}
-                                                        className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-sm transition-colors"
+                                                        className={`rounded-xl bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-800 ${PRESSABLE}`}
                                                     >
                                                         Till Lösningssteg →
                                                     </button>
@@ -1607,14 +1632,14 @@ export default function AdminQuestionsPage() {
                                     </div>
 
                                     {/* ── Section 2: Solution Steps ── */}
-                                    <div className={`border rounded-3xl overflow-hidden transition-colors ${formSection === 'solution' ? 'border-blue-400 ring-1 ring-blue-400 shadow-[0_18px_45px_-34px_rgba(37,99,235,0.6)]' : 'border-zinc-200 bg-white/80'}`}>
+                                    <div className={`overflow-hidden rounded-3xl border ${UI_TRANSITION} ${formSection === 'solution' ? 'border-blue-400 ring-1 ring-blue-400 shadow-[0_18px_45px_-34px_rgba(36, 113, 142,0.6)]' : 'border-zinc-200 bg-white/80'}`}>
                                         <button
                                             type="button"
                                             onClick={() => setFormSection('solution')}
-                                            className="w-full flex items-center justify-between p-4 bg-zinc-50/90 hover:bg-zinc-100 transition-colors"
+                                            className={`flex w-full items-center justify-between bg-zinc-50/90 p-4 text-left hover:bg-zinc-100 ${PRESSABLE}`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${formData.solutionSteps.some(s => s.content.trim()) ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${UI_TRANSITION} ${formData.solutionSteps.some(s => s.content.trim()) ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
                                                     {formData.solutionSteps.some(s => s.content.trim()) ? <Check className="w-3.5 h-3.5" /> : '2'}
                                                 </div>
                                                 <h4 className="font-semibold text-zinc-900">Lösningssteg</h4>
@@ -1628,7 +1653,7 @@ export default function AdminQuestionsPage() {
                                         </button>
 
                                         {formSection === 'solution' && (
-                                            <div className="p-5 pt-4 border-t border-zinc-200 bg-white space-y-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                                            <div className="enter p-5 pt-4 border-t border-zinc-200 bg-white space-y-6">
                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                                                     <div>
                                                         <h5 className="text-sm font-medium text-blue-900">Steg-för-steg-lösning</h5>
@@ -1639,7 +1664,7 @@ export default function AdminQuestionsPage() {
                                                             type="button"
                                                             onClick={handleSuggestSolution}
                                                             disabled={isGeneratingSolution || !formData.contentMarkdown.trim()}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            className={`flex items-center gap-1.5 rounded-xl bg-blue-100 px-3 py-2 text-xs font-medium text-blue-800 hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-40 ${PRESSABLE}`}
                                                             title="Generera en fullständig lösning med AI"
                                                         >
                                                             {isGeneratingSolution ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
@@ -1649,7 +1674,7 @@ export default function AdminQuestionsPage() {
                                                             type="button"
                                                             onClick={handleReviewSolution}
                                                             disabled={reviewingSteps || formData.solutionSteps.every(s => !s.content.trim())}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            className={`flex items-center gap-1.5 rounded-xl bg-purple-100 px-3 py-2 text-xs font-medium text-purple-800 hover:bg-purple-200 disabled:cursor-not-allowed disabled:opacity-40 ${PRESSABLE}`}
                                                             title="Låt AI granska lösningsstegen"
                                                         >
                                                             {reviewingSteps ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
@@ -1658,7 +1683,7 @@ export default function AdminQuestionsPage() {
                                                         <button
                                                             type="button"
                                                             onClick={addStep}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 rounded-lg text-xs font-medium transition-colors"
+                                                            className={`flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-50 ${PRESSABLE}`}
                                                         >
                                                             <Plus className="w-3 h-3" /> Nytt steg
                                                         </button>
@@ -1669,14 +1694,14 @@ export default function AdminQuestionsPage() {
                                                     {formData.solutionSteps.map((step, index) => {
                                                         const isExpanded = expandedStepIndex === index;
                                                         return (
-                                                            <div key={index} className={`border rounded-xl overflow-hidden shadow-sm transition-colors ${isExpanded ? 'border-blue-300 ring-1 ring-blue-300' : 'border-zinc-200 bg-white'}`}>
+                                                            <div key={index} className={`overflow-hidden rounded-2xl border shadow-sm ${UI_TRANSITION} ${isExpanded ? 'border-blue-300 ring-1 ring-blue-300' : 'border-zinc-200 bg-white'}`}>
                                                                 {/* Header Row (Summary or Top Section) */}
                                                                 <div
-                                                                    className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${isExpanded ? 'bg-blue-50/30 border-b border-zinc-200' : 'hover:bg-zinc-50'}`}
+                                                                    className={`flex cursor-pointer items-center justify-between p-4 ${PRESSABLE} ${isExpanded ? 'border-b border-zinc-200 bg-blue-50/30' : 'hover:bg-zinc-50'}`}
                                                                     onClick={() => setExpandedStepIndex(isExpanded ? null : index)}
                                                                 >
                                                                     <div className="flex items-center gap-3 overflow-hidden">
-                                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${step.content.trim() ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-500'}`}>
+                                                                        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${UI_TRANSITION} ${step.content.trim() ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-500'}`}>
                                                                             {step.content.trim() ? <Check className="w-4 h-4" /> : index + 1}
                                                                         </div>
                                                                         {!isExpanded && (
@@ -1706,7 +1731,7 @@ export default function AdminQuestionsPage() {
                                                                                     e.stopPropagation();
                                                                                     removeStep(index);
                                                                                 }}
-                                                                                className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                                                className={`${ICON_BUTTON} text-zinc-400 hover:bg-red-50 hover:text-red-500`}
                                                                                 title="Ta bort steg"
                                                                             >
                                                                                 <Trash2 className="w-5 h-5" />
@@ -1718,7 +1743,7 @@ export default function AdminQuestionsPage() {
 
                                                                 {/* Expanded Form */}
                                                                 {isExpanded && (
-                                                                    <div className="p-5 bg-white space-y-5 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                                    <div className="enter p-5 bg-white space-y-5">
                                                                         <div className="flex flex-col md:flex-row md:items-center gap-3">
                                                                             <div className="flex items-center gap-2">
                                                                                 <input
@@ -1771,7 +1796,7 @@ export default function AdminQuestionsPage() {
                                                 )}
 
                                                 {aiSolutionSuggestions && aiSolutionSuggestions.length > 0 && (
-                                                    <div className="border border-blue-300 bg-white rounded-xl p-4 space-y-3 mt-3 shadow-md animate-in slide-in-from-top-2 duration-300">
+                                                    <div className="enter mt-3 space-y-3 rounded-xl border border-blue-300 bg-white p-4 shadow-md">
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
                                                                 <Sparkles className="w-4 h-4 text-blue-600" />
@@ -1783,14 +1808,14 @@ export default function AdminQuestionsPage() {
                                                                 <button
                                                                     type="button"
                                                                     onClick={handleAcceptAllSolutions}
-                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                                                    className={`flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 ${PRESSABLE}`}
                                                                 >
                                                                     <Check className="w-3 h-3" /> Ersätt alla steg
                                                                 </button>
                                                                 <button
                                                                     type="button"
                                                                     onClick={handleDismissSolutionSuggestions}
-                                                                    className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+                                                                    className={`${ICON_BUTTON} text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600`}
                                                                     title="Avvisa förslag"
                                                                 >
                                                                     <X className="w-4 h-4" />
@@ -1812,7 +1837,7 @@ export default function AdminQuestionsPage() {
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => handleAcceptSolutionStep(step, i)}
-                                                                                className="shrink-0 p-1.5 rounded-lg text-blue-600 hover:bg-blue-100 transition-colors bg-white border border-blue-200"
+                                                                                className={`${ICON_BUTTON} shrink-0 border border-blue-200 bg-white text-blue-600 hover:bg-blue-100`}
                                                                                 title={i < formData.solutionSteps.length ? `Ersätt steg ${i + 1}` : 'Lägg till steg'}
                                                                             >
                                                                                 <Check className="w-3.5 h-3.5" />
@@ -1820,7 +1845,7 @@ export default function AdminQuestionsPage() {
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => handleRejectSolutionStep(i)}
-                                                                                className="shrink-0 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors bg-white border border-zinc-200"
+                                                                                className={`${ICON_BUTTON} shrink-0 border border-zinc-200 bg-white text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600`}
                                                                                 title="Avvisa detta steg"
                                                                             >
                                                                                 <X className="w-3.5 h-3.5" />
@@ -1844,7 +1869,7 @@ export default function AdminQuestionsPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setFormSection('guidance')}
-                                                        className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-sm transition-colors"
+                                                        className={`rounded-xl bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-800 ${PRESSABLE}`}
                                                     >
                                                         Till Vägledning →
                                                     </button>
@@ -1854,14 +1879,14 @@ export default function AdminQuestionsPage() {
                                     </div>
 
                                     {/* ── Section 3: Guidance ── */}
-                                    <div className={`border rounded-3xl overflow-hidden transition-colors ${formSection === 'guidance' ? 'border-blue-400 ring-1 ring-blue-400 shadow-[0_18px_45px_-34px_rgba(37,99,235,0.6)]' : 'border-zinc-200 bg-white/80'}`}>
+                                    <div className={`overflow-hidden rounded-3xl border ${UI_TRANSITION} ${formSection === 'guidance' ? 'border-blue-400 ring-1 ring-blue-400 shadow-[0_18px_45px_-34px_rgba(36, 113, 142,0.6)]' : 'border-zinc-200 bg-white/80'}`}>
                                         <button
                                             type="button"
                                             onClick={() => setFormSection('guidance')}
-                                            className="w-full flex items-center justify-between p-4 bg-zinc-50/90 hover:bg-zinc-100 transition-colors"
+                                            className={`flex w-full items-center justify-between bg-zinc-50/90 p-4 text-left hover:bg-zinc-100 ${PRESSABLE}`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${formData.guidanceSteps.length > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${UI_TRANSITION} ${formData.guidanceSteps.length > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
                                                     {formData.guidanceSteps.length > 0 ? <Check className="w-3.5 h-3.5" /> : '3'}
                                                 </div>
                                                 <h4 className="font-semibold text-zinc-900">Vägledning</h4>
@@ -1875,7 +1900,7 @@ export default function AdminQuestionsPage() {
                                         </button>
 
                                         {formSection === 'guidance' && (
-                                            <div className="p-5 pt-4 border-t border-zinc-200 bg-white space-y-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                                            <div className="enter p-5 pt-4 border-t border-zinc-200 bg-white space-y-6">
                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50/50 p-4 rounded-xl border border-amber-100">
                                                     <div>
                                                         <h5 className="text-sm font-medium text-amber-900 flex items-center gap-1.5">
@@ -1889,7 +1914,7 @@ export default function AdminQuestionsPage() {
                                                             type="button"
                                                             onClick={handleSuggestGuidance}
                                                             disabled={generatingGuidance || !formData.contentMarkdown.trim()}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            className={`flex items-center gap-1.5 rounded-xl bg-amber-100 px-3 py-2 text-xs font-medium text-amber-900 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-40 ${PRESSABLE}`}
                                                         >
                                                             {generatingGuidance ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                                                             {generatingGuidance ? 'Genererar...' : 'AI-föreslå'}
@@ -1897,7 +1922,7 @@ export default function AdminQuestionsPage() {
                                                         <button
                                                             type="button"
                                                             onClick={addGuidanceStep}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 rounded-lg text-xs font-medium transition-colors"
+                                                            className={`flex items-center gap-1.5 rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-medium text-amber-700 hover:bg-amber-50 ${PRESSABLE}`}
                                                         >
                                                             <Plus className="w-3 h-3" /> Lägg till ledtråd
                                                         </button>
@@ -1914,12 +1939,12 @@ export default function AdminQuestionsPage() {
                                                                     onChange={e => updateGuidanceStep(step.id, e.target.value)}
                                                                     rows={2}
                                                                     placeholder="T.ex. Titta på täljaren — kan du faktorisera den?"
-                                                                    className="flex-1 p-2.5 rounded-lg border border-transparent bg-zinc-50 text-zinc-900 text-sm resize-y focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 transition-colors"
+                                                                    className={`flex-1 resize-y rounded-xl border border-transparent bg-zinc-50 p-2.5 text-sm text-zinc-900 focus:border-amber-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 ${UI_TRANSITION}`}
                                                                 />
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => removeGuidanceStep(step.id)}
-                                                                    className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors mt-1 shrink-0"
+                                                                    className={`${ICON_BUTTON} mt-1 shrink-0 text-zinc-400 hover:bg-red-50 hover:text-red-500`}
                                                                     title="Ta bort detta steg"
                                                                 >
                                                                     <Trash2 className="w-4 h-4" />
@@ -1946,14 +1971,14 @@ export default function AdminQuestionsPage() {
                                                                 <button
                                                                     type="button"
                                                                     onClick={handleAcceptAllGuidance}
-                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+                                                                    className={`flex items-center gap-1.5 rounded-xl bg-amber-600 px-3 py-2 text-xs font-medium text-white hover:bg-amber-700 ${PRESSABLE}`}
                                                                 >
                                                                     <Check className="w-3 h-3" /> Acceptera alla
                                                                 </button>
                                                                 <button
                                                                     type="button"
                                                                     onClick={handleDismissGuidanceSuggestions}
-                                                                    className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+                                                                    className={`${ICON_BUTTON} text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600`}
                                                                     title="Avvisa förslag"
                                                                 >
                                                                     <X className="w-4 h-4" />
@@ -1969,7 +1994,7 @@ export default function AdminQuestionsPage() {
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => handleAcceptGuidanceStep(step)}
-                                                                        className="shrink-0 p-1.5 rounded-lg text-amber-600 hover:bg-amber-100 transition-colors bg-white border border-amber-200"
+                                                                        className={`${ICON_BUTTON} shrink-0 border border-amber-200 bg-white text-amber-600 hover:bg-amber-100`}
                                                                         title="Lägg till detta steg"
                                                                     >
                                                                         <Plus className="w-3.5 h-3.5" />
@@ -1988,19 +2013,37 @@ export default function AdminQuestionsPage() {
                                         <button
                                             type="button"
                                             onClick={() => { setIsCreatingQuestion(false); setFormData(DEFAULT_FORM); setEditingQuestionId(null); setSolutionReview(null); setAiGuidanceSuggestions(null); setFormSection('question'); }}
-                                            className="px-5 py-2.5 rounded-xl text-zinc-600 font-medium hover:bg-zinc-100 text-sm transition-colors"
+                                            className={`rounded-xl px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 ${PRESSABLE}`}
                                         >
                                             Avbryt
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={submittingQuestion}
-                                            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm disabled:opacity-50 transition-colors shadow-sm"
+                                            className={`rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 ${PRESSABLE}`}
                                         >
                                             {submittingQuestion ? 'Sparar...' : (editingQuestionId ? 'Uppdatera fråga' : 'Spara som utkast')}
                                         </button>
                                     </div>
                                 </form>
+
+                                {/* ── Tonande lösningssteg: authoring + student preview ── */}
+                                {editingQuestionId && (
+                                    <div className="mt-8 space-y-6 border-t border-zinc-200 pt-6">
+                                        <StepEditor
+                                            questionId={editingQuestionId}
+                                            questionContent={formData.contentMarkdown}
+                                            correctAnswer={formData.correctAnswer}
+                                            questionType={formData.questionType}
+                                            onStepsChanged={() => setStepPreviewNonce((n) => n + 1)}
+                                        />
+                                        <StudentPreview
+                                            questionId={editingQuestionId}
+                                            questionText={formData.contentMarkdown}
+                                            refreshNonce={stepPreviewNonce}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -2010,8 +2053,8 @@ export default function AdminQuestionsPage() {
                                 <button
                                     key={tab.key}
                                     onClick={() => setActiveTab(tab.key)}
-                                    className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-4 text-sm font-medium transition-all ${activeTab === tab.key
-                                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white text-blue-700 shadow-[0_18px_45px_-30px_rgba(37,99,235,0.7)]'
+                                    className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-4 text-sm font-medium ${PRESSABLE} ${activeTab === tab.key
+                                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white text-blue-700 shadow-[0_18px_45px_-30px_rgba(36, 113, 142,0.7)]'
                                         : 'border-zinc-200 bg-zinc-50/80 text-zinc-500 hover:bg-white hover:border-zinc-300'
                                         }`}
                                 >
@@ -2019,7 +2062,7 @@ export default function AdminQuestionsPage() {
                                         {tab.icon}
                                         {tab.label}
                                     </span>
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.key
+                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${activeTab === tab.key
                                         ? 'bg-blue-100 text-blue-700'
                                         : 'bg-zinc-100 text-zinc-500'
                                         }`}>
@@ -2035,14 +2078,14 @@ export default function AdminQuestionsPage() {
                                 <button
                                     onClick={handleAnalyzeBatch}
                                     disabled={analyzingIds.size > 0}
-                                    className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl text-sm font-semibold disabled:opacity-50 transition-colors"
+                                    className={`flex items-center gap-2 rounded-2xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50 ${PRESSABLE}`}
                                 >
                                     {analyzingIds.size > 0 ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
                                         <Sparkles className="w-4 h-4" />
                                     )}
-                                    Analysera alla med AI ({Math.min(tabCounts.draft, 5)})
+                                    Analysera alla med AI (<span className="tabular-nums">{Math.min(tabCounts.draft, 5)}</span>)
                                 </button>
                             </div>
                         )}
@@ -2052,14 +2095,14 @@ export default function AdminQuestionsPage() {
                                 <button
                                     onClick={handlePublishAll}
                                     disabled={publishingIds.size > 0}
-                                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-sm font-semibold disabled:opacity-50 transition-colors"
+                                    className={`flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 ${PRESSABLE}`}
                                 >
                                     {publishingIds.size > 0 ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
                                         <Send className="w-4 h-4" />
                                     )}
-                                    Publicera alla ({tabCounts.ready})
+                                    Publicera alla (<span className="tabular-nums">{tabCounts.ready}</span>)
                                 </button>
                             </div>
                         )}
@@ -2120,7 +2163,7 @@ export default function AdminQuestionsPage() {
                                                         <button
                                                             onClick={() => handleAnalyze(q.id)}
                                                             disabled={analyzingIds.has(q.id) || publishingIds.has(q.id)}
-                                                            className="flex items-center gap-1.5 px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-2xl text-xs font-semibold transition-colors disabled:opacity-50"
+                                                            className={`flex items-center gap-1.5 rounded-2xl bg-purple-50 px-3.5 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-50 ${PRESSABLE}`}
                                                             title="Analysera med AI"
                                                         >
                                                             {analyzingIds.has(q.id) ? (
@@ -2133,7 +2176,7 @@ export default function AdminQuestionsPage() {
                                                         <button
                                                             onClick={() => handlePublishDirect(q.id)}
                                                             disabled={publishingIds.has(q.id) || analyzingIds.has(q.id)}
-                                                            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl text-xs font-semibold transition-colors disabled:opacity-50"
+                                                            className={`flex items-center gap-1.5 rounded-2xl bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 ${PRESSABLE}`}
                                                             title="Publicera direkt utan AI-analys"
                                                         >
                                                             {publishingIds.has(q.id) ? (
@@ -2155,7 +2198,7 @@ export default function AdminQuestionsPage() {
                                                     <button
                                                         onClick={() => handlePublish(q.id)}
                                                         disabled={publishingIds.has(q.id)}
-                                                        className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl text-xs font-semibold transition-colors disabled:opacity-50"
+                                                        className={`flex items-center gap-1.5 rounded-2xl bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 ${PRESSABLE}`}
                                                     >
                                                         {publishingIds.has(q.id) ? (
                                                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -2168,7 +2211,7 @@ export default function AdminQuestionsPage() {
                                                 {activeTab === 'published' && (
                                                     <button
                                                         onClick={() => handleUnpublish(q.id)}
-                                                        className="flex items-center gap-1.5 px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-2xl text-xs font-semibold transition-colors"
+                                                        className={`flex items-center gap-1.5 rounded-2xl bg-zinc-100 px-3.5 py-2 text-xs font-semibold text-zinc-600 hover:bg-zinc-200 ${PRESSABLE}`}
                                                     >
                                                         <XCircle className="w-3.5 h-3.5" />
                                                         Avpublicera
@@ -2179,7 +2222,7 @@ export default function AdminQuestionsPage() {
                                                 {q.explanationMarkdown && (
                                                     <button
                                                         onClick={() => setExpandedQuestionId(prev => prev === q.id ? null : q.id)}
-                                                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-zinc-200 text-xs font-semibold text-zinc-500 hover:text-blue-600 hover:border-blue-200 transition-colors"
+                                                        className={`flex items-center gap-1.5 rounded-2xl border border-zinc-200 px-3.5 py-2 text-xs font-semibold text-zinc-500 hover:border-blue-200 hover:text-blue-600 ${PRESSABLE}`}
                                                     >
                                                         <ChevronDown className={`w-4 h-4 transition-transform ${expandedQuestionId === q.id ? 'rotate-180' : ''}`} />
                                                         Lösning
@@ -2187,7 +2230,7 @@ export default function AdminQuestionsPage() {
                                                 )}
                                                 <button
                                                     onClick={() => handleEditQuestion(q)}
-                                                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-zinc-200 text-xs font-semibold text-zinc-500 hover:text-blue-600 hover:border-blue-200 transition-colors"
+                                                    className={`flex items-center gap-1.5 rounded-2xl border border-zinc-200 px-3.5 py-2 text-xs font-semibold text-zinc-500 hover:border-blue-200 hover:text-blue-600 ${PRESSABLE}`}
                                                     title="Redigera"
                                                 >
                                                     <Edit className="w-4 h-4" />
@@ -2195,7 +2238,7 @@ export default function AdminQuestionsPage() {
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteQuestion(q.id)}
-                                                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-zinc-200 text-xs font-semibold text-zinc-500 hover:text-red-600 hover:border-red-200 transition-colors"
+                                                    className={`flex items-center gap-1.5 rounded-2xl border border-zinc-200 px-3.5 py-2 text-xs font-semibold text-zinc-500 hover:border-red-200 hover:text-red-600 ${PRESSABLE}`}
                                                     title="Ta bort"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -2228,6 +2271,34 @@ export default function AdminQuestionsPage() {
                         )}
                     </section>
                 )}
+
+                {!selectedTopicId && (
+                    <section className="rounded-[24px] border border-dashed border-zinc-300 bg-white/80 p-8 text-center shadow-[0_18px_60px_-44px_rgba(15,23,42,0.3)] backdrop-blur">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                            <HelpCircle className="h-7 w-7" />
+                        </div>
+                        <h2 className="mt-5 text-xl font-semibold tracking-tight text-zinc-900">
+                            {selectedCourse ? 'Välj ett subdomain för att börja skapa frågor' : 'Välj kurs för att öppna frågeverkstaden'}
+                        </h2>
+                        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-600">
+                            {selectedCourse
+                                ? 'När ett subdomain är valt visas frågebyggaren, AI-granskning och publiceringskön här.'
+                                : 'Administratörer och lärare börjar med kursen till vänster. Därefter väljs eller skapas ett subdomain och frågorna hanteras i samma arbetsyta.'}
+                        </p>
+                        {selectedCourse && topics.length === 0 && !isCreatingTopic && (
+                            <button
+                                type="button"
+                                onClick={() => setIsCreatingTopic(true)}
+                                className={`mt-5 inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 ${PRESSABLE}`}
+                            >
+                                <Plus className="h-4 w-4" />
+                                Skapa första subdomain
+                            </button>
+                        )}
+                    </section>
+                )}
+                        </main>
+                    </div>
                 </div>
             </div>
         </AdminLayout>

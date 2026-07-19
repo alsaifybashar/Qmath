@@ -1,9 +1,10 @@
+.env*
+.next*
+*.db
+*.db-*
+uploads/
+coverage/
+graphify-out/
 math-engine/venv/
 math-engine/.venv/
-math-engine/__pycache__/
-**/__pycache__/
-*.pyc
-.env*
-.next/
-node_modules/
-coverage/
+qmath.db.bak-*

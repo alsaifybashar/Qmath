@@ -22,7 +22,7 @@ export function TaylorSeriesApproximation({
         const f = (x: number) => Math.sin(x);
         board.create('functiongraph', [f], { strokeColor: '#e2e8f0', strokeWidth: 4 }); // Background exact function
 
-        const centerPoint = board.create('glider', [initialCenter, 0, board.defaultAxes.x], { name: 'a', size: 5, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        const centerPoint = board.create('glider', [initialCenter, 0, board.defaultAxes.x], { name: 'a', size: 5, fillColor: '#3585a3', strokeColor: '#24718e' });
 
         const clampedDeg = Math.max(0, Math.min(9, initialDegree));
         const nSlider = board.create('slider', [[-4, -4], [-1, -4], [0, clampedDeg, 9]], { name: 'Degree n', snapWidth: 1 });

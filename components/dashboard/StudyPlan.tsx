@@ -169,7 +169,7 @@ export default function StudyPlan({ courseName, courseCode, topics, exams }: Stu
                                 <PolarGrid stroke="#e5e7eb" />
                                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 11 }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
-                                <Radar name="Vikt" dataKey="value" stroke="#4f46e5" strokeWidth={2.5} fill="#6366f1" fillOpacity={0.4} />
+                                <Radar name="Vikt" dataKey="value" stroke="#1f8e90" strokeWidth={2.5} fill="#28afb0" fillOpacity={0.4} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: 13 }}
                                     formatter={(value: number | undefined) => [`${value ?? 0}/10`, 'Vikt']}

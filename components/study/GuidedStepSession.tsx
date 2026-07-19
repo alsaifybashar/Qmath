@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Trophy, ArrowRight, Lightbulb } from 'lucide-react';
-import { GuidedStepQuestion, GuidedStep } from '@/types/study';
+import { GuidedStepQuestion } from '@/types/study';
 import { MultipleChoiceInput } from './MultipleChoiceInput';
 import { NumericInput } from './NumericInput';
 import { MathRenderer } from './MathRenderer';
+import { focusSpring, motionDuration, motionEase } from '@/lib/motion';
 
 interface GuidedStepSessionProps {
     question: GuidedStepQuestion;
@@ -18,17 +19,16 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [stepResults, setStepResults] = useState<boolean[]>(new Array(question.steps.length).fill(false));
     const [showSummary, setShowSummary] = useState(false);
+    const reduceMotion = useReducedMotion();
 
     // Scroll to top when step changes
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'auto' });
     }, [currentStepIndex, showSummary]);
 
     // We treat the overall problem as "completed" when all steps are done.
 
     const currentStep = question.steps[currentStepIndex];
-    const progress = ((currentStepIndex) / question.steps.length) * 100;
-
     const handleStepComplete = (isCorrect: boolean) => {
         // Update result for this step
         const newResults = [...stepResults];
@@ -43,7 +43,7 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
                 } else {
                     setShowSummary(true);
                 }
-            }, 1000);
+            }, motionDuration.correct * 1000);
         }
     };
 
@@ -51,8 +51,9 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
         return (
             <div className="flex flex-col items-center justify-center p-8 bg-zinc-900 border border-zinc-800 rounded-3xl text-center">
                 <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
+                    initial={{ opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: reduceMotion ? 0 : motionDuration.correct, ease: motionEase.out }}
                 >
                     <Trophy className="w-24 h-24 text-yellow-400 mx-auto mb-6" />
                     <h2 className="text-3xl font-bold text-white mb-2">{question.summary?.title || "Problemet klart!"}</h2>
@@ -99,10 +100,10 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
             {/* Progress Bar */}
             <div className="h-1.5 w-full bg-zinc-800 rounded-full mb-8 overflow-hidden">
                 <motion.div
-                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-                    initial={{ width: `${((currentStepIndex) / question.steps.length) * 100}%` }}
-                    animate={{ width: `${((currentStepIndex + 1) / question.steps.length) * 100}%` }}
-                    transition={{ duration: 0.5 }}
+                    className="h-full origin-left bg-gradient-to-r from-blue-500 to-purple-500"
+                    initial={reduceMotion ? false : { scaleX: currentStepIndex / question.steps.length }}
+                    animate={{ scaleX: (currentStepIndex + 1) / question.steps.length }}
+                    transition={reduceMotion ? { duration: 0 } : focusSpring}
                 />
             </div>
 
@@ -127,8 +128,9 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
                     <AnimatePresence mode="popLayout">
                         {currentStep.context && (
                             <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
                                 className="p-5 bg-blue-900/10 border border-blue-500/20 rounded-2xl relative"
                             >
                                 <div className="absolute -left-3 top-6 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-4 border-black">
@@ -147,10 +149,10 @@ export function GuidedStepSession({ question, onComplete, onExit }: GuidedStepSe
                 <div className="flex flex-col">
                     <motion.div
                         key={currentStep.id}
-                        initial={{ opacity: 0, x: 20 }}
+                        initial={reduceMotion ? false : { opacity: 0, x: 12 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3 }}
+                        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -6 }}
+                        transition={reduceMotion ? { duration: 0 } : focusSpring}
                         className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-xl flex-1 flex flex-col"
                     >
                         <div className="mb-6">

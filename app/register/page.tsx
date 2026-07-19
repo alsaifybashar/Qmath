@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Building2, Mail, User, Lock, ArrowRight, Loader2, GraduationCap, BookOpen } from 'lucide-react';
+import { ArrowLeft, Mail, User, Lock, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import 'katex/dist/katex.min.css';
 import { useState, useTransition } from 'react';
@@ -10,416 +10,238 @@ import { register } from '@/app/actions/auth';
 const BlockMath = dynamic(() => import('react-katex').then((mod) => mod.BlockMath), { ssr: false });
 
 export default function RegisterPage() {
-    const [step, setStep] = useState(1);
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const [formData, setFormData] = useState({
+        name: '',
         email: '',
         password: '',
         confirmPassword: '',
-        firstName: '',
-        lastName: '',
-        university: '',
-        yearOfStudy: '',
-        program: '',
-        agreeTerms: false
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        setFieldErrors({});
 
-        if (step === 1) {
-            // Validate passwords match before proceeding
-            if (formData.password !== formData.confirmPassword) {
-                setError('Lösenorden matchar inte');
-                return;
-            }
-            if (formData.password.length < 6) {
-                setError('Lösenordet måste vara minst 6 tecken');
-                return;
-            }
-
-            // Check email availability
-            startTransition(async () => {
-                const { checkEmailAvailability } = await import('@/app/actions/auth');
-                const isAvailable = await checkEmailAvailability(formData.email);
-
-                if (!isAvailable) {
-                    setError('E-postadressen är redan registrerad. Logga in istället.');
-                    // Don't advance step
-                } else {
-                    setStep(2);
-                }
-            });
-        } else {
-            // Submit to backend
-            const data = new FormData();
-            data.append('name', `${formData.firstName} ${formData.lastName}`);
-            data.append('email', formData.email);
-            data.append('password', formData.password);
-            data.append('university', formData.university);
-            data.append('yearOfStudy', formData.yearOfStudy);
-            data.append('program', formData.program);
-
-            startTransition(async () => {
-                const result = await register(null, data);
-                if (result?.errors) {
-                    setFieldErrors(result.errors);
-                }
-                if (result?.message) {
-                    setError(result.message);
-                }
-                // If successful, the register action redirects to /login
-            });
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match.');
+            return;
         }
+        if (formData.password.length < 6) {
+            setError('Password must be at least 6 characters.');
+            return;
+        }
+
+        const data = new FormData();
+        data.append('name', formData.name);
+        data.append('email', formData.email);
+        data.append('password', formData.password);
+
+        startTransition(async () => {
+            const result = await register(null, data);
+            if (result?.message) {
+                setError(result.message);
+            } else if (result?.errors) {
+                const first = Object.values(result.errors).flat()[0];
+                setError(typeof first === 'string' ? first : 'Something went wrong.');
+            }
+        });
     };
 
     return (
-        <div className="min-h-screen w-full flex bg-white dark:bg-black transition-colors duration-300">
-            {/* LEFT SIDE: Branding */}
-            <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 relative overflow-hidden flex-col justify-between p-12 text-white">
+        <div className="min-h-screen w-full flex bg-white dark:bg-black transition-colors">
+            {/* Left: Branding */}
+            <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 relative overflow-hidden flex-col justify-between p-12 text-white">
                 <div className="absolute inset-0">
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:32px_32px]" />
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/[0.07] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
                 </div>
 
-                <div className="absolute top-1/4 right-20 opacity-20 rotate-12 scale-125 pointer-events-none">
+                <div className="absolute opacity-[0.12] top-1/4 right-16 rotate-6 scale-125 pointer-events-none select-none">
                     <BlockMath math="\nabla \times \vec{E} = -\frac{\partial \vec{B}}{\partial t}" />
                 </div>
-                <div className="absolute bottom-1/3 left-20 opacity-20 -rotate-6 scale-125 pointer-events-none">
+                <div className="absolute opacity-[0.12] bottom-1/3 left-12 -rotate-3 scale-125 pointer-events-none select-none">
                     <BlockMath math="\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}" />
                 </div>
 
                 <div className="relative z-10">
-                    <Link href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-8">
-                        <ArrowLeft className="w-4 h-4" /> Tillbaka till Qmath
+                    <Link href="/" className="inline-flex items-center gap-2 text-white/65 hover:text-white transition-colors mb-10 text-sm font-medium">
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to Qmath
                     </Link>
-                    <h1 className="text-4xl font-bold tracking-tight mb-2">Gå med 10 000+ studenter</h1>
-                    <p className="text-white/80 text-lg">Börja bemästra ingenjörsmatten idag.</p>
+                    <h1 className="text-4xl font-bold tracking-tight mb-3 leading-tight">
+                        Master engineering<br />math — for real.
+                    </h1>
+                    <p className="text-white/65 text-base leading-relaxed max-w-sm">
+                        Adaptive practice, past exams, and instant feedback — built for Swedish engineering students.
+                    </p>
                 </div>
 
-                <div className="relative z-10 space-y-6">
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 text-center">
-                            <div className="text-3xl font-bold">50K+</div>
-                            <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Uppgifter</div>
-                        </div>
-                        <div className="p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 text-center">
-                            <div className="text-3xl font-bold">95%</div>
-                            <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Godkänd</div>
-                        </div>
-                        <div className="p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 text-center">
-                            <div className="text-3xl font-bold">4.9★</div>
-                            <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Betyg</div>
-                        </div>
+                <div className="relative z-10 space-y-5">
+                    <div className="grid grid-cols-3 gap-3">
+                        {[
+                            { value: '50K+', label: 'Questions' },
+                            { value: '95%', label: 'Pass rate' },
+                            { value: '4.9★', label: 'Rating' },
+                        ].map(({ value, label }) => (
+                            <div key={label} className="p-4 bg-white/[0.08] backdrop-blur rounded-xl border border-white/10 text-center">
+                                <div className="text-2xl font-bold tabular-nums">{value}</div>
+                                <div className="text-[11px] text-white/50 mt-1 uppercase tracking-wider">{label}</div>
+                            </div>
+                        ))}
                     </div>
-                    <p className="text-xs text-white/40 uppercase tracking-widest pl-1">© 2026 Qmath EdTech AB</p>
+                    <p className="text-xs text-white/30 uppercase tracking-widest">© 2026 Qmath EdTech AB</p>
                 </div>
             </div>
 
-            {/* RIGHT SIDE: Registration Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-zinc-50 dark:bg-black">
-                <div className="max-w-md w-full space-y-8">
-                    {/* Progress Steps */}
-                    <div className="flex items-center justify-center gap-4 mb-8">
-                        <div className={`flex items-center justify-center w-10 h-10 rounded-full font-bold transition-all ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500'}`}>
-                            1
-                        </div>
-                        <div className={`w-16 h-1 rounded-full transition-all ${step >= 2 ? 'bg-blue-600' : 'bg-zinc-200 dark:bg-zinc-800'}`}></div>
-                        <div className={`flex items-center justify-center w-10 h-10 rounded-full font-bold transition-all ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500'}`}>
-                            2
-                        </div>
+            {/* Right: Form */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-zinc-50 dark:bg-zinc-950">
+                <div className="max-w-[380px] w-full">
+                    {/* Mobile back link */}
+                    <Link href="/" className="lg:hidden inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mb-8 font-medium">
+                        <ArrowLeft className="w-4 h-4" />
+                        Qmath
+                    </Link>
+
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Create your account</h2>
+                        <p className="text-zinc-500 dark:text-zinc-400 mt-1.5 text-sm">Takes 30 seconds. No credit card needed.</p>
                     </div>
 
-                    <div className="text-center lg:text-left">
-                        <h2 className="text-3xl font-bold text-zinc-900 dark:text-white">
-                            {step === 1 ? 'Skapa ditt konto' : 'Slutför din profil'}
-                        </h2>
-                        <p className="text-zinc-500 mt-2">
-                            {step === 1 ? 'Börja din läranderesa' : 'Berätta om dig själv'}
-                        </p>
-                    </div>
-
-                    {/* Error Display */}
                     {error && (
-                        <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-xl">
+                        <div className="mb-5 px-4 py-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl">
                             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {step === 1 ? (
-                            <>
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">E-postadress</label>
-                                    <div className="relative">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                                        <input
-                                            type="email"
-                                            placeholder="name@university.edu"
-                                            required
-                                            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        />
-                                    </div>
-                                    {fieldErrors.email && <p className="mt-1 text-sm text-red-500">{fieldErrors.email[0]}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Lösenord</label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                                        <input
-                                            type="password"
-                                            placeholder="Minst 6 tecken"
-                                            required
-                                            minLength={6}
-                                            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        />
-                                    </div>
-                                    {fieldErrors.password && <p className="mt-1 text-sm text-red-500">{fieldErrors.password[0]}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Bekräfta lösenord</label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                                        <input
-                                            type="password"
-                                            placeholder="Bekräfta ditt lösenord"
-                                            required
-                                            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                            value={formData.confirmPassword}
-                                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Förnamn</label>
-                                        <div className="relative">
-                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                                            <input
-                                                type="text"
-                                                placeholder="John"
-                                                required
-                                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                                value={formData.firstName}
-                                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                            />
-                                        </div>
-                                        {fieldErrors.name && <p className="mt-1 text-sm text-red-500">{fieldErrors.name[0]}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Efternamn</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Doe"
-                                            required
-                                            className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                            value={formData.lastName}
-                                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Universitet</label>
-                                    <div className="relative">
-                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                                        <select
-                                            required
-                                            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
-                                            value={formData.university}
-                                            onChange={(e) => setFormData({ ...formData, university: e.target.value })}
-                                        >
-                                            <option value="">Välj ditt universitet</option>
-                                            {[
-                                                "Blekinge Tekniska Högskola",
-                                                "Chalmers tekniska högskola",
-                                                "Högskolan Dalarna",
-                                                "Högskolan i Halmstad",
-                                                "Johannelunds teologiska högskola",
-                                                "Jönköping University",
-                                                "Karlstads universitet",
-                                                "Karolinska Institutet",
-                                                "Konstfack",
-                                                "Högskolan Kristianstad",
-                                                "Kungliga Tekniska högskolan (KTH)",
-                                                "Linköpings universitet",
-                                                "Linnéuniversitetet",
-                                                "Luleå tekniska universitet",
-                                                "Lunds universitet",
-                                                "Mälardalens universitet",
-                                                "Malmö universitet",
-                                                "Marie Cederschiöld högskola",
-                                                "Mittuniversitetet",
-                                                "Newmaninstitutet",
-                                                "Örebro universitet",
-                                                "Kungliga Musikhögskolan",
-                                                "Kungliga Konsthögskolan",
-                                                "Södertörns högskola",
-                                                "Sophiahemmet Högskola",
-                                                "Handelshögskolan i Stockholm",
-                                                "Stockholms universitet",
-                                                "Stockholms konstnärliga högskola",
-                                                "Försvarshögskolan",
-                                                "Röda Korsets Högskola",
-                                                "Gymnastik- och idrottshögskolan",
-                                                "Sveriges lantbruksuniversitet",
-                                                "Umeå universitet",
-                                                "Högskolan i Borås",
-                                                "Enskilda Högskolan Stockholm",
-                                                "Högskolan i Gävle",
-                                                "Göteborgs universitet",
-                                                "Högskolan i Skövde",
-                                                "Högskolan Väst",
-                                                "Uppsala universitet"
-                                            ].map((uni) => (
-                                                <option key={uni} value={uni}>{uni}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Årskurs</label>
-                                        <div className="relative">
-                                            <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                                            <select
-                                                required
-                                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
-                                                value={formData.yearOfStudy}
-                                                onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
-                                            >
-                                                <option value="">Årskurs</option>
-                                                {[1, 2, 3, 4, 5].map((year) => (
-                                                    <option key={year} value={year}>År {year}</option>
-                                                ))}
-                                                <option value="6">5+ år</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Utbildningsprogram</label>
-                                        <div className="relative">
-                                            <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-                                            {formData.university === 'Linköpings universitet' ? (
-                                                <select
-                                                    required
-                                                    className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
-                                                    value={formData.program}
-                                                    onChange={(e) => setFormData({ ...formData, program: e.target.value })}
-                                                >
-                                                    <option value="">Välj ditt program</option>
-                                                    <optgroup label="Civilingenjörsprogram (5 år)">
-                                                        {[
-                                                            "Datateknik",
-                                                            "Design och produktutveckling",
-                                                            "Elektronik och systemdesign",
-                                                            "Energi – miljö – management",
-                                                            "Industriell ekonomi",
-                                                            "Informationsteknologi",
-                                                            "Kemisk biologi",
-                                                            "Maskinteknik",
-                                                            "Medicinsk teknik",
-                                                            "Medieteknik och AI",
-                                                            "Mjukvaruteknik",
-                                                            "Samhällsbyggnad och logistik",
-                                                            "Strategisk systemanalys",
-                                                            "Teknisk biologi",
-                                                            "Teknisk fysik och elektroteknik",
-                                                            "Teknisk matematik"
-                                                        ].map((prog) => (
-                                                            <option key={prog} value={prog}>{prog}</option>
-                                                        ))}
-                                                    </optgroup>
-                                                    <optgroup label="Högskoleingenjörsprogram (3 år)">
-                                                        {[
-                                                            "Byggnadsteknik",
-                                                            "Högskoleingenjör i Datateknik",
-                                                            "Elektronik",
-                                                            "Kemisk analysteknik",
-                                                            "Högskoleingenjör i Maskinteknik"
-                                                        ].map((prog) => (
-                                                            <option key={prog} value={prog}>{prog}</option>
-                                                        ))}
-                                                    </optgroup>
-                                                </select>
-                                            ) : (
-                                                <input
-                                                    type="text"
-                                                    placeholder="Program"
-                                                    required
-                                                    className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                                    value={formData.program}
-                                                    onChange={(e) => setFormData({ ...formData, program: e.target.value })}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                                <label className="flex items-start gap-3 p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl">
-                                    <input
-                                        type="checkbox"
-                                        required
-                                        className="mt-0.5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                                        checked={formData.agreeTerms}
-                                        onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
-                                    />
-                                    <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                                        Jag godkänner <Link href="/terms" className="text-blue-600 hover:underline">användarvillkoren</Link> och{' '}
-                                        <Link href="/privacy" className="text-blue-600 hover:underline">integritetspolicyn</Link>
-                                    </span>
-                                </label>
-                            </>
-                        )}
+                        {/* Name */}
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                                Full name
+                            </label>
+                            <div className="relative">
+                                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    placeholder="Johan Andersson"
+                                    required
+                                    autoComplete="name"
+                                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                                Email
+                            </label>
+                            <div className="relative">
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                                <input
+                                    type="email"
+                                    placeholder="you@university.se"
+                                    required
+                                    autoComplete="email"
+                                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Password */}
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Min. 6 characters"
+                                    required
+                                    minLength={6}
+                                    autoComplete="new-password"
+                                    className="w-full pl-10 pr-10 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                                Confirm password
+                            </label>
+                            <div className="relative">
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                                <input
+                                    type={showConfirm ? 'text' : 'password'}
+                                    placeholder="Repeat your password"
+                                    required
+                                    autoComplete="new-password"
+                                    className="w-full pl-10 pr-10 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"
+                                    value={formData.confirmPassword}
+                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirm(!showConfirm)}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                                >
+                                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed pt-1">
+                            By creating an account you agree to our{' '}
+                            <Link href="/terms" className="text-indigo-600 dark:text-indigo-400 hover:underline">Terms</Link>
+                            {' '}and{' '}
+                            <Link href="/privacy" className="text-indigo-600 dark:text-indigo-400 hover:underline">Privacy Policy</Link>.
+                        </p>
 
                         <button
                             type="submit"
                             disabled={isPending}
-                            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold rounded-xl shadow-sm transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
                         >
                             {isPending ? (
                                 <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    Skapar konto...
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Creating account…
                                 </>
                             ) : (
                                 <>
-                                    {step === 1 ? 'Fortsätt' : 'Skapa konto'}
-                                    <ArrowRight className="w-5 h-5" />
+                                    Create account
+                                    <ArrowRight className="w-4 h-4" />
                                 </>
                             )}
                         </button>
                     </form>
 
-                    {step === 2 && (
-                        <button
-                            type="button"
-                            onClick={() => setStep(1)}
-                            className="w-full py-3 text-zinc-600 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-white transition-colors"
-                        >
-                            ← Tillbaka till steg 1
-                        </button>
-                    )}
-
-                    <div className="text-center pt-4">
-                        <p className="text-zinc-600 dark:text-zinc-400">
-                            Har du redan ett konto?{' '}
-                            <Link href="/login" className="text-blue-600 font-bold hover:underline">
-                                Logga in
-                            </Link>
-                        </p>
-                    </div>
+                    <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-7">
+                        Already have an account?{' '}
+                        <Link href="/login" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                            Sign in
+                        </Link>
+                    </p>
                 </div>
             </div>
         </div>

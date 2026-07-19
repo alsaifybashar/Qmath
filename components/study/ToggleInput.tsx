@@ -80,8 +80,6 @@ export function ToggleInput({ question, onAnswer }: ToggleProps) {
                             key={item.id}
                             onClick={() => handleToggle(item.id)}
                             disabled={isSubmitted}
-                            whileHover={!isSubmitted ? { scale: 1.02 } : {}}
-                            whileTap={!isSubmitted ? { scale: 0.98 } : {}}
                             className={`
                                 relative p-6 rounded-2xl border-2 text-left transition-all flex items-center justify-between
                                 ${borderColor} ${bgColor} ${textColor}
@@ -112,7 +110,7 @@ export function ToggleInput({ question, onAnswer }: ToggleProps) {
                 className={`mt-12 px-8 py-3 rounded-full font-bold transition-all shadow-lg
                     ${isSubmitted
                         ? 'bg-zinc-200 text-zinc-500 cursor-default hidden'
-                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25 active:scale-95'
+                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25'
                     }
                 `}
             >

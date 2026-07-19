@@ -1,6 +1,8 @@
 'use server';
 
 import { callOllama } from '@/lib/ollama';
+import { auth } from '@/auth';
+import { emitLearningEvent } from '@/lib/events/emit';
 
 // ============ TYPES ============
 
@@ -15,6 +17,10 @@ export interface HintRequest {
     existingHints?: string[];    // Pre-authored hints from question data
     relatedFormulas?: Array<{ name: string; latex: string }>;
     conceptsTested?: string[];
+    // Telemetry (optional): lets hint_requested events join the session stream
+    sessionId?: string | null;
+    questionId?: string;
+    trigger?: 'idle' | 'manual' | 'wrong_answer' | 'ladder';
 }
 
 export interface HintResult {
@@ -48,6 +54,18 @@ export async function generateHint(request: HintRequest): Promise<HintResult> {
     const { questionText, questionMath, correctAnswer, topicId, studentAnswer, attemptCount, hintLevel, existingHints, relatedFormulas, conceptsTested } = request;
 
     console.log(`[Hint] Level ${hintLevel} requested for topic "${topicId}" (attempt #${attemptCount})`);
+
+    const session = await auth();
+    if (session?.user?.id) {
+        await emitLearningEvent({
+            eventType: 'hint_requested',
+            userId: session.user.id,
+            sessionId: request.sessionId,
+            questionId: request.questionId,
+            topicId,
+            payload: { level: hintLevel, trigger: request.trigger ?? 'manual' },
+        });
+    }
 
     // --- 1. Check if pre-authored hint exists for this level ---
     // Use the question's built-in hints first (no AI cost)

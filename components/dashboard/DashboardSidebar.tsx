@@ -48,6 +48,7 @@ const W_CLOSED = 80;
 // ─── Transitions ─────────────────────────────────────────────────────────────
 const WT = { type: 'tween', ease: [0.4, 0, 0.2, 1], duration: 0.28 } as const;
 const LT = { type: 'tween', ease: 'easeInOut', duration: 0.15 } as const;
+const POPOVER_T = { type: 'tween', ease: [0.25, 0.1, 0.25, 1], duration: 0.22 } as const;
 
 // ─── Nav data ─────────────────────────────────────────────────────────────────
 const NAV = [
@@ -77,280 +78,10 @@ const NAV = [
     },
 ] as const;
 
-type SidebarTheme = {
-    light: React.CSSProperties;
-    dark: React.CSSProperties;
-};
-
-const SIDEBAR_THEMES: Record<string, SidebarTheme> = {
-    dashboard: {
-        light: {
-            '--sidebar-bg': 'rgba(255, 255, 255, 0.68)',
-            '--sidebar-bg-soft': 'rgba(255, 255, 255, 0.48)',
-            '--sidebar-border': 'rgba(15, 118, 110, 0.14)',
-            '--sidebar-text': '#11202a',
-            '--sidebar-muted': 'rgba(17, 32, 42, 0.62)',
-            '--sidebar-subtle': 'rgba(17, 32, 42, 0.42)',
-            '--sidebar-hover': 'rgba(20, 184, 166, 0.10)',
-            '--sidebar-beta-text': '#0f766e',
-            '--sidebar-beta-bg': 'rgba(20, 184, 166, 0.12)',
-            '--sidebar-active': 'linear-gradient(135deg, #14b8a6 0%, #ff684a 100%)',
-            '--sidebar-active-bg': 'rgba(20, 184, 166, 0.14)',
-            '--sidebar-accent': '#14b8a6',
-            '--sidebar-active-shadow': '0 10px 28px rgba(20, 184, 166, 0.14)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(20, 184, 166, 0.18)',
-            '--sidebar-rail-shadow': '12px 0 34px rgba(15, 118, 110, 0.06)',
-        } as React.CSSProperties,
-        dark: {
-            '--sidebar-bg': 'rgba(4, 23, 20, 0.72)',
-            '--sidebar-bg-soft': 'rgba(4, 23, 20, 0.58)',
-            '--sidebar-border': 'rgba(94, 234, 212, 0.16)',
-            '--sidebar-text': '#f7fff8',
-            '--sidebar-muted': 'rgba(247, 255, 248, 0.62)',
-            '--sidebar-subtle': 'rgba(247, 255, 248, 0.42)',
-            '--sidebar-hover': 'rgba(255, 255, 255, 0.07)',
-            '--sidebar-beta-text': '#99f6e4',
-            '--sidebar-beta-bg': 'rgba(94, 234, 212, 0.14)',
-            '--sidebar-active': 'linear-gradient(135deg, #14b8a6 0%, #ff684a 100%)',
-            '--sidebar-active-bg': 'rgba(94, 234, 212, 0.13)',
-            '--sidebar-accent': '#5eead4',
-            '--sidebar-active-shadow': '0 14px 34px rgba(0, 0, 0, 0.28)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(20, 184, 166, 0.30)',
-            '--sidebar-rail-shadow': '12px 0 36px rgba(0, 0, 0, 0.20)',
-        } as React.CSSProperties,
-    },
-    analytics: {
-        light: {
-            '--sidebar-bg': 'rgba(255, 255, 255, 0.70)',
-            '--sidebar-bg-soft': 'rgba(238, 244, 255, 0.54)',
-            '--sidebar-border': 'rgba(59, 130, 246, 0.15)',
-            '--sidebar-text': '#172033',
-            '--sidebar-muted': 'rgba(23, 32, 51, 0.62)',
-            '--sidebar-subtle': 'rgba(23, 32, 51, 0.43)',
-            '--sidebar-hover': 'rgba(59, 130, 246, 0.10)',
-            '--sidebar-beta-text': '#2563eb',
-            '--sidebar-beta-bg': 'rgba(59, 130, 246, 0.12)',
-            '--sidebar-active': 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-            '--sidebar-active-bg': 'rgba(59, 130, 246, 0.14)',
-            '--sidebar-accent': '#3b82f6',
-            '--sidebar-active-shadow': '0 10px 28px rgba(59, 130, 246, 0.14)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(59, 130, 246, 0.18)',
-            '--sidebar-rail-shadow': '12px 0 34px rgba(59, 130, 246, 0.06)',
-        } as React.CSSProperties,
-        dark: {
-            '--sidebar-bg': 'rgba(5, 8, 22, 0.74)',
-            '--sidebar-bg-soft': 'rgba(17, 22, 78, 0.58)',
-            '--sidebar-border': 'rgba(147, 197, 253, 0.16)',
-            '--sidebar-text': '#f8fbff',
-            '--sidebar-muted': 'rgba(248, 251, 255, 0.62)',
-            '--sidebar-subtle': 'rgba(248, 251, 255, 0.42)',
-            '--sidebar-hover': 'rgba(255, 255, 255, 0.07)',
-            '--sidebar-beta-text': '#bfdbfe',
-            '--sidebar-beta-bg': 'rgba(96, 165, 250, 0.14)',
-            '--sidebar-active': 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
-            '--sidebar-active-bg': 'rgba(96, 165, 250, 0.13)',
-            '--sidebar-accent': '#93c5fd',
-            '--sidebar-active-shadow': '0 14px 34px rgba(0, 0, 0, 0.28)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(96, 165, 250, 0.24)',
-            '--sidebar-rail-shadow': '12px 0 36px rgba(0, 0, 0, 0.22)',
-        } as React.CSSProperties,
-    },
-    courses: {
-        light: {
-            '--sidebar-bg': 'rgba(255, 255, 255, 0.70)',
-            '--sidebar-bg-soft': 'rgba(240, 255, 248, 0.54)',
-            '--sidebar-border': 'rgba(67, 97, 238, 0.14)',
-            '--sidebar-text': '#172033',
-            '--sidebar-muted': 'rgba(23, 32, 51, 0.62)',
-            '--sidebar-subtle': 'rgba(23, 32, 51, 0.43)',
-            '--sidebar-hover': 'rgba(67, 97, 238, 0.09)',
-            '--sidebar-beta-text': '#1d4ed8',
-            '--sidebar-beta-bg': 'rgba(67, 97, 238, 0.12)',
-            '--sidebar-active': 'linear-gradient(135deg, #4361ee 0%, #22c55e 100%)',
-            '--sidebar-active-bg': 'rgba(67, 97, 238, 0.13)',
-            '--sidebar-accent': '#4361ee',
-            '--sidebar-active-shadow': '0 10px 28px rgba(67, 97, 238, 0.13)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(67, 97, 238, 0.18)',
-            '--sidebar-rail-shadow': '12px 0 34px rgba(67, 97, 238, 0.06)',
-        } as React.CSSProperties,
-        dark: {
-            '--sidebar-bg': 'rgba(5, 8, 22, 0.74)',
-            '--sidebar-bg-soft': 'rgba(5, 44, 36, 0.58)',
-            '--sidebar-border': 'rgba(134, 239, 172, 0.16)',
-            '--sidebar-text': '#f8fbff',
-            '--sidebar-muted': 'rgba(248, 251, 255, 0.62)',
-            '--sidebar-subtle': 'rgba(248, 251, 255, 0.42)',
-            '--sidebar-hover': 'rgba(255, 255, 255, 0.07)',
-            '--sidebar-beta-text': '#bfdbfe',
-            '--sidebar-beta-bg': 'rgba(96, 165, 250, 0.14)',
-            '--sidebar-active': 'linear-gradient(135deg, #60a5fa 0%, #4ade80 100%)',
-            '--sidebar-active-bg': 'rgba(96, 165, 250, 0.13)',
-            '--sidebar-accent': '#60a5fa',
-            '--sidebar-active-shadow': '0 14px 34px rgba(0, 0, 0, 0.28)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(96, 165, 250, 0.24)',
-            '--sidebar-rail-shadow': '12px 0 36px rgba(0, 0, 0, 0.22)',
-        } as React.CSSProperties,
-    },
-    articles: {
-        light: {
-            '--sidebar-bg': 'rgba(255, 255, 255, 0.70)',
-            '--sidebar-bg-soft': 'rgba(247, 243, 255, 0.54)',
-            '--sidebar-border': 'rgba(99, 102, 241, 0.14)',
-            '--sidebar-text': '#172033',
-            '--sidebar-muted': 'rgba(23, 32, 51, 0.62)',
-            '--sidebar-subtle': 'rgba(23, 32, 51, 0.43)',
-            '--sidebar-hover': 'rgba(99, 102, 241, 0.09)',
-            '--sidebar-beta-text': '#4f46e5',
-            '--sidebar-beta-bg': 'rgba(99, 102, 241, 0.12)',
-            '--sidebar-active': 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-            '--sidebar-active-bg': 'rgba(99, 102, 241, 0.13)',
-            '--sidebar-accent': '#6366f1',
-            '--sidebar-active-shadow': '0 10px 28px rgba(99, 102, 241, 0.13)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(99, 102, 241, 0.18)',
-            '--sidebar-rail-shadow': '12px 0 34px rgba(99, 102, 241, 0.06)',
-        } as React.CSSProperties,
-        dark: {
-            '--sidebar-bg': 'rgba(5, 8, 22, 0.74)',
-            '--sidebar-bg-soft': 'rgba(36, 16, 79, 0.58)',
-            '--sidebar-border': 'rgba(165, 180, 252, 0.16)',
-            '--sidebar-text': '#f8fbff',
-            '--sidebar-muted': 'rgba(248, 251, 255, 0.62)',
-            '--sidebar-subtle': 'rgba(248, 251, 255, 0.42)',
-            '--sidebar-hover': 'rgba(255, 255, 255, 0.07)',
-            '--sidebar-beta-text': '#c4b5fd',
-            '--sidebar-beta-bg': 'rgba(167, 139, 250, 0.14)',
-            '--sidebar-active': 'linear-gradient(135deg, #818cf8 0%, #22d3ee 100%)',
-            '--sidebar-active-bg': 'rgba(129, 140, 248, 0.13)',
-            '--sidebar-accent': '#a5b4fc',
-            '--sidebar-active-shadow': '0 14px 34px rgba(0, 0, 0, 0.28)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(129, 140, 248, 0.24)',
-            '--sidebar-rail-shadow': '12px 0 36px rgba(0, 0, 0, 0.22)',
-        } as React.CSSProperties,
-    },
-    flashcards: {
-        light: {
-            '--sidebar-bg': 'rgba(255, 255, 255, 0.68)',
-            '--sidebar-bg-soft': 'rgba(255, 255, 255, 0.48)',
-            '--sidebar-border': 'rgba(15, 118, 110, 0.14)',
-            '--sidebar-text': '#11202a',
-            '--sidebar-muted': 'rgba(17, 32, 42, 0.62)',
-            '--sidebar-subtle': 'rgba(17, 32, 42, 0.42)',
-            '--sidebar-hover': 'rgba(16, 185, 129, 0.10)',
-            '--sidebar-beta-text': '#047857',
-            '--sidebar-beta-bg': 'rgba(16, 185, 129, 0.12)',
-            '--sidebar-active': 'linear-gradient(135deg, #10b981 0%, #8b5cf6 100%)',
-            '--sidebar-active-bg': 'rgba(16, 185, 129, 0.14)',
-            '--sidebar-accent': '#10b981',
-            '--sidebar-active-shadow': '0 10px 28px rgba(16, 185, 129, 0.14)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(16, 185, 129, 0.18)',
-            '--sidebar-rail-shadow': '12px 0 34px rgba(16, 185, 129, 0.06)',
-        } as React.CSSProperties,
-        dark: {
-            '--sidebar-bg': 'rgba(4, 23, 20, 0.72)',
-            '--sidebar-bg-soft': 'rgba(4, 23, 20, 0.58)',
-            '--sidebar-border': 'rgba(110, 231, 183, 0.16)',
-            '--sidebar-text': '#f7fff8',
-            '--sidebar-muted': 'rgba(247, 255, 248, 0.62)',
-            '--sidebar-subtle': 'rgba(247, 255, 248, 0.42)',
-            '--sidebar-hover': 'rgba(255, 255, 255, 0.07)',
-            '--sidebar-beta-text': '#a7f3d0',
-            '--sidebar-beta-bg': 'rgba(110, 231, 183, 0.14)',
-            '--sidebar-active': 'linear-gradient(135deg, #34d399 0%, #a78bfa 100%)',
-            '--sidebar-active-bg': 'rgba(52, 211, 153, 0.13)',
-            '--sidebar-accent': '#6ee7b7',
-            '--sidebar-active-shadow': '0 14px 34px rgba(0, 0, 0, 0.28)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(52, 211, 153, 0.24)',
-            '--sidebar-rail-shadow': '12px 0 36px rgba(0, 0, 0, 0.22)',
-        } as React.CSSProperties,
-    },
-    exams: {
-        light: {
-            '--sidebar-bg': 'rgba(255, 255, 255, 0.70)',
-            '--sidebar-bg-soft': 'rgba(255, 248, 241, 0.56)',
-            '--sidebar-border': 'rgba(249, 115, 22, 0.15)',
-            '--sidebar-text': '#261b15',
-            '--sidebar-muted': 'rgba(38, 27, 21, 0.62)',
-            '--sidebar-subtle': 'rgba(38, 27, 21, 0.42)',
-            '--sidebar-hover': 'rgba(249, 115, 22, 0.10)',
-            '--sidebar-beta-text': '#c2410c',
-            '--sidebar-beta-bg': 'rgba(249, 115, 22, 0.13)',
-            '--sidebar-active': 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
-            '--sidebar-active-bg': 'rgba(249, 115, 22, 0.14)',
-            '--sidebar-accent': '#f97316',
-            '--sidebar-active-shadow': '0 10px 28px rgba(249, 115, 22, 0.14)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(249, 115, 22, 0.18)',
-            '--sidebar-rail-shadow': '12px 0 34px rgba(249, 115, 22, 0.06)',
-        } as React.CSSProperties,
-        dark: {
-            '--sidebar-bg': 'rgba(18, 8, 6, 0.74)',
-            '--sidebar-bg-soft': 'rgba(50, 17, 13, 0.58)',
-            '--sidebar-border': 'rgba(251, 146, 60, 0.17)',
-            '--sidebar-text': '#fff8f1',
-            '--sidebar-muted': 'rgba(255, 248, 241, 0.62)',
-            '--sidebar-subtle': 'rgba(255, 248, 241, 0.42)',
-            '--sidebar-hover': 'rgba(255, 255, 255, 0.07)',
-            '--sidebar-beta-text': '#fed7aa',
-            '--sidebar-beta-bg': 'rgba(251, 146, 60, 0.14)',
-            '--sidebar-active': 'linear-gradient(135deg, #fb923c 0%, #f87171 100%)',
-            '--sidebar-active-bg': 'rgba(251, 146, 60, 0.13)',
-            '--sidebar-accent': '#fdba74',
-            '--sidebar-active-shadow': '0 14px 34px rgba(0, 0, 0, 0.28)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(251, 146, 60, 0.24)',
-            '--sidebar-rail-shadow': '12px 0 36px rgba(0, 0, 0, 0.22)',
-        } as React.CSSProperties,
-    },
-    account: {
-        light: {
-            '--sidebar-bg': 'rgba(255, 255, 255, 0.76)',
-            '--sidebar-bg-soft': 'rgba(248, 250, 252, 0.62)',
-            '--sidebar-border': 'rgba(100, 116, 139, 0.16)',
-            '--sidebar-text': '#172033',
-            '--sidebar-muted': 'rgba(23, 32, 51, 0.62)',
-            '--sidebar-subtle': 'rgba(23, 32, 51, 0.42)',
-            '--sidebar-hover': 'rgba(100, 116, 139, 0.10)',
-            '--sidebar-beta-text': '#475569',
-            '--sidebar-beta-bg': 'rgba(100, 116, 139, 0.12)',
-            '--sidebar-active': 'linear-gradient(135deg, #64748b 0%, #0ea5e9 100%)',
-            '--sidebar-active-bg': 'rgba(100, 116, 139, 0.13)',
-            '--sidebar-accent': '#64748b',
-            '--sidebar-active-shadow': '0 10px 28px rgba(100, 116, 139, 0.12)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(100, 116, 139, 0.16)',
-            '--sidebar-rail-shadow': '12px 0 34px rgba(100, 116, 139, 0.05)',
-        } as React.CSSProperties,
-        dark: {
-            '--sidebar-bg': 'rgba(24, 24, 27, 0.76)',
-            '--sidebar-bg-soft': 'rgba(39, 39, 42, 0.60)',
-            '--sidebar-border': 'rgba(148, 163, 184, 0.16)',
-            '--sidebar-text': '#fafafa',
-            '--sidebar-muted': 'rgba(250, 250, 250, 0.62)',
-            '--sidebar-subtle': 'rgba(250, 250, 250, 0.42)',
-            '--sidebar-hover': 'rgba(255, 255, 255, 0.07)',
-            '--sidebar-beta-text': '#cbd5e1',
-            '--sidebar-beta-bg': 'rgba(148, 163, 184, 0.14)',
-            '--sidebar-active': 'linear-gradient(135deg, #94a3b8 0%, #38bdf8 100%)',
-            '--sidebar-active-bg': 'rgba(148, 163, 184, 0.13)',
-            '--sidebar-accent': '#cbd5e1',
-            '--sidebar-active-shadow': '0 14px 34px rgba(0, 0, 0, 0.28)',
-            '--sidebar-logo-shadow': '0 8px 24px rgba(148, 163, 184, 0.22)',
-            '--sidebar-rail-shadow': '12px 0 36px rgba(0, 0, 0, 0.22)',
-        } as React.CSSProperties,
-    },
-};
 
 function isActive(pathname: string, href: string) {
     if (href === '/dashboard') return pathname === '/dashboard';
     return pathname === href || pathname.startsWith(href + '/');
-}
-
-function themeForPath(pathname: string) {
-    if (pathname === '/dashboard') return SIDEBAR_THEMES.dashboard;
-    if (pathname.startsWith('/analytics')) return SIDEBAR_THEMES.analytics;
-    if (pathname.startsWith('/courses') || pathname.startsWith('/study')) return SIDEBAR_THEMES.courses;
-    if (pathname.startsWith('/articles')) return SIDEBAR_THEMES.articles;
-    if (pathname.startsWith('/flashcards')) return SIDEBAR_THEMES.flashcards;
-    if (pathname.startsWith('/archive') || pathname.startsWith('/exam') || pathname.startsWith('/exams')) return SIDEBAR_THEMES.exams;
-    if (pathname.startsWith('/profile') || pathname.startsWith('/settings')) return SIDEBAR_THEMES.account;
-    return SIDEBAR_THEMES.dashboard;
 }
 
 // ─── Shared row styles ────────────────────────────────────────────────────────
@@ -401,7 +132,7 @@ export default function DashboardSidebar({
 }) {
     const pathname = usePathname();
     const { isSidebarExpanded, toggleSidebar } = useSidebar();
-    const { setTheme, theme, resolvedTheme } = useTheme();
+    const { setTheme, theme } = useTheme();
     const [isThemeMenuOpen, setIsThemeMenuOpen] = React.useState(false);
     // next-themes only knows the resolved theme on the client. Default to the
     // light branch for SSR + first client render (matching SSR output), then
@@ -410,28 +141,17 @@ export default function DashboardSidebar({
     React.useEffect(() => setMounted(true), []);
 
     const lo = isSidebarExpanded ? 1 : 0;
-    const sidebarThemeSet = themeForPath(pathname);
-    const isDark = mounted && resolvedTheme === 'dark';
-    const sidebarTheme = isDark ? sidebarThemeSet.dark : sidebarThemeSet.light;
     // Sidebar's own glass surface — near-transparent so the page-themed
     // background behind the sidebar tints the glass directly via backdrop-filter.
-    const glassSurface = isDark
-        ? 'linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.008) 55%, rgba(255,255,255,0.018) 100%)'
-        : 'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.018) 55%, rgba(255,255,255,0.05) 100%)';
+    const glassSurface = T.glass;
     // Slightly more opaque surface for tiny chips (logo square, avatar, theme popover)
     // so they remain legible against the very translucent sidebar.
-    const chipSurface = isDark
-        ? 'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 100%)'
-        : 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.30) 100%)';
-    const glassHover = isDark ? 'rgba(255,255,255,0.065)' : 'rgba(255,255,255,0.22)';
-    const glassActive = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.34)';
-    const glassBorder = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.32)';
-    const glassInset = isDark
-        ? 'inset 1px 0 0 rgba(255,255,255,0.07), inset -1px 0 0 rgba(255,255,255,0.025), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.10)'
-        : 'inset 1px 0 0 rgba(255,255,255,0.55), inset -1px 0 0 rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.50), inset 0 -1px 0 rgba(15,23,42,0.025)';
-    const glassDrop = isDark
-        ? '6px 0 28px rgba(0, 0, 0, 0.24)'
-        : '6px 0 28px rgba(15, 23, 42, 0.05)';
+    const chipSurface = T.glassSoft;
+    const glassHover = 'var(--sidebar-glass-hover)';
+    const glassActive = 'var(--sidebar-glass-active)';
+    const glassBorder = 'var(--sidebar-glass-border)';
+    const glassInset = 'var(--sidebar-glass-inset)';
+    const glassDrop = 'var(--sidebar-glass-drop)';
 
     return (
         <motion.aside
@@ -439,7 +159,6 @@ export default function DashboardSidebar({
             animate={{ width: isSidebarExpanded ? W_OPEN : W_CLOSED }}
             transition={WT}
             style={{
-                ...sidebarTheme,
                 flexShrink: 0,
                 height: '100vh',
                 position: 'sticky',
@@ -447,8 +166,8 @@ export default function DashboardSidebar({
                 display: 'flex',
                 flexDirection: 'column',
                 background: glassSurface,
-                backdropFilter: 'blur(44px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(44px) saturate(180%)',
+                backdropFilter: 'blur(16px) saturate(140%)',
+                WebkitBackdropFilter: 'blur(16px) saturate(140%)',
                 borderRight: `1px solid ${glassBorder}`,
                 boxShadow: `${glassInset}, ${glassDrop}`,
                 willChange: 'width',
@@ -474,9 +193,7 @@ export default function DashboardSidebar({
                     position: 'absolute',
                     inset: '0 auto 0 0',
                     width: isSidebarExpanded ? 72 : 34,
-                    background: isDark
-                        ? 'linear-gradient(90deg, rgba(255,255,255,0.025), transparent)'
-                        : 'linear-gradient(90deg, rgba(255,255,255,0.18), transparent)',
+                    background: 'var(--sidebar-glass-highlight)',
                     opacity: 1,
                     pointerEvents: 'none',
                 }}
@@ -543,7 +260,7 @@ export default function DashboardSidebar({
                         </span>
                         <span
                             style={{
-                                background: `linear-gradient(135deg, ${T.primaryLight}, rgba(255,255,255,0.22))`,
+                                background: T.primaryLight,
                                 color: T.primary,
                                 fontSize: 10,
                                 fontWeight: 700,
@@ -727,19 +444,19 @@ export default function DashboardSidebar({
                         scale: isThemeMenuOpen ? 1 : 0.95,
                         pointerEvents: isThemeMenuOpen ? 'auto' : 'none'
                     }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                    transition={POPOVER_T}
                     style={{
                         position: 'absolute',
                         bottom: '100%',
                         left: IPAD,
                         width: isSidebarExpanded ? W_OPEN - (OUTER * 2) - (IPAD * 2) : 50,
                         background: chipSurface,
-                        backdropFilter: 'blur(44px) saturate(180%)',
-                        WebkitBackdropFilter: 'blur(44px) saturate(180%)',
+                        backdropFilter: 'blur(16px) saturate(140%)',
+                        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
                         border: `1px solid ${glassBorder}`,
                         borderRadius: 14,
                         padding: 6,
-                        boxShadow: `${isDark ? '0 18px 46px rgba(0,0,0,0.32)' : '0 18px 46px rgba(15,23,42,0.10)'}, inset 0 1px 0 ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.45)'}`,
+                        boxShadow: 'var(--sidebar-popover-shadow)',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 2,
@@ -761,8 +478,8 @@ export default function DashboardSidebar({
                                 padding: '8px 10px',
                                 borderRadius: 10,
                                 border: 'none',
-                                background: theme === t.id ? glassActive : 'transparent',
-                                color: theme === t.id ? T.text : T.textMuted,
+                                background: mounted && theme === t.id ? glassActive : 'transparent',
+                                color: mounted && theme === t.id ? T.text : T.textMuted,
                                 cursor: 'pointer',
                                 transition: 'background 160ms ease, color 160ms ease',
                                 width: '100%',

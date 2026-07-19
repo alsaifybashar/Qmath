@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
 import crypto from 'crypto';
 
@@ -46,7 +46,9 @@ export const users = sqliteTable('users', {
     email: text('email').unique().notNull(),
     password: text('password'),
     name: text('name'),
-    role: text('role').default('student'),
+    role: text('role', { enum: ['student', 'professor', 'admin'] }).notNull().default('student'),
+    // Incrementing this value revokes every stateless session issued under the old value.
+    sessionVersion: integer('session_version').notNull().default(1),
     image: text('image'), // Added image field for profile
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
@@ -101,6 +103,35 @@ export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
     course: one(courses, {
         fields: [enrollments.courseId],
         references: [courses.id],
+    }),
+}));
+
+// Explicit professor-to-course authorization scope. A professor role alone does
+// not grant access to every course or every student's academic records.
+export const courseAssignments = sqliteTable('course_assignments', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    professorId: text('professor_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    courseId: text('course_id').references(() => courses.id, { onDelete: 'cascade' }).notNull(),
+    assignedBy: text('assigned_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+}, (table) => ({
+    professorCourseIdx: uniqueIndex('course_assignments_professor_course_idx').on(table.professorId, table.courseId),
+}));
+
+export const courseAssignmentsRelations = relations(courseAssignments, ({ one }) => ({
+    professor: one(users, {
+        fields: [courseAssignments.professorId],
+        references: [users.id],
+        relationName: 'professorAssignments',
+    }),
+    course: one(courses, {
+        fields: [courseAssignments.courseId],
+        references: [courses.id],
+    }),
+    assigner: one(users, {
+        fields: [courseAssignments.assignedBy],
+        references: [users.id],
+        relationName: 'assignmentCreator',
     }),
 }));
 
@@ -169,6 +200,13 @@ export const questions = sqliteTable('questions', {
     // Admin-authored sub-questions (interactive checkpoints expecting a specific value/equation)
     // Shape: Array<{ id: string; order: number; prompt: string; correctAnswer: string }>
     subQuestions: text('sub_questions', { mode: 'json' }),
+    // Full worked example shown at the top of the assistance ladder ("Genomgång")
+    workedExampleMarkdown: text('worked_example_markdown'),
+    // Internal notes from the authoring teacher/admin — never shown to students
+    teacherNotes: text('teacher_notes'),
+    // Review metadata for the draft → ai_review → ready → published workflow
+    reviewedBy: text('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
@@ -191,6 +229,13 @@ export const questionSteps = sqliteTable('question_steps', {
     correctAnswer: text('correct_answer').notNull(),
     questionType: text('question_type').default('algebra'),
     hint: text('hint'),
+    // Why this step works — rendered on completed/prefilled steps in the fading view
+    explanation: text('explanation'),
+    // Misconception this step commonly trips; links attempts to the misconceptions catalog
+    misconceptionId: text('misconception_id').references(() => misconceptions.id, { onDelete: 'set null' }),
+    // Assistance-ladder hints: level 1 (nudge) and level 2 (guided). Legacy `hint` is the fallback.
+    hintNudge: text('hint_nudge'),
+    hintGuided: text('hint_guided'),
 });
 
 export const questionStepsRelations = relations(questionSteps, ({ one }) => ({
@@ -239,6 +284,12 @@ export const attemptLogs = sqliteTable('attempt_logs', {
     confidenceRating: integer('confidence_rating'),
     /** Whether the SymPy sidecar was needed (Tier 2 CAS) */
     symbolicallyChecked: integer('symbolically_checked', { mode: 'boolean' }),
+    /** Number of hints the student used before this attempt */
+    hintsUsed: integer('hints_used'),
+    /** Highest assistance-ladder level (0–5) reached before this attempt */
+    helpLevelReached: integer('help_level_reached'),
+    /** study_sessions.id — plain text to avoid a circular import with dashboard-schema */
+    sessionId: text('session_id'),
 });
 
 export const attemptLogsRelations = relations(attemptLogs, ({ one }) => ({
@@ -250,6 +301,26 @@ export const attemptLogsRelations = relations(attemptLogs, ({ one }) => ({
         fields: [attemptLogs.questionId],
         references: [questions.id],
     }),
+}));
+
+// Learning Events — append-only telemetry for the fading-steps flow.
+// Rows are never updated or deleted (except via user cascade); payload shape is
+// versioned per eventType and validated by the Zod schemas in lib/events/types.ts.
+export const learningEvents = sqliteTable('learning_events', {
+    id: text('id').primaryKey().$defaultFn(generateId),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    /** study_sessions.id — plain text to avoid a circular import with dashboard-schema */
+    sessionId: text('session_id'),
+    eventType: text('event_type').notNull(),
+    eventVersion: integer('event_version').notNull().default(1),
+    questionId: text('question_id').references(() => questions.id, { onDelete: 'set null' }),
+    topicId: text('topic_id').references(() => topics.id, { onDelete: 'set null' }),
+    stepId: text('step_id').references(() => questionSteps.id, { onDelete: 'set null' }),
+    payload: text('payload', { mode: 'json' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+}, (table) => ({
+    userCreatedIdx: index('learning_events_user_created_idx').on(table.userId, table.createdAt),
+    typeIdx: index('learning_events_type_idx').on(table.eventType),
 }));
 
 // Exams (Old Exam Archive)

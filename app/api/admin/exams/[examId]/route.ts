@@ -1,184 +1,181 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { z } from 'zod';
+import { eq } from 'drizzle-orm';
 import { db } from '@/db/drizzle';
 import { exams } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import fs from 'fs/promises';
-import path from 'path';
+import { requireAdmin } from '@/lib/auth';
+import { logAuditEvent } from '@/lib/audit-log';
+import {
+    deleteExamFile,
+    validateUploadedExamBlob,
+} from '@/lib/exam-storage';
+import { checkRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
+import { getTrustedClientAddress, problem, requireSameOrigin } from '@/lib/security/request';
 
-// Helper to safely delete file if exists
-const deleteFile = async (filePath: string) => {
+const idSchema = z.string().uuid();
+const metadataSchema = z.object({
+    courseCode: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{2,24}$/),
+    courseName: z.string().trim().min(1).max(200),
+    examDate: z.iso.date().transform((value) => new Date(`${value}T00:00:00.000Z`)),
+    examType: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{1,32}$/),
+    removeSolution: z.boolean().default(false),
+    examBlobUrl: z.url().optional(),
+    solutionBlobUrl: z.url().optional(),
+}).strict();
+
+const MAX_JSON_BYTES = 16 * 1024;
+
+async function context(request: NextRequest) {
+    let user: Awaited<ReturnType<typeof requireAdmin>>;
     try {
-        const fullPath = path.join(process.cwd(), filePath);
-        await fs.access(fullPath);
-        await fs.unlink(fullPath);
-        return true;
-    } catch (error) {
-        // File doesn't exist or other error, ignore
-        return false;
+        user = await requireAdmin();
+    } catch {
+        return null;
     }
-};
+    const sourceAddress = getTrustedClientAddress(request);
+    const rate = await checkRateLimit(user.id, 'admin-mutation');
+    return { user, sourceAddress, rate };
+}
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ examId: string }> }
+    _request: NextRequest,
+    { params }: { params: Promise<{ examId: string }> },
 ) {
     try {
-        const session = await auth();
-        if (!session || !session.user || session.user.role !== 'admin') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const { examId } = await params;
-        const exam = await db.query.exams.findFirst({
-            where: eq(exams.id, examId),
-        });
-
-        if (!exam) {
-            return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
-        }
-
-        return NextResponse.json({ exam });
-    } catch (error) {
-        console.error('Fetch exam error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        await requireAdmin();
+    } catch {
+        return problem(403, 'admin_access_required');
     }
+    const parsedId = idSchema.safeParse((await params).examId);
+    if (!parsedId.success) return problem(400, 'invalid_exam_id');
+
+    const exam = await db.query.exams.findFirst({ where: eq(exams.id, parsedId.data) });
+    if (!exam) return problem(404, 'exam_not_found');
+    return NextResponse.json({ exam }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: Promise<{ examId: string }> }
+    { params }: { params: Promise<{ examId: string }> },
 ) {
-    try {
-        const session = await auth();
-        if (!session || !session.user || session.user.role !== 'admin') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+    const csrfFailure = requireSameOrigin(request);
+    if (csrfFailure) return csrfFailure;
+    const secured = await context(request);
+    if (!secured) return problem(403, 'admin_access_required');
+    const { user, sourceAddress, rate } = secured;
+    if (!rate.allowed) return problem(429, 'rate_limit_exceeded');
 
-        const { examId } = await params;
+    const parsedId = idSchema.safeParse((await params).examId);
+    if (!parsedId.success) return problem(400, 'invalid_exam_id');
+    const exam = await db.query.exams.findFirst({ where: eq(exams.id, parsedId.data) });
+    if (!exam) return problem(404, 'exam_not_found');
 
-        // 1. Get exam info to know file paths
-        const exam = await db.query.exams.findFirst({
-            where: eq(exams.id, examId),
-        });
+    await db.delete(exams).where(eq(exams.id, exam.id));
+    if (exam.filePath) await deleteExamFile(exam.filePath);
+    if (exam.solutionFilePath) await deleteExamFile(exam.solutionFilePath);
+    await logAuditEvent({
+        actorId: user.id,
+        actorRole: user.role,
+        type: 'exam_delete',
+        description: 'Exam deleted',
+        targetType: 'exam',
+        targetId: exam.id,
+        sourceAddress,
+    });
 
-        if (!exam) {
-            return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
-        }
-
-        // 2. Delete files from disk
-        if (exam.filePath) {
-            await deleteFile(exam.filePath);
-        }
-        if (exam.solutionFilePath) {
-            await deleteFile(exam.solutionFilePath);
-        }
-
-        // 3. Delete from DB
-        await db.delete(exams).where(eq(exams.id, examId));
-
-        return NextResponse.json({ success: true, message: 'Exam deleted successfully' });
-    } catch (error) {
-        console.error('Delete exam error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    }
+    return NextResponse.json({ success: true }, { headers: rateLimitHeaders(rate) });
 }
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: Promise<{ examId: string }> }
+    { params }: { params: Promise<{ examId: string }> },
 ) {
-    try {
-        const session = await auth();
-        if (!session || !session.user || session.user.role !== 'admin') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+    const csrfFailure = requireSameOrigin(request);
+    if (csrfFailure) return csrfFailure;
+    const secured = await context(request);
+    if (!secured) return problem(403, 'admin_access_required');
+    const { user, sourceAddress, rate } = secured;
+    if (!rate.allowed) return problem(429, 'rate_limit_exceeded');
 
-        const { examId } = await params;
-        const formData = await request.formData();
-
-        // Retrieve existing exam to handle file replacements
-        const existingExam = await db.query.exams.findFirst({
-            where: eq(exams.id, examId),
-        });
-
-        if (!existingExam) {
-            return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
-        }
-
-        // Get basic fields
-        const courseCode = (formData.get('courseCode') as string)?.toUpperCase() || existingExam.courseCode;
-        const courseName = (formData.get('courseName') as string) || existingExam.courseName;
-        const examDateStr = formData.get('examDate') as string;
-        const examDate = examDateStr ? new Date(examDateStr) : existingExam.examDate;
-        const examType = (formData.get('examType') as string) || existingExam.examType;
-
-        const updateData: any = {
-            courseCode,
-            courseName,
-            examDate,
-            examType,
-            updatedAt: new Date(),
-        };
-
-        // Date string for filenames
-        const dateStr = examDate.toISOString().split('T')[0];
-        const uploadBaseDir = path.join(process.cwd(), 'uploads', 'exams', courseCode);
-        await fs.mkdir(uploadBaseDir, { recursive: true });
-
-        // Handle Exam File Replacement
-        const examFile = formData.get('examFile') as File | null;
-        if (examFile && examFile.size > 0) {
-            // Delete old file if path exists
-            if (existingExam.filePath) await deleteFile(existingExam.filePath);
-
-            const examFileName = `${examType}_${dateStr}.pdf`;
-            const examFilePath = path.join(uploadBaseDir, examFileName);
-
-            const buffer = Buffer.from(await examFile.arrayBuffer());
-            await fs.writeFile(examFilePath, buffer);
-
-            updateData.fileName = examFileName;
-            updateData.filePath = path.join('uploads', 'exams', courseCode, examFileName);
-            updateData.fileSize = buffer.length;
-        }
-
-        // Handle Solution File Replacement
-        const solutionFile = formData.get('solutionFile') as File | null;
-        const removeSolution = formData.get('removeSolution') === 'true';
-
-        if (removeSolution) {
-            if (existingExam.solutionFilePath) await deleteFile(existingExam.solutionFilePath);
-            updateData.hasSolution = false;
-            updateData.solutionFileName = null;
-            updateData.solutionFilePath = null;
-            updateData.solutionFileSize = null;
-        } else if (solutionFile && solutionFile.size > 0) {
-            // Delete old solution if exists
-            if (existingExam.solutionFilePath) await deleteFile(existingExam.solutionFilePath);
-
-            const solutionFileName = `${examType}_${dateStr}_solution.pdf`;
-            const solutionFilePath = path.join(uploadBaseDir, solutionFileName);
-
-            const buffer = Buffer.from(await solutionFile.arrayBuffer());
-            await fs.writeFile(solutionFilePath, buffer);
-
-            updateData.hasSolution = true;
-            updateData.solutionFileName = solutionFileName;
-            updateData.solutionFilePath = path.join('uploads', 'exams', courseCode, solutionFileName);
-            updateData.solutionFileSize = buffer.length;
-        }
-
-        const [updatedExam] = await db
-            .update(exams)
-            .set(updateData)
-            .where(eq(exams.id, examId))
-            .returning();
-
-        return NextResponse.json({ success: true, exam: updatedExam });
-    } catch (error) {
-        console.error('Update exam error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    const declaredLength = Number(request.headers.get('content-length') ?? '0');
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_JSON_BYTES) {
+        return problem(413, 'request_too_large');
     }
+
+    const parsedId = idSchema.safeParse((await params).examId);
+    if (!parsedId.success) return problem(400, 'invalid_exam_id');
+    const existing = await db.query.exams.findFirst({ where: eq(exams.id, parsedId.data) });
+    if (!existing) return problem(404, 'exam_not_found');
+
+    let payload: unknown;
+    try {
+        payload = await request.json();
+    } catch {
+        return problem(400, 'invalid_json_body');
+    }
+    const parsed = metadataSchema.safeParse(payload);
+    if (!parsed.success) return problem(400, 'invalid_exam_metadata');
+    const metadata = parsed.data;
+
+    const updateData: Partial<typeof exams.$inferInsert> = {
+        courseCode: metadata.courseCode,
+        courseName: metadata.courseName,
+        examDate: metadata.examDate,
+        examType: metadata.examType,
+        updatedAt: new Date(),
+    };
+
+    if (metadata.examBlobUrl) {
+        try {
+            const uploaded = await validateUploadedExamBlob(metadata.examBlobUrl);
+            updateData.fileName = uploaded.fileName;
+            updateData.filePath = metadata.examBlobUrl;
+            updateData.fileSize = uploaded.size;
+        } catch {
+            return problem(400, 'invalid_exam_pdf');
+        }
+    }
+
+    if (metadata.removeSolution) {
+        updateData.hasSolution = false;
+        updateData.solutionFileName = null;
+        updateData.solutionFilePath = null;
+        updateData.solutionFileSize = null;
+    } else if (metadata.solutionBlobUrl) {
+        try {
+            const uploaded = await validateUploadedExamBlob(metadata.solutionBlobUrl);
+            updateData.hasSolution = true;
+            updateData.solutionFileName = uploaded.fileName;
+            updateData.solutionFilePath = metadata.solutionBlobUrl;
+            updateData.solutionFileSize = uploaded.size;
+        } catch {
+            return problem(400, 'invalid_solution_pdf');
+        }
+    }
+
+    const [updatedExam] = await db
+        .update(exams)
+        .set(updateData)
+        .where(eq(exams.id, existing.id))
+        .returning();
+
+    if (existing.filePath && existing.filePath !== updatedExam.filePath) await deleteExamFile(existing.filePath);
+    if (existing.solutionFilePath && existing.solutionFilePath !== updatedExam.solutionFilePath) {
+        await deleteExamFile(existing.solutionFilePath);
+    }
+
+    await logAuditEvent({
+        actorId: user.id,
+        actorRole: user.role,
+        type: 'exam_update',
+        description: 'Exam updated',
+        targetType: 'exam',
+        targetId: existing.id,
+        sourceAddress,
+    });
+
+    return NextResponse.json(
+        { success: true, exam: updatedExam },
+        { headers: { ...rateLimitHeaders(rate), 'Cache-Control': 'no-store' } },
+    );
 }

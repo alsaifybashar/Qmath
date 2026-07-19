@@ -64,9 +64,6 @@ export default function TodaysFocus({ recommendations, userName }: TodaysFocusPr
                         </motion.div>
                         <div>
                             <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Dagens Fokus</h2>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                {getTimeBasedGreeting()}, {userName}!
-                            </p>
                         </div>
                     </div>
                     <motion.div
@@ -178,7 +175,7 @@ function HeroCard({ recommendation: rec }: { recommendation: DailyRecommendation
                     <div className="flex items-start gap-2">
                         <span className="text-lg">💡</span>
                         <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                            "{generateNaturalExplanation(rec)}"
+                            &quot;{generateNaturalExplanation(rec)}&quot;
                         </p>
                     </div>
                 </div>
@@ -311,15 +308,6 @@ function EmptyState({ userName }: { userName: string }) {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
-
-function getTimeBasedGreeting(): string {
-    const hour = new Date().getHours();
-    if (hour < 5) return 'God natt';
-    if (hour < 12) return 'God morgon';
-    if (hour < 17) return 'God eftermiddag';
-    if (hour < 21) return 'God kväll';
-    return 'God natt';
-}
 
 function getTypeLabel(type: string): string {
     const labels: Record<string, string> = {

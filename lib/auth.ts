@@ -1,68 +1,141 @@
-import { cookies } from 'next/headers';
+import { auth } from '@/auth';
 import { db } from '@/db/drizzle';
-import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { courseAssignments, enrollments } from '@/db/schema';
+import { and, eq } from 'drizzle-orm';
+import { type AppRole, normalizeRole } from '@/lib/security/roles';
+import { emitSecurityEvent } from '@/lib/security/events';
 
 export interface User {
     id: string;
     email: string;
     name: string | null;
-    role: string;
+    role: AppRole;
+    sessionVersion: number;
 }
 
-/**
- * Get current user from session
- * This is a simplified auth helper - in production use proper auth library
- */
-export async function getUser(): Promise<User | null> {
-    try {
-        const cookieStore = await cookies();
-        const userId = cookieStore.get('user_id')?.value;
-
-        if (!userId) {
-            return null;
-        }
-
-        const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-
-        if (!user) {
-            return null;
-        }
-
-        return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role ?? 'student',
-        };
-    } catch (error) {
-        console.error('Error getting user:', error);
-        return null;
+export class AuthenticationError extends Error {
+    readonly status = 401;
+    constructor() {
+        super('Unauthorized');
+        this.name = 'AuthenticationError';
     }
 }
 
-/**
- * Check if user is authenticated
- */
+export class AuthorizationError extends Error {
+    readonly status = 403;
+    constructor(message = 'Forbidden') {
+        super(message);
+        this.name = 'AuthorizationError';
+    }
+}
+
+/** The only supported application identity source: a verified Auth.js session. */
+export async function getUser(): Promise<User | null> {
+    const session = await auth();
+    if (!session?.user?.id || !session.user.email) return null;
+
+    return {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name ?? null,
+        role: normalizeRole(session.user.role),
+        sessionVersion: session.user.sessionVersion,
+    };
+}
+
 export async function requireAuth(): Promise<User> {
     const user = await getUser();
-
-    if (!user) {
-        throw new Error('Unauthorized');
-    }
-
+    if (!user) throw new AuthenticationError();
     return user;
 }
 
-/**
- * Check if user is admin
- */
-export async function requireAdmin(): Promise<User> {
+export async function requireRole(...roles: readonly AppRole[]): Promise<User> {
     const user = await requireAuth();
-
-    if (user.role !== 'admin') {
-        throw new Error('Forbidden: Admin access required');
+    if (!roles.includes(user.role)) {
+        emitSecurityEvent({
+            category: 'authorization',
+            action: 'role_required',
+            outcome: 'denied',
+            severity: 'medium',
+            actorId: user.id,
+            actorRole: user.role,
+            reason: `requires_${roles.join('_or_')}`,
+        });
+        throw new AuthorizationError();
     }
+    return user;
+}
 
+export async function requireAdmin(): Promise<User> {
+    return requireRole('admin');
+}
+
+export async function requireCourseEditor(courseId: string): Promise<User> {
+    const user = await requireRole('professor', 'admin');
+    if (user.role === 'admin') return user;
+
+    const assignment = await db
+        .select({ id: courseAssignments.id })
+        .from(courseAssignments)
+        .where(and(
+            eq(courseAssignments.professorId, user.id),
+            eq(courseAssignments.courseId, courseId),
+        ))
+        .limit(1)
+        .get();
+
+    if (!assignment) {
+        emitSecurityEvent({
+            category: 'authorization',
+            action: 'course.edit',
+            outcome: 'denied',
+            severity: 'medium',
+            actorId: user.id,
+            actorRole: user.role,
+            resourceType: 'course',
+            resourceId: courseId,
+            reason: 'course_assignment_missing',
+        });
+        throw new AuthorizationError();
+    }
+    return user;
+}
+
+/** Object-level authorization for every course-scoped student data read. */
+export async function requireCourseViewer(courseId: string): Promise<User> {
+    const user = await requireAuth();
+    if (user.role === 'admin') return user;
+
+    const access = user.role === 'professor'
+        ? await db
+            .select({ id: courseAssignments.id })
+            .from(courseAssignments)
+            .where(and(
+                eq(courseAssignments.professorId, user.id),
+                eq(courseAssignments.courseId, courseId),
+            ))
+            .limit(1)
+            .get()
+        : await db
+            .select({ id: enrollments.id })
+            .from(enrollments)
+            .where(and(eq(enrollments.userId, user.id), eq(enrollments.courseId, courseId)))
+            .limit(1)
+            .get();
+
+    if (!access) {
+        emitSecurityEvent({
+            category: 'authorization',
+            action: 'course.view',
+            outcome: 'denied',
+            severity: 'medium',
+            actorId: user.id,
+            actorRole: user.role,
+            resourceType: 'course',
+            resourceId: courseId,
+            reason: 'course_access_missing',
+        });
+        throw new AuthorizationError();
+    }
     return user;
 }

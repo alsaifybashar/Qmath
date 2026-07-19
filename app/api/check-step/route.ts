@@ -1,113 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { db } from '@/db/drizzle';
-import { questionSteps, userMastery } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
-import { preParseInput } from '@/lib/math/pre-parser';
-import { gradeAnswer } from '@/lib/math/cas-grader';
-import { runFeedbackTree } from '@/lib/math/feedback-tree';
-import { BayesianKnowledgeTracing } from '@/lib/adaptive-engine/knowledge-tracing';
-import { getRevealedSteps } from '@/lib/math/fade-logic';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
+import { checkStepCore } from '@/lib/study/check-step-core';
+import { z } from 'zod';
+import { parseStrictJson, problem, requireSameOrigin } from '@/lib/security/request';
+
+const checkStepRequestSchema = z.object({
+    stepId: z.string().uuid(),
+    questionId: z.string().uuid(),
+    topicId: z.string().uuid(),
+    studentInput: z.string().min(1).max(1000),
+    sessionId: z.string().uuid().nullable().optional(),
+}).strict();
 
 export async function POST(req: NextRequest) {
-    // 1. Auth
+    const csrfFailure = requireSameOrigin(req);
+    if (csrfFailure) return csrfFailure;
+
     const session = await auth();
     if (!session?.user?.id) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return problem(401, 'authentication_required');
     }
     const userId = session.user.id;
 
-    // 2. Rate limit
-    const { allowed, remaining } = checkRateLimit(userId);
-    if (!allowed) {
+    const rateLimit = await checkRateLimit(userId, 'grading');
+    if (!rateLimit.allowed) {
         return NextResponse.json(
             { error: 'För många förfrågningar. Vänta en stund.' },
-            { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
+            { status: 429, headers: rateLimitHeaders(rateLimit) }
         );
     }
 
-    // 3. Parse body
-    const body = await req.json();
-    const { stepId, questionId, topicId, studentInput } = body;
+    const parsed = await parseStrictJson(req, checkStepRequestSchema);
+    if (!parsed.success) return parsed.response;
+    const body = parsed.data;
+    const result = await checkStepCore(userId, {
+        stepId: body.stepId,
+        questionId: body.questionId,
+        topicId: body.topicId,
+        studentInput: body.studentInput,
+        sessionId: body.sessionId ?? null,
+    });
 
-    // G. Type coercion guard — ensure all fields are non-empty strings
-    if (
-        typeof stepId !== 'string' || !stepId.trim() ||
-        typeof questionId !== 'string' || !questionId.trim() ||
-        typeof topicId !== 'string' || !topicId.trim() ||
-        typeof studentInput !== 'string' || !studentInput.trim()
-    ) {
-        return NextResponse.json({ error: 'Missing or invalid required fields' }, { status: 400 });
+    if (!result.ok) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    // F. Input length guard — prevent oversized payloads from reaching the CAS grader
-    if (studentInput.length > 1000) {
-        return NextResponse.json({ error: 'Inmatningen är för lång (max 1000 tecken).' }, { status: 400 });
-    }
-
-    // 4. Fetch correctAnswer from DB (never from client)
-    const step = await db.select().from(questionSteps).where(eq(questionSteps.id, stepId)).get();
-    if (!step || step.questionId !== questionId) {
-        return NextResponse.json({ error: 'Step not found' }, { status: 404 });
-    }
-
-    // 5. CAS grading pipeline
-    const parsed = preParseInput(studentInput);
-    const gradeResult = await gradeAnswer(parsed, step.correctAnswer);
-    const { isCorrect } = gradeResult;
-
-    // 6. Feedback if wrong
-    let feedback: string | undefined;
-    if (!isCorrect) {
-        const result = await runFeedbackTree(studentInput, step.correctAnswer, {
-            questionType: (step.questionType as any) ?? 'algebra',
-        });
-        feedback = result?.message;
-    }
-
-    // 7. BKT update
-    const bkt = new BayesianKnowledgeTracing();
-    const existingMastery = await db.select()
-        .from(userMastery)
-        .where(and(eq(userMastery.userId, userId), eq(userMastery.topicId, topicId)))
-        .get();
-    const currentMastery = existingMastery?.masteryProbability ?? 0.1;
-    const newMastery = bkt.updateMastery(currentMastery, isCorrect);
-
-    // 8. Upsert mastery
-    if (existingMastery) {
-        await db.update(userMastery)
-            .set({ masteryProbability: newMastery, lastPracticedAt: new Date() })
-            .where(and(eq(userMastery.userId, userId), eq(userMastery.topicId, topicId)));
-    } else {
-        await db.insert(userMastery).values({
-            userId,
-            topicId,
-            masteryProbability: newMastery,
-            lastPracticedAt: new Date(),
-        });
-    }
-
-    // 9. Recompute revealed steps (strip correctAnswer — never sent to client)
-    const allSteps = await db.select({
-        id: questionSteps.id,
-        stepNumber: questionSteps.stepNumber,
-        instruction: questionSteps.instruction,
-        displayLatex: questionSteps.displayLatex,
-        hint: questionSteps.hint,
-        questionType: questionSteps.questionType,
-    }).from(questionSteps).where(eq(questionSteps.questionId, questionId));
-
-    const sorted = allSteps.sort((a, b) => a.stepNumber - b.stepNumber);
-    const revealedSteps = getRevealedSteps(sorted, newMastery);
-
-    return NextResponse.json({
-        isCorrect,
-        parsedStudent: parsed,
-        feedback,
-        newMastery,
-        revealedSteps,
-        allStepsComplete: false, // caller tracks this
-    }, { headers: { 'X-RateLimit-Remaining': String(remaining) } });
+    return NextResponse.json(
+        {
+            isCorrect: result.isCorrect,
+            parsedStudent: result.parsedStudent,
+            feedback: result.feedback,
+            newMastery: result.newMastery,
+            fadePhase: result.fadePhase,
+            phaseChanged: result.phaseChanged,
+            revealedSteps: result.revealedSteps,
+            allStepsComplete: false, // caller tracks completion
+        },
+        { headers: { ...rateLimitHeaders(rateLimit), 'Cache-Control': 'no-store' } }
+    );
 }

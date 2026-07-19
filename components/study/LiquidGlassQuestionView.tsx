@@ -2,12 +2,14 @@
 
 import { useState, ReactNode } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
     Calculator, ChevronLeft, FileText,
     Flame, HelpCircle, Lightbulb, PenLine,
     Sigma, Sparkles, Star, X, Zap,
 } from 'lucide-react';
+import { drawerTransition, focusTransition, motionDuration, shellSpring } from '@/lib/motion';
+import { evaluateSafeExpression } from '@/lib/math/safe-expression';
 
 // ── GlassPanel ────────────────────────────────────────────────────────────────
 
@@ -62,13 +64,14 @@ type ToolId = 'calculator' | 'formulas' | 'scratchpad';
 function CalculatorPanel() {
     const [expr, setExpr] = useState('');
     const [result, setResult] = useState<string | null>(null);
+    const reduceMotion = useReducedMotion();
 
     function evaluate() {
         if (!expr.trim()) return;
         try {
-            // eslint-disable-next-line no-new-func
-            const val = Function('"use strict"; return (' + expr + ')')();
-            setResult(typeof val === 'number' ? String(Number(val.toFixed(10))) : String(val));
+            const value = evaluateSafeExpression(expr, {});
+            if (typeof value !== 'number' || !Number.isFinite(value)) throw new Error('Non-numeric result');
+            setResult(String(Number(value.toFixed(10))));
         } catch {
             setResult('Syntax error');
         }
@@ -93,9 +96,10 @@ function CalculatorPanel() {
             <AnimatePresence>
                 {result !== null && (
                     <motion.div
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
                         className="rounded-xl border border-white/12 bg-white/[0.05] px-3 py-2 text-sm font-mono text-blue-100"
                     >
                         = {result}
@@ -236,6 +240,7 @@ export function LiquidGlassQuestionView({
 }: LiquidGlassQuestionViewProps) {
     const [activeTool, setActiveTool] = useState<ToolId>('calculator');
     const [isMobileHelpOpen, setIsMobileHelpOpen] = useState(false);
+    const reduceMotion = useReducedMotion();
 
     const progressPct =
         totalQuestions > 0 ? Math.round((questionNumber / totalQuestions) * 100) : 0;
@@ -243,12 +248,11 @@ export function LiquidGlassQuestionView({
     const headerLabel = [courseLabel, topicName].filter(Boolean).join(' · ');
 
     return (
-        <div className="relative min-h-screen font-sans text-white">
+        <div className="study-focus relative min-h-screen font-sans text-white">
 
             {/* ── Fixed ambient background ──────────────────────────────────── */}
-            <div className="pointer-events-none fixed inset-0 -z-10 bg-[#08091f]" />
-            <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_12%_14%,rgba(59,130,246,0.52),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(147,51,234,0.48),transparent_30%),radial-gradient(circle_at_52%_90%,rgba(79,70,229,0.42),transparent_34%),linear-gradient(135deg,#050816_0%,#11164e_48%,#3b1169_100%)]" />
-            <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(115deg,rgba(255,255,255,0.10),transparent_24%,rgba(255,255,255,0.05)_52%,transparent_76%)]" />
+            <div className="study-focus-background pointer-events-none fixed inset-0 -z-10" />
+            <div className="study-focus-sheen pointer-events-none fixed inset-0 -z-10" />
 
             {/* ── Fixed header ──────────────────────────────────────────────── */}
             <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-white/[0.04] backdrop-blur-xl">
@@ -280,8 +284,9 @@ export function LiquidGlassQuestionView({
                         {xpEarned > 0 && (
                             <motion.div
                                 key={xpEarned}
-                                initial={{ scale: 1.3, opacity: 0.7 }}
+                                initial={reduceMotion ? false : { scale: 0.96, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
+                                transition={reduceMotion ? { duration: 0 } : shellSpring}
                                 className="flex items-center gap-1 rounded-lg border border-violet-400/20 bg-violet-400/10 px-2 py-1"
                             >
                                 <Zap className="h-3 w-3 text-violet-300" />
@@ -291,8 +296,9 @@ export function LiquidGlassQuestionView({
 
                         {streak >= 2 && (
                             <motion.div
-                                initial={{ scale: 0.8, opacity: 0 }}
+                                initial={reduceMotion ? false : { scale: 0.96, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
+                                transition={reduceMotion ? { duration: 0 } : shellSpring}
                                 className="flex items-center gap-1 rounded-lg border border-orange-400/20 bg-orange-400/10 px-2 py-1"
                             >
                                 <Flame className="h-3 w-3 text-orange-300" />
@@ -327,10 +333,10 @@ export function LiquidGlassQuestionView({
                 {/* Progress bar */}
                 <div className="h-0.5 bg-white/8">
                     <motion.div
-                        className="h-full bg-gradient-to-r from-blue-400 to-violet-500"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressPct}%` }}
-                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                        className="h-full origin-left bg-gradient-to-r from-blue-400 to-violet-500"
+                        initial={reduceMotion ? false : { scaleX: 0 }}
+                        animate={{ scaleX: progressPct / 100 }}
+                        transition={reduceMotion ? { duration: 0 } : focusTransition}
                     />
                 </div>
             </header>
@@ -379,10 +385,10 @@ export function LiquidGlassQuestionView({
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTool}
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -4 }}
-                                transition={{ duration: 0.16 }}
+                                initial={reduceMotion ? false : { opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
                             >
                                 {activeTool === 'calculator' && <CalculatorPanel />}
                                 {activeTool === 'formulas' && <FormulaPanel />}
@@ -439,14 +445,15 @@ export function LiquidGlassQuestionView({
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                            transition={{ duration: reduceMotion ? 0 : motionDuration.fast }}
                             className="fixed inset-0 z-40 bg-black/60 lg:hidden"
                             onClick={() => setIsMobileHelpOpen(false)}
                         />
                         <motion.div
-                            initial={{ y: '100%' }}
+                            initial={reduceMotion ? false : { y: '100%' }}
                             animate={{ y: 0 }}
-                            exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            exit={reduceMotion ? { opacity: 0 } : { y: '100%' }}
+                            transition={reduceMotion ? { duration: 0 } : drawerTransition}
                             className="fixed inset-x-0 bottom-0 z-50 flex h-[85vh] flex-col overflow-hidden rounded-t-3xl border-t border-white/15 bg-[#0d1033]/95 backdrop-blur-xl lg:hidden"
                         >
                             <div className="flex flex-none flex-col items-center border-b border-white/10 pb-3 pt-3 px-4">

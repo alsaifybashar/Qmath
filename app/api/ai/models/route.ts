@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { problem } from '@/lib/security/request';
 
 export interface ClaudeModelMeta {
     id: string;
@@ -70,10 +72,14 @@ const GOOGLE_MODELS: GoogleModelMeta[] = [
 ];
 
 export async function GET() {
-    const ollamaBase = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434';
+    const session = await auth();
+    if (!session?.user?.id) return problem(401, 'authentication_required');
+    const ollamaBase = process.env.OLLAMA_BASE_URL
+        ?? (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:11434');
     let ollamaModels: OllamaModelMeta[] = [];
 
     try {
+        if (!ollamaBase) throw new Error('Ollama is disabled');
         const res = await fetch(`${ollamaBase}/api/tags`, {
             signal: AbortSignal.timeout(3000),
             cache: 'no-store',
@@ -98,5 +104,5 @@ export async function GET() {
         claude: CLAUDE_MODELS,
         google: GOOGLE_MODELS,
         ollama: ollamaModels
-    });
+    }, { headers: { 'Cache-Control': 'private, max-age=60' } });
 }

@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 // is fresh. We do this by using vi.resetModules() + dynamic import.
 // ---------------------------------------------------------------------------
 
-describe('checkRateLimit()', () => {
+describe('await checkRateLimit()', () => {
     beforeEach(() => {
         vi.resetModules();
         vi.useRealTimers();
@@ -24,14 +24,14 @@ describe('checkRateLimit()', () => {
         const userId = 'user-allow-20';
 
         for (let i = 1; i <= 20; i++) {
-            const result = checkRateLimit(userId);
+            const result = await checkRateLimit(userId);
             expect(result.allowed).toBe(true);
         }
     });
 
     it('first request returns remaining = 19', async () => {
         const { checkRateLimit } = await import('../lib/rate-limit');
-        const result = checkRateLimit('user-remaining-check');
+        const result = await checkRateLimit('user-remaining-check');
         expect(result.remaining).toBe(19);
     });
 
@@ -40,7 +40,7 @@ describe('checkRateLimit()', () => {
         const userId = 'user-decrement';
 
         for (let i = 1; i <= 20; i++) {
-            const { remaining } = checkRateLimit(userId);
+            const { remaining } = await checkRateLimit(userId);
             expect(remaining).toBe(20 - i);
         }
     });
@@ -53,8 +53,8 @@ describe('checkRateLimit()', () => {
         const { checkRateLimit } = await import('../lib/rate-limit');
         const userId = 'user-block-21';
 
-        for (let i = 0; i < 20; i++) checkRateLimit(userId);
-        const result = checkRateLimit(userId);
+        for (let i = 0; i < 20; i++) await checkRateLimit(userId);
+        const result = await checkRateLimit(userId);
 
         expect(result.allowed).toBe(false);
         expect(result.remaining).toBe(0);
@@ -64,10 +64,10 @@ describe('checkRateLimit()', () => {
         const { checkRateLimit } = await import('../lib/rate-limit');
         const userId = 'user-block-many';
 
-        for (let i = 0; i < 20; i++) checkRateLimit(userId);
+        for (let i = 0; i < 20; i++) await checkRateLimit(userId);
 
         for (let i = 0; i < 5; i++) {
-            const result = checkRateLimit(userId);
+            const result = await checkRateLimit(userId);
             expect(result.allowed).toBe(false);
         }
     });
@@ -82,11 +82,11 @@ describe('checkRateLimit()', () => {
         const userB = 'user-B';
 
         // Exhaust userA
-        for (let i = 0; i < 20; i++) checkRateLimit(userA);
-        expect(checkRateLimit(userA).allowed).toBe(false);
+        for (let i = 0; i < 20; i++) await checkRateLimit(userA);
+        expect((await checkRateLimit(userA)).allowed).toBe(false);
 
         // userB should still be fresh
-        const resultB = checkRateLimit(userB);
+        const resultB = await checkRateLimit(userB);
         expect(resultB.allowed).toBe(true);
         expect(resultB.remaining).toBe(19);
     });
@@ -96,7 +96,7 @@ describe('checkRateLimit()', () => {
 
         for (let u = 0; u < 10; u++) {
             const userId = `independent-user-${u}`;
-            const result = checkRateLimit(userId);
+            const result = await checkRateLimit(userId);
             expect(result.allowed).toBe(true);
             expect(result.remaining).toBe(19);
         }
@@ -115,14 +115,14 @@ describe('checkRateLimit()', () => {
         const userId = 'user-window-reset';
 
         // Exhaust the window
-        for (let i = 0; i < 20; i++) checkRateLimit(userId);
-        expect(checkRateLimit(userId).allowed).toBe(false);
+        for (let i = 0; i < 20; i++) await checkRateLimit(userId);
+        expect((await checkRateLimit(userId)).allowed).toBe(false);
 
         // Advance time past 1 minute (60 001 ms)
         vi.setSystemTime(now + 60_001);
 
         // Should now be allowed (new window)
-        const result = checkRateLimit(userId);
+        const result = await checkRateLimit(userId);
         expect(result.allowed).toBe(true);
         expect(result.remaining).toBe(19);
     });
@@ -136,14 +136,14 @@ describe('checkRateLimit()', () => {
         const userId = 'user-no-early-reset';
 
         // Exhaust the window
-        for (let i = 0; i < 20; i++) checkRateLimit(userId);
-        const blocked = checkRateLimit(userId);
+        for (let i = 0; i < 20; i++) await checkRateLimit(userId);
+        const blocked = await checkRateLimit(userId);
         expect(blocked.allowed).toBe(false);
 
         // Advance to just before the resetAt timestamp (resetAt = now + 60_000)
         vi.setSystemTime(now + 59_999);
 
-        const stillBlocked = checkRateLimit(userId);
+        const stillBlocked = await checkRateLimit(userId);
         expect(stillBlocked.allowed).toBe(false);
     });
 
@@ -155,11 +155,11 @@ describe('checkRateLimit()', () => {
         const { checkRateLimit } = await import('../lib/rate-limit');
         const userId = 'user-after-reset-remaining';
 
-        for (let i = 0; i < 20; i++) checkRateLimit(userId);
+        for (let i = 0; i < 20; i++) await checkRateLimit(userId);
 
         vi.setSystemTime(now + 60_001);
 
-        const result = checkRateLimit(userId);
+        const result = await checkRateLimit(userId);
         expect(result.remaining).toBe(19);
     });
 
@@ -173,7 +173,7 @@ describe('checkRateLimit()', () => {
         vi.setSystemTime(now);
 
         const { checkRateLimit } = await import('../lib/rate-limit');
-        const result = checkRateLimit('user-resetAt');
+        const result = await checkRateLimit('user-resetAt');
 
         expect(result.resetAt).toBe(now + 60_000);
     });
@@ -186,11 +186,11 @@ describe('checkRateLimit()', () => {
         const { checkRateLimit } = await import('../lib/rate-limit');
         const userId = 'user-stable-resetAt';
 
-        const first = checkRateLimit(userId);
+        const first = await checkRateLimit(userId);
 
         // Advance time slightly and make more requests
         vi.setSystemTime(now + 5_000);
-        const later = checkRateLimit(userId);
+        const later = await checkRateLimit(userId);
 
         // resetAt should be unchanged (sliding window doesn't extend)
         expect(later.resetAt).toBe(first.resetAt);

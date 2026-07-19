@@ -23,14 +23,14 @@ export function InequalitiesVisualizer({
         const initP1y = initialSlope * initP1x + initialIntercept;
         const initP2x = 1;
         const initP2y = initialSlope * initP2x + initialIntercept;
-        const p1 = board.create('point', [initP1x, initP1y], { name: 'A', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
-        const p2 = board.create('point', [initP2x, initP2y], { name: 'B', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        const p1 = board.create('point', [initP1x, initP1y], { name: 'A', size: 4, fillColor: '#3585a3', strokeColor: '#24718e' });
+        const p2 = board.create('point', [initP2x, initP2y], { name: 'B', size: 4, fillColor: '#3585a3', strokeColor: '#24718e' });
 
-        const line = board.create('line', [p1, p2], { strokeColor: '#3b82f6', strokeWidth: 2, dash: 2 }); // dashed for strictly greater/less
+        const line = board.create('line', [p1, p2], { strokeColor: '#3585a3', strokeWidth: 2, dash: 2 }); // dashed for strictly greater/less
 
         // Inequality region (y > mx + b)
         // JXG.Inequality takes a line/curve. E.g., board.create('inequality', [line])
-        const ineq = board.create('inequality', [line], { fillColor: '#3b82f6', fillOpacity: 0.2 });
+        const ineq = board.create('inequality', [line], { fillColor: '#3585a3', fillOpacity: 0.2 });
 
         const updateEquation = () => {
             const m = (p2.Y() - p1.Y()) / (p2.X() - p1.X());

@@ -11,6 +11,7 @@
  */
 
 import { preParseInput } from './pre-parser';
+import { compileSafeExpression } from './safe-expression';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -42,7 +43,8 @@ export type GradeResult = {
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const DEFAULT_TOLERANCE = 1e-6;
-const SYMPY_SIDECAR_URL = process.env.SYMPY_SIDECAR_URL ?? 'http://localhost:8001';
+const SYMPY_SIDECAR_URL = process.env.SYMPY_SIDECAR_URL
+    ?? (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8001');
 const SYMPY_TIMEOUT_MS = 4000; // SymPy call budget
 
 /** Default multi-point probe for single-variable (x) questions */
@@ -125,8 +127,9 @@ async function numericProbe(
     try {
         const math = await import('mathjs');
 
-        const studentExpr = math.compile(parsedStudent);
-        const correctExpr = math.compile(parsedCorrect);
+        const symbols = Object.keys(testPoints[0] ?? {});
+        const studentExpr = compileSafeExpression(parsedStudent, { symbols });
+        const correctExpr = compileSafeExpression(parsedCorrect, { symbols });
 
         let maxError = 0;
         const diffs: number[] = [];
@@ -212,6 +215,7 @@ async function sympyCheck(
     parsedCorrect: string,
     options: { domain: string; ignoreConstant: boolean }
 ): Promise<{ isCorrect: boolean } | null> {
+    if (!SYMPY_SIDECAR_URL) return null;
     try {
         const controller = new AbortController();
         const tid = setTimeout(() => controller.abort(), SYMPY_TIMEOUT_MS);
@@ -257,9 +261,8 @@ export function quickGrade(
         const evalSimple = (expr: string): number | null => {
             try {
                 if (/[a-zA-Z]/.test(expr)) return null;
-                // eslint-disable-next-line no-new-func
-                const result = new Function(`"use strict"; return (${expr})`)();
-                return typeof result === 'number' ? result : null;
+                const result = compileSafeExpression(expr).evaluate({});
+                return typeof result === 'number' && Number.isFinite(result) ? result : null;
             } catch {
                 return null;
             }

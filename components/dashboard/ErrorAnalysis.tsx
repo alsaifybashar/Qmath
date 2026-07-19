@@ -32,11 +32,11 @@ interface ErrorAnalysisProps {
 
 const ERROR_COLORS: Record<string, string> = {
     conceptual: '#EAB308',
-    procedural: '#3B82F6',
-    computational: '#F97316',
-    interpretation: '#8B5CF6',
+    procedural: '#3585a3',
+    computational: '#e87c2b',
+    interpretation: '#19647e',
     notation: '#10B981',
-    time_pressure: '#6366F1',
+    time_pressure: '#28afb0',
     incomplete: '#9CA3AF',
     unknown: '#D1D5DB',
 };

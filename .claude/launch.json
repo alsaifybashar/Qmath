@@ -3,8 +3,11 @@
   "configurations": [
     {
       "name": "qmath-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": [
+        "/c",
+        "set WSLENV=PORT/u&& wsl.exe -d ubuntu bash -lc ~/github/Qmath/scripts/dev-preview.sh"
+      ],
       "port": 3000,
       "autoPort": true
     }

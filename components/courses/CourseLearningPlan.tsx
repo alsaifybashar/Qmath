@@ -39,7 +39,7 @@ const MODULE_STYLE = {
         bg: 'bg-blue-50 dark:bg-blue-950/30',
         border: 'border-blue-200 dark:border-blue-900',
         text: 'text-blue-700 dark:text-blue-300',
-        color: '#3B82F6',
+        color: '#3585a3',
         icon: Target,
     },
     advanced: {
@@ -48,7 +48,7 @@ const MODULE_STYLE = {
         bg: 'bg-violet-50 dark:bg-violet-950/30',
         border: 'border-violet-200 dark:border-violet-900',
         text: 'text-violet-700 dark:text-violet-300',
-        color: '#8B5CF6',
+        color: '#19647e',
         icon: Brain,
     },
 } as const;
@@ -224,18 +224,11 @@ function TopicMission({
 
                                     <div className="flex flex-col gap-2 sm:flex-row">
                                         <Link
-                                            href={`/study?topic=${topic.id}&course=${courseCode}`}
+                                            href={`/study?topic=${topic.id}&topicName=${encodeURIComponent(topic.name)}`}
                                             className="inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
                                         >
                                             <Play className="h-4 w-4 fill-current" />
                                             Starta pass
-                                        </Link>
-                                        <Link
-                                            href={`/courses/${courseCode}/topics/${topic.id}`}
-                                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-bold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-900"
-                                        >
-                                            Förhandsgranska
-                                            <ArrowRight className="h-4 w-4" />
                                         </Link>
                                     </div>
                                 </div>
@@ -334,7 +327,7 @@ export default function CourseLearningPlan({ data }: { data: CourseOverviewData 
                 animate={{ opacity: 1, y: 0 }}
                 className="relative overflow-hidden rounded-lg bg-zinc-950 p-5 text-white shadow-xl dark:bg-zinc-900 sm:p-6"
             >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.22),transparent_32%),radial-gradient(circle_at_88%_18%,rgba(168,85,247,0.22),transparent_30%),linear-gradient(135deg,rgba(16,185,129,0.18),transparent_44%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.22),transparent_32%),radial-gradient(circle_at_88%_18%,rgba(25, 100, 126,0.22),transparent_30%),linear-gradient(135deg,rgba(16,185,129,0.18),transparent_44%)]" />
                 <div className="relative grid gap-5 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
                     <div>
                         <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-cyan-100 backdrop-blur">
@@ -397,28 +390,6 @@ export default function CourseLearningPlan({ data }: { data: CourseOverviewData 
                 </main>
 
                 <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-                    {firstTopic && (
-                        <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-                            <div className="mb-3 flex items-center justify-between">
-                                <p className="text-xs font-black uppercase tracking-wide text-zinc-400">Nästa bästa steg</p>
-                                <span className="rounded-md bg-amber-100 px-2 py-1 text-[11px] font-black text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-                                    {focusMinutes} min
-                                </span>
-                            </div>
-                            <h3 className="text-xl font-black leading-snug text-zinc-950 dark:text-white">{firstTopic.name}</h3>
-                            <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                                Börja här för snabbast momentum. Ett kort pass räcker för att skapa första framstegssignalen.
-                            </p>
-                            <Link
-                                href={`/study?topic=${firstTopic.id}&course=${data.courseCode}`}
-                                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-blue-700"
-                            >
-                                <Play className="h-4 w-4 fill-current" />
-                                Starta första passet
-                            </Link>
-                        </div>
-                    )}
-
                     <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
                         <p className="mb-3 text-xs font-black uppercase tracking-wide text-zinc-400">Högst tentaeffekt</p>
                         <div className="space-y-3">

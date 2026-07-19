@@ -3,8 +3,9 @@
 import crypto from 'crypto';
 import { db } from '@/db/drizzle';
 import { questions, topics, courses, questionSteps, userMastery } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
-import { getRevealedSteps } from '@/lib/math/fade-logic';
+import { eq, and, sql, inArray } from 'drizzle-orm';
+import { getRevealedSteps, fadePhase } from '@/lib/math/fade-logic';
+import { auth } from '@/auth';
 import type { QuestionWithHelp } from '@/lib/hooks/useStudySession';
 
 // ============================================================================
@@ -206,7 +207,20 @@ export async function getStudyQuestions(topicId: string): Promise<QuestionWithHe
             ),
         );
 
-    return rows.map(mapDbQuestion);
+    // Which of these questions have fading steps authored?
+    const withSteps = rows.length > 0
+        ? await db
+            .select({ questionId: questionSteps.questionId })
+            .from(questionSteps)
+            .where(inArray(questionSteps.questionId, rows.map(r => r.id)))
+        : [];
+    const stepQuestionIds = new Set(withSteps.map(r => r.questionId));
+
+    return rows.map(row => ({
+        ...mapDbQuestion(row),
+        hasSteps: stepQuestionIds.has(row.id),
+        workedExampleMarkdown: row.workedExampleMarkdown ?? null,
+    }));
 }
 
 // ============================================================================
@@ -215,11 +229,18 @@ export async function getStudyQuestions(topicId: string): Promise<QuestionWithHe
 
 /**
  * Fetch question steps for a given question, applying fading-steps logic
- * based on the user's current mastery for the topic.
+ * based on the current user's mastery for the topic. The userId comes from
+ * the session — never from the client.
  *
  * IMPORTANT: correctAnswer is never included in the returned data.
  */
-export async function getQuestionWithSteps(questionId: string, userId: string, topicId: string) {
+export async function getQuestionWithSteps(questionId: string, topicId: string) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized');
+    }
+    const userId = session.user.id;
+
     // Fetch steps WITHOUT correctAnswer
     const steps = await db.select({
         id: questionSteps.id,
@@ -227,6 +248,9 @@ export async function getQuestionWithSteps(questionId: string, userId: string, t
         instruction: questionSteps.instruction,
         displayLatex: questionSteps.displayLatex,
         hint: questionSteps.hint,
+        hintNudge: questionSteps.hintNudge,
+        hintGuided: questionSteps.hintGuided,
+        explanation: questionSteps.explanation,
         questionType: questionSteps.questionType,
     }).from(questionSteps).where(eq(questionSteps.questionId, questionId));
 
@@ -237,8 +261,18 @@ export async function getQuestionWithSteps(questionId: string, userId: string, t
         .get();
     const masteryProbability = mastery?.masteryProbability ?? 0.1;
 
+    const question = await db.select({ workedExampleMarkdown: questions.workedExampleMarkdown })
+        .from(questions)
+        .where(eq(questions.id, questionId))
+        .get();
+
     const sorted = steps.sort((a, b) => a.stepNumber - b.stepNumber);
     const revealedSteps = getRevealedSteps(sorted, masteryProbability);
 
-    return { revealedSteps, mastery: masteryProbability };
+    return {
+        revealedSteps,
+        mastery: masteryProbability,
+        phase: fadePhase(masteryProbability),
+        workedExampleMarkdown: question?.workedExampleMarkdown ?? null,
+    };
 }

@@ -5,6 +5,17 @@ import { apiKeys } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import crypto from 'crypto';
 import { logAuditEvent } from '@/lib/audit-log';
+import { z } from 'zod';
+import { getTrustedClientAddress, parseStrictJson, problem, requireSameOrigin } from '@/lib/security/request';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+const createKeySchema = z.object({
+    name: z.string().trim().min(1).max(100),
+    permissions: z.array(z.enum([
+        'read:questions', 'read:users', 'write:questions', 'ai:invoke', 'admin:full',
+    ])).max(5).default([]),
+    expiresInDays: z.number().int().min(1).max(365).nullable().optional(),
+}).strict();
 
 async function getAdminSession() {
     const session = await auth();
@@ -45,17 +56,18 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
+        const csrfFailure = requireSameOrigin(request);
+        if (csrfFailure) return csrfFailure;
         const session = await getAdminSession();
         if (!session) {
             return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
-        const body = await request.json();
-        const { name, permissions, expiresInDays } = body;
-
-        if (!name || typeof name !== 'string' || name.trim().length === 0) {
-            return NextResponse.json({ error: 'Key name is required' }, { status: 400 });
-        }
+        const limit = await checkRateLimit(session.user.id, 'admin-mutation');
+        if (!limit.allowed) return problem(429, 'rate_limit_exceeded');
+        const parsed = await parseStrictJson(request, createKeySchema);
+        if (!parsed.success) return parsed.response;
+        const { name, permissions, expiresInDays } = parsed.data;
 
         // Generate a secure random key
         const rawKey = `qmk_${crypto.randomBytes(32).toString('hex')}`;
@@ -72,7 +84,7 @@ export async function POST(request: NextRequest) {
                 name: name.trim(),
                 keyHash,
                 keyPrefix,
-                permissions: Array.isArray(permissions) ? permissions : [],
+                permissions,
                 createdBy: session.user.id,
                 expiresAt: expiresAt ?? undefined,
                 isActive: true,
@@ -82,16 +94,19 @@ export async function POST(request: NextRequest) {
         await logAuditEvent({
             type: 'key_generate',
             actorId: session.user.id,
-            actorEmail: session.user.email ?? '',
+            actorRole: session.user.role,
             description: `Generated API key: "${name.trim()}"`,
             targetId: inserted.id,
             targetType: 'api_key',
             metadata: { keyPrefix, permissions },
-            ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+            sourceAddress: getTrustedClientAddress(request),
         });
 
         // Return the full key ONCE — it is never stored in plaintext
-        return NextResponse.json({ id: inserted.id, key: rawKey, keyPrefix });
+        return NextResponse.json(
+            { id: inserted.id, key: rawKey, keyPrefix },
+            { headers: { 'Cache-Control': 'no-store' } },
+        );
     } catch (error) {
         console.error('API key generate error:', error);
         return NextResponse.json({ error: 'Failed to generate API key' }, { status: 500 });

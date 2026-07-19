@@ -1,10 +1,11 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import { questions, topics, courses } from '@/db/schema';
+import { questions, topics, courses, questionSteps, misconceptions } from '@/db/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
+import { questionStepsSchema, validateReadyGate, type StepInput } from '@/lib/validation/question-steps';
 
 // ── Auth helper ──────────────────────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ export async function deleteAdminCourse(courseId: string): Promise<{ success: tr
         const isLastCourseForCode = Number(sameCodeCount) <= 1;
 
         await db.transaction(async (tx) => {
-            tx.run(sql`
+            await tx.run(sql`
                 delete from content_attempts
                 where content_id in (
                     select gc.id
@@ -63,7 +64,7 @@ export async function deleteAdminCourse(courseId: string): Promise<{ success: tr
                     where t.course_id = ${courseId}
                 )
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from content_quality
                 where content_id in (
                     select gc.id
@@ -72,12 +73,12 @@ export async function deleteAdminCourse(courseId: string): Promise<{ success: tr
                     where t.course_id = ${courseId}
                 )
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from generated_content
                 where topic_id in (select id from topics where course_id = ${courseId})
             `);
 
-            tx.run(sql`
+            await tx.run(sql`
                 delete from question_attempts
                 where question_id in (
                     select q.id
@@ -86,7 +87,7 @@ export async function deleteAdminCourse(courseId: string): Promise<{ success: tr
                     where t.course_id = ${courseId}
                 )
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from question_steps
                 where question_id in (
                     select q.id
@@ -95,7 +96,7 @@ export async function deleteAdminCourse(courseId: string): Promise<{ success: tr
                     where t.course_id = ${courseId}
                 )
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from attempt_logs
                 where question_id in (
                     select q.id
@@ -104,7 +105,7 @@ export async function deleteAdminCourse(courseId: string): Promise<{ success: tr
                     where t.course_id = ${courseId}
                 )
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from diagnostic_item_responses
                 where topic_id in (select id from topics where course_id = ${courseId})
                    or question_id in (
@@ -115,50 +116,50 @@ export async function deleteAdminCourse(courseId: string): Promise<{ success: tr
                    )
             `);
 
-            tx.run(sql`
+            await tx.run(sql`
                 delete from user_mastery
                 where topic_id in (select id from topics where course_id = ${courseId})
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from user_topic_mastery
                 where topic_id in (select id from topics where course_id = ${courseId})
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from calibration_logs
                 where topic_id in (select id from topics where course_id = ${courseId})
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from prerequisite_edges
                 where from_topic_id in (select id from topics where course_id = ${courseId})
                    or to_topic_id in (select id from topics where course_id = ${courseId})
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 update misconceptions
                 set remediation_topic_id = null
                 where remediation_topic_id in (select id from topics where course_id = ${courseId})
             `);
 
-            tx.run(sql`
+            await tx.run(sql`
                 delete from exam_questions
                 where topic_id in (select id from topics where course_id = ${courseId})
                    or source_exam_id in (select id from source_exams where course_id = ${courseId})
             `);
-            tx.run(sql`delete from source_exams where course_id = ${courseId}`);
-            tx.run(sql`delete from articles where course_id = ${courseId} or topic_id in (select id from topics where course_id = ${courseId})`);
-            tx.run(sql`delete from questions where topic_id in (select id from topics where course_id = ${courseId})`);
-            tx.run(sql`delete from topics where course_id = ${courseId}`);
+            await tx.run(sql`delete from source_exams where course_id = ${courseId}`);
+            await tx.run(sql`delete from articles where course_id = ${courseId} or topic_id in (select id from topics where course_id = ${courseId})`);
+            await tx.run(sql`delete from questions where topic_id in (select id from topics where course_id = ${courseId})`);
+            await tx.run(sql`delete from topics where course_id = ${courseId}`);
 
-            tx.run(sql`delete from enrollments where course_id = ${courseId}`);
-            tx.run(sql`delete from user_city where course_id = ${courseId}`);
-            tx.run(sql`delete from course_areas where course_id = ${courseId}`);
-            tx.run(sql`update study_sessions set course_id = null where course_id = ${courseId}`);
-            tx.run(sql`update diagnostic_results set course_id = null where course_id = ${courseId}`);
+            await tx.run(sql`delete from enrollments where course_id = ${courseId}`);
+            await tx.run(sql`delete from user_city where course_id = ${courseId}`);
+            await tx.run(sql`delete from course_areas where course_id = ${courseId}`);
+            await tx.run(sql`update study_sessions set course_id = null where course_id = ${courseId}`);
+            await tx.run(sql`update diagnostic_results set course_id = null where course_id = ${courseId}`);
 
             if (isLastCourseForCode) {
-                tx.run(sql`delete from exams where course_code = ${course.code}`);
-                tx.run(sql`delete from course_exam_analysis_cache where course_code = ${course.code}`);
+                await tx.run(sql`delete from exams where course_code = ${course.code}`);
+                await tx.run(sql`delete from course_exam_analysis_cache where course_code = ${course.code}`);
             }
-            tx.delete(courses).where(eq(courses.id, courseId)).run();
+            await tx.delete(courses).where(eq(courses.id, courseId)).run();
         });
 
         revalidatePath('/admin/questions');
@@ -233,34 +234,34 @@ export async function deleteTopic(topicId: string): Promise<{ success: true } | 
 
         await db.transaction(async (tx) => {
             // Delete content related to this topic
-            tx.run(sql`
+            await tx.run(sql`
                 delete from content_attempts
                 where content_id in (
                     select id from generated_content where topic_id = ${topicId}
                 )
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from content_quality
                 where content_id in (
                     select id from generated_content where topic_id = ${topicId}
                 )
             `);
-            tx.run(sql`delete from generated_content where topic_id = ${topicId}`);
+            await tx.run(sql`delete from generated_content where topic_id = ${topicId}`);
 
             // Delete question related to this topic
-            tx.run(sql`
+            await tx.run(sql`
                 delete from question_attempts
                 where question_id in (
                     select id from questions where topic_id = ${topicId}
                 )
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from question_steps
                 where question_id in (
                     select id from questions where topic_id = ${topicId}
                 )
             `);
-            tx.run(sql`
+            await tx.run(sql`
                 delete from attempt_logs
                 where question_id in (
                     select id from questions where topic_id = ${topicId}
@@ -268,32 +269,32 @@ export async function deleteTopic(topicId: string): Promise<{ success: true } | 
             `);
 
             // Delete other topic relations
-            tx.run(sql`
+            await tx.run(sql`
                 delete from diagnostic_item_responses
                 where topic_id = ${topicId}
                    or question_id in (select id from questions where topic_id = ${topicId})
             `);
 
-            tx.run(sql`delete from user_mastery where topic_id = ${topicId}`);
-            tx.run(sql`delete from user_topic_mastery where topic_id = ${topicId}`);
-            tx.run(sql`delete from calibration_logs where topic_id = ${topicId}`);
-            tx.run(sql`
+            await tx.run(sql`delete from user_mastery where topic_id = ${topicId}`);
+            await tx.run(sql`delete from user_topic_mastery where topic_id = ${topicId}`);
+            await tx.run(sql`delete from calibration_logs where topic_id = ${topicId}`);
+            await tx.run(sql`
                 delete from prerequisite_edges
                 where from_topic_id = ${topicId}
                    or to_topic_id = ${topicId}
             `);
 
-            tx.run(sql`
+            await tx.run(sql`
                 update misconceptions
                 set remediation_topic_id = null
                 where remediation_topic_id = ${topicId}
             `);
 
-            tx.run(sql`update articles set topic_id = null where topic_id = ${topicId}`);
-            tx.run(sql`update exam_questions set topic_id = null where topic_id = ${topicId}`);
+            await tx.run(sql`update articles set topic_id = null where topic_id = ${topicId}`);
+            await tx.run(sql`update exam_questions set topic_id = null where topic_id = ${topicId}`);
 
-            tx.run(sql`delete from questions where topic_id = ${topicId}`);
-            tx.run(sql`delete from topics where id = ${topicId}`);
+            await tx.run(sql`delete from questions where topic_id = ${topicId}`);
+            await tx.run(sql`delete from topics where id = ${topicId}`);
         });
 
         revalidatePath('/admin/questions');
@@ -380,6 +381,8 @@ export async function updateQuestion(id: string, data: Partial<{
     explanationMarkdown: string;
     difficultyTier: number;
     guidanceSteps: any;
+    workedExampleMarkdown: string;
+    teacherNotes: string;
 }>) {
     try {
         await checkAdmin();
@@ -422,6 +425,89 @@ export async function deleteQuestion(id: string) {
     }
 }
 
+// ── Questions — Fading steps (tonande lösningssteg) ──────────────────────────
+
+/** Full step rows for the authoring UI (includes correctAnswer — admin only). */
+export async function getQuestionSteps(questionId: string) {
+    try {
+        await checkAdmin();
+        const rows = await db.select().from(questionSteps)
+            .where(eq(questionSteps.questionId, questionId));
+        return { data: rows.sort((a, b) => a.stepNumber - b.stepNumber) };
+    } catch (error) {
+        console.error('Failed to fetch question steps:', error);
+        return { error: 'Failed to fetch question steps' };
+    }
+}
+
+/**
+ * Replace all fading steps for a question. Validated with the Zod gate;
+ * editing resets the question to draft (same policy as updateQuestion).
+ */
+export async function saveQuestionSteps(
+    questionId: string,
+    steps: StepInput[]
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        await checkAdmin();
+
+        const parsed = questionStepsSchema.safeParse(steps);
+        if (!parsed.success) {
+            return { success: false, error: parsed.error.issues.map((i) => i.message).join(' ') };
+        }
+
+        const question = await db.query.questions.findFirst({ where: eq(questions.id, questionId) });
+        if (!question) return { success: false, error: 'Question not found' };
+
+        await db.transaction(async (tx) => {
+            await tx.delete(questionSteps).where(eq(questionSteps.questionId, questionId));
+            if (parsed.data.length > 0) {
+                await tx.insert(questionSteps).values(
+                    parsed.data.map((s) => ({
+                        questionId,
+                        stepNumber: s.stepNumber,
+                        instruction: s.instruction,
+                        displayLatex: s.displayLatex ?? null,
+                        correctAnswer: s.correctAnswer,
+                        questionType: s.questionType || 'algebra',
+                        explanation: s.explanation ?? null,
+                        hintNudge: s.hintNudge ?? null,
+                        hintGuided: s.hintGuided ?? null,
+                        misconceptionId: s.misconceptionId ?? null,
+                    }))
+                );
+            }
+            // Content changed → back to draft for re-review
+            await tx.update(questions)
+                .set({ status: 'draft', isPublished: false })
+                .where(eq(questions.id, questionId));
+        });
+
+        revalidatePath('/admin/questions');
+        revalidatePath('/study');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to save question steps:', error);
+        return { success: false, error: 'Failed to save question steps' };
+    }
+}
+
+/** Misconception catalog for the step editor dropdown. */
+export async function getMisconceptionOptions() {
+    try {
+        await checkAdmin();
+        const rows = await db.select({
+            id: misconceptions.id,
+            code: misconceptions.code,
+            description: misconceptions.description,
+        }).from(misconceptions);
+        return { data: rows };
+    } catch (error) {
+        console.error('Failed to fetch misconceptions:', error);
+        return { error: 'Failed to fetch misconceptions' };
+    }
+}
+
 // ── Questions — Status & Publishing ──────────────────────────────────────────
 
 export type QuestionStatus = 'draft' | 'ai_review' | 'ready' | 'published';
@@ -432,6 +518,35 @@ export async function updateQuestionStatus(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         await checkAdmin();
+
+        // Gate: nothing reaches 'ready' (and thus publish) without passing
+        // the fading-step validation.
+        if (status === 'ready') {
+            const question = await db.query.questions.findFirst({ where: eq(questions.id, id) });
+            if (!question) return { success: false, error: 'Question not found' };
+
+            const steps = await db.select().from(questionSteps)
+                .where(eq(questionSteps.questionId, id));
+            const problems = validateReadyGate({
+                steps: steps
+                    .sort((a, b) => a.stepNumber - b.stepNumber)
+                    .map((s) => ({
+                        stepNumber: s.stepNumber,
+                        instruction: s.instruction,
+                        correctAnswer: s.correctAnswer,
+                        displayLatex: s.displayLatex,
+                        explanation: s.explanation,
+                        hintNudge: s.hintNudge,
+                        hintGuided: s.hintGuided,
+                        misconceptionId: s.misconceptionId,
+                        questionType: s.questionType ?? 'algebra',
+                    })),
+                workedExampleMarkdown: question.workedExampleMarkdown,
+            });
+            if (problems.length > 0) {
+                return { success: false, error: problems.join(' ') };
+            }
+        }
 
         await db.update(questions)
             .set({

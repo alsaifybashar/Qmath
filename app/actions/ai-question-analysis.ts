@@ -2,7 +2,7 @@
 
 import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
-import Anthropic from '@anthropic-ai/sdk';
+import type Anthropic from '@anthropic-ai/sdk';
 import { callOllama } from '@/lib/ollama';
 import { db } from '@/db/drizzle';
 import { questions, topics, courses } from '@/db/schema';
@@ -10,12 +10,15 @@ import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { z } from 'zod';
 import { logAIRequest } from '@/lib/ai-logger';
+import {
+    anthropicModel,
+    createAnthropicClient,
+    isAnthropicConfigured,
+} from '@/lib/ai/anthropic-client';
 
 // ============ ANTHROPIC CLIENT ============
 
-const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
+const anthropic = createAnthropicClient();
 
 // ============ TYPES ============
 
@@ -236,7 +239,7 @@ export async function analyzeQuestionDifficulty(
         try {
             analysis = JSON.parse(fixLatexBackslashes(stripMarkdownFences(rawText)));
         } catch {
-            console.error('[AI Analysis] Failed to parse JSON:', rawText);
+            console.error('[AI Analysis] Failed to parse model JSON response');
             // Use fallback on parse failure
             analysis = generateFallbackAnalysis(question);
         }
@@ -448,7 +451,7 @@ Svara med JSON only.`;
         try {
             parsed = JSON.parse(fixLatexBackslashes(stripMarkdownFences(rawText)));
         } catch {
-            console.error('[Guidance Suggest] Failed to parse JSON:', rawText);
+            console.error('[Guidance Suggest] Failed to parse model JSON response');
             return { success: false, error: 'AI-förslaget kunde inte tolkas. Försök igen.' };
         }
 
@@ -535,13 +538,11 @@ Regler:
 - Svara med JSON only.`;
 
         let rawText: string;
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-
-        if (apiKey) {
+        if (isAnthropicConfigured()) {
             // Use Claude if API key is available
             const _solveSuggestStart = Date.now();
             const message = await anthropic.messages.create({
-                model: 'claude-sonnet-4-5',
+                model: anthropicModel('claude-sonnet-4-5'),
                 max_tokens: 8192,
                 temperature: 0.3,
                 system: 'Du är en elit-lärare i matematik. Skapa pedagogiska lösningar med formler och steg-för-steg-instruktioner. Skriv på svenska. Svara med JSON only.',
@@ -578,7 +579,7 @@ Regler:
         try {
             parsed = parseAiJson(rawText);
         } catch (parseErr) {
-            console.error('[AI Solution Suggest] Failed to parse JSON. Raw:', rawText);
+            console.error('[AI Solution Suggest] Failed to parse model JSON response');
             console.error('[AI Solution Suggest] Parse error:', parseErr);
             return { success: false, error: 'AI-förslaget kunde inte tolkas. Försök igen.' };
         }
@@ -663,12 +664,10 @@ export async function reviewSolutionSteps(input: {
         const prompt = buildSolutionReviewPrompt(input);
 
         let rawText: string;
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-
-        if (apiKey) {
+        if (isAnthropicConfigured()) {
             const _solutionReviewStart = Date.now();
             const message = await anthropic.messages.create({
-                model: 'claude-sonnet-4-5',
+                model: anthropicModel('claude-sonnet-4-5'),
                 max_tokens: 2500,
                 temperature: 0.3,
                 system: `Du är en erfaren matematiklektor vid ett svenskt universitet som granskar lösningsförslag till matematikuppgifter. Din uppgift är att granska varje steg i lösningen och föreslå förbättringar som ökar tydligheten, pedagogiken och den matematiska korrektheten.
@@ -723,7 +722,7 @@ Svara ALLTID med giltig JSON utan markdown-formatering utanför JSON.`,
         try {
             review = JSON.parse(fixLatexBackslashes(stripMarkdownFences(rawText)));
         } catch {
-            console.error('[AI Solution Review] Failed to parse JSON:', rawText);
+            console.error('[AI Solution Review] Failed to parse model JSON response');
             return { success: false, error: 'AI-granskningen kunde inte tolkas. Försök igen.' };
         }
 
@@ -828,7 +827,7 @@ Svara med JSON only.`;
         try {
             parsed = JSON.parse(fixLatexBackslashes(stripMarkdownFences(rawText)));
         } catch {
-            console.error('[Guidance Steps] Failed to parse JSON:', rawText);
+            console.error('[Guidance Steps] Failed to parse model JSON response');
             return { success: false, error: 'AI-förslaget kunde inte tolkas. Försök igen.' };
         }
 

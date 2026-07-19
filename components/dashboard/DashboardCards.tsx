@@ -1,112 +1,127 @@
 'use client';
 
 import {
-    ArrowRight, Play, Brain, FileText, Sparkles,
+    ArrowRight, Play, Brain, FileText, Target,
     BookOpen, GraduationCap, User, Settings, HelpCircle,
-    Layers, CreditCard, School, Info, MessageSquare, Zap, BarChart,
-    History, FlaskConical
+    CreditCard, Info, MessageSquare, Zap, BarChart,
+    History, FlaskConical,
+    Calculator, Sigma, GitBranch, BarChart2 as BarChartIcon,
+    Atom, FlaskRound, Waves, Network,
+    type LucideIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { CubeArt, RipplesArt } from '@/components/ui/LineArt';
 
-const C = {
-    surface: '#FFFFFF',
-    surfaceAlt: '#F7F8FC',
-    text: '#1A1D2E',
-    textSec: '#6B7194',
-    textMuted: '#A0A5C0',
-    blue: '#4361EE',
-    purple: '#7C5CFC',
-    orange: '#FF8C42',
-    green: '#22C55E',
-    red: '#EF4444',
-    border: '#E4E7F1',
-    borderLight: '#EFF1F8',
-    cardShadow: '0 2px 12px rgba(26,29,46,0.06)',
-};
+// ─── Color tokens ────────────────────────────────────────────────────────────
+// ElevenLabs-inspired: near-monochrome canvas + exactly one signature accent.
+// Reserved for the primary CTA, active states, and section eyebrows — never
+// used to color-code courses, mastery levels, or decorative chips.
+const ACCENT_BASE = { base: '#3f6c51', light: '#5f8a70', muted: 'rgba(63,108,81,0.09)', border: 'rgba(63,108,81,0.24)', glow: 'rgba(63,108,81,0.16)' };
+const ACCENT = { indigo: ACCENT_BASE }; // key kept as `indigo` to avoid a rename ripple; value is moss
 
-// ========== Stats Card ==========
-interface StatCardProps {
-    label: string;
-    value: string | number;
-    subtext?: string;
-    color?: string;
+// ─── DashboardHeader ─────────────────────────────────────────────────────────
+
+interface DashboardHeaderProps {
+    name: string;
+    streak: number;
+    accuracy: number;
+    totalQuestions: number;
+    level: number;
 }
 
-export function StatCard({ label, value, subtext, color = C.blue }: StatCardProps) {
+export function DashboardHeader({ name, streak, accuracy, totalQuestions, level }: DashboardHeaderProps) {
+    const stats: Array<{ value: string; label: string }> = [
+        { value: `${streak}`, label: streak === 1 ? 'dag i svit' : 'dagar i svit' },
+        { value: `${accuracy}%`, label: 'noggrannhet' },
+        { value: `${totalQuestions}`, label: 'frågor besvarade' },
+        { value: `${level}`, label: 'nivå' },
+    ];
+
     return (
-        <div
-            className="rounded-2xl p-5"
-            style={{
-                background: C.surface,
-                border: `1px solid ${C.borderLight}`,
-                boxShadow: C.cardShadow,
-            }}
-        >
-            <div className="text-sm mb-1" style={{ color: C.textMuted }}>
-                {label}
-            </div>
-            <div className="text-3xl font-bold" style={{ color }}>
-                {value}
-            </div>
-            {subtext && (
-                <div className="text-xs mt-1" style={{ color: C.textSec }}>
-                    {subtext}
+        <div className="dashboard-card dashboard-panel dashboard-panel-hero dashboard-card-animate mb-8 overflow-hidden p-5 sm:p-6" style={{ animationDelay: '0ms' }}>
+            <div className="grid gap-6 lg:grid-cols-1 lg:items-stretch">
+                <div className="flex min-w-0 flex-col justify-between gap-8">
+                    <div>
+                        <p className="dashboard-panel-eyebrow mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase">
+                            <Target size={13} />
+                            Översikt
+                        </p>
+                        <h1 className="max-w-2xl text-balance text-3xl font-semibold leading-tight sm:text-4xl" style={{ letterSpacing: 0, color: 'var(--foreground)' }}>
+                            Välkommen tillbaka, {name}
+                        </h1>
+                        <p className="mt-2 max-w-xl text-pretty text-sm leading-6 dashboard-muted">
+                            En fokuserad vy för dagens övning, kursläge och de områden som är viktigast att följa upp.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-4">
+                        {stats.map((stat, i) => (
+                            <div
+                                key={i}
+                                className="dashboard-card-animate"
+                                style={{ animationDelay: `${80 + i * 60}ms` }}
+                            >
+                                <div className="text-2xl font-semibold tabular-nums" style={{ color: 'var(--foreground)', letterSpacing: 0 }}>
+                                    {stat.value}
+                                </div>
+                                <div className="mt-0.5 text-xs dashboard-subtle">{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
 
-// ========== Weekly Activity Chart ==========
+// ─── WeeklyActivityChart ─────────────────────────────────────────────────────
+
 interface WeeklyActivityProps {
     data: Array<{ day: string; minutes: number }>;
     totalQuestions: number;
     accuracy: number;
 }
 
-export function WeeklyActivityChart({ data, totalQuestions, accuracy }: WeeklyActivityProps) {
+export function WeeklyActivityChart({ data }: WeeklyActivityProps) {
     const maxV = Math.max(...data.map((d) => d.minutes), 1);
 
     return (
-        <div className="dashboard-card p-6">
-            <div className="flex justify-between items-center mb-5">
-                <h3 className="text-xl font-bold">
-                    Dina framsteg
-                </h3>
-                <div className="flex gap-4 text-sm">
-                    <span className="font-semibold">
-                        Antal svar: <span className="text-teal-600 dark:text-teal-200">{totalQuestions}</span>
-                    </span>
-                    <span className="font-semibold">
-                        Noggrannhet: <span className="text-emerald-600 dark:text-emerald-200">{accuracy}%</span>
-                    </span>
+        <div className="dashboard-card dashboard-panel dashboard-panel-activity p-6 dashboard-card-animate" style={{ animationDelay: '200ms' }}>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-widest dashboard-subtle" style={{ letterSpacing: '0.08em' }}>
+                        Aktivitet
+                    </h3>
+                    <p className="text-base font-semibold mt-0.5" style={{ color: 'var(--foreground)', letterSpacing: 0 }}>
+                        Denna vecka
+                    </p>
                 </div>
             </div>
 
-            <div className="flex items-end gap-3 h-32 px-2">
+            <div className="flex items-end gap-2.5 h-28">
                 {data.map((w, i) => {
-                    const h = maxV > 0 ? (w.minutes / maxV) * 110 : 0;
+                    const pct = maxV > 0 ? w.minutes / maxV : 0;
+                    const h = Math.max(pct * 100, 4);
+                    const active = w.minutes > 0;
                     return (
-                        <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                        <div key={i} className="flex-1 flex flex-col items-center gap-1.5 group">
                             <span
-                                className={`text-xs font-semibold ${w.minutes > 0 ? 'text-teal-600 dark:text-teal-200' : 'dashboard-subtle'}`}
+                                className="text-[11px] font-medium tabular-nums transition-opacity duration-200 dashboard-muted"
+                                style={{ opacity: active ? 1 : 0 }}
                             >
                                 {w.minutes > 0 ? `${w.minutes}m` : ''}
                             </span>
                             <div
-                                className="w-full max-w-11 rounded-lg transition-all duration-700"
+                                className="dashboard-activity-bar w-full max-w-9 rounded-md"
                                 style={{
-                                    height: Math.max(h, 6),
-                                    background:
-                                        w.minutes > 0
-                                            ? 'linear-gradient(180deg, #14B8A6, #FF684A)'
-                                            : 'rgba(20,184,166,0.12)',
+                                    height: h,
+                                    opacity: active ? 0.85 : 0.06,
+                                    transition: 'height 800ms cubic-bezier(0.16,1,0.3,1)',
                                     transitionDelay: `${i * 60}ms`,
-                                    boxShadow: w.minutes > 0 ? '0 4px 16px rgba(20,184,166,0.22)' : 'none',
                                 }}
                             />
-                            <span className="dashboard-subtle text-xs font-medium">
+                            <span className="text-[11px] font-medium dashboard-subtle">
                                 {w.day}
                             </span>
                         </div>
@@ -117,7 +132,8 @@ export function WeeklyActivityChart({ data, totalQuestions, accuracy }: WeeklyAc
     );
 }
 
-// ========== Streak Card ==========
+// ─── StreakCard ───────────────────────────────────────────────────────────────
+
 interface StreakCardProps {
     currentStreak: number;
     weekStreak: boolean[];
@@ -127,272 +143,384 @@ interface StreakCardProps {
 export function StreakCard({ currentStreak, weekStreak, level }: StreakCardProps) {
     return (
         <div
-            className="rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between"
-            style={{
-                background: 'linear-gradient(135deg, #5B2C1E 0%, #8B3A1F 40%, #C2562D 100%)',
-                minHeight: 180,
-            }}
+            className="dashboard-card dashboard-panel dashboard-panel-streak relative flex flex-col justify-between overflow-hidden p-6 dashboard-card-animate"
+            style={{ minHeight: 180, animationDelay: '260ms' }}
         >
-            {/* Glow effect */}
-            <div
-                className="absolute -top-8 -right-8 w-28 h-28 rounded-full"
-                style={{
-                    background: 'radial-gradient(circle, rgba(255,160,60,0.3), transparent 70%)',
-                }}
-            />
-
             <div>
-                <div className="flex items-center gap-1.5 mb-3">
-                    <span className="text-2xl">🔥</span>
-                    <span className="text-sm font-bold text-white/70 uppercase tracking-wider">
-                        Veckosvit
-                    </span>
-                </div>
-
+                <p className="text-xs font-semibold uppercase tracking-widest mb-3 dashboard-subtle" style={{ letterSpacing: '0.08em' }}>
+                    Veckosvit
+                </p>
+                {/* Streak dots — filled ink for active days, open for the rest */}
                 <div className="flex gap-1.5 mb-4">
                     {weekStreak.map((active, i) => (
                         <div
                             key={i}
-                            className="text-2xl transition-all duration-300"
+                            className={`h-2.5 w-2.5 rounded-full ${active ? 'dashboard-streak-dot-active' : 'dashboard-streak-dot-inactive'}`}
                             style={{
-                                filter: active ? 'none' : 'grayscale(1) opacity(0.3)',
-                                transitionDelay: `${i * 80}ms`,
+                                animation: 'dash-streak-dot var(--motion-slow) var(--ease-out) both',
+                                animationDelay: `${300 + i * 50}ms`,
                             }}
-                        >
-                            🔥
-                        </div>
+                        />
                     ))}
                 </div>
             </div>
 
             <div className="flex gap-5 items-end relative z-10">
                 <div>
-                    <div className="text-5xl font-extrabold text-white leading-none">
+                    <div
+                        className="text-5xl font-semibold leading-none tabular-nums dashboard-card-animate"
+                        style={{
+                            color: 'var(--foreground)',
+                            letterSpacing: 0,
+                            animationDelay: '320ms',
+                        }}
+                    >
                         {currentStreak}
                     </div>
-                    <div className="text-sm text-white/60 mt-0.5">dagars svit</div>
+                    <div className="dashboard-muted text-xs mt-1">dagars svit</div>
                 </div>
-                <div
-                    className="px-4 py-2.5 rounded-xl flex items-center gap-2.5"
-                    style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}
-                >
-                    <span className="text-2xl">⭐</span>
-                    <div>
-                        <div className="font-bold text-sm text-white">Nivå {level}</div>
-                    </div>
+
+                <div className="dashboard-panel-chip px-3 py-2 rounded-full flex items-center gap-2">
+                    <GraduationCap size={14} />
+                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                        Nivå {level}
+                    </span>
                 </div>
             </div>
         </div>
     );
 }
 
-// ========== Course Card ==========
+
+// ─── Course icon lookup ───────────────────────────────────────────────────────
+// Maps common Swedish engineering maths course code prefixes → Lucide icons.
+// Falls back to BookOpen when no match is found.
+
 interface CourseCardProps {
     code: string;
     name: string;
     progress: number;
     topicsMastered: number;
     topicsTotal: number;
-    gradient: string;
+    gradient?: string; // kept for API compat
+    index?: number;
 }
 
-export function CourseCard({
-    code,
-    name,
-    progress,
-    topicsMastered,
-    topicsTotal,
-    gradient,
-}: CourseCardProps) {
-    const progressColor = progress >= 60 ? '#fff' : progress >= 35 ? 'rgba(255,255,255,0.9)' : 'rgba(255,200,200,1)';
+type CourseIconKey = 'calc' | 'linalg' | 'prob' | 'opt' | 'diff' | 'discrete' | 'signal' | 'physics' | 'chem' | 'default';
+
+const COURSE_ICON_MAP: Record<CourseIconKey, LucideIcon> = {
+    calc:     Calculator,
+    linalg:   Sigma,
+    prob:     BarChartIcon,
+    opt:      GitBranch,
+    diff:     Waves,
+    discrete: Network,
+    signal:   Waves,
+    physics:  Atom,
+    chem:     FlaskRound,
+    default:  BookOpen,
+};
+
+const COURSE_PALETTES = [
+    {
+        a: 'rgba(29, 115, 117, 0.22)',
+        b: 'rgba(76, 192, 193, 0.16)',
+        c: 'rgba(194, 221, 232, 0.20)',
+        ink: '#1d7375',
+        shadow: 'rgba(29, 115, 117, 0.28)',
+    },
+    {
+        a: 'rgba(194, 105, 48, 0.20)',
+        b: 'rgba(235, 157, 72, 0.16)',
+        c: 'rgba(246, 213, 157, 0.20)',
+        ink: '#b85f2d',
+        shadow: 'rgba(194, 105, 48, 0.28)',
+    },
+    {
+        a: 'rgba(102, 123, 69, 0.22)',
+        b: 'rgba(121, 143, 82, 0.16)',
+        c: 'rgba(192, 210, 164, 0.20)',
+        ink: '#667b45',
+        shadow: 'rgba(102, 123, 69, 0.28)',
+    },
+] as const;
+
+function getCourseIconKey(code: string): CourseIconKey {
+    const c = code.toUpperCase();
+    // Analysis / calculus
+    if (/TATA\d+/.test(c) || /MAT\d/.test(c) || /MA\d/.test(c) || c.includes('ANAL') || c.includes('CALC')) return 'calc';
+    // Linear algebra
+    if (c.includes('LINA') || c.includes('LINAALG') || c.includes('ALGEBRA') || /TATM\d+/.test(c)) return 'linalg';
+    // Probability / statistics
+    if (c.includes('PROB') || c.includes('STAT') || c.includes('SANNO') || /TAMS\d+/.test(c)) return 'prob';
+    // Optimisation
+    if (c.includes('OPT') || c.includes('TATA80') || c.includes('TATA76')) return 'opt';
+    // Differential equations
+    if (c.includes('ODE') || c.includes('PDE') || c.includes('DIFF')) return 'diff';
+    // Discrete / combinatorics
+    if (c.includes('DISC') || c.includes('KOMBI') || c.includes('GRAPH')) return 'discrete';
+    // Signals / transforms
+    if (c.includes('SIGNAL') || c.includes('FOURIER') || c.includes('TRANS')) return 'signal';
+    // Physics
+    if (c.includes('FYS') || c.includes('PHYS') || /TFFY\d+/.test(c)) return 'physics';
+    // Chemistry
+    if (c.includes('KEM') || c.includes('CHEM')) return 'chem';
+    return 'default';
+}
+
+export function CourseCard({ code, name, progress, topicsMastered, topicsTotal, index = 0 }: CourseCardProps) {
+    const iconKey = getCourseIconKey(code);
+    const Icon = COURSE_ICON_MAP[iconKey];
+    const palette = COURSE_PALETTES[index % COURSE_PALETTES.length];
 
     return (
         <Link
             href={`/courses/${code.toLowerCase()}`}
-            className="block rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
+            className="dashboard-course-card group relative isolate block overflow-hidden dashboard-card dashboard-card-interactive dashboard-card-animate active:scale-[0.96]"
+            style={{
+                animationDelay: `${120 + index * 60}ms`,
+                textDecoration: 'none',
+                '--course-accent-a': palette.a,
+                '--course-accent-b': palette.b,
+                '--course-accent-c': palette.c,
+                '--course-accent-ink': palette.ink,
+                '--course-accent-shadow': palette.shadow,
+            } as React.CSSProperties}
         >
-            <div
-                className="p-6 relative min-h-[180px] flex flex-col justify-between"
-                style={{ background: gradient }}
-            >
-                <div className="relative z-10">
-                    <div className="text-xl font-extrabold text-white tracking-tight">{code}</div>
-                    <div className="text-sm text-white/75 mt-0.5">{name}</div>
-                </div>
-
-                <div className="relative z-10 flex justify-between items-end">
-                    <div>
-                        <div className="text-xs text-white/60 mb-0.5">Framsteg</div>
-                        <div className="text-3xl font-extrabold" style={{ color: progressColor }}>
-                            {progress}%
+            <div className="relative z-10 p-5">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-2 mb-4">
+                    <div className="flex items-start gap-3">
+                        {/* Course icon */}
+                        <div
+                            className="dashboard-course-icon flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-[transform,background-color,color] duration-200 group-hover:-translate-y-0.5 group-hover:bg-[var(--course-accent-display)] group-hover:text-white"
+                        >
+                            <Icon size={18} />
+                        </div>
+                        <div>
+                            <div
+                                className="dashboard-course-code inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold mb-1 transition-colors duration-200 group-hover:bg-[var(--course-accent-display)] group-hover:text-white"
+                            >
+                                {code}
+                            </div>
+                            <div
+                                className="text-sm font-medium leading-snug"
+                                style={{ color: 'var(--foreground)', lineHeight: 1.35 }}
+                            >
+                                {name}
+                            </div>
                         </div>
                     </div>
+                    <div className="text-right flex-shrink-0">
+                        <div
+                            className="text-2xl font-extrabold tabular-nums text-[var(--course-accent-display)] transition-colors duration-200"
+                            style={{ letterSpacing: 0 }}
+                        >
+                            {progress}%
+                        </div>
+                        <div className="text-[10px] dashboard-subtle">framsteg</div>
+                    </div>
                 </div>
-            </div>
 
-            <div
-                className="dashboard-card-soft p-4 flex justify-between items-center"
-            >
-                <div className="dashboard-muted text-sm">
-                    <strong className="text-zinc-950 dark:text-white">{topicsMastered}</strong>/{topicsTotal} områden klara
+                {/* Progress bar */}
+                <div className="h-1.5 rounded-full overflow-hidden mb-3 bg-black/5 dark:bg-white/10">
+                    <div
+                        className="h-full rounded-full origin-left bg-[var(--course-accent-display)] transition-[filter] duration-200 group-hover:brightness-90 dark:group-hover:brightness-110"
+                        style={{
+                            width: `${progress}%`,
+                            animation: 'dash-bar-fill var(--motion-slow) var(--ease-out) both',
+                            animationDelay: `${200 + index * 80}ms`,
+                        } as React.CSSProperties}
+                    />
                 </div>
-                <div
-                    className="flex items-center gap-1.5 text-sm font-semibold text-teal-700 dark:text-teal-200"
-                >
-                    Fortsätt <ArrowRight size={14} />
+
+                {/* Footer */}
+                <div className="flex items-center justify-between">
+                    <span className="text-xs dashboard-muted">
+                        <strong className="font-bold" style={{ color: 'var(--foreground)' }}>{topicsMastered}</strong>/{topicsTotal} områden klara
+                    </span>
+                    <span className="text-xs font-semibold flex items-center gap-1 text-[var(--course-accent-display)] transition-colors duration-150">
+                        Fortsätt <ArrowRight size={11} className="transition-transform duration-200 group-hover:translate-x-1" />
+                    </span>
                 </div>
             </div>
         </Link>
     );
 }
 
-// ========== Mastery Topic Card ==========
+// ─── MasteryTopicCard ─────────────────────────────────────────────────────────
+
 interface MasteryTopicProps {
     name: string;
     course: string;
     mastery: number;
+    topicId?: string;
+    topicName?: string;
+}
+
+function masteryLabel(m: number) {
+    if (m >= 0.85) return 'Bemästrad';
+    if (m >= 0.55) return 'Lärande';
+    if (m >= 0.3)  return 'Utvecklas';
+    return 'Fokusera';
+}
+
+function masteryColor(m: number) {
+    if (m >= 0.85) return '#1d7375';
+    if (m >= 0.55) return '#3585a3';
+    if (m >= 0.3) return '#c27838';
+    return '#c65d4b';
 }
 
 export function MasteryTopicCard({ name, course, mastery }: MasteryTopicProps) {
-    const getStyle = (m: number) => {
-        if (m >= 0.9) return { bg: '#ECFDF5', border: '#10B981', text: '#059669' };
-        if (m >= 0.6) return { bg: '#EFF6FF', border: '#3B82F6', text: '#2563EB' };
-        if (m >= 0.3) return { bg: '#FFFBEB', border: '#F59E0B', text: '#B45309' };
-        return { bg: '#FEF2F2', border: '#EF4444', text: '#DC2626' };
-    };
+    const accent = masteryColor(mastery);
+    const href = undefined;
 
-    const s = getStyle(mastery);
-
-    return (
-        <div
-            className="p-3.5 rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-            style={{
-                background: s.bg,
-                border: `1.5px solid ${s.border}25`,
-            }}
-        >
+    const inner = (
+        <>
             <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-extrabold opacity-70" style={{ color: s.text }}>
+                <span className="text-[var(--mastery-display)] text-[10px] font-bold uppercase tracking-wider" style={{ letterSpacing: 0 }}>
                     {course}
                 </span>
-                <span className="text-sm font-bold" style={{ color: s.text }}>
-                    {Math.round(mastery * 100)}%
+                <span
+                    className="mastery-topic-badge text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                >
+                    {masteryLabel(mastery)}
                 </span>
             </div>
-            <div className="text-sm font-semibold mb-2.5 text-zinc-950 dark:text-zinc-950" style={{ lineHeight: 1.3 }}>
+            <div
+                className="text-sm font-semibold mb-3 leading-snug"
+                style={{ color: 'var(--foreground)', lineHeight: 1.3 }}
+            >
                 {name}
             </div>
-            <div className="h-1 rounded-full" style={{ background: s.border + '20' }}>
+            <div className="h-1 rounded-full overflow-hidden bg-black/[0.06] dark:bg-white/10">
                 <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${mastery * 100}%`, background: s.border }}
+                    className="h-full rounded-full origin-left bg-[var(--mastery-display)]"
+                    style={{
+                        width: `${Math.round(mastery * 100)}%`,
+                        animation: 'dash-bar-fill var(--motion-slow) var(--ease-out) both',
+                        animationDelay: '300ms',
+                    } as React.CSSProperties}
                 />
             </div>
+            <div className="flex justify-between items-center mt-2">
+                <span className="text-[var(--mastery-display)] text-[11px] font-semibold tabular-nums">{Math.round(mastery * 100)}%</span>
+            </div>
+        </>
+    );
+
+    const baseCls = 'mastery-topic-card p-3.5 rounded-xl block dashboard-card-soft';
+    // Hover affordance (lift + accent tint) only applies when the card is actually clickable.
+    const interactiveCls = 'group dashboard-card-soft-interactive transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.96]';
+
+    if (href) {
+        return <Link href={href} className={`${baseCls} ${interactiveCls}`} style={{ '--mastery-accent': accent } as React.CSSProperties}>{inner}</Link>;
+    }
+    return <div className={baseCls} style={{ '--mastery-accent': accent } as React.CSSProperties}>{inner}</div>;
+}
+
+// ─── FeatureTiles ──────────────────────────────────────────────────────────────
+// Reference-style section: filled tiles with a thin line-art illustration on
+// top and title + muted copy below. No icons, no color coding — the artwork
+// carries the identity.
+
+const featureTiles = [
+    {
+        art: <CubeArt size={150} />,
+        title: 'Tentamenssimulering',
+        desc: 'Skriv en tenta under riktiga villkor och se din förväntade poäng — innan det räknas.',
+        href: '/exam-sim',
+    },
+    {
+        art: <RipplesArt size={150} />,
+        title: 'Din analys',
+        desc: 'Följ din utveckling över tid och se exakt vilka moment som lyfter ditt resultat mest.',
+        href: '/analytics',
+    },
+];
+
+export function FeatureTiles() {
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {featureTiles.map((tile, i) => (
+                <Link
+                    key={tile.href}
+                    href={tile.href}
+                    className="feature-tile feature-tile-interactive group block p-6 dashboard-card-animate"
+                    style={{ textDecoration: 'none', animationDelay: `${160 + i * 70}ms` }}
+                >
+                    <div className="feature-tile-art py-6">{tile.art}</div>
+                    <div className="text-[15px] font-semibold" style={{ color: 'var(--foreground)', letterSpacing: 0 }}>
+                        {tile.title}
+                    </div>
+                    <p className="text-[13px] leading-relaxed mt-1.5 dashboard-muted">
+                        {tile.desc}
+                    </p>
+                </Link>
+            ))}
         </div>
     );
 }
 
-// ========== Quick Actions ==========
+// ─── Quick Actions ─────────────────────────────────────────────────────────────
 
 export function QuickActions() {
     const actions: Array<{
         icon: ReactNode;
         label: string;
         desc: string;
-        color: string;
         href: string;
         primary?: boolean;
-        badge?: number;
     }> = [
-        {
-            icon: <Brain size={20} />,
-            label: 'Adaptiv övning',
-            desc: 'AI väljer optimal nivå',
-            color: C.blue,
-            primary: true,
-            href: '/practice',
-        },
-        {
-            icon: <FileText size={20} />,
-            label: 'Tentamenssimulering',
-            desc: 'Öva under tentamensvillkor',
-            color: C.purple,
-            href: '/exam-sim',
-        },
-        {
-            icon: <BarChart size={20} />,
-            label: 'Din Analys',
-            desc: 'Se din utveckling',
-            color: C.blue,
-            href: '/analytics',
-        },
-        {
-            icon: <FlaskConical size={20} />,
-            label: 'Test AI Panel',
-            desc: 'Sandbox för AI-utveckling',
-            color: '#10B981',
-            href: '/test-ai-panel',
-        },
+        { icon: <Brain size={18} />,        label: 'Adaptiv övning',     desc: 'AI väljer optimal nivå',     primary: true, href: '/practice'      },
+        { icon: <FileText size={18} />,     label: 'Tentamenssimulering', desc: 'Öva under tentamensvillkor', href: '/exam-sim'      },
+        { icon: <BarChart size={18} />,     label: 'Din Analys',          desc: 'Se din utveckling',          href: '/analytics'     },
+        { icon: <FlaskConical size={18} />, label: 'Test AI Panel',       desc: 'Sandbox för AI-utveckling',  href: '/test-ai-panel' },
     ];
 
     return (
-        <div
-            className="rounded-2xl p-6"
-            style={{
-                background: C.surface,
-                border: `1px solid ${C.borderLight}`,
-                boxShadow: C.cardShadow,
-            }}
-        >
-            <h3 className="text-xl font-bold mb-4" style={{ color: C.text }}>
+        <div className="dashboard-card p-6 dashboard-card-animate" style={{ animationDelay: '140ms' }}>
+            <h3 className="text-xs font-semibold uppercase tracking-widest mb-5 dashboard-subtle" style={{ letterSpacing: '0.08em' }}>
                 Börja studera
             </h3>
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2">
                 {actions.map((a, i) => (
                     <Link
                         key={i}
                         href={a.href}
-                        className="flex items-center gap-3.5 p-3.5 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                        style={{
-                            background: a.primary ? a.color : C.surfaceAlt,
-                            border: a.primary ? 'none' : `1px solid ${C.borderLight}`,
-                        }}
+                        className={
+                            a.primary
+                                ? 'group flex items-center gap-3 p-3.5 rounded-xl transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.96]'
+                                : 'group flex items-center gap-3 p-3.5 rounded-xl border transition-[transform,border-color,background-color,box-shadow] duration-200 hover:-translate-y-0.5 active:scale-[0.96] bg-black/[0.04] dark:bg-white/[0.06] border-black/[0.09] dark:border-white/10 hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)] hover:shadow-[0_4px_14px_var(--accent-glow)]'
+                        }
+                        style={
+                            a.primary
+                                ? {
+                                    background: `linear-gradient(135deg, ${ACCENT.indigo.base}, ${ACCENT.indigo.light})`,
+                                    boxShadow: `0 4px 14px ${ACCENT.indigo.glow}`,
+                                }
+                                : undefined
+                        }
                     >
                         <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center relative flex-shrink-0"
-                            style={{
-                                background: a.primary ? 'rgba(255,255,255,0.2)' : a.color + '12',
-                                color: a.primary ? '#fff' : a.color,
-                            }}
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${
+                                a.primary
+                                    ? 'bg-white/[0.18] text-white'
+                                    : 'bg-black/5 dark:bg-white/10 text-[var(--foreground)] group-hover:bg-[var(--accent-500)] group-hover:text-white'
+                            }`}
                         >
                             {a.icon}
-                            {a.badge && a.badge > 0 && (
-                                <div
-                                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
-                                    style={{
-                                        background: C.red,
-                                        border: `2px solid ${C.surfaceAlt}`,
-                                    }}
-                                >
-                                    {a.badge}
-                                </div>
-                            )}
                         </div>
-                        <div className="flex-1">
-                            <div
-                                className="text-sm font-semibold"
-                                style={{ color: a.primary ? '#fff' : C.text }}
-                            >
+                        <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold" style={{ color: a.primary ? '#fff' : 'var(--foreground)' }}>
                                 {a.label}
                             </div>
-                            <div
-                                className="text-xs"
-                                style={{ color: a.primary ? 'rgba(255,255,255,0.7)' : C.textMuted }}
-                            >
+                            <div className="text-xs mt-0.5" style={{ color: a.primary ? 'rgba(255,255,255,0.68)' : 'var(--foreground-muted)' }}>
                                 {a.desc}
                             </div>
                         </div>
-                        <ArrowRight size={16} style={{ color: a.primary ? 'rgba(255,255,255,0.5)' : C.textMuted }} />
+                        <ArrowRight size={14} style={{ color: a.primary ? 'rgba(255,255,255,0.5)' : 'var(--foreground-subtle)', flexShrink: 0 }} />
                     </Link>
                 ))}
             </div>
@@ -400,7 +528,94 @@ export function QuickActions() {
     );
 }
 
-// ========== AI Recommendation Card ==========
+// ─── Quick Navigation ──────────────────────────────────────────────────────────
+
+const navigationItems = [
+    {
+        category: 'Lärande',
+        items: [
+            { icon: <BookOpen size={16} />,    label: 'Kurser',       href: '/courses' },
+            { icon: <Brain size={16} />,       label: 'Övning',       href: '/practice' },
+            { icon: <Zap size={16} />,         label: 'Flashcards',   href: '/flashcards' },
+            { icon: <History size={16} />,     label: 'Tenta-arkiv',  href: '/archive' },
+            { icon: <FlaskConical size={16} />,label: 'Tentamen',     href: '/exam-sim' },
+        ],
+    },
+    {
+        category: 'Konto',
+        items: [
+            { icon: <User size={16} />,       label: 'Profil',        href: '/profile' },
+            { icon: <Settings size={16} />,   label: 'Inställningar', href: '/settings' },
+            { icon: <CreditCard size={16} />, label: 'Priser',        href: '/pricing' },
+        ],
+    },
+    {
+        category: 'Information',
+        items: [
+            { icon: <Info size={16} />,          label: 'Om oss',    href: '/about' },
+            { icon: <GraduationCap size={16} />, label: 'Funktioner',href: '/features' },
+            { icon: <HelpCircle size={16} />,    label: 'Hjälp',     href: '/help' },
+            { icon: <MessageSquare size={16} />, label: 'Kontakt',   href: '/contact' },
+        ],
+    },
+];
+
+export function QuickNavigation() {
+    return (
+        <div className="dashboard-card p-6 dashboard-card-animate" style={{ animationDelay: '180ms' }}>
+            <h3 className="text-xs font-semibold uppercase tracking-widest mb-5 dashboard-subtle" style={{ letterSpacing: '0.08em' }}>
+                Snabbnavigering
+            </h3>
+            <div className="space-y-5">
+                {navigationItems.map((section) => (
+                    <div key={section.category}>
+                        <h4 className="dashboard-subtle text-[10px] font-bold uppercase tracking-widest mb-2.5">
+                            {section.category}
+                        </h4>
+                        <div className="grid grid-cols-4 gap-1.5">
+                            {section.items.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className="group flex flex-col items-center gap-1.5 p-2.5 rounded-xl border bg-black/[0.04] dark:bg-white/[0.06] border-black/[0.09] dark:border-white/10 transition-[transform,border-color,background-color,box-shadow] duration-200 hover:-translate-y-0.5 active:scale-[0.96] hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)] hover:shadow-[0_4px_14px_var(--accent-glow)]"
+                                >
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-black/5 text-[var(--foreground)] transition-[transform,color,background-color] duration-200 group-hover:scale-110 group-hover:bg-[var(--accent-500)] group-hover:text-white dark:bg-white/10">
+                                        {item.icon}
+                                    </div>
+                                    <span className="text-[10px] font-medium text-center leading-tight dashboard-muted transition-colors duration-200 group-hover:text-[var(--accent-500)]">
+                                        {item.label}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ─── StatCard (kept for compatibility) ───────────────────────────────────────
+
+interface StatCardProps {
+    label: string;
+    value: string | number;
+    subtext?: string;
+    color?: string;
+}
+
+export function StatCard({ label, value, subtext, color = ACCENT.indigo.base }: StatCardProps) {
+    return (
+        <div className="dashboard-card p-5 dashboard-card-animate">
+            <div className="text-xs font-semibold uppercase tracking-wider mb-1 dashboard-subtle">{label}</div>
+            <div className="text-3xl font-bold tabular-nums" style={{ color, letterSpacing: 0 }}>{value}</div>
+            {subtext && <div className="text-xs mt-1 dashboard-muted">{subtext}</div>}
+        </div>
+    );
+}
+
+// ─── AIRecommendationCard (kept for compatibility) ────────────────────────────
+
 interface AIRecommendationProps {
     topicName: string;
     mastery: number;
@@ -411,147 +626,46 @@ interface AIRecommendationProps {
 export function AIRecommendationCard({ topicName, mastery, courseName, daysUntilExam }: AIRecommendationProps) {
     return (
         <div
-            className="rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between"
+            className="grain-tile p-6 flex flex-col justify-between dashboard-card-animate"
             style={{
-                background: 'linear-gradient(135deg, #1A1D2E 0%, #2A2F4A 100%)',
+                // Grainy moss-to-sky gradient — the reference "artwork tile" treatment
+                ['--grain-gradient' as string]:
+                    'radial-gradient(130% 120% at 50% 0%, #c9d8d0 0%, #7fa389 36%, #3f6c51 64%, #1c2f22 100%)',
                 minHeight: 200,
+                animationDelay: '300ms',
             }}
         >
-            {/* Subtle constellation overlay */}
-            <div
-                className="absolute inset-0 opacity-5"
-                style={{
-                    backgroundImage: `radial-gradient(circle at 30% 20%, rgba(255,255,255,0.8) 1px, transparent 1px),
-                                      radial-gradient(circle at 70% 60%, rgba(255,255,255,0.8) 1px, transparent 1px),
-                                      radial-gradient(circle at 50% 80%, rgba(255,255,255,0.8) 1px, transparent 1px)`,
-                    backgroundSize: '80px 80px, 60px 60px, 90px 90px',
-                }}
-            />
+            <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.75)', letterSpacing: '0.08em' }}>
+                    AI-rekommendation
+                </span>
 
-            <div className="relative z-10">
-                <div
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg mb-4"
-                    style={{ background: `${C.blue}25` }}
-                >
-                    <Sparkles size={14} color="#A5B4FC" />
-                    <span className="text-xs font-semibold text-[#A5B4FC]">AI-rekommendation</span>
-                </div>
-
-                <h3 className="text-xl font-bold text-white mb-2.5 leading-snug">
+                <h3 className="text-xl font-semibold text-white mt-3 mb-2 leading-snug" style={{ letterSpacing: 0 }}>
                     Fokusera på {topicName}
                 </h3>
 
-                <p className="text-sm text-[#8890B5] leading-relaxed">
-                    Din mästerskapsnivå är <strong style={{ color: C.orange }}>{Math.round(mastery * 100)}%</strong>.
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                    Din mästerskapsnivå är <strong className="text-white">{Math.round(mastery * 100)}%</strong>.
                     {daysUntilExam && (
-                        <>
-                            {' '}
-                            Detta område är viktigt för din tenta i <strong className="text-white">{courseName}</strong> om{' '}
-                            <strong className="text-white">{daysUntilExam} dagar</strong>.
-                        </>
+                        <> Viktigt för <strong className="text-white">{courseName}</strong> om{' '}
+                            <strong className="text-white">{daysUntilExam} dagar</strong>.</>
                     )}
                 </p>
             </div>
 
             <Link
                 href="/practice"
-                className="relative z-10 inline-flex items-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 self-start mt-5"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold self-start mt-5 active:scale-[0.96]"
                 style={{
-                    background: C.blue,
-                    boxShadow: `0 4px 16px ${C.blue}40`,
+                    background: 'rgba(255,255,255,0.92)',
+                    color: '#1c2f22',
+                    transitionProperty: 'transform, background-color',
+                    transitionDuration: '150ms',
+                    transitionTimingFunction: 'ease',
                 }}
             >
-                <Play size={16} /> Starta session
+                <Play size={14} /> Starta session
             </Link>
-        </div>
-    );
-}
-
-// ========== Quick Navigation - All Subpages ==========
-const navigationItems = [
-    // Learning section
-    {
-        category: 'Lärande',
-        items: [
-            { icon: <BookOpen size={18} />, label: 'Kurser', href: '/courses', color: '#667EEA' },
-            { icon: <Brain size={18} />, label: 'Övning', href: '/practice', color: '#4361EE' },
-            { icon: <Zap size={18} />, label: 'Flashcards', href: '/flashcards', color: '#7C5CFC' },
-            { icon: <History size={18} />, label: 'Tenta-arkiv', href: '/archive', color: '#11998E' },
-            { icon: <FlaskConical size={18} />, label: 'Tentamen-sim', href: '/exam-sim', color: '#8B5CF6' },
-        ],
-    },
-    // Resources section
-    {
-        category: 'Resurser',
-        items: [
-            { icon: <School size={18} />, label: 'Universitet', href: '/universities', color: '#F59E0B' },
-            { icon: <Layers size={18} />, label: 'Studieverktyg', href: '/study', color: '#10B981' },
-            { icon: <FileText size={18} />, label: 'Demo', href: '/demo', color: '#8B5CF6' },
-        ],
-    },
-    // Account section
-    {
-        category: 'Konto',
-        items: [
-            { icon: <User size={18} />, label: 'Profil', href: '/profile', color: '#3B82F6' },
-            { icon: <Settings size={18} />, label: 'Inställningar', href: '/settings', color: '#6B7280' },
-            { icon: <CreditCard size={18} />, label: 'Priser', href: '/pricing', color: '#EC4899' },
-        ],
-    },
-    // Info section
-    {
-        category: 'Information',
-        items: [
-            { icon: <Info size={18} />, label: 'Om oss', href: '/about', color: '#0EA5E9' },
-            { icon: <GraduationCap size={18} />, label: 'Funktioner', href: '/features', color: '#14B8A6' },
-            { icon: <HelpCircle size={18} />, label: 'Hjälp', href: '/help', color: '#F97316' },
-            { icon: <MessageSquare size={18} />, label: 'Kontakt', href: '/contact', color: '#8B5CF6' },
-        ],
-    },
-];
-
-export function QuickNavigation() {
-    return (
-        <div className="dashboard-card p-6">
-            <h3 className="text-xl font-bold mb-5">
-                Snabbnavigering
-            </h3>
-
-            <div className="space-y-5">
-                {navigationItems.map((section) => (
-                    <div key={section.category}>
-                        <h4
-                            className="dashboard-subtle text-xs font-semibold uppercase tracking-wider mb-3"
-                        >
-                            {section.category}
-                        </h4>
-                        <div className="grid grid-cols-4 gap-2">
-                            {section.items.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="dashboard-card-soft flex flex-col items-center gap-2 p-3 transition-all duration-200 hover:-translate-y-1 hover:shadow-md group"
-                                >
-                                    <div
-                                        className="w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
-                                        style={{
-                                            background: `${item.color}15`,
-                                            color: item.color,
-                                        }}
-                                    >
-                                        {item.icon}
-                                    </div>
-                                    <span
-                                        className="text-xs font-medium text-center"
-                                    >
-                                        {item.label}
-                                    </span>
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
         </div>
     );
 }

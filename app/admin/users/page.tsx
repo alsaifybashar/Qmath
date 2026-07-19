@@ -5,7 +5,6 @@ import AdminLayout from '@/components/AdminLayout';
 import {
     Search,
     Shield,
-    ShieldOff,
     Trash2,
     User,
     Calendar,
@@ -20,7 +19,7 @@ interface UserData {
     id: string;
     email: string;
     name: string | null;
-    role: string;
+    role: 'student' | 'professor' | 'admin';
     createdAt: string;
 }
 
@@ -88,8 +87,7 @@ export default function AdminUsersPage() {
         return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
     }, [search]);
 
-    const handleRoleChange = async (userId: string, currentRole: string) => {
-        const newRole = currentRole === 'admin' ? 'student' : 'admin';
+    const handleRoleChange = async (userId: string, newRole: UserData['role']) => {
         setActionInProgress(userId);
         try {
             const res = await fetch(`/api/admin/users/${userId}`, {
@@ -101,7 +99,7 @@ export default function AdminUsersPage() {
                 const { error } = await res.json();
                 throw new Error(error ?? 'Failed to update role');
             }
-            showToast('success', `User ${newRole === 'admin' ? 'promoted to admin' : 'demoted to student'}.`);
+            showToast('success', `User role changed to ${newRole}.`);
             fetchUsers();
         } catch (err: unknown) {
             showToast('error', err instanceof Error ? err.message : 'Failed to update role.');
@@ -132,6 +130,7 @@ export default function AdminUsersPage() {
     const total = data?.total ?? 0;
     const totalPages = data?.totalPages ?? 1;
     const adminCount = users.filter((u) => u.role === 'admin').length;
+    const professorCount = users.filter((u) => u.role === 'professor').length;
     const studentCount = users.filter((u) => u.role === 'student').length;
 
     return (
@@ -160,10 +159,11 @@ export default function AdminUsersPage() {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     {[
                         { label: 'Total Users', value: total },
                         { label: 'Administrators', value: adminCount },
+                        { label: 'Professors', value: professorCount },
                         { label: 'Students', value: studentCount },
                     ].map(({ label, value }) => (
                         <div
@@ -197,6 +197,7 @@ export default function AdminUsersPage() {
                     >
                         <option value="">All Roles</option>
                         <option value="admin">Admin</option>
+                        <option value="professor">Professor</option>
                         <option value="student">Student</option>
                     </select>
                 </div>
@@ -245,7 +246,9 @@ export default function AdminUsersPage() {
                                                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
                                                         user.role === 'admin'
                                                             ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400'
-                                                            : 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                                                            : user.role === 'professor'
+                                                                ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                                                                : 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
                                                     }`}>
                                                         {user.role === 'admin' && <Shield className="w-3 h-3" />}
                                                         {user.role}
@@ -263,19 +266,16 @@ export default function AdminUsersPage() {
                                                             <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
                                                         ) : (
                                                             <>
-                                                                <button
-                                                                    onClick={() => handleRoleChange(user.id, user.role)}
-                                                                    className={`p-2 rounded-lg transition-colors ${
-                                                                        user.role === 'student'
-                                                                            ? 'hover:bg-purple-50 dark:hover:bg-purple-900/20'
-                                                                            : 'hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                                                                    }`}
-                                                                    title={user.role === 'student' ? 'Promote to Admin' : 'Demote to Student'}
+                                                                <select
+                                                                    value={user.role}
+                                                                    onChange={(event) => handleRoleChange(user.id, event.target.value as UserData['role'])}
+                                                                    aria-label={`Role for ${user.name || user.email}`}
+                                                                    className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
                                                                 >
-                                                                    {user.role === 'student'
-                                                                        ? <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                                                        : <ShieldOff className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
-                                                                </button>
+                                                                    <option value="student">Student</option>
+                                                                    <option value="professor">Professor</option>
+                                                                    <option value="admin">Admin</option>
+                                                                </select>
                                                                 <button
                                                                     onClick={() => handleDelete(user.id, user.email)}
                                                                     className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"

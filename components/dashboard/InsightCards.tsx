@@ -25,7 +25,7 @@ const insightConfig = {
     warning: {
         icon: AlertTriangle,
         gradient: 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
-        iconColor: '#D97706',
+        iconColor: '#c08414',
         borderColor: '#F59E0B33',
     },
     success: {
@@ -37,13 +37,13 @@ const insightConfig = {
     tip: {
         icon: Lightbulb,
         gradient: 'linear-gradient(135deg, #DBEAFE, #BFDBFE)',
-        iconColor: '#2563EB',
+        iconColor: '#24718e',
         borderColor: '#3B82F633',
     },
     milestone: {
         icon: Trophy,
         gradient: 'linear-gradient(135deg, #F3E8FF, #E9D5FF)',
-        iconColor: '#7C3AED',
+        iconColor: '#24718e',
         borderColor: '#8B5CF633',
     },
 };

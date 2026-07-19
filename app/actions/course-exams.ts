@@ -1,8 +1,10 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import { exams } from '@/db/schema';
+import { courses, exams } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { requireCourseViewer } from '@/lib/auth';
+import { z } from 'zod';
 
 export interface CourseExam {
     id: string;
@@ -17,6 +19,16 @@ export interface CourseExam {
 }
 
 export async function getCourseExams(courseCode: string): Promise<CourseExam[]> {
+    courseCode = z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{2,24}$/).parse(courseCode);
+    const course = await db
+        .select({ id: courses.id })
+        .from(courses)
+        .where(eq(courses.code, courseCode))
+        .limit(1)
+        .get();
+    if (!course) return [];
+    await requireCourseViewer(course.id);
+
     try {
         const rows = await db
             .select({
@@ -31,7 +43,7 @@ export async function getCourseExams(courseCode: string): Promise<CourseExam[]> 
                 solutionFileName: exams.solutionFileName,
             })
             .from(exams)
-            .where(eq(exams.courseCode, courseCode.toUpperCase()))
+            .where(eq(exams.courseCode, courseCode))
             .orderBy(desc(exams.examDate));
 
         return rows.map((r) => ({

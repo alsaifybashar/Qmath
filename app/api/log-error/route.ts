@@ -1,26 +1,48 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { auth } from '@/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { emitSecurityEvent } from '@/lib/security/events';
+import { getTrustedClientAddress, parseStrictJson, problem, requireSameOrigin } from '@/lib/security/request';
 
-export async function POST(req: Request) {
-    try {
-        const body = await req.json();
+const telemetrySchema = z.object({
+    type: z.string().trim().min(1).max(64),
+    url: z.string().max(512).optional(),
+    source: z.string().max(200).optional(),
+    lineno: z.number().int().min(0).max(10_000_000).optional(),
+    colno: z.number().int().min(0).max(100_000).optional(),
+    message: z.string().max(500).optional(),
+    stack: z.string().max(4000).optional(),
+}).strict();
 
-        console.log('\n\x1b[41m\x1b[37m ================= BROWSER CAUGHT ERROR ================= \x1b[0m');
-        console.log(`\x1b[31m💥 Type:\x1b[0m    ${body.type}`);
-        console.log(`\x1b[34m🔗 URL:\x1b[0m     ${body.url}`);
+export async function POST(req: NextRequest) {
+    const csrfFailure = requireSameOrigin(req);
+    if (csrfFailure) return csrfFailure;
 
-        if (body.source && body.source !== 'unknown') {
-            console.log(`\x1b[33m📁 Source:\x1b[0m  ${body.source}:${body.lineno}:${body.colno}`);
-        }
+    const session = await auth();
+    if (!session?.user?.id) return problem(401, 'authentication_required');
 
-        console.log(`\x1b[37m💬 Message:\x1b[0m\n${body.message}`);
+    const sourceAddress = getTrustedClientAddress(req);
+    const rateLimit = await checkRateLimit(session.user.id, 'telemetry');
+    if (!rateLimit.allowed) return problem(429, 'rate_limit_exceeded');
 
-        if (body.stack) {
-            console.log(`\x1b[90m📚 Stacktrace:\n${body.stack}\x1b[0m`);
-        }
-        console.log('\x1b[41m\x1b[37m ======================================================== \x1b[0m\n');
+    const parsed = await parseStrictJson(req, telemetrySchema, 8 * 1024);
+    if (!parsed.success) return parsed.response;
 
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        return NextResponse.json({ error: 'Failed to process log' }, { status: 500 });
-    }
+    emitSecurityEvent({
+        category: 'validation',
+        action: 'browser_error',
+        outcome: 'failure',
+        severity: 'low',
+        actorId: session.user.id,
+        actorRole: session.user.role,
+        sourceAddress,
+        metadata: {
+            errorType: parsed.data.type,
+            hasStack: Boolean(parsed.data.stack),
+            line: parsed.data.lineno ?? null,
+        },
+    });
+
+    return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } });
 }

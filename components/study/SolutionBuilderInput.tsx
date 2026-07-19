@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Lightbulb } from 'lucide-react';
 import { MathRenderer } from './MathRenderer';
+import { motionDuration, motionEase } from '@/lib/motion';
 
 interface SolutionStep {
     id: string;
@@ -34,8 +35,8 @@ interface SolutionBuilderQuestion {
         }>;
     };
     correctAnswer?: string;
-    helps?: any;
-    aiContext?: any;
+    helps?: unknown;
+    aiContext?: unknown;
 }
 
 interface SolutionBuilderInputProps {
@@ -52,6 +53,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
     const [completedSteps, setCompletedSteps] = useState<Array<{ operation: string; result: string; correct: boolean }>>([]);
     const [showHint, setShowHint] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
+    const reduceMotion = useReducedMotion();
 
     const steps = question.content.steps;
     const currentStep = steps[currentStepIndex];
@@ -96,7 +98,7 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
                     setIsComplete(true);
                     onAnswer(true);
                 }
-            }, 1000);
+            }, motionDuration.correct * 1000);
         } else {
             setStepFeedback({
                 isCorrect: false,
@@ -126,8 +128,9 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
     if (isComplete) {
         return (
             <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
                 className="text-center p-8 bg-green-50 dark:bg-green-500/10 rounded-2xl border border-green-200 dark:border-green-500/30"
             >
                 <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -165,9 +168,10 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
                 </span>
                 <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                     <motion.div
-                        className="h-full bg-gradient-to-r from-violet-500 to-purple-500"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${((currentStepIndex) / steps.length) * 100}%` }}
+                        className="h-full origin-left bg-gradient-to-r from-violet-500 to-purple-500"
+                        initial={reduceMotion ? false : { scaleX: 0 }}
+                        animate={{ scaleX: currentStepIndex / steps.length }}
+                        transition={{ duration: reduceMotion ? 0 : motionDuration.base, ease: motionEase.out }}
                     />
                 </div>
             </div>
@@ -222,34 +226,26 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                     {operations.map((op) => (
-                        <motion.button
+                        <button
                             key={op.id}
                             onClick={() => {
                                 setSelectedOperation(op.id);
                                 setStepFeedback(null);
                             }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
                             className={`p-3 rounded-xl text-left transition-all border-2 ${selectedOperation === op.id
                                 ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300'
                                 : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-600'
                                 }`}
                         >
                             <span className="font-medium">{op.label}</span>
-                        </motion.button>
+                        </button>
                     ))}
                 </div>
             </div>
 
             {/* Value Input (if required) */}
-            <AnimatePresence>
-                {selectedOperation && operations.find(op => op.id === selectedOperation)?.requiresValue && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mb-4"
-                    >
+            {selectedOperation && operations.find(op => op.id === selectedOperation)?.requiresValue && (
+                    <div className="mb-4">
                         <input
                             type="text"
                             value={operationValue}
@@ -257,17 +253,24 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
                             placeholder={operations.find(op => op.id === selectedOperation)?.valuePlaceholder || 'Ange värde...'}
                             className="w-full px-4 py-3 text-lg font-mono rounded-xl border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
                         />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    </div>
+            )}
 
             {/* Feedback */}
             <AnimatePresence>
                 {stepFeedback && (
                     <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
+                        initial={reduceMotion ? false : stepFeedback.isCorrect
+                            ? { opacity: 0, scale: 0.96 }
+                            : { opacity: 1, x: -4 }}
+                        animate={stepFeedback.isCorrect
+                            ? { opacity: 1, scale: 1 }
+                            : { opacity: 1, x: [-4, 4, -3, 3, 0] }}
+                        exit={{ opacity: 0 }}
+                        transition={{
+                            duration: reduceMotion ? 0 : stepFeedback.isCorrect ? motionDuration.correct : motionDuration.wrong,
+                            ease: motionEase.out,
+                        }}
                         className={`mb-4 p-4 rounded-xl flex items-start gap-3 ${stepFeedback.isCorrect
                             ? 'bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30'
                             : 'bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30'
@@ -298,8 +301,9 @@ export function SolutionBuilderInput({ question, onAnswer }: SolutionBuilderInpu
                         </button>
                     ) : (
                         <motion.div
-                            initial={{ opacity: 0, y: -5 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
                             className="p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl text-sm text-blue-700 dark:text-blue-300"
                         >
                             💡 {currentStep.hint}

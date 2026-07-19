@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, ReactNode, useCallback, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
-import { ChevronLeft, X, HelpCircle, Zap, Flame, Sparkles, Brain, Star } from 'lucide-react';
+import { ChevronLeft, X, HelpCircle, Zap, Flame, MessageCircle, PanelRightOpen } from 'lucide-react';
 import QuickAddTrigger from '@/components/flashcards/QuickAddTrigger';
+import { drawerTransition, focusTransition, motionDuration, shellSpring } from '@/lib/motion';
 
 interface FocusedStudyLayoutProps {
     children: ReactNode;
@@ -41,6 +42,7 @@ export function FocusedStudyLayout({
 }: FocusedStudyLayoutProps) {
     const [isMobileHelpOpen, setIsMobileHelpOpen] = useState(false);
     const [isResizingHelp, setIsResizingHelp] = useState(false);
+    const reduceMotion = useReducedMotion();
 
     const handleHelpToggle = useCallback(() => {
         onHelpToggle?.(!isHelpOpen);
@@ -52,6 +54,7 @@ export function FocusedStudyLayout({
 
     const splitActive = isHelpOpen && !!helpPanel;
     const clampedHelpWidth = Math.min(56, Math.max(28, helpPanelWidth));
+    const shouldStretchQuestionPane = splitActive && clampedHelpWidth >= 50;
 
     const handleHelpResizeStart = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
         if (!onHelpPanelWidthChange) return;
@@ -89,16 +92,16 @@ export function FocusedStudyLayout({
     }, [onHelpPanelWidthChange]);
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors">
+        <div className="study-focus min-h-screen bg-zinc-50 text-zinc-900 transition-colors dark:bg-zinc-950 dark:text-white">
 
             {/* ── Fixed Header ──────────────────────────────────────────────── */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-100 dark:border-zinc-900">
-                <div className="h-14 px-4 flex items-center gap-4">
+            <header className="fixed left-0 right-0 top-0 z-50 border-b border-zinc-200/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/92">
+                <div className="mx-auto flex h-14 max-w-[1680px] items-center gap-4 px-4">
 
                     {/* Left: back */}
                     <Link
                         href="/practice"
-                        className="flex items-center gap-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors flex-shrink-0"
+                        className="flex flex-shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950 dark:hover:bg-white/10 dark:hover:text-white"
                     >
                         <ChevronLeft className="w-5 h-5" />
                         <span className="text-sm font-medium hidden sm:block">Avsluta</span>
@@ -107,11 +110,11 @@ export function FocusedStudyLayout({
                     {/* Center: topic + counter */}
                     <div className="flex-1 flex flex-col items-center justify-center min-w-0">
                         {topicName && (
-                            <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 truncate max-w-full leading-none mb-0.5">
+                            <span className="mb-0.5 max-w-full truncate text-[11px] font-semibold leading-none text-zinc-500 dark:text-zinc-400">
                                 {topicName}
                             </span>
                         )}
-                        <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 leading-none">
+                        <span className="text-sm font-bold leading-none text-zinc-800 dark:text-zinc-200">
                             {questionNumber} / {totalQuestions}
                         </span>
                     </div>
@@ -121,10 +124,10 @@ export function FocusedStudyLayout({
                         {xpEarned > 0 && (
                             <motion.div
                                 key={xpEarned}
-                                initial={{ scale: 1.3, opacity: 0.7 }}
+                                initial={reduceMotion ? false : { scale: 0.96, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                transition={{ type: 'spring', damping: 10 }}
-                                className="flex items-center gap-1 px-2 py-1 bg-violet-50 dark:bg-violet-500/10 rounded-lg"
+                                transition={reduceMotion ? { duration: 0 } : shellSpring}
+                                className="flex items-center gap-1 rounded-lg bg-violet-50 px-2 py-1 dark:bg-violet-500/10"
                             >
                                 <Zap className="w-3 h-3 text-violet-500" />
                                 <span className="text-xs font-bold text-violet-600 dark:text-violet-400">{xpEarned}</span>
@@ -132,8 +135,9 @@ export function FocusedStudyLayout({
                         )}
                         {streak >= 2 && (
                             <motion.div
-                                initial={{ scale: 0.8, opacity: 0 }}
+                                initial={reduceMotion ? false : { scale: 0.96, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
+                                transition={reduceMotion ? { duration: 0 } : shellSpring}
                                 className="flex items-center gap-1 px-2 py-1 bg-orange-50 dark:bg-orange-500/10 rounded-lg"
                             >
                                 <Flame className="w-3 h-3 text-orange-500" />
@@ -153,27 +157,14 @@ export function FocusedStudyLayout({
                         <button
                             onClick={handleHelpToggle}
                             aria-pressed={splitActive}
-                            className={`group relative overflow-hidden hidden lg:flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold shadow-sm backdrop-blur-xl transition-all duration-700 ease-in-out ${
+                            className={`hidden items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-semibold shadow-sm transition lg:flex ${
                                 splitActive
-                                    ? 'border-primary-500/50 bg-white/70 text-zinc-950 shadow-lg shadow-primary-500/20 dark:border-white/10 dark:bg-white/10 dark:text-white'
-                                    : 'border-zinc-200/50 bg-white/55 text-zinc-600 hover:border-primary-400 hover:text-zinc-950 dark:border-white/10 dark:bg-zinc-900/40 dark:text-zinc-300 dark:hover:border-primary-500/50 dark:hover:text-white shadow-glass'
+                                    ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-300/25 dark:bg-blue-300/10 dark:text-blue-100'
+                                    : 'border-zinc-200 bg-white text-zinc-700 hover:border-blue-200 hover:text-blue-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-300 dark:hover:text-white'
                             }`}
                         >
-                            {/* Neural flow background effect */}
-                            <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[length:200%_200%] animate-gradient bg-gradient-to-br from-primary-500/10 via-accent-500/10 to-primary-500/10" />
-
-                            <span className={`relative flex h-6 w-6 items-center justify-center rounded-full transition-all duration-700 group-hover:scale-110 group-hover:rotate-[15deg] ${
-                                splitActive
-                                    ? 'bg-gradient-to-br from-primary-600 to-accent-600 text-white shadow-lg shadow-primary-600/25'
-                                    : 'bg-gradient-to-br from-primary-500/10 to-accent-500/10 text-primary-600 group-hover:bg-gradient-to-br group-hover:from-primary-500 group-hover:to-accent-500 group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary-500/30'
-                            }`}>
-                                <Star className={`h-3.5 w-3.5 transition-all duration-700 ${splitActive ? 'fill-current' : 'group-hover:fill-current'}`} />
-                                <Star className={`absolute -top-0.5 -right-0.5 h-2 w-2 transition-all duration-1000 delay-100 opacity-0 group-hover:opacity-100 group-hover:rotate-[-15deg] ${splitActive ? 'fill-current text-white/80' : 'fill-accent-400 text-accent-400'}`} />
-                            </span>
-                            <span className="relative z-10">{splitActive ? 'Handledare' : 'Chit-Chat'}</span>
-
-                            {/* Shimmer "Spark" */}
-                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-primary-500/5 to-transparent" />
+                            {splitActive ? <PanelRightOpen className="h-4 w-4" /> : <MessageCircle className="h-4 w-4" />}
+                            <span>{splitActive ? 'AI öppen' : 'Fråga AI'}</span>
                         </button>
 
                         {/* Help — mobile */}
@@ -187,12 +178,12 @@ export function FocusedStudyLayout({
                 </div>
 
                 {/* Progress bar */}
-                <div className="h-1 bg-zinc-100 dark:bg-zinc-800">
+                <div className="h-0.5 bg-zinc-100 dark:bg-zinc-900">
                     <motion.div
-                        className="h-full bg-emerald-500"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressPct}%` }}
-                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                        className="h-full origin-left bg-blue-600 dark:bg-blue-300"
+                        initial={reduceMotion ? false : { scaleX: 0 }}
+                        animate={{ scaleX: progressPct / 100 }}
+                        transition={reduceMotion ? { duration: 0 } : focusTransition}
                     />
                 </div>
             </header>
@@ -202,12 +193,12 @@ export function FocusedStudyLayout({
 
                 {/* ── LEFT: Question content ──────────────────────────────── */}
                 <main
-                    className={`${isResizingHelp ? '' : 'transition-all duration-300 ease-in-out'} overflow-y-auto ${
+                    className={`overflow-y-auto ${
                         splitActive ? 'lg:flex-none lg:[width:calc(100%_-_var(--help-panel-width))]' : 'flex-1'
                     }`}
                     style={splitActive ? { '--help-panel-width': `${clampedHelpWidth}vw` } as CSSProperties : undefined}
                 >
-                    <div className={`py-8 lg:py-12 px-4 sm:px-6 ${splitActive ? 'max-w-xl mx-auto lg:px-8' : 'max-w-4xl mx-auto lg:px-8'}`}>
+                    <div className={`px-4 py-6 sm:px-6 lg:py-10 ${shouldStretchQuestionPane ? 'w-full lg:px-8' : 'mx-auto max-w-4xl lg:px-8'}`}>
                         {children}
                     </div>
                 </main>
@@ -217,11 +208,11 @@ export function FocusedStudyLayout({
                     {splitActive && (
                         <motion.aside
                             key="ai-panel-right"
-                            initial={{ x: '100%', opacity: 0 }}
+                            initial={reduceMotion ? false : { x: 24, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: '100%', opacity: 0 }}
-                            transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-                            className="hidden lg:flex fixed right-0 top-[60px] bottom-0 flex-col border-l border-white/60 bg-white/45 shadow-[-18px_0_55px_-24px_rgba(24,24,27,0.35)] backdrop-blur-2xl dark:border-white/10 dark:bg-zinc-950/45 dark:shadow-[-18px_0_60px_-24px_rgba(0,0,0,0.8)] z-40"
+                            exit={reduceMotion ? { opacity: 0 } : { x: 24, opacity: 0 }}
+                            transition={reduceMotion ? { duration: 0 } : focusTransition}
+                            className="fixed bottom-0 right-0 top-[60px] z-40 hidden flex-col border-l border-zinc-200 bg-white shadow-[-18px_0_55px_-28px_rgba(24,24,27,0.32)] dark:border-white/10 dark:bg-zinc-950 dark:shadow-[-18px_0_60px_-30px_rgba(0,0,0,0.8)] lg:flex"
                             style={{ width: `${clampedHelpWidth}vw` }}
                         >
                             <div
@@ -264,22 +255,23 @@ export function FocusedStudyLayout({
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+                                transition={{ duration: reduceMotion ? 0 : motionDuration.fast }}
+                                className="fixed inset-0 z-40 bg-black/40 lg:hidden"
                                 onClick={() => setIsMobileHelpOpen(false)}
                             />
                             <motion.div
-                                initial={{ y: '100%' }}
+                                initial={reduceMotion ? false : { y: '100%' }}
                                 animate={{ y: 0 }}
-                                exit={{ y: '100%' }}
-                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                                className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl h-[85vh] overflow-hidden lg:hidden flex flex-col bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800"
+                                exit={reduceMotion ? { opacity: 0 } : { y: '100%' }}
+                                transition={reduceMotion ? { duration: 0 } : drawerTransition}
+                                className="fixed inset-x-0 bottom-0 z-50 flex h-[85vh] flex-col overflow-hidden rounded-t-2xl border-t border-zinc-200 bg-white dark:border-white/10 dark:bg-zinc-950 lg:hidden"
                             >
                                 {/* Drag handle + close */}
                                 <div className="flex-none pt-3 pb-2 px-4 flex flex-col items-center border-b border-zinc-200 dark:border-zinc-800">
                                     <div className="w-10 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full mb-3" />
                                     <div className="flex items-center justify-between w-full">
                                         <span className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                                            <Star className="w-4 h-4 text-violet-500 fill-current" />
+                                            <MessageCircle className="w-4 h-4 text-blue-600 dark:text-blue-300" />
                                             AI-handledare
                                         </span>
                                         <button

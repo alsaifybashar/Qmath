@@ -15,11 +15,11 @@ interface ReflectionModalProps {
 }
 
 const ERROR_TYPES = [
-    { id: 'conceptual', label: 'Konceptuellt', icon: Brain, color: '#f59e0b', desc: 'Jag förstod inte konceptet' },
-    { id: 'procedural', label: 'Procedurellt', icon: FileQuestion, color: '#3b82f6', desc: 'Jag använde fel metod' },
+    { id: 'conceptual', label: 'Konceptuellt', icon: Brain, color: '#dfa81b', desc: 'Jag förstod inte konceptet' },
+    { id: 'procedural', label: 'Procedurellt', icon: FileQuestion, color: '#3585a3', desc: 'Jag använde fel metod' },
     { id: 'computational', label: 'Beräkning', icon: Calculator, color: '#ef4444', desc: 'Jag gjorde ett räknefel' },
-    { id: 'interpretation', label: 'Misläsning', icon: Eye, color: '#8b5cf6', desc: 'Jag läste fel på frågan' },
-    { id: 'time_pressure', label: 'Tid', icon: Clock, color: '#6366f1', desc: 'Jag fick slut på tid' },
+    { id: 'interpretation', label: 'Misläsning', icon: Eye, color: '#19647e', desc: 'Jag läste fel på frågan' },
+    { id: 'time_pressure', label: 'Tid', icon: Clock, color: '#28afb0', desc: 'Jag fick slut på tid' },
     { id: 'other', label: 'Annat', icon: HelpCircle, color: '#9ca3af', desc: 'Något annat' },
 ];
 

@@ -20,11 +20,11 @@ export function DerivativeDefinitionBoard({
 
         // The function f(x) = 0.5 * x^2 + 1
         const f = (x: number) => 0.5 * x * x + 1;
-        board.create('functiongraph', [f], { strokeColor: '#3b82f6', strokeWidth: 3 });
+        board.create('functiongraph', [f], { strokeColor: '#3585a3', strokeWidth: 3 });
 
         // Fixed point x
         const ptX = board.create('glider', [2, f(2), board.defaultAxes.x], { name: 'x', size: 4, visible: false });
-        const ptF = board.create('point', [() => ptX.X(), () => f(ptX.X())], { name: 'f(x)', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb', fixed: true });
+        const ptF = board.create('point', [() => ptX.X(), () => f(ptX.X())], { name: 'f(x)', size: 4, fillColor: '#3585a3', strokeColor: '#24718e', fixed: true });
 
         const ptH = board.create('glider', [2 + initialH, 0, board.defaultAxes.x], { name: 'x+h', size: 5, fillColor: '#ef4444', strokeColor: '#dc2626' });
         const ptFH = board.create('point', [() => ptH.X(), () => f(ptH.X())], { name: 'f(x+h)', size: 4, fillColor: '#ef4444', strokeColor: '#dc2626' });
@@ -36,10 +36,10 @@ export function DerivativeDefinitionBoard({
         // Horizontal delta X
         board.create('segment', [ptF, [() => ptH.X(), () => ptF.Y()]], { strokeColor: '#10b981', strokeWidth: 2 });
         // Vertical delta Y
-        board.create('segment', [[() => ptH.X(), () => ptF.Y()], ptFH], { strokeColor: '#f59e0b', strokeWidth: 2 });
+        board.create('segment', [[() => ptH.X(), () => ptF.Y()], ptFH], { strokeColor: '#dfa81b', strokeWidth: 2 });
 
         // The secant line
-        const secant = board.create('line', [ptF, ptFH], { strokeColor: '#8b5cf6', strokeWidth: 2 });
+        const secant = board.create('line', [ptF, ptFH], { strokeColor: '#19647e', strokeWidth: 2 });
 
         // The true tangent line (for reference when h approaches 0)
         board.create('line', [

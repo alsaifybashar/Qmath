@@ -287,8 +287,6 @@ export function MatrixGridInput({ question, onAnswer }: MatrixGridInputProps) {
             <motion.button
                 type="button"
                 onClick={handleSubmit}
-                whileHover={!isSubmitted ? { scale: 1.01 } : {}}
-                whileTap={!isSubmitted ? { scale: 0.99 } : {}}
                 disabled={isSubmitted}
                 className={`flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 font-semibold transition-colors ${
                     isSubmitted

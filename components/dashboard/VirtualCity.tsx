@@ -71,17 +71,17 @@ export default function VirtualCity({ cityState, courseName, cityProgress }: Vir
             return 'linear-gradient(to bottom, #0f172a 0%, #1e293b 40%, #334155 100%)';
         }
         if (isDawn) {
-            return 'linear-gradient(to bottom, #1e3a5f 0%, #f97316 30%, #fcd34d 100%)';
+            return 'linear-gradient(to bottom, #1e3a5f 0%, #e87c2b 30%, #fcd34d 100%)';
         }
         if (isEvening) {
-            return 'linear-gradient(to bottom, #1e3a5f 0%, #f97316 40%, #fcd34d 100%)';
+            return 'linear-gradient(to bottom, #1e3a5f 0%, #e87c2b 40%, #fcd34d 100%)';
         }
 
         switch (weather) {
             case 'sunny':
-                return 'linear-gradient(to bottom, #2563eb 0%, #60a5fa 50%, #93c5fd 100%)';
+                return 'linear-gradient(to bottom, #24718e 0%, #5ea6bd 50%, #92c5d6 100%)';
             case 'partly_cloudy':
-                return 'linear-gradient(to bottom, #3b82f6 0%, #94a3b8 100%)';
+                return 'linear-gradient(to bottom, #3585a3 0%, #94a3b8 100%)';
             case 'cloudy':
                 return 'linear-gradient(to bottom, #64748b 0%, #94a3b8 100%)';
             case 'rainy':
@@ -89,7 +89,7 @@ export default function VirtualCity({ cityState, courseName, cityProgress }: Vir
             case 'stormy':
                 return 'linear-gradient(to bottom, #1e293b 0%, #475569 100%)';
             default:
-                return 'linear-gradient(to bottom, #60a5fa 0%, #93c5fd 100%)';
+                return 'linear-gradient(to bottom, #5ea6bd 0%, #92c5d6 100%)';
         }
     };
 
@@ -173,7 +173,7 @@ export default function VirtualCity({ cityState, courseName, cityProgress }: Vir
                         </linearGradient>
                         <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
                             <stop offset="0%" stopColor="#fef3c7" />
-                            <stop offset="100%" stopColor="#fbbf24" />
+                            <stop offset="100%" stopColor="#f4d35e" />
                         </radialGradient>
                         <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
                             <stop offset="0%" stopColor="#fef9c3" />
@@ -202,7 +202,7 @@ export default function VirtualCity({ cityState, courseName, cityProgress }: Vir
 
                     {/* Roads */}
                     <rect x="0" y="300" width="600" height="12" fill="url(#roadGradient)" />
-                    <line x1="0" y1="306" x2="600" y2="306" stroke="#fbbf24" strokeWidth="1" strokeDasharray="20,10" opacity="0.6" />
+                    <line x1="0" y1="306" x2="600" y2="306" stroke="#f4d35e" strokeWidth="1" strokeDasharray="20,10" opacity="0.6" />
 
                     {/* Weather Effects */}
                     <WeatherEffects weather={weather} isNight={isNight} />
@@ -437,7 +437,7 @@ function CelestialBody({ timeOfDay, hour }: { timeOfDay: TimeOfDay; hour: number
                 cx={x}
                 cy={y}
                 r="35"
-                fill="#fbbf24"
+                fill="#f4d35e"
                 opacity="0.2"
                 animate={{ r: [35, 40, 35] }}
                 transition={{ duration: 3, repeat: Infinity }}
@@ -451,7 +451,7 @@ function CelestialBody({ timeOfDay, hour }: { timeOfDay: TimeOfDay; hour: number
                     y1={y + Math.sin((i * Math.PI) / 4) * 28}
                     x2={x + Math.cos((i * Math.PI) / 4) * 38}
                     y2={y + Math.sin((i * Math.PI) / 4) * 38}
-                    stroke="#fbbf24"
+                    stroke="#f4d35e"
                     strokeWidth="2"
                     strokeLinecap="round"
                     animate={{ opacity: [0.5, 1, 0.5] }}
@@ -527,7 +527,7 @@ function WeatherEffects({ weather, isNight }: { weather: WeatherType; isNight: b
                         y1={-10}
                         x2={drop.x2}
                         y2={30}
-                        stroke="#60a5fa"
+                        stroke="#5ea6bd"
                         strokeWidth="1"
                         opacity="0.4"
                         initial={{ y: -40 }}
@@ -676,7 +676,7 @@ function TownHallSVG({ x, y, level, scale, isNight }: { x: number; y: number; le
             {level >= 4 && (
                 <motion.g animate={{ rotate: [-5, 5, -5] }} transition={{ duration: 2, repeat: Infinity }}>
                     <line x1={x + 40} y1={y - height - 65} x2={x + 40} y2={y - height - 25} stroke="#78350f" strokeWidth="2" />
-                    <polygon points={`${x + 40},${y - height - 65} ${x + 60},${y - height - 55} ${x + 40},${y - height - 45}`} fill="#3b82f6" />
+                    <polygon points={`${x + 40},${y - height - 65} ${x + 60},${y - height - 55} ${x + 40},${y - height - 45}`} fill="#3585a3" />
                 </motion.g>
             )}
         </motion.g>
@@ -691,7 +691,7 @@ function LibrarySVG({ x, y, level, scale, isNight }: { x: number; y: number; lev
             <rect x={x} y={y - height} width="70" height={height} fill="#1e40af" rx="2" />
             {/* Columns */}
             {[0, 1, 2, 3].map((i) => (
-                <rect key={i} x={x + 8 + i * 15} y={y - height + 10} width="6" height={height - 15} fill="#3b82f6" />
+                <rect key={i} x={x + 8 + i * 15} y={y - height + 10} width="6" height={height - 15} fill="#3585a3" />
             ))}
             {/* Roof with triangle */}
             <polygon points={`${x - 3},${y - height} ${x + 35},${y - height - 20} ${x + 73},${y - height}`} fill="#1e3a8a" />
@@ -722,9 +722,9 @@ function ObservatorySVG({ x, y, level, scale, isNight }: { x: number; y: number;
     return (
         <motion.g animate={{ scale }} style={{ transformOrigin: `${x + 30}px ${y}px` }}>
             {/* Tower */}
-            <rect x={x + 10} y={y - height} width="40" height={height} fill="#6366f1" rx="2" />
+            <rect x={x + 10} y={y - height} width="40" height={height} fill="#28afb0" rx="2" />
             {/* Dome */}
-            <ellipse cx={x + 30} cy={y - height} rx="30" ry="18" fill="#4f46e5" />
+            <ellipse cx={x + 30} cy={y - height} rx="30" ry="18" fill="#1f8e90" />
             {/* Telescope */}
             <motion.g
                 animate={{ rotate: [-15, 15, -15] }}
@@ -774,7 +774,7 @@ function ObservatorySVG({ x, y, level, scale, isNight }: { x: number; y: number;
 }
 
 function GardenSVG({ x, y, level, scale, isNight }: { x: number; y: number; level: number; scale: number; isNight: boolean }) {
-    const flowerColors = ['#ef4444', '#f59e0b', '#ec4899', '#a855f7', '#3b82f6'];
+    const flowerColors = ['#ef4444', '#dfa81b', '#ec4899', '#a855f7', '#3585a3'];
     const flowerCount = Math.min(level * 3, 12);
 
     return (
@@ -862,13 +862,13 @@ function AcademySVG({ x, y, level, scale, isNight }: { x: number; y: number; lev
     return (
         <motion.g animate={{ scale }} style={{ transformOrigin: `${x + 35}px ${y}px` }}>
             {/* Main building */}
-            <rect x={x} y={y - height} width="70" height={height} fill="#7c3aed" rx="2" />
+            <rect x={x} y={y - height} width="70" height={height} fill="#24718e" rx="2" />
             {/* Grand columns */}
             {[0, 1, 2].map((i) => (
-                <rect key={i} x={x + 10 + i * 20} y={y - height + 15} width="8" height={height - 20} fill="#a78bfa" />
+                <rect key={i} x={x + 10 + i * 20} y={y - height + 15} width="8" height={height - 20} fill="#5ea6bd" />
             ))}
             {/* Dome */}
-            <ellipse cx={x + 35} cy={y - height} rx="40" ry="20" fill="#6d28d9" />
+            <ellipse cx={x + 35} cy={y - height} rx="40" ry="20" fill="#1d7375" />
             {/* Graduation cap on top */}
             {level >= 3 && (
                 <text x={x + 35} y={y - height - 10} fontSize="16" textAnchor="middle">🎓</text>
@@ -931,7 +931,7 @@ function LighthouseSVG({ x, y, level, scale, isNight }: { x: number; y: number; 
                 cx={x + 20}
                 cy={y - height - 12}
                 r="6"
-                fill={isNight ? '#fef3c7' : '#fbbf24'}
+                fill={isNight ? '#fef3c7' : '#f4d35e'}
                 animate={isNight ? { opacity: [0.8, 1, 0.8] } : {}}
                 transition={{ duration: 1, repeat: Infinity }}
             />
@@ -983,7 +983,7 @@ function FallbackBuilding({ x, y, type, level, isNight }: { x: number; y: number
     const colors: Record<string, string> = {
         library: '#1e40af',
         townhall: '#dc2626',
-        observatory: '#6366f1',
+        observatory: '#28afb0',
         garden: '#22c55e',
     };
 
@@ -1011,7 +1011,7 @@ function LockedBuilding({ x, y, definition, progress }: { x: number; y: number; 
             <text x={x + (definition.size?.width || 60) / 2} y={y - 20} fontSize="20" textAnchor="middle">🔒</text>
             {/* Progress bar */}
             <rect x={x + 5} y={y - 8} width={(definition.size?.width || 60) - 10} height="4" fill="#cbd5e1" rx="2" />
-            <rect x={x + 5} y={y - 8} width={((definition.size?.width || 60) - 10) * (progress / 100)} height="4" fill="#3b82f6" rx="2" />
+            <rect x={x + 5} y={y - 8} width={((definition.size?.width || 60) - 10) * (progress / 100)} height="4" fill="#3585a3" rx="2" />
         </g>
     );
 }
@@ -1029,7 +1029,7 @@ function Inhabitant({
     delay: number;
     variant: number;
 }) {
-    const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ec4899'];
+    const colors = ['#3585a3', '#22c55e', '#dfa81b', '#ec4899'];
     const color = isNight ? '#64748b' : colors[variant];
 
     return (

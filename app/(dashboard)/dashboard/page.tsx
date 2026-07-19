@@ -8,16 +8,17 @@ import {
     questionAttempts,
 } from '@/db/dashboard-schema';
 import { courses, topics, enrollments } from '@/db/schema';
+import { levelForXp, xpForAttempts } from '@/lib/gamification/xp';
 
 import { checkAndMaintainStreak } from '@/lib/dashboard/streak-system';
 import { getExamReadiness } from '@/app/actions/dashboard-insights';
-import { Command, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 import {
     WeeklyActivityChart,
     StreakCard,
     CourseCard,
     MasteryTopicCard,
-    QuickNavigation,
+    DashboardHeader,
 } from '@/components/dashboard/DashboardCards';
 import { ExamReadinessBar } from '@/components/dashboard/ExamReadinessBar';
 
@@ -36,6 +37,7 @@ export default async function DashboardPage() {
 
     const user = session.user;
     const userId = user.id!;
+    const displayName = user.name?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'Studenten';
 
     // Calculate time ranges
     const now = new Date();
@@ -116,8 +118,8 @@ export default async function DashboardPage() {
     const currentStreak = streakData?.currentStreak || 0;
 
     // Calculate user level based on XP (questions answered * 10)
-    const totalXP = recentAttempts.length * 10;
-    const userLevel = Math.floor(totalXP / 500) + 1;
+    const totalXP = xpForAttempts(recentAttempts.length);
+    const userLevel = levelForXp(totalXP);
 
     // Weekly activity data
     const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -145,16 +147,6 @@ export default async function DashboardPage() {
         });
     });
 
-    // Course gradients
-    const courseGradients = [
-        'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)',
-        'linear-gradient(135deg, #F6D365 0%, #FDA085 100%)',
-        'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)',
-        'linear-gradient(135deg, #4361EE 0%, #7C5CFC 100%)',
-        'linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%)',
-        'linear-gradient(135deg, #00C6FB 0%, #005BEA 100%)',
-    ];
-
     // Process mastery topics with topic names
     const masteryTopics = masteryData
         .map((m) => {
@@ -167,59 +159,45 @@ export default async function DashboardPage() {
                 mastery: (m.masteryLevel || 0) / 5,
             };
         })
-        .sort((a, b) => b.mastery - a.mastery)
-        .slice(0, 12);
-
-
-    // Get greeting based on time
-    const hour = now.getHours();
-    const greeting = hour < 12 ? 'God morgon' : hour < 18 ? 'God eftermiddag' : 'God kväll';
+        .sort((a, b) => a.mastery - b.mastery)
+        .slice(0, 6);
 
     return (
         <div className="dashboard-command">
             <div className="dashboard-command-bg" />
             <div className="dashboard-command-sheen" />
-            <div className="relative z-10 p-7 max-w-[1060px] min-w-0 mx-auto">
+            <div className="relative z-10 mx-auto w-full max-w-[1120px] min-w-0 px-4 py-6 sm:px-6 lg:px-8">
 
-            {/* ── Header ── */}
-            <div className="dashboard-card mb-6 p-5 sm:p-6">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            {/* ── Greeting + Stats ── */}
+            <DashboardHeader
+                name={displayName}
+                streak={currentStreak}
+                accuracy={accuracy}
+                totalQuestions={recentAttempts.length}
+                level={userLevel}
+            />
+
+
+            {/* ── Active Courses ── */}
+            <div className="mb-5">
+                <div className="mb-3 flex items-end justify-between gap-3">
                     <div>
-                        <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-teal-300/25 bg-teal-400/10 px-3 py-1.5 text-xs font-bold text-teal-700 dark:text-teal-100">
-                            <Command className="h-3.5 w-3.5" />
-                            Kontrollcenter
-                        </div>
-                        <h1 className="text-3xl font-bold tracking-normal sm:text-4xl">
-                            {greeting}, {user.name || 'Student'}
-                        </h1>
-                        <p className="dashboard-muted mt-2 max-w-2xl text-sm leading-6">
-                            Dagens läge, dina kurser och snabbaste vägen tillbaka till momentum.
+                        <p className="mb-1 text-xs font-semibold uppercase dashboard-subtle">
+                            Kurser
                         </p>
-                    </div>
-                    <div className="rounded-lg border border-orange-300/25 bg-orange-400/10 p-4 shadow-xl shadow-orange-500/10">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-300/15 text-orange-700 dark:text-orange-100">
-                                <Sparkles className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold uppercase text-orange-700 dark:text-orange-200">Dagens signal</p>
-                                <p className="text-sm font-bold">{accuracy}% träffsäkerhet · nivå {userLevel}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            {/* ── Row 2: Active Courses ── */}
-            <div className="mb-6">
-                <div className="flex justify-between items-center mb-3">
-                    <h2 className="text-base font-semibold">
+                        <h2 className="text-xl font-semibold text-balance" style={{ letterSpacing: 0 }}>
                         Dina kurser
-                    </h2>
+                        </h2>
+                    </div>
+                    <Link
+                        href="/courses"
+                        className="min-h-10 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-[var(--foreground-muted)] transition-colors duration-150 hover:text-[var(--accent-500)]"
+                    >
+                        Utforska fler
+                    </Link>
                 </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    {userCourses.slice(0, 3).map((course, idx) => {
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {userCourses.map((course, idx) => {
                         const courseMastery = masteryData.filter((m) => {
                             const topic = topicsData.find((t) => t.id === m.topicId);
                             return topic?.courseId === course.id;
@@ -238,14 +216,12 @@ export default async function DashboardPage() {
                                 progress={Math.round(avgMastery * 100)}
                                 topicsMastered={masteredCount}
                                 topicsTotal={topicsCount || 1}
-                                gradient={courseGradients[idx % courseGradients.length]}
+                                index={idx}
                             />
                         );
                     })}
                     {userCourses.length === 0 && (
-                        <div
-                            className="dashboard-card col-span-3 p-8 text-center"
-                        >
+                        <div className="dashboard-card col-span-full p-8 text-center">
                             <p className="dashboard-muted">Inga kurser än. Bläddra i kurskatalogen för att komma igång!</p>
                         </div>
                     )}
@@ -253,7 +229,16 @@ export default async function DashboardPage() {
             </div>
 
             {/* ── Row 3: Weekly Activity + Streak ── */}
-            <div className="grid grid-cols-[1fr_300px] gap-4 mb-6">
+            <div className="mb-5">
+                <div className="mb-3">
+                    <p className="mb-1 text-xs font-semibold uppercase dashboard-subtle">
+                        Veckoläge
+                    </p>
+                    <h2 className="text-xl font-semibold text-balance" style={{ letterSpacing: 0 }}>
+                        Aktivitet och svit
+                    </h2>
+                </div>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
                 <WeeklyActivityChart
                     data={weeklyData}
                     totalQuestions={recentAttempts.length}
@@ -264,12 +249,16 @@ export default async function DashboardPage() {
                     weekStreak={weekStreak}
                     level={userLevel}
                 />
+                </div>
             </div>
 
             {/* ── Row 4: Exam Readiness ── */}
             {examReadiness.length > 0 && (
-                <div className="mb-6">
-                    <h2 className="text-base font-semibold mb-3">
+                <div className="mb-5">
+                    <p className="mb-1 text-xs font-semibold uppercase dashboard-subtle">
+                        Prognos
+                    </p>
+                    <h2 className="mb-3 text-xl font-semibold text-balance" style={{ letterSpacing: 0 }}>
                         Tentamensredo
                     </h2>
                     <div className="space-y-3">
@@ -292,32 +281,43 @@ export default async function DashboardPage() {
             )}
 
             {/* ── Row 5: Knowledge Map ── */}
-            <div className="dashboard-card p-6">
-                <div className="flex justify-between items-center mb-5">
+            <div className="dashboard-card dashboard-panel dashboard-panel-focus p-5 sm:p-6">
+                <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
+                        <p className="mb-1 text-xs font-semibold uppercase dashboard-subtle">
+                            Fokus
+                        </p>
                         <h3 className="text-base font-semibold">
-                            Kunskapskarta
+                            Fokusområden
                         </h3>
                         <p className="dashboard-muted text-xs mt-0.5">
-                            Din mästerskapsnivå över alla områden
+                            Klicka på ett område för att öva direkt
                         </p>
                     </div>
 
-                    {/* Legend */}
-                    <div className="flex gap-3 flex-wrap justify-end">
-                        {[
-                            { color: '#10B981', label: 'Bemästrad' },
-                            { color: '#3B82F6', label: 'Lärande' },
-                            { color: '#F59E0B', label: 'Utvecklas' },
-                            { color: '#EF4444', label: 'Behöver fokus' },
-                        ].map((l, i) => (
-                            <div key={i} className="flex items-center gap-1.5">
-                                <div className="w-2 h-2 rounded-sm" style={{ background: l.color }} />
-                                <span className="dashboard-subtle text-xs">
-                                    {l.label}
-                                </span>
-                            </div>
-                        ))}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
+                        {/* Legend — the same calm status palette used by the topic cards */}
+                        <div className="hidden sm:flex gap-3 flex-wrap justify-end">
+                            {[
+                                { color: '#1d7375', label: 'Bemästrad' },
+                                { color: '#3585a3', label: 'Lärande' },
+                                { color: '#c27838', label: 'Utvecklas' },
+                                { color: '#c65d4b', label: 'Behöver fokus' },
+                            ].map((l, i) => (
+                                <div key={i} className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: l.color }} />
+                                    <span className="dashboard-subtle text-xs">
+                                        {l.label}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                        <Link
+                            href="/analytics"
+                            className="min-h-10 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-[var(--foreground-muted)] transition-colors duration-150 hover:text-[var(--accent-500)]"
+                        >
+                            Se alla
+                        </Link>
                     </div>
                 </div>
 
@@ -329,6 +329,8 @@ export default async function DashboardPage() {
                             name={topic.name}
                             course={topic.course}
                             mastery={topic.mastery}
+                            topicId={topic.id}
+                            topicName={topic.name}
                         />
                     ))}
                     {masteryTopics.length === 0 && (
@@ -339,10 +341,6 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
-            {/* ── Row 6: All Tools & Navigation ── */}
-            <div className="mt-8">
-                <QuickNavigation />
-            </div>
             </div>
         </div>
     );

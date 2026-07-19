@@ -1,19 +1,32 @@
 'use server';
 
-import { auth } from '@/auth';
 import { db } from '@/db/drizzle';
 import { users, profiles, userMastery } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { requireAuth } from '@/lib/auth';
+
+const onboardingProfileSchema = z.object({
+    universityId: z.string().uuid(),
+    universityProgram: z.string().trim().min(1).max(200),
+    studyYear: z.number().int().min(1).max(10),
+}).strict();
+
+const userProfileSchema = z.object({
+    name: z.string().trim().min(1).max(100),
+    universityId: z.union([z.string().uuid(), z.literal('')]),
+    universityProgram: z.string().trim().max(200),
+    enrollmentYear: z.coerce.number().int().min(1900).max(new Date().getUTCFullYear() + 10).nullable(),
+    targetGpa: z.coerce.number().min(0).max(5).nullable(),
+}).strict();
 
 export async function getCurrentUser() {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { error: 'Not authenticated' };
-    }
+    const userIdentity = await requireAuth();
 
     try {
         const user = await db.query.users.findFirst({
-            where: eq(users.id, session.user.id),
+            where: eq(users.id, userIdentity.id),
             with: {
                 profile: {
                     with: {
@@ -23,21 +36,17 @@ export async function getCurrentUser() {
             },
         });
         return { data: user };
-    } catch (error) {
-        console.error('Failed to fetch user:', error);
+    } catch {
         return { error: 'Failed to fetch user data' };
     }
 }
 
 export async function getUserProgress() {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { error: 'Not authenticated' };
-    }
+    const userIdentity = await requireAuth();
 
     try {
         const masteryData = await db.query.userMastery.findMany({
-            where: eq(userMastery.userId, session.user.id),
+            where: eq(userMastery.userId, userIdentity.id),
             with: {
                 topic: {
                     with: {
@@ -68,46 +77,66 @@ export async function getUserProgress() {
                 totalTopics: masteryData.length,
             }
         };
-    } catch (error) {
-        console.error('Failed to fetch progress:', error);
+    } catch {
         return { error: 'Failed to fetch progress data' };
     }
 }
 
-export async function updateUserProfile(formData: FormData) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { error: 'Not authenticated' };
-    }
-
-    const name = formData.get('name') as string;
-    const universityId = formData.get('universityId') as string;
-    const universityProgram = formData.get('universityProgram') as string;
-    const enrollmentYear = parseInt(formData.get('enrollmentYear') as string);
-    const targetGpaRaw = formData.get('targetGpa') as string;
-    const targetGpa = targetGpaRaw ? parseFloat(targetGpaRaw) : null;
+export async function saveOnboardingProfile(data: {
+    universityId: string;
+    universityProgram: string;
+    studyYear: number;
+}) {
+    const userIdentity = await requireAuth();
+    const parsed = onboardingProfileSchema.safeParse(data);
+    if (!parsed.success) return { error: 'Invalid profile data' };
 
     try {
-        // Update user name
-        if (name) {
-            await db.update(users)
-                .set({ name, updatedAt: new Date() })
-                .where(eq(users.id, session.user.id));
-        }
-
-        // Update profile
         await db.update(profiles)
             .set({
-                universityId: universityId || null,
-                universityProgram,
-                enrollmentYear: isNaN(enrollmentYear) ? null : enrollmentYear,
-                targetGpa: targetGpa,
+                universityId: parsed.data.universityId,
+                universityProgram: parsed.data.universityProgram,
+                studyYear: parsed.data.studyYear,
             })
-            .where(eq(profiles.id, session.user.id));
+            .where(eq(profiles.id, userIdentity.id));
+
+        revalidatePath('/onboarding/courses');
+        return { success: true };
+    } catch {
+        return { error: 'Failed to save profile. Please try again.' };
+    }
+}
+
+export async function updateUserProfile(formData: FormData) {
+    const userIdentity = await requireAuth();
+    const parsed = userProfileSchema.safeParse({
+        name: formData.get('name'),
+        universityId: formData.get('universityId') || '',
+        universityProgram: formData.get('universityProgram') || '',
+        enrollmentYear: formData.get('enrollmentYear') || null,
+        targetGpa: formData.get('targetGpa') || null,
+    });
+    if (!parsed.success) return { error: 'Invalid profile data' };
+
+    try {
+        await db.transaction(async (transaction) => {
+            await transaction.update(users)
+                .set({ name: parsed.data.name, updatedAt: new Date() })
+                .where(eq(users.id, userIdentity.id))
+                .run();
+            await transaction.update(profiles)
+                .set({
+                    universityId: parsed.data.universityId || null,
+                    universityProgram: parsed.data.universityProgram,
+                    enrollmentYear: parsed.data.enrollmentYear,
+                    targetGpa: parsed.data.targetGpa,
+                })
+                .where(eq(profiles.id, userIdentity.id))
+                .run();
+        });
 
         return { message: 'Profile updated successfully' };
-    } catch (error) {
-        console.error('Failed to update profile:', error);
+    } catch {
         return { error: 'Failed to update profile' };
     }
 }

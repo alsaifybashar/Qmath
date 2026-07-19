@@ -48,7 +48,6 @@ interface DailyFocusProps {
 
 export default function DailyFocus({
     recommendations,
-    userName,
     studyTip,
     sessionEstimate,
 }: DailyFocusProps) {
@@ -102,9 +101,6 @@ export default function DailyFocus({
                         <div className="flex items-center gap-2">
                             <span className="text-2xl">📋</span>
                             <h2 className="text-xl font-bold">Dagens fokus</h2>
-                        </div>
-                        <div className="text-sm opacity-80">
-                            {getGreeting()}, {userName}!
                         </div>
                     </div>
 
@@ -482,15 +478,6 @@ function RecommendationCard({
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
-
-function getGreeting(): string {
-    const hour = new Date().getHours();
-    if (hour < 5) return 'God natt';
-    if (hour < 12) return 'God morgon';
-    if (hour < 17) return 'God eftermiddag';
-    if (hour < 21) return 'God kväll';
-    return 'God natt';
-}
 
 function getModeLabel(mode: 'all' | 'review' | 'learn' | 'challenge'): string {
     const labels: Record<string, string> = {

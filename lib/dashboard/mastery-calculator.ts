@@ -20,7 +20,7 @@ export const MASTERY_LEVELS = {
     },
     2: {
         name: 'Practicing',
-        color: '#F97316', // Orange
+        color: '#e87c2b', // Orange
         description: 'You are actively practicing',
         criteria: '5+ questions, <60% accuracy',
     },
@@ -32,13 +32,13 @@ export const MASTERY_LEVELS = {
     },
     4: {
         name: 'Skilled',
-        color: '#3B82F6', // Blue
+        color: '#3585a3', // Blue
         description: 'You are confident with this',
         criteria: '15+ questions, 80-95% accuracy',
     },
     5: {
         name: 'Master',
-        color: '#8B5CF6', // Purple
+        color: '#19647e', // Purple
         description: 'You have mastered this topic!',
         criteria: '20+ questions, >95% accuracy, including difficult ones',
     },

@@ -143,7 +143,7 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
                         disabled={publishing}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                         style={{
-                            color: article.status === 'published' ? '#D97706' : '#059669',
+                            color: article.status === 'published' ? '#c08414' : '#059669',
                             background: article.status === 'published' ? '#FFF8ED' : '#ECFDF5',
                         }}
                     >

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ExpressionBuilderQuestion } from '@/types/study';
 import { MathRenderer } from './MathRenderer';
 import { Delete, Eraser, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -90,8 +90,6 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
                             key={block.id}
                             onClick={() => handleAddToken(block.value)}
                             disabled={isSubmitted}
-                            whileHover={!isSubmitted ? { scale: 1.05, y: -2 } : {}}
-                            whileTap={!isSubmitted ? { scale: 0.95 } : {}}
                             className={`
                                 h-12 min-w-[60px] px-4 rounded-xl shadow-sm border-b-2 font-medium text-lg flex items-center justify-center
                                 transition-all select-none
@@ -116,7 +114,7 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
                     <button
                         onClick={handleBackspace}
                         disabled={isSubmitted || tokens.length === 0}
-                        className="h-12 w-12 rounded-xl bg-zinc-200 dark:bg-zinc-800 border-b-4 border-zinc-300 dark:border-zinc-950 flex items-center justify-center text-zinc-600 dark:text-zinc-400 active:border-b-0 active:translate-y-[4px] transition-all disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
+                        className="h-12 w-12 rounded-xl bg-zinc-200 dark:bg-zinc-800 border-b-4 border-zinc-300 dark:border-zinc-950 flex items-center justify-center text-zinc-600 dark:text-zinc-400 transition-colors disabled:opacity-50"
                     >
                         <Delete className="w-6 h-6" />
                     </button>
@@ -129,7 +127,7 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
                 className={`w-full max-w-sm px-8 py-3 rounded-full font-bold transition-all shadow-lg flex items-center justify-center gap-2
                     ${isSubmitted
                         ? 'bg-zinc-200 text-zinc-500 cursor-default hidden'
-                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25 active:scale-95'
+                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25'
                     }
                 `}
             >
@@ -137,7 +135,7 @@ export function ExpressionBuilderInput({ question, onAnswer }: ExpressionBuilder
             </button>
 
             {isSubmitted && (
-                <div className="mt-4 animate-in fade-in slide-in-from-bottom-4">
+                <div className="mt-4">
                     {displayExpression.replace(/\s+/g, '') === question.correctExpression.replace(/\s+/g, '') ? (
                         <div className="flex items-center gap-2 text-green-500 font-bold bg-green-500/10 px-6 py-2 rounded-full">
                             <CheckCircle2 className="w-5 h-5" /> Perfekt matchning!

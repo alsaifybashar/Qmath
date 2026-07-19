@@ -1,10 +1,11 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import { auth } from '@/auth';
-import { courses, exams, enrollments } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { courses, enrollments, exams } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
 import { generateExamAnalysis, type AIExamAnalysisResult, type AIExamSection } from '@/app/actions/ai';
+import { requireAuth, requireCourseViewer } from '@/lib/auth';
+import { z } from 'zod';
 
 // ============================================================================
 // TYPES
@@ -135,7 +136,7 @@ function importanceToPriority(importance: number): 'critical' | 'high' | 'medium
 }
 
 function sectionColor(index: number): string {
-    const colors = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'];
+    const colors = ['#10B981', '#3585a3', '#19647e', '#dfa81b', '#EF4444'];
     return colors[index % colors.length];
 }
 
@@ -179,13 +180,13 @@ function buildCourseProfileFromAI(
                 id: 'II', label: 'Del II – Tillämpning', shortLabel: 'Del II',
                 description: 'Tillämpade problem och analys',
                 taskRange: 'Uppgift 5–8', pointsPerTask: 2, taskCount: 4,
-                maxPoints: 8, passPoints: 3, difficultyProfile: 'medium', color: '#3B82F6',
+                maxPoints: 8, passPoints: 3, difficultyProfile: 'medium', color: '#3585a3',
             },
             {
                 id: 'III', label: 'Del III – Fördjupning', shortLabel: 'Del III',
                 description: 'Avancerade uppgifter och bevis',
                 taskRange: 'Uppgift 9–12', pointsPerTask: 2, taskCount: 4,
-                maxPoints: 8, passPoints: 0, difficultyProfile: 'hard', color: '#8B5CF6',
+                maxPoints: 8, passPoints: 0, difficultyProfile: 'hard', color: '#19647e',
             },
         ];
 
@@ -198,13 +199,13 @@ function buildCourseProfileFromAI(
         {
             grade: '3', label: 'Godkänd',
             totalPoints: Math.round(maxTotalPoints * 0.45),
-            color: '#F59E0B',
+            color: '#dfa81b',
             sectionRequirements: examSections.slice(0, 1).map(s => ({ sectionId: s.id, minPoints: Math.round(s.maxPoints * 0.5) })),
         },
         {
             grade: '4', label: 'Väl godkänd',
             totalPoints: Math.round(maxTotalPoints * 0.65),
-            color: '#3B82F6',
+            color: '#3585a3',
             sectionRequirements: examSections.slice(0, 2).map(s => ({ sectionId: s.id, minPoints: Math.round(s.maxPoints * 0.5) })),
         },
         {
@@ -273,18 +274,8 @@ function buildExamTopicMap(aiResult: AIExamAnalysisResult): ExamTopicNode[] {
 // ============================================================================
 
 export async function getExamAnalysis(courseId: string): Promise<ExamAnalysisData | { error: string }> {
-    const session = await auth();
-    if (!session?.user?.id) return { error: 'Not authenticated' };
-    const userId = session.user.id;
-    const isAdmin = session.user.role === 'admin';
-
-    // Admins have full access to all courses — skip enrollment check
-    if (!isAdmin) {
-        const enrollment = await db.select().from(enrollments)
-            .where(and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId)))
-            .limit(1);
-        if (enrollment.length === 0) return { error: 'Not enrolled in this course' };
-    }
+    courseId = z.string().uuid().parse(courseId);
+    await requireCourseViewer(courseId);
 
     // Fetch course first (needed for course.code)
     const courseData = await db.select().from(courses).where(eq(courses.id, courseId)).limit(1);
@@ -292,14 +283,10 @@ export async function getExamAnalysis(courseId: string): Promise<ExamAnalysisDat
     const course = courseData[0];
     const courseCodeStr = course.code ?? '';
 
-    console.log(`[ExamAnalysis] Course: ${courseCodeStr} (id: ${courseId})`);
-
     // Fetch exams by courseCode (not courseId — bug fix)
     const courseExams = await db.select().from(exams)
         .where(eq(exams.courseCode, courseCodeStr))
         .orderBy(desc(exams.examDate));
-
-    console.log(`[ExamAnalysis] Found: ${courseExams.length} exams for ${courseCodeStr}`);
 
     // Build exam metadata for AI (up to 5 exams: 3 questions + 2 solutions)
     const examMeta = courseExams.map(e => ({
@@ -315,8 +302,6 @@ export async function getExamAnalysis(courseId: string): Promise<ExamAnalysisDat
         courseCodeStr,
         examMeta,
     );
-
-    console.log(`[ExamAnalysis] AI returned: ${aiResult.topics.length} topics, ${aiResult.examStructure.sections.length} sections`);
 
     // Build course profile from AI-detected exam structure
     const courseProfile = buildCourseProfileFromAI(courseCodeStr, course.name ?? '', aiResult);
@@ -350,14 +335,13 @@ export async function getExamAnalysis(courseId: string): Promise<ExamAnalysisDat
 // ============================================================================
 
 export async function getUserCoursesForAnalysis(): Promise<{ id: string; name: string; code: string }[]> {
-    const session = await auth();
-    if (!session?.user?.id) return [];
+    const user = await requireAuth();
 
     const userCourses = await db
         .select({ id: courses.id, name: courses.name, code: courses.code })
         .from(enrollments)
         .innerJoin(courses, eq(enrollments.courseId, courses.id))
-        .where(eq(enrollments.userId, session.user.id));
+        .where(eq(enrollments.userId, user.id));
 
     return userCourses.map(c => ({ id: c.id, name: c.name ?? 'Okänd', code: c.code ?? 'N/A' }));
 }

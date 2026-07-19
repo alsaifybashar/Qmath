@@ -129,7 +129,7 @@ export default function FlashcardReview({ deck, onReview, onComplete }: Flashcar
                         />
                         <defs>
                             <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stopColor="#8B5CF6" />
+                                <stop offset="0%" stopColor="#19647e" />
                                 <stop offset="100%" stopColor="#EC4899" />
                             </linearGradient>
                         </defs>
@@ -322,7 +322,7 @@ export function DeckProgressRing({ deck }: { deck: FlashcardDeck }) {
                 />
                 <defs>
                     <linearGradient id="deckGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#6366F1" />
+                        <stop offset="0%" stopColor="#28afb0" />
                         <stop offset="100%" stopColor="#EC4899" />
                     </linearGradient>
                 </defs>

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Target, ArrowRight, Brain } from 'lucide-react';
+import { motionDuration } from '@/lib/motion';
 
 interface CalibrationPromptProps {
     totalQuestions: number;
@@ -28,11 +29,13 @@ export function CalibrationPrompt({
     onSkip,
 }: CalibrationPromptProps) {
     const [predicted, setPredicted] = useState(Math.round(totalQuestions / 2));
+    const reduceMotion = useReducedMotion();
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
             className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 max-w-md mx-auto"
         >
             <div className="text-center mb-6">

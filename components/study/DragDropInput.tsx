@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Reorder, useDragControls } from 'framer-motion';
+import { Reorder } from 'framer-motion';
 import { GripVertical, CheckCircle2 } from 'lucide-react';
 import { DragDropQuestion } from '@/types/study';
 import { MathRenderer } from './MathRenderer';
@@ -82,7 +82,7 @@ export function DragDropInput({ question, onAnswer }: DragDropProps) {
                 className={`mt-10 px-8 py-3 rounded-full font-bold transition-all shadow-lg w-full md:w-auto
                     ${isSubmitted
                         ? 'bg-zinc-200 text-zinc-500 cursor-default hidden'
-                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25 active:scale-95'
+                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25'
                     }
                 `}
             >
@@ -90,7 +90,7 @@ export function DragDropInput({ question, onAnswer }: DragDropProps) {
             </button>
 
             {isSubmitted && (
-                <div className="mt-8 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4">
+                <div className="mt-8 flex flex-col items-center">
                     {JSON.stringify(items.map(i => i.id)) === JSON.stringify(question.correctOrder) ? (
                         <div className="flex items-center gap-2 text-green-500 font-bold bg-green-500/10 px-4 py-2 rounded-full">
                             <CheckCircle2 className="w-5 h-5" /> Rätt ordning!

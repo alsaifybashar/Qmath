@@ -40,23 +40,23 @@ export function CurveSketchingBoard({
         const fDoublePrime = (x: number) => a.Value() * (6 * x) - 6;
 
         // Top graph f(x)
-        board.create('functiongraph', [f], { strokeColor: '#3b82f6', strokeWidth: 3 });
-        board.create('text', [3, 10, "f(x)"], { strokeColor: '#3b82f6', fontSize: 16 });
+        board.create('functiongraph', [f], { strokeColor: '#3585a3', strokeWidth: 3 });
+        board.create('text', [3, 10, "f(x)"], { strokeColor: '#3585a3', fontSize: 16 });
 
         // Bottom graph f'(x)
         board.create('functiongraph', [fPrime], { strokeColor: '#10b981', strokeWidth: 2 });
         board.create('text', [3, -2, "f'(x)"], { strokeColor: '#10b981', fontSize: 16 });
 
         // Bottom graph f''(x)
-        board.create('functiongraph', [fDoublePrime], { strokeColor: '#f59e0b', strokeWidth: 2, dash: 2 });
-        board.create('text', [3, -4, "f''(x)"], { strokeColor: '#f59e0b', fontSize: 16 });
+        board.create('functiongraph', [fDoublePrime], { strokeColor: '#dfa81b', strokeWidth: 2, dash: 2 });
+        board.create('text', [3, -4, "f''(x)"], { strokeColor: '#dfa81b', fontSize: 16 });
 
         // Vertical tracker line
         const ptScanner = board.create('glider', [0, 6, board.create('line', [[-5, 6], [5, 6]], { visible: false })], { name: 'x', size: 5, fillColor: '#ef4444' });
         board.create('line', [[() => ptScanner.X(), 12], [() => ptScanner.X(), -12]], { strokeColor: '#ef4444', strokeWidth: 1, dash: 1 });
 
         // Intersections highlighting
-        const ptTop = board.create('point', [() => ptScanner.X(), () => f(ptScanner.X())], { size: 3, fillColor: '#3b82f6', name: '' });
+        const ptTop = board.create('point', [() => ptScanner.X(), () => f(ptScanner.X())], { size: 3, fillColor: '#3585a3', name: '' });
         const ptBottom1 = board.create('point', [() => ptScanner.X(), () => fPrime(ptScanner.X())], { size: 3, fillColor: '#10b981', name: '' });
 
         return board;

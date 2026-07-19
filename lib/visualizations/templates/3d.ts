@@ -1,5 +1,5 @@
 import { JSXTemplateDef } from './types';
-import { makeJSFunction2D, BOARD_BASE_OPTS, C } from '../mathUtils';
+import { makeJSFunction2D, makeJSFunctionForSymbols, BOARD_BASE_OPTS, C } from '../mathUtils';
 
 /** Shared 3D board + view factory. Returns { board, view }. */
 function make3DBoard(JXG: any, boardId: string, bbRange = 3) {
@@ -69,14 +69,8 @@ export const threeDTemplates: JSXTemplateDef[] = [
                 yFn: (t: number) => number,
                 zFn: (t: number) => number;
             const buildFn = (expr: string) => {
-                try {
-                    const js = expr.replace(/\^/g, '**');
-                    return new Function('t', `
-                        "use strict";
-                        const {sin,cos,tan,exp,log,sqrt,abs,PI,E,pow} = Math;
-                        try { return +(${js}); } catch(e) { return 0; }
-                    `) as (t: number) => number;
-                } catch { return () => 0; }
+                const fn = makeJSFunctionForSymbols(expr, ['t']);
+                return (t: number) => fn(t);
             };
             xFn = buildFn(xExpr); yFn = buildFn(yExpr); zFn = buildFn(zExpr);
             const { board, view } = make3DBoard(JXG, boardId, 2);
@@ -101,14 +95,8 @@ export const threeDTemplates: JSXTemplateDef[] = [
         init(JXG, boardId, cfg) {
             const { fxExpr = '-y', fyExpr = 'x', fzExpr = '0.2' } = cfg;
             const buildFn3 = (expr: string) => {
-                try {
-                    const js = expr.replace(/\^/g, '**');
-                    return new Function('x', 'y', 'z', `
-                        "use strict";
-                        const {sin,cos,exp,log,sqrt,abs,PI,E,pow} = Math;
-                        try { return +(${js}); } catch(e) { return 0; }
-                    `) as (x: number, y: number, z: number) => number;
-                } catch { return () => 0; }
+                const fn = makeJSFunctionForSymbols(expr, ['x', 'y', 'z']);
+                return (x: number, y: number, z: number) => fn(x, y, z);
             };
             const Fx = buildFn3(fxExpr);
             const Fy = buildFn3(fyExpr);

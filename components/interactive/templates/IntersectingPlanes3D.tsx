@@ -37,10 +37,10 @@ export function IntersectingPlanes3D({
             (u: number, v: number) => v,
             (u: number, v: number) => 2 - u - v,
             [-3, 3], [-3, 3]
-        ], { strokeWidth: 0, fillColor: '#3b82f6', fillOpacity: 0.6 });
+        ], { strokeWidth: 0, fillColor: '#3585a3', fillOpacity: 0.6 });
 
         const kLine = board.create('line', [[-5, -6], [5, -6]], { visible: true, strokeColor: '#475569', strokeWidth: 4 });
-        const pk = board.create('glider', [initialK, -6, kLine], { name: 'Shift k', size: 5, fillColor: '#f59e0b' });
+        const pk = board.create('glider', [initialK, -6, kLine], { name: 'Shift k', size: 5, fillColor: '#dfa81b' });
         pk.on('drag', () => {
             onStateChangeRef.current?.({ kValue: parseFloat(pk.X().toFixed(2)) });
         });

@@ -21,10 +21,10 @@ export function MatrixDeformationBoard({
         const origin = board.create('point', [0, 0], { visible: false });
 
         const iHat = board.create('point', [iX0, iY0], { name: 'i', size: 5, fillColor: '#10b981', strokeColor: '#059669' });
-        const jHat = board.create('point', [jX0, jY0], { name: 'j', size: 5, fillColor: '#f59e0b', strokeColor: '#d97706' });
+        const jHat = board.create('point', [jX0, jY0], { name: 'j', size: 5, fillColor: '#dfa81b', strokeColor: '#c08414' });
 
         board.create('arrow', [origin, iHat], { strokeColor: '#10b981', strokeWidth: 3 });
-        board.create('arrow', [origin, jHat], { strokeColor: '#f59e0b', strokeWidth: 3 });
+        board.create('arrow', [origin, jHat], { strokeColor: '#dfa81b', strokeWidth: 3 });
 
         // Deformed unit square
         const ptOrigin = board.create('point', [0, 0], { visible: false });
@@ -34,7 +34,7 @@ export function MatrixDeformationBoard({
         ], { visible: false });
 
         board.create('polygon', [ptOrigin, iHat, ptCorner, jHat], {
-            fillColor: '#3b82f6', fillOpacity: 0.2, borders: { strokeColor: '#3b82f6', strokeWidth: 2 }
+            fillColor: '#3585a3', fillOpacity: 0.2, borders: { strokeColor: '#3585a3', strokeWidth: 2 }
         });
 
         const updateMatrix = () => {

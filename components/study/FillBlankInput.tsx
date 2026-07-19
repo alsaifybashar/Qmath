@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { FillBlankQuestion } from '@/types/study';
 import { MathRenderer } from './MathRenderer';
 import { Check, X } from 'lucide-react';
@@ -93,7 +92,7 @@ export function FillBlankInput({ question, onAnswer }: FillBlankProps) {
                 className={`mt-12 px-8 py-3 rounded-full font-bold transition-all shadow-lg
                     ${isSubmitted
                         ? 'bg-zinc-200 text-zinc-500 cursor-default'
-                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25 active:scale-95'
+                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25'
                     }
                 `}
             >

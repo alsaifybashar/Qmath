@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ChevronRight, ChevronLeft, X, BookOpen, Clock } from 'lucide-react';
 import type { StudySkillsLesson as LessonType } from '@/lib/content/study-skills-content';
+import { motionDuration } from '@/lib/motion';
 
 interface StudySkillsLessonProps {
     lesson: LessonType;
@@ -24,6 +25,7 @@ export function StudySkillsLessonViewer({
     onDismiss,
 }: StudySkillsLessonProps) {
     const [currentSection, setCurrentSection] = useState(0);
+    const reduceMotion = useReducedMotion();
     const section = lesson.sections[currentSection];
     const isLast = currentSection === lesson.sections.length - 1;
 
@@ -51,9 +53,10 @@ export function StudySkillsLessonViewer({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
             className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden max-w-md mx-auto shadow-xl"
         >
             {/* Header */}
@@ -101,10 +104,10 @@ export function StudySkillsLessonViewer({
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSection}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.25 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
                     >
                         <div className={`p-5 rounded-xl border ${sectionStyles[section.type]}`}>
                             {section.emoji && (

@@ -15,6 +15,8 @@ export const studySessions = sqliteTable('study_sessions', {
     startedAt: integer('started_at', { mode: 'timestamp' }).notNull(),
     endedAt: integer('ended_at', { mode: 'timestamp' }),
     sessionType: text('session_type').notNull(), // 'pomodoro', 'free', 'exam_sim'
+    topicId: text('topic_id').references(() => topics.id, { onDelete: 'set null' }),
+    source: text('source').default('study'), // which surface started the session, e.g. 'study'
     focusScore: real('focus_score'), // 0.0 - 1.0 calculated from activity patterns
     breaksTaken: integer('breaks_taken').default(0),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),

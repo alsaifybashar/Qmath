@@ -1,1597 +1,1172 @@
-# Graph Report - .  (2026-06-03)
+# Graph Report - Qmath  (2026-07-19)
 
 ## Corpus Check
-- 496 files · ~434,708 words
+- 464 files · ~539,510 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4039 nodes · 6350 edges · 370 communities (275 shown, 95 thin omitted)
-- Extraction: 96% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 203 edges (avg confidence: 0.88)
-- Token cost: 60,500 input · 5,000 output
+- 3514 nodes · 5873 edges · 273 communities (230 shown, 43 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 51 edges (avg confidence: 0.8)
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `7f711199`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_content-schema.ts|content-schema.ts]]
-- [[_COMMUNITY_recommendation-engine.ts|recommendation-engine.ts]]
-- [[_COMMUNITY_insert_real_exam.ts|insert_real_exam.ts]]
-- [[_COMMUNITY_GuidancePanel.tsx|GuidancePanel.tsx]]
-- [[_COMMUNITY_question-flow-and-topics.test.|question-flow-and-topics.test.]]
-- [[_COMMUNITY_exam-cache.test.ts|exam-cache.test.ts]]
-- [[_COMMUNITY_TSRT19 Exam TEN1 2024-08-23|TSRT19 Exam TEN1 2024-08-23]]
-- [[_COMMUNITY_VirtualCity.tsx|VirtualCity.tsx]]
-- [[_COMMUNITY_phases-3-5.test.ts|phases-3-5.test.ts]]
-- [[_COMMUNITY_QuizEngine.tsx|QuizEngine.tsx]]
-- [[_COMMUNITY_ExamResultsTable.tsx|ExamResultsTable.tsx]]
-- [[_COMMUNITY_parameters.ts|parameters.ts]]
-- [[_COMMUNITY_flashcardReviews|flashcardReviews]]
-- [[_COMMUNITY_RichMathTextInput.tsx|RichMathTextInput.tsx]]
-- [[_COMMUNITY_JSXGraphBoard.tsx|JSXGraphBoard.tsx]]
-- [[_COMMUNITY_TSRT19 TEN1 2024-01-08 Exam|TSRT19 TEN1 2024-01-08 Exam]]
-- [[_COMMUNITY_AdminLayout.tsx|AdminLayout.tsx]]
-- [[_COMMUNITY_schema.ts|schema.ts]]
-- [[_COMMUNITY_dashboard-schema.ts|dashboard-schema.ts]]
-- [[_COMMUNITY_admin-questions.ts|admin-questions.ts]]
-- [[_COMMUNITY_LoginPromptModal.tsx|LoginPromptModal.tsx]]
-- [[_COMMUNITY_courseExamAnalysisCache|courseExamAnalysisCache]]
-- [[_COMMUNITY_KnowledgeMap.tsx|KnowledgeMap.tsx]]
-- [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_QuickAddTrigger.tsx|QuickAddTrigger.tsx]]
-- [[_COMMUNITY_SolutionBuilderInput.tsx|SolutionBuilderInput.tsx]]
-- [[_COMMUNITY_AdaptiveLearningEngine|AdaptiveLearningEngine]]
-- [[_COMMUNITY_Exam System|Exam System]]
-- [[_COMMUNITY_TATA41 TEN1 Solution Sketches|TATA41 TEN1 Solution Sketches ]]
-- [[_COMMUNITY_mathUtils.ts|mathUtils.ts]]
-- [[_COMMUNITY_DailyFocus.tsx|DailyFocus.tsx]]
-- [[_COMMUNITY_NextAuth Configuration|NextAuth Configuration]]
-- [[_COMMUNITY_ai-question-analysis.ts|ai-question-analysis.ts]]
-- [[_COMMUNITY_test-api.ts|test-api.ts]]
-- [[_COMMUNITY_appapiauth...nextauthrou|app/api/auth/[...nextauth]/rou]]
-- [[_COMMUNITY_universities|universities]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_city.ts|city.ts]]
-- [[_COMMUNITY_fsrs.ts|fsrs.ts]]
-- [[_COMMUNITY_CourseAnalysisView.tsx|CourseAnalysisView.tsx]]
-- [[_COMMUNITY_MathRenderer.tsx|MathRenderer.tsx]]
-- [[_COMMUNITY_userStreaks|userStreaks]]
-- [[_COMMUNITY_exam-sim.ts|exam-sim.ts]]
-- [[_COMMUNITY_checkMathEquivalence()|checkMathEquivalence()]]
-- [[_COMMUNITY_courses|courses]]
-- [[_COMMUNITY_curriculumStandards|curriculumStandards]]
-- [[_COMMUNITY_MilestoneCelebration.tsx|MilestoneCelebration.tsx]]
-- [[_COMMUNITY_TATA41 2024-08-27 (solution)|TATA41 2024-08-27 (solution)]]
-- [[_COMMUNITY_hint-system.test.ts|hint-system.test.ts]]
-- [[_COMMUNITY_dependencies|dependencies]]
-- [[_COMMUNITY_import-tata41-extracted-questi|import-tata41-extracted-questi]]
-- [[_COMMUNITY_MathCASInput.tsx|MathCASInput.tsx]]
-- [[_COMMUNITY_MasteryIndicator.tsx|MasteryIndicator.tsx]]
-- [[_COMMUNITY_ArticleEditor.tsx|ArticleEditor.tsx]]
-- [[_COMMUNITY_AIPanel.tsx|AIPanel.tsx]]
-- [[_COMMUNITY_TATA24 TEN1 2023-03-14 Solutio|TATA24 TEN1 2023-03-14 Solutio]]
-- [[_COMMUNITY_updated_at|updated_at]]
-- [[_COMMUNITY_tsconfig.json|tsconfig.json]]
-- [[_COMMUNITY_devDependencies|devDependencies]]
-- [[_COMMUNITY_ElaboratedFeedback.tsx|ElaboratedFeedback.tsx]]
-- [[_COMMUNITY_BayesianKnowledgeTracing|BayesianKnowledgeTracing]]
-- [[_COMMUNITY_BehavioralSection.tsx|BehavioralSection.tsx]]
-- [[_COMMUNITY_AchievementBadge.tsx|AchievementBadge.tsx]]
-- [[_COMMUNITY_PsychInsightsPanel.tsx|PsychInsightsPanel.tsx]]
-- [[_COMMUNITY_ReviewNotifications.tsx|ReviewNotifications.tsx]]
-- [[_COMMUNITY_auth.ts|auth.ts]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_description|description]]
-- [[_COMMUNITY_topic_id|topic_id]]
+- [[_COMMUNITY_Community 0|Community 0]]
+- [[_COMMUNITY_Community 1|Community 1]]
+- [[_COMMUNITY_Community 2|Community 2]]
+- [[_COMMUNITY_Community 3|Community 3]]
+- [[_COMMUNITY_Community 4|Community 4]]
+- [[_COMMUNITY_Community 5|Community 5]]
+- [[_COMMUNITY_Community 6|Community 6]]
+- [[_COMMUNITY_Community 7|Community 7]]
+- [[_COMMUNITY_Community 8|Community 8]]
+- [[_COMMUNITY_Community 9|Community 9]]
+- [[_COMMUNITY_Community 10|Community 10]]
+- [[_COMMUNITY_Community 11|Community 11]]
+- [[_COMMUNITY_Community 12|Community 12]]
+- [[_COMMUNITY_Community 13|Community 13]]
+- [[_COMMUNITY_Community 14|Community 14]]
+- [[_COMMUNITY_Community 15|Community 15]]
+- [[_COMMUNITY_Community 16|Community 16]]
+- [[_COMMUNITY_Community 17|Community 17]]
+- [[_COMMUNITY_Community 18|Community 18]]
+- [[_COMMUNITY_Community 19|Community 19]]
+- [[_COMMUNITY_Community 20|Community 20]]
+- [[_COMMUNITY_Community 21|Community 21]]
+- [[_COMMUNITY_Community 22|Community 22]]
+- [[_COMMUNITY_Community 23|Community 23]]
+- [[_COMMUNITY_Community 24|Community 24]]
+- [[_COMMUNITY_Community 25|Community 25]]
+- [[_COMMUNITY_Community 26|Community 26]]
+- [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 28|Community 28]]
+- [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 31|Community 31]]
+- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 33|Community 33]]
+- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 35|Community 35]]
+- [[_COMMUNITY_Community 36|Community 36]]
+- [[_COMMUNITY_Community 37|Community 37]]
+- [[_COMMUNITY_Community 38|Community 38]]
+- [[_COMMUNITY_Community 39|Community 39]]
+- [[_COMMUNITY_Community 40|Community 40]]
+- [[_COMMUNITY_Community 41|Community 41]]
+- [[_COMMUNITY_Community 42|Community 42]]
+- [[_COMMUNITY_Community 43|Community 43]]
+- [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 45|Community 45]]
+- [[_COMMUNITY_Community 46|Community 46]]
+- [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 48|Community 48]]
+- [[_COMMUNITY_Community 49|Community 49]]
+- [[_COMMUNITY_Community 50|Community 50]]
+- [[_COMMUNITY_Community 51|Community 51]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 53|Community 53]]
+- [[_COMMUNITY_Community 54|Community 54]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 56|Community 56]]
+- [[_COMMUNITY_Community 57|Community 57]]
+- [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 59|Community 59]]
+- [[_COMMUNITY_Community 60|Community 60]]
+- [[_COMMUNITY_Community 61|Community 61]]
+- [[_COMMUNITY_Community 62|Community 62]]
+- [[_COMMUNITY_Community 63|Community 63]]
+- [[_COMMUNITY_Community 64|Community 64]]
+- [[_COMMUNITY_Community 65|Community 65]]
+- [[_COMMUNITY_Community 66|Community 66]]
+- [[_COMMUNITY_Community 67|Community 67]]
+- [[_COMMUNITY_Community 68|Community 68]]
+- [[_COMMUNITY_Community 69|Community 69]]
+- [[_COMMUNITY_Community 70|Community 70]]
+- [[_COMMUNITY_Community 71|Community 71]]
+- [[_COMMUNITY_Community 72|Community 72]]
+- [[_COMMUNITY_Community 73|Community 73]]
 - [[_COMMUNITY_Community 74|Community 74]]
-- [[_COMMUNITY_RepetitionCalendar.tsx|RepetitionCalendar.tsx]]
-- [[_COMMUNITY_Curve Sketching and Function A|Curve Sketching and Function A]]
-- [[_COMMUNITY_course-overview.ts|course-overview.ts]]
-- [[_COMMUNITY_PrescriptiveSection.tsx|PrescriptiveSection.tsx]]
-- [[_COMMUNITY_questions|questions]]
-- [[_COMMUNITY_Limits (Gränsvärden)|Limits (Gränsvärden)]]
-- [[_COMMUNITY_scripts|scripts]]
-- [[_COMMUNITY_articles.ts|articles.ts]]
-- [[_COMMUNITY_NumericInput.tsx|NumericInput.tsx]]
-- [[_COMMUNITY_CalculusTangent.tsx|CalculusTangent.tsx]]
-- [[_COMMUNITY_WorkShowPanel.tsx|WorkShowPanel.tsx]]
-- [[_COMMUNITY_user_id|user_id]]
-- [[_COMMUNITY_Hint System Integration Tests|Hint System Integration Tests]]
-- [[_COMMUNITY_QuoteSeparator.tsx|QuoteSeparator.tsx]]
-- [[_COMMUNITY_route.ts|route.ts]]
-- [[_COMMUNITY_Integral Inequalities and Comp|Integral Inequalities and Comp]]
-- [[_COMMUNITY_AnalyticsDashboard.tsx|AnalyticsDashboard.tsx]]
-- [[_COMMUNITY_apiKeys|apiKeys]]
-- [[_COMMUNITY_Fading Steps Learning System|Fading Steps Learning System]]
-- [[_COMMUNITY_Stat()|Stat()]]
-- [[_COMMUNITY_main.py|main.py]]
-- [[_COMMUNITY_admin-topics.ts|admin-topics.ts]]
-- [[_COMMUNITY_CourseHub.tsx|CourseHub.tsx]]
-- [[_COMMUNITY_CAS Equation Input System (5-L|CAS Equation Input System (5-L]]
-- [[_COMMUNITY_AnalyticsHero.tsx|AnalyticsHero.tsx]]
-- [[_COMMUNITY_questionAttempts|questionAttempts]]
-- [[_COMMUNITY_import-tata41-extracted-questi|import-tata41-extracted-questi]]
-- [[_COMMUNITY_Core Curriculum Interactive Te|Core Curriculum Interactive Te]]
-- [[_COMMUNITY_Item Response Theory|Item Response Theory]]
-- [[_COMMUNITY_clsx|clsx]]
-- [[_COMMUNITY_MathInputWithToolbar.tsx|MathInputWithToolbar.tsx]]
-- [[_COMMUNITY_DescriptiveSection.tsx|DescriptiveSection.tsx]]
-- [[_COMMUNITY_StudyLayout.tsx|StudyLayout.tsx]]
-- [[_COMMUNITY_Improper Integrals (Generalise|Improper Integrals (Generalise]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_ArticleContent()|ArticleContent()]]
-- [[_COMMUNITY_CourseLearningPlan.tsx|CourseLearningPlan.tsx]]
-- [[_COMMUNITY_HelpPanel.tsx|HelpPanel.tsx]]
-- [[_COMMUNITY_MatrixGridInput.tsx|MatrixGridInput.tsx]]
-- [[_COMMUNITY_IRTModel|IRTModel]]
-- [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_DashboardSidebar.tsx|DashboardSidebar.tsx]]
-- [[_COMMUNITY_signals.ts|signals.ts]]
-- [[_COMMUNITY_ContentCard.tsx|ContentCard.tsx]]
-- [[_COMMUNITY_LiquidGlassQuestionView.tsx|LiquidGlassQuestionView.tsx]]
-- [[_COMMUNITY_Dashboard Card Components|Dashboard Card Components]]
-- [[_COMMUNITY_TATA41 TEN1 Exam – 7 June 2022|TATA41 TEN1 Exam – 7 June 2022]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_ArticleBlock.tsx|ArticleBlock.tsx]]
-- [[_COMMUNITY_ArticleSidebar.tsx|ArticleSidebar.tsx]]
-- [[_COMMUNITY_ExamReadinessBar.tsx|ExamReadinessBar.tsx]]
-- [[_COMMUNITY_MarkdownMessage.tsx|MarkdownMessage.tsx]]
-- [[_COMMUNITY_Qmath Redesign Study Hub Mode|Qmath Redesign: Study Hub Mode]]
-- [[_COMMUNITY_cas-grader.ts|cas-grader.ts]]
-- [[_COMMUNITY_curriculum_standards|curriculum_standards]]
-- [[_COMMUNITY_articles|articles]]
-- [[_COMMUNITY_curriculum_standards|curriculum_standards]]
-- [[_COMMUNITY_Definition of Derivative (Deri|Definition of Derivative (Deri]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_ArticleEditor()|ArticleEditor()]]
-- [[_COMMUNITY_CourseOverview.tsx|CourseOverview.tsx]]
-- [[_COMMUNITY_MultipleChoiceInput.tsx|MultipleChoiceInput.tsx]]
-- [[_COMMUNITY_SpacedRepetitionManager|SpacedRepetitionManager]]
-- [[_COMMUNITY_theme-provider.tsx|theme-provider.tsx]]
-- [[_COMMUNITY_providers.tsx|providers.tsx]]
-- [[_COMMUNITY_next-themes|next-themes]]
-- [[_COMMUNITY_StudyIntelligencePanel.tsx|StudyIntelligencePanel.tsx]]
-- [[_COMMUNITY_route.ts|route.ts]]
-- [[_COMMUNITY_Theme Provider Component|Theme Provider Component]]
-- [[_COMMUNITY_katex|katex]]
-- [[_COMMUNITY_setup-db.sh|setup-db.sh]]
-- [[_COMMUNITY_TopicPage.tsx|TopicPage.tsx]]
-- [[_COMMUNITY_hint-engine.ts|hint-engine.ts]]
-- [[_COMMUNITY_route.ts|route.ts]]
-- [[_COMMUNITY_ErrorAnalysis.tsx|ErrorAnalysis.tsx]]
-- [[_COMMUNITY_StudySkillsLesson.tsx|StudySkillsLesson.tsx]]
-- [[_COMMUNITY_rate-limit.test.ts|rate-limit.test.ts]]
-- [[_COMMUNITY_FSRSAlgorithm|FSRSAlgorithm]]
-- [[_COMMUNITY_Sidebar.tsx|Sidebar.tsx]]
-- [[_COMMUNITY_Question Flow System (Draft→AI|Question Flow System (Draft→AI]]
-- [[_COMMUNITY_MasteryRadar.tsx|MasteryRadar.tsx]]
-- [[_COMMUNITY_ModelSelector.tsx|ModelSelector.tsx]]
-- [[_COMMUNITY_InsightCard.tsx|InsightCard.tsx]]
-- [[_COMMUNITY_attempt_logs_question_id_quest|attempt_logs_question_id_quest]]
-- [[_COMMUNITY_attempt_logs_user_id_users_id_|attempt_logs_user_id_users_id_]]
-- [[_COMMUNITY_calibration_logs_user_id_users|calibration_logs_user_id_users]]
-- [[_COMMUNITY_diagnostic_item_responses_diag|diagnostic_item_responses_diag]]
-- [[_COMMUNITY_diagnostic_results_course_id_c|diagnostic_results_course_id_c]]
-- [[_COMMUNITY_diagnostic_results_user_id_use|diagnostic_results_user_id_use]]
-- [[_COMMUNITY_Home Page|Home Page]]
-- [[_COMMUNITY_Global Stylesheet|Global Stylesheet]]
-- [[_COMMUNITY_courses_university_id_universi|courses_university_id_universi]]
-- [[_COMMUNITY_attempt_logs_question_id_quest|attempt_logs_question_id_quest]]
-- [[_COMMUNITY_attempt_logs_user_id_users_id_|attempt_logs_user_id_users_id_]]
-- [[_COMMUNITY_0004_snapshot.json|0004_snapshot.json]]
-- [[_COMMUNITY_articles_author_id_users_id_fk|articles_author_id_users_id_fk]]
-- [[_COMMUNITY_articles_course_id_courses_id_|articles_course_id_courses_id_]]
-- [[_COMMUNITY_articles_topic_id_topics_id_fk|articles_topic_id_topics_id_fk]]
-- [[_COMMUNITY_calibration_logs_user_id_users|calibration_logs_user_id_users]]
-- [[_COMMUNITY_courses_university_id_universi|courses_university_id_universi]]
-- [[_COMMUNITY_Mean Value Theorem (Medelvärde|Mean Value Theorem (Medelvärde]]
-- [[_COMMUNITY_getUserCoursesForAnalysis()|getUserCoursesForAnalysis()]]
-- [[_COMMUNITY_PdfViewer.tsx|PdfViewer.tsx]]
-- [[_COMMUNITY_calibration_logs|calibration_logs]]
-- [[_COMMUNITY_attempt_logs|attempt_logs]]
-- [[_COMMUNITY_course_exam_analysis_cache|course_exam_analysis_cache]]
-- [[_COMMUNITY_diagnostic_item_responses|diagnostic_item_responses]]
-- [[_COMMUNITY_diagnostic_results|diagnostic_results]]
-- [[_COMMUNITY_Articles Feature - Rich Study|Articles Feature - Rich Study ]]
-- [[_COMMUNITY_Qmath Design System|Qmath Design System]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_courses|courses]]
-- [[_COMMUNITY_exams_analyzed|exams_analyzed]]
-- [[_COMMUNITY_learning_path_generated|learning_path_generated]]
-- [[_COMMUNITY_sort_order|sort_order]]
-- [[_COMMUNITY_status|status]]
-- [[_COMMUNITY_view_count|view_count]]
-- [[_COMMUNITY_columns|columns]]
-- [[_COMMUNITY_attempt_logs|attempt_logs]]
-- [[_COMMUNITY_calibration_logs|calibration_logs]]
-- [[_COMMUNITY_course_exam_analysis_cache|course_exam_analysis_cache]]
-- [[_COMMUNITY_courses|courses]]
-- [[_COMMUNITY_route.ts|route.ts]]
-- [[_COMMUNITY_Math Utilities for Visualizati|Math Utilities for Visualizati]]
-- [[_COMMUNITY_exam-analysis.test.ts|exam-analysis.test.ts]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_ollama.ts|ollama.ts]]
-- [[_COMMUNITY_ai-chat.test.ts|ai-chat.test.ts]]
-- [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_InsightCards.tsx|InsightCards.tsx]]
-- [[_COMMUNITY_StreakTracker.tsx|StreakTracker.tsx]]
-- [[_COMMUNITY_AIGraph.tsx|AIGraph.tsx]]
-- [[_COMMUNITY_MarkdownMessage|MarkdownMessage]]
-- [[_COMMUNITY_0003_snapshot.json|0003_snapshot.json]]
-- [[_COMMUNITY_Adaptive Engine Parameters|Adaptive Engine Parameters]]
-- [[_COMMUNITY_code|code]]
-- [[_COMMUNITY_description|description]]
-- [[_COMMUNITY_level|level]]
-- [[_COMMUNITY_name|name]]
-- [[_COMMUNITY_semester|semester]]
-- [[_COMMUNITY_title|title]]
-- [[_COMMUNITY_title_sv|title_sv]]
-- [[_COMMUNITY_university_id|university_id]]
-- [[_COMMUNITY_course_id|course_id]]
-- [[_COMMUNITY_created_at|created_at]]
-- [[_COMMUNITY_detailed_results|detailed_results]]
-- [[_COMMUNITY_diagnostic_result_id|diagnostic_result_id]]
-- [[_COMMUNITY_exam_fingerprint|exam_fingerprint]]
-- [[_COMMUNITY_gaps_identified|gaps_identified]]
+- [[_COMMUNITY_Community 75|Community 75]]
+- [[_COMMUNITY_Community 76|Community 76]]
+- [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Community 78|Community 78]]
+- [[_COMMUNITY_Community 79|Community 79]]
+- [[_COMMUNITY_Community 80|Community 80]]
+- [[_COMMUNITY_Community 81|Community 81]]
+- [[_COMMUNITY_Community 82|Community 82]]
+- [[_COMMUNITY_Community 83|Community 83]]
+- [[_COMMUNITY_Community 84|Community 84]]
+- [[_COMMUNITY_Community 85|Community 85]]
+- [[_COMMUNITY_Community 86|Community 86]]
+- [[_COMMUNITY_Community 87|Community 87]]
+- [[_COMMUNITY_Community 88|Community 88]]
+- [[_COMMUNITY_Community 89|Community 89]]
+- [[_COMMUNITY_Community 90|Community 90]]
+- [[_COMMUNITY_Community 91|Community 91]]
+- [[_COMMUNITY_Community 92|Community 92]]
+- [[_COMMUNITY_Community 93|Community 93]]
+- [[_COMMUNITY_Community 94|Community 94]]
+- [[_COMMUNITY_Community 95|Community 95]]
+- [[_COMMUNITY_Community 96|Community 96]]
+- [[_COMMUNITY_Community 97|Community 97]]
+- [[_COMMUNITY_Community 98|Community 98]]
+- [[_COMMUNITY_Community 99|Community 99]]
+- [[_COMMUNITY_Community 100|Community 100]]
+- [[_COMMUNITY_Community 101|Community 101]]
+- [[_COMMUNITY_Community 102|Community 102]]
+- [[_COMMUNITY_Community 103|Community 103]]
+- [[_COMMUNITY_Community 104|Community 104]]
+- [[_COMMUNITY_Community 105|Community 105]]
+- [[_COMMUNITY_Community 106|Community 106]]
+- [[_COMMUNITY_Community 107|Community 107]]
+- [[_COMMUNITY_Community 108|Community 108]]
+- [[_COMMUNITY_Community 109|Community 109]]
+- [[_COMMUNITY_Community 110|Community 110]]
+- [[_COMMUNITY_Community 111|Community 111]]
+- [[_COMMUNITY_Community 112|Community 112]]
+- [[_COMMUNITY_Community 113|Community 113]]
+- [[_COMMUNITY_Community 114|Community 114]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
+- [[_COMMUNITY_Community 117|Community 117]]
+- [[_COMMUNITY_Community 118|Community 118]]
+- [[_COMMUNITY_Community 119|Community 119]]
+- [[_COMMUNITY_Community 120|Community 120]]
+- [[_COMMUNITY_Community 121|Community 121]]
+- [[_COMMUNITY_Community 122|Community 122]]
+- [[_COMMUNITY_Community 123|Community 123]]
+- [[_COMMUNITY_Community 124|Community 124]]
+- [[_COMMUNITY_Community 125|Community 125]]
+- [[_COMMUNITY_Community 126|Community 126]]
+- [[_COMMUNITY_Community 127|Community 127]]
+- [[_COMMUNITY_Community 128|Community 128]]
+- [[_COMMUNITY_Community 129|Community 129]]
+- [[_COMMUNITY_Community 130|Community 130]]
+- [[_COMMUNITY_Community 131|Community 131]]
+- [[_COMMUNITY_Community 132|Community 132]]
+- [[_COMMUNITY_Community 133|Community 133]]
+- [[_COMMUNITY_Community 134|Community 134]]
+- [[_COMMUNITY_Community 135|Community 135]]
+- [[_COMMUNITY_Community 136|Community 136]]
+- [[_COMMUNITY_Community 137|Community 137]]
+- [[_COMMUNITY_Community 138|Community 138]]
+- [[_COMMUNITY_Community 139|Community 139]]
+- [[_COMMUNITY_Community 140|Community 140]]
+- [[_COMMUNITY_Community 141|Community 141]]
+- [[_COMMUNITY_Community 142|Community 142]]
+- [[_COMMUNITY_Community 143|Community 143]]
+- [[_COMMUNITY_Community 144|Community 144]]
+- [[_COMMUNITY_Community 145|Community 145]]
+- [[_COMMUNITY_Community 146|Community 146]]
+- [[_COMMUNITY_Community 147|Community 147]]
+- [[_COMMUNITY_Community 149|Community 149]]
+- [[_COMMUNITY_Community 150|Community 150]]
+- [[_COMMUNITY_Community 151|Community 151]]
+- [[_COMMUNITY_Community 152|Community 152]]
+- [[_COMMUNITY_Community 153|Community 153]]
+- [[_COMMUNITY_Community 154|Community 154]]
+- [[_COMMUNITY_Community 155|Community 155]]
+- [[_COMMUNITY_Community 156|Community 156]]
+- [[_COMMUNITY_Community 157|Community 157]]
+- [[_COMMUNITY_Community 158|Community 158]]
+- [[_COMMUNITY_Community 159|Community 159]]
+- [[_COMMUNITY_Community 160|Community 160]]
+- [[_COMMUNITY_Community 161|Community 161]]
+- [[_COMMUNITY_Community 162|Community 162]]
+- [[_COMMUNITY_Community 163|Community 163]]
+- [[_COMMUNITY_Community 164|Community 164]]
+- [[_COMMUNITY_Community 165|Community 165]]
+- [[_COMMUNITY_Community 166|Community 166]]
+- [[_COMMUNITY_Community 167|Community 167]]
+- [[_COMMUNITY_Community 168|Community 168]]
+- [[_COMMUNITY_Community 169|Community 169]]
+- [[_COMMUNITY_Community 170|Community 170]]
+- [[_COMMUNITY_Community 171|Community 171]]
+- [[_COMMUNITY_Community 172|Community 172]]
+- [[_COMMUNITY_Community 173|Community 173]]
+- [[_COMMUNITY_Community 174|Community 174]]
+- [[_COMMUNITY_Community 175|Community 175]]
+- [[_COMMUNITY_Community 176|Community 176]]
+- [[_COMMUNITY_Community 177|Community 177]]
+- [[_COMMUNITY_Community 178|Community 178]]
+- [[_COMMUNITY_Community 179|Community 179]]
+- [[_COMMUNITY_Community 180|Community 180]]
+- [[_COMMUNITY_Community 181|Community 181]]
+- [[_COMMUNITY_Community 182|Community 182]]
+- [[_COMMUNITY_Community 183|Community 183]]
+- [[_COMMUNITY_Community 184|Community 184]]
+- [[_COMMUNITY_Community 185|Community 185]]
+- [[_COMMUNITY_Community 186|Community 186]]
+- [[_COMMUNITY_Community 187|Community 187]]
+- [[_COMMUNITY_Community 188|Community 188]]
+- [[_COMMUNITY_Community 189|Community 189]]
+- [[_COMMUNITY_Community 190|Community 190]]
+- [[_COMMUNITY_Community 191|Community 191]]
+- [[_COMMUNITY_Community 192|Community 192]]
+- [[_COMMUNITY_Community 193|Community 193]]
+- [[_COMMUNITY_Community 194|Community 194]]
+- [[_COMMUNITY_Community 195|Community 195]]
+- [[_COMMUNITY_Community 196|Community 196]]
+- [[_COMMUNITY_Community 198|Community 198]]
+- [[_COMMUNITY_Community 199|Community 199]]
+- [[_COMMUNITY_Community 200|Community 200]]
+- [[_COMMUNITY_Community 201|Community 201]]
+- [[_COMMUNITY_Community 202|Community 202]]
+- [[_COMMUNITY_Community 203|Community 203]]
+- [[_COMMUNITY_Community 204|Community 204]]
+- [[_COMMUNITY_Community 205|Community 205]]
+- [[_COMMUNITY_Community 206|Community 206]]
+- [[_COMMUNITY_Community 207|Community 207]]
+- [[_COMMUNITY_Community 208|Community 208]]
+- [[_COMMUNITY_Community 209|Community 209]]
+- [[_COMMUNITY_Community 210|Community 210]]
+- [[_COMMUNITY_Community 212|Community 212]]
+- [[_COMMUNITY_Community 213|Community 213]]
+- [[_COMMUNITY_Community 214|Community 214]]
+- [[_COMMUNITY_Community 215|Community 215]]
+- [[_COMMUNITY_Community 216|Community 216]]
+- [[_COMMUNITY_Community 217|Community 217]]
+- [[_COMMUNITY_Community 218|Community 218]]
+- [[_COMMUNITY_Community 219|Community 219]]
+- [[_COMMUNITY_Community 220|Community 220]]
+- [[_COMMUNITY_Community 221|Community 221]]
+- [[_COMMUNITY_Community 222|Community 222]]
+- [[_COMMUNITY_Community 223|Community 223]]
+- [[_COMMUNITY_Community 224|Community 224]]
 - [[_COMMUNITY_Community 225|Community 225]]
-- [[_COMMUNITY_session_id|session_id]]
-- [[_COMMUNITY_time_taken_ms|time_taken_ms]]
-- [[_COMMUNITY_enrollments_user_id_users_id_f|enrollments_user_id_users_id_f]]
-- [[_COMMUNITY_predicted_score|predicted_score]]
-- [[_COMMUNITY_actual_score|actual_score]]
-- [[_COMMUNITY_code|code]]
-- [[_COMMUNITY_content_blocks|content_blocks]]
-- [[_COMMUNITY_course_id|course_id]]
-- [[_COMMUNITY_created_at|created_at]]
-- [[_COMMUNITY_exam_fingerprint|exam_fingerprint]]
-- [[_COMMUNITY_excerpt|excerpt]]
-- [[_COMMUNITY_published_at|published_at]]
-- [[_COMMUNITY_reading_time_minutes|reading_time_minutes]]
-- [[_COMMUNITY_session_id|session_id]]
-- [[_COMMUNITY_tags|tags]]
-- [[_COMMUNITY_title|title]]
-- [[_COMMUNITY_user_id|user_id]]
-- [[_COMMUNITY_course_code|course_code]]
-- [[_COMMUNITY_confidence_rating|confidence_rating]]
-- [[_COMMUNITY_is_correct|is_correct]]
-- [[_COMMUNITY_partial_score|partial_score]]
-- [[_COMMUNITY_student_answer_raw|student_answer_raw]]
-- [[_COMMUNITY_symbolically_checked|symbolically_checked]]
-- [[_COMMUNITY_time_taken_ms|time_taken_ms]]
-- [[_COMMUNITY_timestamp|timestamp]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_react-katex|react-katex]]
-- [[_COMMUNITY_SM2Algorithm|SM2Algorithm]]
-- [[_COMMUNITY_ArticleThemeWrapper.tsx|ArticleThemeWrapper.tsx]]
-- [[_COMMUNITY_MinimalHelpPanel.tsx|MinimalHelpPanel.tsx]]
-- [[_COMMUNITY_route.ts|route.ts]]
-- [[_COMMUNITY_slugify|slugify]]
-- [[_COMMUNITY_package.json|package.json]]
-- [[_COMMUNITY_react-pdf|react-pdf]]
-- [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_JSXTemplate.tsx|JSXTemplate.tsx]]
-- [[_COMMUNITY__journal.json|_journal.json]]
-- [[_COMMUNITY_Qmath Platform Structure Analy|Qmath Platform Structure Analy]]
-- [[_COMMUNITY_User Profile Data Flow & Regis|User Profile Data Flow & Regis]]
-- [[_COMMUNITY_vercel.json|vercel.json]]
-- [[_COMMUNITY_next-auth.d.ts|next-auth.d.ts]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Card State Row Type|Card State Row Type]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_appapigraderoute.ts|app/api/grade/route.ts]]
-- [[_COMMUNITY_MatrixDeformationBoard.tsx|MatrixDeformationBoard.tsx]]
-- [[_COMMUNITY_IntersectingPlanes3D.tsx|IntersectingPlanes3D.tsx]]
-- [[_COMMUNITY_create_pdfs.js|create_pdfs.js]]
-- [[_COMMUNITY_drizzle.config.ts|drizzle.config.ts]]
-- [[_COMMUNITY_Free-Form Symbolic Prompt|Free-Form Symbolic Prompt]]
-- [[_COMMUNITY_Persistent AI Exam Analysis Ca|Persistent AI Exam Analysis Ca]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_componentsQuestionCard.tsx|components/QuestionCard.tsx]]
-- [[_COMMUNITY_data-processing.ts|data-processing.ts]]
-- [[_COMMUNITY_Next.js Logging Configuration|Next.js Logging Configuration]]
-- [[_COMMUNITY_next.config.mjs|next.config.mjs]]
-- [[_COMMUNITY_Tailwind Color Scheme|Tailwind Color Scheme]]
-- [[_COMMUNITY_estimateStudyHours()|estimateStudyHours()]]
-- [[_COMMUNITY_TypeScript Compiler Options|TypeScript Compiler Options]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Math Equivalence Utilities|Math Equivalence Utilities]]
-- [[_COMMUNITY_AI Study Plan Generation & Cac|AI Study Plan Generation & Cac]]
-- [[_COMMUNITY_QuoteSeparator|QuoteSeparator]]
-- [[_COMMUNITY_Question View - Focused Study|Question View - Focused Study ]]
-- [[_COMMUNITY_componentsExamResultsTable.ts|components/ExamResultsTable.ts]]
-- [[_COMMUNITY_Node Modules Ignore|Node Modules Ignore]]
-- [[_COMMUNITY_componentsSidebar.tsx|components/Sidebar.tsx]]
-- [[_COMMUNITY_Development Dependencies|Development Dependencies]]
-- [[_COMMUNITY_Tailwind CSS Plugin|Tailwind CSS Plugin]]
-- [[_COMMUNITY_eslint.config.mjs|eslint.config.mjs]]
-- [[_COMMUNITY_tailwind.config.ts|tailwind.config.ts]]
-- [[_COMMUNITY_restart.sh|restart.sh]]
-- [[_COMMUNITY_Behavioral Signals Module|Behavioral Signals Module]]
-- [[_COMMUNITY_calculateGain|calculateGain]]
-- [[_COMMUNITY_estimateStudyHours|estimateStudyHours]]
-- [[_COMMUNITY_canPublish|canPublish]]
-- [[_COMMUNITY_AI Card Drafting Function|AI Card Drafting Function]]
-- [[_COMMUNITY_proxy|proxy]]
-- [[_COMMUNITY_{ GET, POST }|{ GET, POST }]]
-- [[_COMMUNITY_PDF Generation Utility|PDF Generation Utility]]
-- [[_COMMUNITY_Environment Files Ignore|Environment Files Ignore]]
-- [[_COMMUNITY_Claude Settings Ignore|Claude Settings Ignore]]
-- [[_COMMUNITY_ESLint Next.js Configuration|ESLint Next.js Configuration]]
-- [[_COMMUNITY_ESLint TypeScript Configuratio|ESLint TypeScript Configuratio]]
-- [[_COMMUNITY_HintResult|HintResult]]
-- [[_COMMUNITY_canTrigger|canTrigger]]
-- [[_COMMUNITY_selectHint|selectHint]]
-- [[_COMMUNITY_quickClassify|quickClassify]]
-- [[_COMMUNITY_getHintCacheKey|getHintCacheKey]]
-- [[_COMMUNITY_sanitize|sanitize]]
-- [[_COMMUNITY_StudyPlanResult|StudyPlanResult]]
-- [[_COMMUNITY_getCourses|getCourses]]
-- [[_COMMUNITY_getAdminCourses|getAdminCourses]]
-- [[_COMMUNITY_libapiadmin.ts|lib/api/admin.ts]]
-- [[_COMMUNITY_libapianalytics.ts|lib/api/analytics.ts]]
-- [[_COMMUNITY_libapiflashcards.ts|lib/api/flashcards.ts]]
-- [[_COMMUNITY_libapihealth.ts|lib/api/health.ts]]
-- [[_COMMUNITY_libapimiddleware.ts|lib/api/middleware.ts]]
-- [[_COMMUNITY_libapiquestions.ts|lib/api/questions.ts]]
-- [[_COMMUNITY_libapisettings.ts|lib/api/settings.ts]]
-- [[_COMMUNITY_libapiusers.ts|lib/api/users.ts]]
-- [[_COMMUNITY_libserveractions.ts|lib/server/actions.ts]]
-- [[_COMMUNITY_libserveradmin-actions.ts|lib/server/admin-actions.ts]]
-- [[_COMMUNITY_libserveradmin-queries.ts|lib/server/admin-queries.ts]]
-- [[_COMMUNITY_libserveranalytics-engine.ts|lib/server/analytics-engine.ts]]
-- [[_COMMUNITY_libserverimage-processing.ts|lib/server/image-processing.ts]]
-- [[_COMMUNITY_libutilscache.ts|lib/utils/cache.ts]]
-- [[_COMMUNITY_libutilserrors.ts|lib/utils/errors.ts]]
-- [[_COMMUNITY_libutilsformat.ts|lib/utils/format.ts]]
-- [[_COMMUNITY_libutilsmath.ts|lib/utils/math.ts]]
-- [[_COMMUNITY_libutilspdf.ts|lib/utils/pdf.ts]]
-- [[_COMMUNITY_libutilsvalidation.ts|lib/utils/validation.ts]]
-- [[_COMMUNITY_libutilslogger.ts|lib/utils/logger.ts]]
-- [[_COMMUNITY_publicfavicon.ico|public/favicon.ico]]
-- [[_COMMUNITY_publicmanifest.json|public/manifest.json]]
-- [[_COMMUNITY_Deployment Prerequisites & Set|Deployment Prerequisites & Set]]
-- [[_COMMUNITY_Redis Caching for Performance|Redis Caching for Performance]]
-- [[_COMMUNITY_Design Principles Implementati|Design Principles Implementati]]
-- [[_COMMUNITY_Admin-Published Questions Syst|Admin-Published Questions Syst]]
-- [[_COMMUNITY_Admin Topics Management & AI S|Admin Topics Management & AI S]]
-- [[_COMMUNITY_Course-Linked Question Bank|Course-Linked Question Bank]]
-- [[_COMMUNITY_ThemeProvider|ThemeProvider]]
-- [[_COMMUNITY_Behavioral Signal Type|Behavioral Signal Type]]
-- [[_COMMUNITY_Study Technique Type|Study Technique Type]]
-- [[_COMMUNITY_Cognitive Load Signal Detector|Cognitive Load Signal Detector]]
-- [[_COMMUNITY_Card Bucket Classifier|Card Bucket Classifier]]
-- [[_COMMUNITY_Retrievability Calculator|Retrievability Calculator]]
-- [[_COMMUNITY_utils.ts|utils.ts]]
-- [[_COMMUNITY_Study Skills Lessons|Study Skills Lessons]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Unknown|Unknown]]
-- [[_COMMUNITY_Unknown|Unknown]]
+- [[_COMMUNITY_Community 226|Community 226]]
+- [[_COMMUNITY_Community 227|Community 227]]
+- [[_COMMUNITY_Community 229|Community 229]]
+- [[_COMMUNITY_Community 230|Community 230]]
+- [[_COMMUNITY_Community 231|Community 231]]
+- [[_COMMUNITY_Community 232|Community 232]]
+- [[_COMMUNITY_Community 233|Community 233]]
+- [[_COMMUNITY_Community 234|Community 234]]
+- [[_COMMUNITY_Community 235|Community 235]]
+- [[_COMMUNITY_Community 236|Community 236]]
+- [[_COMMUNITY_Community 237|Community 237]]
+- [[_COMMUNITY_Community 238|Community 238]]
+- [[_COMMUNITY_Community 240|Community 240]]
+- [[_COMMUNITY_Community 241|Community 241]]
+- [[_COMMUNITY_Community 242|Community 242]]
+- [[_COMMUNITY_Community 243|Community 243]]
+- [[_COMMUNITY_Community 246|Community 246]]
+- [[_COMMUNITY_Community 247|Community 247]]
+- [[_COMMUNITY_Community 252|Community 252]]
+- [[_COMMUNITY_Community 254|Community 254]]
+- [[_COMMUNITY_Community 260|Community 260]]
+- [[_COMMUNITY_Community 261|Community 261]]
+- [[_COMMUNITY_Community 262|Community 262]]
+- [[_COMMUNITY_Community 263|Community 263]]
+- [[_COMMUNITY_Community 264|Community 264]]
+- [[_COMMUNITY_Community 265|Community 265]]
+- [[_COMMUNITY_Community 266|Community 266]]
+- [[_COMMUNITY_Community 267|Community 267]]
+- [[_COMMUNITY_Community 268|Community 268]]
+- [[_COMMUNITY_Community 270|Community 270]]
+- [[_COMMUNITY_Community 271|Community 271]]
+- [[_COMMUNITY_Community 272|Community 272]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `Framer Motion Animation Library` - 114 edges
-2. `db` - 71 edges
-3. `Improper Integrals (Generaliserade integraler)` - 33 edges
-4. `AdaptiveLearningEngine` - 32 edges
-5. `Limits (Gränsvärden)` - 29 edges
-6. `courses` - 24 edges
-7. `Curve Sketching and Function Analysis` - 24 edges
-8. `topics` - 22 edges
-9. `users` - 21 edges
-10. `callOllama()` - 20 edges
+1. `db` - 83 edges
+2. `checkRateLimit()` - 41 edges
+3. `AdaptiveLearningEngine` - 37 edges
+4. `problem()` - 37 edges
+5. `courses` - 31 edges
+6. `topics` - 28 edges
+7. `requireSameOrigin()` - 27 edges
+8. `users` - 24 edges
+9. `scripts` - 23 edges
+10. `Qmath - Adaptive Learning Platform` - 21 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Project README` --semantically_similar_to--> `Claude Settings Permissions`  [INFERRED] [semantically similar]
-  /home/kali/github/Qmath/README.md → /home/kali/github/Qmath/.claude/settings.local.json
-- `cn()` --calls--> `clsx`  [INFERRED]
-  components/interactive/InteractiveWidgetWrapper.tsx → package.json
-- `ParticleBackground` --calls--> `useTheme()`  [INFERRED]
-  /home/kali/github/Qmath/components/ParticleBackground.tsx → components/articles/ArticleThemeWrapper.tsx
-- `validateStep()` --calls--> `checkMathEquivalence()`  [EXTRACTED]
-  components/study/SolutionStepsInput.tsx → lib/utils/mathEquivalence.ts
-- `QuestionViewPage()` --calls--> `useTheme()`  [INFERRED]
-  app/question-view/page.tsx → components/articles/ArticleThemeWrapper.tsx
+- `invalidateExamAnalysisCache()` --calls--> `requireAdmin()`  [EXTRACTED]
+  app/actions/ai.ts → lib/auth.ts
+- `GET()` --calls--> `problem()`  [INFERRED]
+  app/api/admin/exams/[examId]/route.ts → lib/security/request.ts
+- `DELETE()` --calls--> `logAuditEvent()`  [INFERRED]
+  app/api/admin/exams/[examId]/route.ts → lib/audit-log.ts
+- `DELETE()` --calls--> `problem()`  [INFERRED]
+  app/api/admin/exams/[examId]/route.ts → lib/security/request.ts
+- `DELETE()` --calls--> `requireSameOrigin()`  [INFERRED]
+  app/api/admin/exams/[examId]/route.ts → lib/security/request.ts
 
-## Hyperedges (group relationships)
-- **Math Input & Grading System** — MathCASInput, LatexPreview, ConfidenceSlider, VirtualKeyboard, FeedbackRenderer, math_grading_api [INFERRED]
-- **Dashboard Analytics & Tracking** — DashboardCards, StatCard, WeeklyActivityChart, StreakCard, CourseCard, MasteryTopicCard, user_mastery_tracking, study_streak_system [INFERRED]
-- **Interactive Math Visualization** — JSXGraphBoard, jsxgraph_integration [INFERRED]
-- **Design System & Theming** — globals.css, design_system, color_tokens, animation_system, glassmorphism, dark_mode, dashboard_theme, liquid_theme [INFERRED]
-- **Home Page & Marketing** — page.tsx, Header, FloatingMathCard, FeatureCard, ScrollSection, ScrollConnector, QuoteSeparator [INFERRED]
-- **App Initialization & Providers** — layout.tsx, providers.tsx, ThemeProvider, SessionProvider, SidebarProvider, GlobalErrorLogger [INFERRED]
-- **** — tests_integration_hint_system_test_calculateGain, tests_integration_hint_system_test_selectHint, tests_integration_hint_system_test_shouldTriggerLevel3 [INFERRED]
-- **** — tests_integration_question_flow_and_topics_test_slugify, tests_integration_question_flow_and_topics_test_canPublish, tests_integration_question_flow_and_topics_test_makeTopicSlug [INFERRED]
-- **** — components_ui_markdownmessage_markdownmessage, components_ui_markdownmessage_renderTextBlock, components_ui_markdownmessage_renderLineWithMath, components_ui_markdownmessage_tokenize [INFERRED]
-- **** — components_sidebar_sidebar, components_header_header, components_adminlayout_adminlayout [INFERRED]
-- **** — components_archive_examviewer_examviewer, components_archive_pdfviewer_pdfviewer, components_examresultstable_examresultstable [INFERRED]
-- **** — components_globalerrorlogger_globalerrorlogger, components_globalerrorlogger_safeSerialize, components_header_header [INFERRED]
-- **** — components_questioncard_questioncard, components_mathrenderer_mathrenderer, components_ui_markdownmessage_markdownmessage [INFERRED]
-- **Authentication and user state flow** — component_header, component_login_prompt, component_sidebar, component_admin_layout [INFERRED 0.85]
-- **Question rendering pipeline** — component_question_card, component_math_renderer, test_question_flow [INFERRED 0.95]
-- **Exam system integration** — test_course_availability, test_phases_3_5, component_exam_results_table, component_question_card [INFERRED 0.85]
-- **UI animation framework** — component_scroll_animation, component_quote_separator, component_page_transition, component_particle_background [INFERRED 0.85]
-- **Error detection and logging** — component_global_error_logger, test_ai_feature, test_question_flow [INFERRED 0.75]
-- **Dark/light theme integration** — component_theme_toggle, component_particle_background, component_header, component_sidebar [INFERRED 0.80]
-- **Navigation system** — component_sidebar, component_header, component_admin_layout [INFERRED 0.85]
-- **AI-powered features** — test_ai_feature, test_hint_system, test_phases_3_5 [INFERRED 0.75]
-- **Adaptive Learning Engine Cluster** — AdaptiveLearningEngine, IRTModel, BayesianKnowledgeTracing, KnowledgeStateManager, SpacedRepetitionManager, SM2Algorithm, FSRSAlgorithm [1.0]
-- **Student State Cluster** — StudentLearningState, PerformanceMetrics, TemporalMetrics, EngagementMetrics, KnowledgeState [1.0]
-- **Behavioral Analytics Cluster** — BehavioralSignal, StudyTechnique, cognitiveLoadSignal [0.95]
-- **Flashcard System Cluster** — FSRSAlgorithm, CardStateRow, StateBucket, applyReview, retrievability, bucketFor, draftCards [1.0]
-- **Content Rendering Cluster** — MarkdownMessage, PdfViewer, ExamViewer, react-katex, react-pdf [1.0]
-- **interactive-templates** — LinearSpanExplorer, MatrixDeformationBoard, PolynomialRootFinder, RiemannSumsVisualizer, TaylorSeriesApproximation, VectorOperationsBoard [0.95]
-- **layout-components** — FocusedStudyLayout, StudyLayout, ContextPanel [0.95]
-- **study-components** — CalibrationPrompt, CalibrationResults, ConfidenceRating [1.0]
-- **animation-dependencies** — framer-motion, FocusedStudyLayout, StudyLayout, ContextPanel, PageTransition, QuoteSeparator, ScrollAnimation, CalibrationPrompt, CalibrationResults, ConfidenceRating [0.95]
-- **math-rendering** — react-katex, MathRenderer, ContextPanel, QuestionCard [1.0]
-- **icon-system** — lucide-react, Sidebar, FocusedStudyLayout, StudyLayout, LoginPromptModal, ContextPanel, CalibrationPrompt, CalibrationResults [0.95]
-- **hyperedge:math_grading_pipeline** — module:math_pre_parser, module:math_cas_grader, module:math_feedback_tree, function:gradeAnswer, function:runFeedbackTree, type:GradeResult, type:FeedbackResult [INFERRED 1.00]
-- **hyperedge:answer_validation_stack** — module:study_answer_validation, module:utils_math_equivalence, enum:AnswerMode, type:StudentAnswerPayload, function:validateStudentAnswer [INFERRED 1.00]
-- **hyperedge:visualization_subsystem** — module:visualizations_templates_index, module:visualizations_templates_types, module:visualizations_math_utils, type:JSXTemplateDef, function:makeJSFunction, configuration:board_options [INFERRED 0.90]
-- **hyperedge:adaptive_learning_system** — module:adaptive_engine, module:math_fade_logic, module:math_feedback_tree, algorithm:fade_logic, algorithm:pattern_matching_feedback [INFERRED 0.75]
-- **API Route Endpoints** — endpoint_auth, endpoint_courses, endpoint_grade, endpoint_ai_chat, endpoint_admin_users, endpoint_admin_stats, endpoint_admin_exams, endpoint_admin_courses [INFERRED]
-- **Admin API Endpoints** — endpoint_admin_users, endpoint_admin_stats, endpoint_admin_exams, endpoint_admin_courses [INFERRED]
-- **AI Provider Integrations** — function_handleAnthropic, function_handleGemini, function_handleOllama [INFERRED]
-- **Database Dependencies** — import_drizzle, import_schema [INFERRED]
-- **React Components** — file_question_card, file_math_renderer, file_exam_results_table, file_sidebar [INFERRED]
-- **Authentication Flow** — file_auth_route, endpoint_auth, import_auth [INFERRED]
-- **Admin Statistics Module** — file_admin_stats_route, endpoint_admin_stats, function_getDirectorySize, function_formatBytes [INFERRED]
-- **content-generation-flow** — content-generator-service, faded-example-prompt, parsons-problem-prompt, symbolic-validator-service, ollama-lib [INFERRED]
-- **study-session-flow** — useStudySession-hook, auth-lib, useBoardNarration-hook, useGraphStream-hook, symbolic-validator-service [INFERRED]
-- **database-layer** — setup-db-script, import-tata41-script, test-registration-flow-script, auth-lib, ai-logger-lib, audit-log-lib [INFERRED]
-- **testing-suite** — test-ai-generation-script, test-registration-script, test-registration-flow-script [INFERRED]
-- **utilities-collection** — rate-limit-lib, exam-storage-lib, utils-lib, ai-logger-lib, audit-log-lib, ollama-lib [INFERRED]
-- **hooks-ecosystem** — useStudySession-hook, useBoardNarration-hook, useGraphStream-hook, useSidebar-hook [INFERRED]
-- **question_validation_flow** — answer-validation.ts, mathEquivalence.ts, study/answer-validation.ts [INFERRED 1.00]
-- **visualization_system** — templates/index.ts, functions.ts, calculus.ts, series.ts, analysis.ts, 3d.ts, mathUtils.ts [INFERRED 1.00]
-- **adaptive_learning_system** — adaptive-engine/index.ts, engine.ts, irt.ts, knowledge-tracing.ts, parameters.ts, use-adaptive.tsx [INFERRED 1.00]
-- **behavioral_analytics_system** — signals.ts, techniques.ts [INFERRED 1.00]
-- **content_generation_system** — prompts/index.ts, free-form-symbolic.ts, error-spotting.ts [INFERRED 0.95]
-- **educational_content_delivery** — study-skills-content.ts, answer-validation.ts, study/answer-validation.ts [INFERRED 0.85]
-- **answer_grading_pipeline** — gradeAnswer, numericProbe, sympyCheck, GradeResult [INFERRED 0.95]
-- **math_parsing_pipeline** — preParseInput, toDisplayLatex, gradeAnswer, runFeedbackTree [INFERRED 0.90]
-- **pedagogical_feedback_loop** — runFeedbackTree, FeedbackCode, FeedbackResult, QuestionWithHelp [INFERRED 0.90]
-- **study_session_management** — useStudySession, StudySessionState, QuestionWithHelp, gradeAnswer, classifyError [INFERRED 0.95]
-- **fade_progression_system** — fadePhase, getRevealedSteps, QuestionStep, RevealedStep [INFERRED 0.85]
-- **ai_narration_system** — useBoardNarration, BoardStateSnapshot, api_board_narrate [INFERRED 0.85]
-- **websocket_streaming** — useGraphStream, WebSocket [INFERRED 0.90]
-- **ui_state_management** — useSidebarProvider, useSidebar [INFERRED 0.90]
-- **HE_test_suite** — TEST_answer-validation, TEST_fade-logic, TEST_flashcards, TEST_rate-limit, PYTHON_test_main [INFERRED]
-- **HE_sympy_api** — ENDPOINT_check-equivalence, ENDPOINT_simplify-diff, ENDPOINT_classify-error, ENDPOINT_websocket [INFERRED]
-- **HE_ai_integration** — DOC_ai-structure, DOC_interactive_learning, DOC_redesign, DOC_question_view [INFERRED]
-- **HE_cas_pipeline** — PYTHON_math_engine, DOC_changelog, TEST_answer-validation, SAFE_SYMBOLS [INFERRED]
-- **HE_adaptive_system** — DOC_adaptive_logic, TEST_fade-logic, TEST_flashcards, DOC_interactive_learning [INFERRED]
-- **HE_architecture_docs** — DOC_infrastructure, DOC_platform_structure, DOC_user_profile_flow, DOCKER_compose [INFERRED]
-- **HE_ux_design** — DOC_design_principles, DOC_redesign, DOC_question_view, DOC_platform_structure [INFERRED]
-- **HE_content_system** — DOC_content_gen, DOC_articles, DOC_docs_README [INFERRED]
-- **validation_pipeline** — AnswerValidation, MathEquivalence, SymbolicValidator [INFERRED 0.95]
-- **security_audit_chain** — AuthHelpers, RateLimiter, AuditLogger, AILogger [INFERRED 0.90]
-- **learning_analytics_system** — BehavioralSignals, StudyTechniques, AnswerValidation [INFERRED 0.85]
-- **file_and_audit_handling** — ExamStorage, AuditLogger [INFERRED 0.80]
-- **TATA24 Aug 2024 Exam Pair** — tata24_2024_08_23, tata24_2024_08_23_sol [INFERRED 0.95]
-- **TATA24 Mar 2024 Exam Pair** — tata24_2024_03_12, tata24_2024_03_12_sol [INFERRED 0.95]
-- **TATA24 Aug 2023 Exam Pair** — tata24_2023_08_18, tata24_2023_08_18_sol [INFERRED 0.95]
-- **TATA24 Mar 2023 Exam Pair** — tata24_2023_03_14, tata24_2023_03_14_sol [INFERRED 0.95]
-- **TATA24 Mar 2022 Exam Pair** — tata24_2022_03_15, tata24_2022_03_15_sol [INFERRED 0.95]
-- **TATA24 Mar 2025 Exam Pair** — tata24_2025_03_17, tata24_2025_03_17_sol [INFERRED 0.95]
-- **TATA24 Jan 2025 Exam Pair** — tata24_2025_01_13, tata24_2025_01_13_sol [INFERRED 0.95]
-- **TATA24 Exam Archive** — tata24_2022_03_15, tata24_2022_08_19_sol, tata24_2023_01_09_sol, tata24_2023_03_14, tata24_2023_08_18, tata24_2024_01_08_sol, tata24_2024_03_12, tata24_2024_08_23, tata24_2025_01_13, tata24_2025_03_17, tata24_2025_08_22 [INFERRED 0.85]
-- **TSRT19 Exam Archive** — tsrt19_2024_01_08, tsrt19_2024_08_23_sol, tsrt19_2025_08_22_sol [INFERRED 0.85]
-- **TATA41 Exams 2024** — tata41_ten1_2024_08_27_solution, tata41_ten1_2024_06_17_solution, tata41_ten1_2024_01_10_solution, tata41_ten1_2024_06_17, tata41_ten1_2024_03_21, tata41_ten1_2024_03_21_solution [INFERRED 0.95]
-- **TATA41 Exams 2025** — tata41_ten1_2025_03_26, tata41_ten1_2025_08_26, tata41_ten1_2025_01_15_solution, tata41_ten1_2025_08_26_solution, tata41_ten1_2025_01_15, tata41_ten1_2025_06_09, tata41_ten1_2025_03_26_solution [INFERRED 0.95]
-- **TATA41 Exams 2023** — tata41_ten1_2023_03_23_solution, tata41_ten1_2023_01_11_solution, tata41_ten1_2023_06_05, tata41_ten1_2023_03_23, tata41_ten1_2023_06_05_solution, tata41_ten1_2023_01_11, tata41_ten1_2023_08_22 [INFERRED 0.95]
+## Import Cycles
+- None detected.
 
-## Communities (370 total, 95 thin omitted)
+## Communities (273 total, 43 thin omitted)
 
-### Community 0 - "content-schema.ts"
-Cohesion: 0.06
-Nodes (32): ContentGenerator, SymbolicValidator, ExamProcessingResult, GenerationRequest, GenerationResult, TopicDiscoveryResult, ValidationRequest, ValidationResult (+24 more)
+### Community 0 - "Community 0"
+Cohesion: 0.12
+Nodes (21): ExamProcessingResult, GenerationResult, TopicDiscoveryResult, contentAttempts, contentAttemptsRelations, contentQuality, contentQualityRelations, CounterExampleContent (+13 more)
 
-### Community 1 - "recommendation-engine.ts"
+### Community 1 - "Community 1"
 Cohesion: 0.05
 Nodes (41): MASTERY_LEVELS, MasteryLevel, TopicStats, analyzeUserState(), analyzeWeakPatterns(), applyFocusModeFilter(), calculateReviewTime(), calculateStdDev() (+33 more)
 
-### Community 2 - "insert_real_exam.ts"
-Cohesion: 0.07
-Nodes (13): PageProps, currentDir, currentFilePath, db, repoRoot, sqlite, exams, profiles (+5 more)
+### Community 2 - "Community 2"
+Cohesion: 0.22
+Nodes (5): DashboardInsight, ExamReadiness, StudyPattern, WeakestTopicDetail, studySessions
 
-### Community 3 - "GuidancePanel.tsx"
-Cohesion: 0.04
-Nodes (17): MODES, TimerMode, StudyStatsProps, DailyAttempt, WeeklyProgressProps, availableExams, pastExams, upcomingExams (+9 more)
-
-### Community 4 - "question-flow-and-topics.test."
-Cohesion: 0.04
-Nodes (31): actionsToAudit, aiNode, base, batch, bloomLevels, cleaned, dangerousPatterns, easyLow (+23 more)
-
-### Community 5 - "exam-cache.test.ts"
-Cohesion: 0.04
-Nodes (42): after, afterUpload, base, before, emptyResult, exam2023, exam2024, examA (+34 more)
-
-### Community 6 - "TSRT19 Exam TEN1 2024-08-23"
-Cohesion: 0.15
-Nodes (46): Johan Löfberg (Examiner), Block Diagram Algebra, Bode Diagrams (Bodediagram), Complementary Sensitivity Function (Komplementär Känslighetsfunktion), Controllability, Controllability and Observability (Styrbarhet och Observerbarhet), Crossover Frequency (Skärfrekvens), Damping and Oscillatory Response (+38 more)
-
-### Community 7 - "VirtualCity.tsx"
-Cohesion: 0.06
-Nodes (16): AchievementDefinition, BuildingDefinition, BUILDINGS, BuildingState, CITY_LEVEL_NAMES, CITY_LEVEL_XP, CityProgress, getAchievementById() (+8 more)
-
-### Community 8 - "phases-3-5.test.ts"
-Cohesion: 0.05
-Nodes (39): actual, afterWrong, allQuestions, attemptDays, attempts, consistencyScore, dangerousPatterns, dayBuckets (+31 more)
-
-### Community 9 - "QuizEngine.tsx"
-Cohesion: 0.07
-Nodes (27): BlockMath, DeckProgressRing(), Flashcard, FlashcardDeck, FlashcardReviewProps, InlineMath, colorMap, LearningNode (+19 more)
-
-### Community 10 - "ExamResultsTable.tsx"
-Cohesion: 0.06
-Nodes (22): team, timeline, values, ExamViewer, PdfViewer, ExamResult, ExamResultsTable, ExamResultsTableProps (+14 more)
-
-### Community 11 - "parameters.ts"
-Cohesion: 0.13
-Nodes (32): QuestionItem, BKTParams, DEFAULT_BKT_PARAMS, AdaptiveRecommendation, AnswerAnalysis, EngagementMetrics, ErrorPattern, HintUsageStats (+24 more)
-
-### Community 12 - "flashcardReviews"
-Cohesion: 0.09
-Nodes (32): createFlashcard(), createFlashcardDeck(), CreateFlashcardInput, deserialiseMasks(), draftFlashcardsFromContext(), DraftFlashcardsInput, FlashcardDashboard, FlashcardReviewResult (+24 more)
-
-### Community 13 - "RichMathTextInput.tsx"
-Cohesion: 0.07
-Nodes (29): DEFAULT_TOOLBAR, RichMathTextInputProps, RichMathTextQuestionLike, TOOLBAR_ICONS, SolutionStepsInputProps, SolutionStepsQuestionLike, validateStep(), QUESTION_TYPE_LABELS (+21 more)
-
-### Community 14 - "JSXGraphBoard.tsx"
+### Community 3 - "Community 3"
 Cohesion: 0.08
-Nodes (24): JSXGraphBoardProps, CurveSketchingBoard(), DerivativeDefinitionBoard(), EigenvectorVisualizer(), InequalitiesVisualizer(), InteractiveUnitCircle(), LinearSpanExplorer(), PolynomialRootFinder() (+16 more)
+Nodes (24): BlockMath, DeckProgressRing(), Flashcard, FlashcardDeck, FlashcardReviewProps, InlineMath, colorMap, LearningNode (+16 more)
 
-### Community 15 - "TSRT19 TEN1 2024-01-08 Exam"
-Cohesion: 0.18
-Nodes (37): Bode Diagram, Bode Plot (Bodediagram), Cascade Control (Kaskadreglering), Characteristic Equation (Karakteristiska ekvationen), Complementary Sensitivity Function (Komplementära känslighetsfunktionen), Controllability (Styrbarhet), Discrete-Time Control (Tidsdiskret regulator), Feedback Control and Closed Loop Systems (+29 more)
+### Community 4 - "Community 4"
+Cohesion: 0.04
+Nodes (45): 1. Merge Practice/Study/Exam, 2. Dashboard Becomes "Progress", 3. AI is NOT a Page, 4. Help is ALWAYS Available, 5. Mobile-First for Study, AI Chat API Implementation, AI Context Injection, AI Integration Points (Where AI appears) (+37 more)
 
-### Community 16 - "AdminLayout.tsx"
-Cohesion: 0.06
-Nodes (15): DashboardStats, APIKey, PERMISSION_OPTIONS, Toast, AdminLayout, NavGroup, navGroups, NavItem (+7 more)
-
-### Community 17 - "schema.ts"
-Cohesion: 0.06
-Nodes (27): extractKeywords(), retrieveContext(), RetrievedContext, aiRequestLogs, apiKeysRelations, articles, articlesRelations, attemptLogsRelations (+19 more)
-
-### Community 18 - "dashboard-schema.ts"
-Cohesion: 0.07
-Nodes (26): DashboardInsight, ExamReadiness, StudyPattern, WeakestTopicDetail, flashcardCardState, flashcardCardStateRelations, flashcardDecks, flashcardDecksRelations (+18 more)
-
-### Community 19 - "admin-questions.ts"
-Cohesion: 0.10
-Nodes (25): checkAdmin(), createQuestion(), createTopic(), deleteAdminCourse(), deleteQuestion(), deleteTopic(), getAdminCourses(), getAdminQuestions() (+17 more)
-
-### Community 20 - "LoginPromptModal.tsx"
-Cohesion: 0.07
-Nodes (24): CalibrationPrompt, CalibrationResults, ConfidenceRating, ContextPanel, FocusedStudyLayout, LoginPromptModal, PageTransition, ScrollAnimation (+16 more)
-
-### Community 21 - "courseExamAnalysisCache"
-Cohesion: 0.09
-Nodes (29): AIExamAnalysisResult, AIExamSection, AIExamTopic, anthropic, CacheEntry, computeExamFingerprint(), examAnalysisCache, ExamAnalysisCacheEntry (+21 more)
-
-### Community 22 - "KnowledgeMap.tsx"
-Cohesion: 0.09
-Nodes (24): calculateGridBounds(), DEFAULT_HEX_CONFIG, generateArrowPath(), generateDependencyLayout(), getHexCorners(), getHexDimensions(), getHexPath(), HexCoord (+16 more)
-
-### Community 23 - "page.tsx"
-Cohesion: 0.07
-Nodes (20): AnswerMode, assistanceLabel(), AssistanceLevel, BlockMath, buildQuestionContent(), DemoQuestion, FeedbackState, FigureSpec (+12 more)
-
-### Community 24 - "QuickAddTrigger.tsx"
-Cohesion: 0.07
-Nodes (14): FlashcardSourceContextType, FlashcardType, OcclusionMask, FlashcardContextBridge(), FlashcardContextBridgeProps, ImageOcclusionCardProps, DragState, ImageOcclusionEditorProps (+6 more)
-
-### Community 25 - "SolutionBuilderInput.tsx"
-Cohesion: 0.08
-Nodes (17): useStudySession(), FocusedStudyLayout(), FocusedStudyLayoutProps, BlockMath, HintBubble(), HintBubbleProps, InlineMath, levelConfig (+9 more)
-
-### Community 27 - "Exam System"
-Cohesion: 0.09
-Nodes (30): Exam Document, Exam Problem Set, Exam Retrieval Capability, Exam Solution, Exam Storage System, Exam System, TATA24 2022-03-15 Exam, TATA24 2022-03-15 Solution (+22 more)
-
-### Community 28 - "TATA41 TEN1 Solution Sketches "
-Cohesion: 0.10
-Nodes (29): Chain Rule, Fundamental Theorem of Calculus, L'Hopital's Rule, Sign Table / Derivative Sign Analysis, Trigonometric Substitution and Identities in Integration, Curve Sketching: f(x)=2ln(x)+1/(x-1) with local extrema and tangent line, Number of Real Solutions: (x+2)e^(1/x)=k for all real k, TATA41 TEN1 Exam 2024-06-03 (+21 more)
-
-### Community 29 - "mathUtils.ts"
-Cohesion: 0.17
-Nodes (18): threeDTemplates, analysisTemplates, calculusTemplates, functionTemplates, allTemplates, registry, TEMPLATE_IDS, seriesTemplates (+10 more)
-
-### Community 30 - "DailyFocus.tsx"
-Cohesion: 0.10
-Nodes (18): DailyFocus(), DailyFocusProps, DailyRecommendation, getActionButtonText(), getGreeting(), getModeLabel(), getTypeColors(), getTypeLabel() (+10 more)
-
-### Community 31 - "NextAuth Configuration"
-Cohesion: 0.09
-Nodes (27): authorize Function, Password Hashing via bcryptjs, Credentials Provider, NextAuth Configuration, FastAPI Application, Symbolic Equivalence Check, Error Classification Logic, CORS Middleware Configuration (+19 more)
-
-### Community 32 - "ai-question-analysis.ts"
-Cohesion: 0.16
-Nodes (24): AIQuestionAnalysis, AISolutionReview, AISolutionStepReview, analyzeQuestionDifficulty(), analyzeQuestionsBatch(), anthropic, buildAnalysisPrompt(), buildSolutionReviewPrompt() (+16 more)
-
-### Community 33 - "test-api.ts"
-Cohesion: 0.14
-Nodes (22): preprocessUserInput(), anthropic, buildMessages(), buildOllamaSystemPrompt(), buildSystemPrompt(), ChatMessage, DANGEROUS_EXPRESSION_PATTERNS, fetchQuestionContextById() (+14 more)
-
-### Community 34 - "app/api/auth/[...nextauth]/rou"
-Cohesion: 0.12
-Nodes (26): GET /api/admin/courses, GET /api/admin/exams, GET /api/admin/stats, GET /api/admin/users, POST /api/ai/chat, GET/POST /api/auth, GET /api/courses, app/api/admin/courses/route.ts (+18 more)
-
-### Community 35 - "universities"
+### Community 5 - "Community 5"
 Cohesion: 0.11
-Nodes (11): forgotPassword(), register(), universities, LoginFormSchema, SignupFormSchema, BlockMath, testRegistration(), insertCourses() (+3 more)
+Nodes (22): JSXGraphBoard(), JSXGraphBoardProps, CurveSketchingBoard(), EigenvectorVisualizer(), InequalitiesVisualizer(), IntersectingPlanes3D(), LinearSpanExplorer(), MatrixDeformationBoard() (+14 more)
 
-### Community 36 - "columns"
-Cohesion: 0.08
-Nodes (25): name, name_sv, semester, university_id, columns, autoincrement, name, notNull (+17 more)
-
-### Community 37 - "city.ts"
-Cohesion: 0.13
-Nodes (20): awardQuestionXP(), awardStreakXP(), awardXP(), checkAndAwardAchievement(), checkProgressAchievements(), getCityProgress(), updateCityWeather(), updatePersonalRecords() (+12 more)
-
-### Community 38 - "fsrs.ts"
-Cohesion: 0.12
-Nodes (21): applyReview(), CardStateRow, fromAlgorithmCard(), initialState(), Rating, RATING_LABEL_SV, RATING_XP, toAlgorithmCard() (+13 more)
-
-### Community 39 - "CourseAnalysisView.tsx"
-Cohesion: 0.10
-Nodes (11): AIAnalysisSummary, buildCourseProfileFromAI(), buildExamTopicMap(), CourseProfile, ExamSection, getExamAnalysis(), GradeThreshold, AI_FOCUS_CONFIG (+3 more)
-
-### Community 40 - "MathRenderer.tsx"
-Cohesion: 0.10
-Nodes (17): DragDropInput(), DragDropProps, EngineeringContextProps, ExpressionBuilderInput(), ExpressionBuilderProps, FillBlankInput(), FillBlankProps, BlockMath (+9 more)
-
-### Community 41 - "userStreaks"
-Cohesion: 0.12
-Nodes (18): getExamReadiness(), AIRecommendationProps, C, CourseCard(), CourseCardProps, MasteryTopicCard(), MasteryTopicProps, navigationItems (+10 more)
-
-### Community 42 - "exam-sim.ts"
-Cohesion: 0.13
-Nodes (17): ExamTopicNode, estimateGrade(), ExamResult, ExamSimConfig, ExamSimulation, generateAIExamSimulation(), generateExamBreakdown(), generateExamSimulation() (+9 more)
-
-### Community 43 - "checkMathEquivalence()"
-Cohesion: 0.19
-Nodes (21): isMatrixAnswer(), isRichMathAnswer(), isSolutionStepsAnswer(), LEGACY_MODE_MAP, normalizeAnswerMode(), normalizeString(), serializeStudentAnswer(), validateDragDropAnswer() (+13 more)
-
-### Community 44 - "courses"
-Cohesion: 0.11
-Nodes (10): addCourseEnrollment(), getCourses(), getSuggestedCourses(), saveUserCourses(), searchCoursesWithExams(), DiscoverResult, Props, Course (+2 more)
-
-### Community 45 - "curriculumStandards"
-Cohesion: 0.12
-Nodes (17): completeDiagnosticOnboarding(), DiagnosticGap, DiagnosticQuestion, DiagnosticResponse, getScreeningQuestions(), saveAnxietyScreening(), SCREENING_QUESTIONS, submitDiagnosticScreening() (+9 more)
-
-### Community 46 - "MilestoneCelebration.tsx"
-Cohesion: 0.10
-Nodes (11): FlashcardWithState, COLORS, MilestoneCelebrationProps, BlockMath, FlashcardReviewSessionProps, MILESTONES, RATING_STYLE, RATING_SUB (+3 more)
-
-### Community 47 - "TATA41 2024-08-27 (solution)"
-Cohesion: 0.17
-Nodes (22): TATA41 - Linear Algebra Course, TATA41 2022-06-07 (problem), TATA41 2023-01-11 (problem), TATA41 2023-01-11 (solution), TATA41 2023-03-23 (problem), TATA41 2023-03-23 (solution), TATA41 2023-06-05 (problem), TATA41 2023-06-05 (solution) (+14 more)
-
-### Community 48 - "hint-system.test.ts"
-Cohesion: 0.09
-Nodes (11): cleaned, existingHints, h1, h2, h3, HintResult, key1, key2 (+3 more)
-
-### Community 49 - "dependencies"
-Cohesion: 0.10
-Nodes (21): dependencies, @anthropic-ai/sdk, bcryptjs, better-sqlite3, dotenv, @dotenvx/dotenvx-ops, drizzle-orm, framer-motion (+13 more)
-
-### Community 50 - "import-tata41-extracted-questi"
-Cohesion: 0.14
-Nodes (21): ai-logger.ts, audit-log.ts, auth.ts, index.ts, types.ts, content-generator.ts, exam-storage.ts, faded-example.ts (+13 more)
-
-### Community 51 - "MathCASInput.tsx"
-Cohesion: 0.12
-Nodes (15): FeedbackData, FeedbackRenderer(), FeedbackRendererProps, CASQuestionType, CONFIDENCE_COLORS, CONFIDENCE_LABELS, KatexLike, LatexPreview() (+7 more)
-
-### Community 52 - "MasteryIndicator.tsx"
-Cohesion: 0.12
-Nodes (12): fadePhase(), QuestionStep, RevealedStep, MasteryIndicator(), PHASE_COLORS, PHASE_LABELS, KatexLike, StepRendererProps (+4 more)
-
-### Community 53 - "ArticleEditor.tsx"
-Cohesion: 0.13
-Nodes (15): ArticleEditorProps, BlockMath, C, SLASH_COMMANDS, ALLOWED_IMAGE_SCHEMES, Article, CalloutBlock, CodeBlock (+7 more)
-
-### Community 54 - "AIPanel.tsx"
-Cohesion: 0.14
-Nodes (13): AIContext, AIMessage, AIPanel(), AIPanelProps, AIRequestContext, ConversationalMode(), ConversationalModeProps, CleanFlag (+5 more)
-
-### Community 55 - "TATA24 TEN1 2023-03-14 Solutio"
-Cohesion: 0.25
-Nodes (20): Anti-symmetric Matrices, Characteristic Polynomial and Secular Polynomial, Determinant, Matrix Diagonalization, Eigenvalues and Eigenvectors, Gram-Schmidt Orthogonalization, Inner Product and Scalar Product, Isometries and Orthogonal Matrices (+12 more)
-
-### Community 56 - "updated_at"
-Cohesion: 0.10
-Nodes (20): autoincrement, name, notNull, primaryKey, type, analysis_json, exams_analyzed, updated_at (+12 more)
-
-### Community 57 - "tsconfig.json"
-Cohesion: 0.10
-Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
-
-### Community 58 - "devDependencies"
-Cohesion: 0.11
-Nodes (19): devDependencies, autoprefixer, drizzle-kit, eslint, eslint-config-next, postcss, puppeteer, tailwindcss (+11 more)
-
-### Community 59 - "ElaboratedFeedback.tsx"
-Cohesion: 0.15
-Nodes (16): CachedClassification, classificationCache, classifyError(), ClassifyRequest, ErrorClassification, ErrorType, getCacheKey(), getFallbackClassification() (+8 more)
-
-### Community 61 - "BehavioralSection.tsx"
-Cohesion: 0.15
-Nodes (13): ACCENT_CLASSES, BehavioralSection(), BehavioralSectionProps, buildNarrativeInsights(), ConcentrationTooltip(), FOCUS_BG, FOCUS_COLORS, FOCUS_LABELS (+5 more)
-
-### Community 62 - "AchievementBadge.tsx"
-Cohesion: 0.13
-Nodes (13): AchievementBadgeProps, ICON_MAP, ProgressionRingProps, SIZE_MAP, AchievementBadgeData, AchievementId, BehaviouralDataPoint, ErrorType (+5 more)
-
-### Community 63 - "PsychInsightsPanel.tsx"
-Cohesion: 0.13
-Nodes (16): glass(), INTENSITY_TONE, PsychInsightsPanel(), PsychInsightsPanelProps, SignalCard(), TECHNIQUE_ICONS, VALENCE_ACCENT, BehavioralSignal (+8 more)
-
-### Community 64 - "ReviewNotifications.tsx"
-Cohesion: 0.15
-Nodes (13): completeReview(), getReviewInterval(), getReviewNotifications(), NotificationSummary, REVIEW_INTERVALS, ReviewNotification, snoozeReview(), updateReviewSchedule() (+5 more)
-
-### Community 65 - "auth.ts"
-Cohesion: 0.11
-Nodes (5): classifyError(), ERROR_TYPES, ReflectionModalProps, { auth, signIn, signOut, handlers }, config
-
-### Community 66 - "columns"
-Cohesion: 0.11
-Nodes (19): autoincrement, name, notNull, primaryKey, type, columns, actual_score, topic_id (+11 more)
-
-### Community 67 - "columns"
-Cohesion: 0.11
-Nodes (19): autoincrement, name, notNull, primaryKey, type, analysis_json, course_code, updated_at (+11 more)
-
-### Community 68 - "columns"
-Cohesion: 0.11
-Nodes (19): completed_at, diagnostic_type, screening_score, autoincrement, name, notNull, primaryKey, type (+11 more)
-
-### Community 69 - "columns"
-Cohesion: 0.11
-Nodes (19): columns, is_correct, question_id, timestamp, autoincrement, name, notNull, primaryKey (+11 more)
-
-### Community 70 - "columns"
-Cohesion: 0.11
-Nodes (19): confidence, curriculum_standard_id, student_answer, autoincrement, name, notNull, primaryKey, type (+11 more)
-
-### Community 71 - "columns"
-Cohesion: 0.11
-Nodes (19): columns, autoincrement, name, notNull, primaryKey, type, author_id, slug (+11 more)
-
-### Community 72 - "description"
-Cohesion: 0.11
-Nodes (19): autoincrement, name, notNull, primaryKey, type, category, description, level (+11 more)
-
-### Community 73 - "topic_id"
-Cohesion: 0.11
-Nodes (19): columns, predicted_score, topic_id, total_questions, autoincrement, name, notNull, primaryKey (+11 more)
-
-### Community 74 - "Community 74"
-Cohesion: 0.11
-Nodes (19): diagnostic_result_id, id, question_id, columns, autoincrement, name, notNull, primaryKey (+11 more)
-
-### Community 75 - "RepetitionCalendar.tsx"
-Cohesion: 0.13
-Nodes (12): FlashcardDeckSummary, CreateCardButtonProps, BUCKET_STYLES, BucketTrack(), clampPct(), DeckCard(), FlashcardsPage(), RepetitionCalendar() (+4 more)
-
-### Community 76 - "Curve Sketching and Function A"
-Cohesion: 0.26
-Nodes (19): Curve Sketching and Function Analysis, Differentiability and Continuity Properties, Differential Calculus (Differentialkalkyl), Extrema and Curve Sketching, Floor Function and Step Integrals, Fundamental Theorem of Calculus (Analysens huvudsats), Integral Calculus (Integralkalkyl), Integration by Substitution (Variabelbyte) (+11 more)
-
-### Community 77 - "course-overview.ts"
-Cohesion: 0.23
-Nodes (13): buildModulesFromAICache(), buildOverviewFromTopicsTable(), estimateStudyHours(), getCourseOverview(), groupByPhase(), nodeToOverviewTopic(), OverviewTopicSource, PHASE_CONFIG (+5 more)
-
-### Community 78 - "PrescriptiveSection.tsx"
-Cohesion: 0.12
-Nodes (12): BG, ERROR_COLORS, ERROR_ICONS, ErrorPatternCard(), HeroTodoCard(), ICON_BG, labelForType(), PrescriptiveSectionProps (+4 more)
-
-### Community 79 - "questions"
-Cohesion: 0.14
-Nodes (14): submitAnswer(), getQuestionWithSteps(), mapDbQuestion(), MCOption, parseExplanationMarkdown(), PracticeTopic, attemptLogs, questions (+6 more)
-
-### Community 80 - "Limits (Gränsvärden)"
-Cohesion: 0.18
-Nodes (18): Antiderivatives and Primitive Functions (primitiva funktioner), Differentiability and Limit via Derivative Definition (Chain Rule, Composition), Number of Real Solutions to Equations, Derivative of Inverse Function (derivering av invers funktion), Limit of Integral with Variable Bounds (gränsvärde av integral), Limits (Gränsvärden), Monotonicity and Local Extrema (strängt växande, extrempunkter), ODE and Boundedness of Solutions (+10 more)
-
-### Community 81 - "scripts"
-Cohesion: 0.12
-Nodes (17): scripts, build, db:generate, db:migrate, db:push, db:reset, db:seed, db:seed:admin (+9 more)
-
-### Community 82 - "articles.ts"
-Cohesion: 0.26
-Nodes (13): createArticle(), deleteArticle(), generateUniqueSlug(), getAdminArticleById(), publishArticle(), reorderArticles(), requireAdminSession(), sanitizeBlocks() (+5 more)
-
-### Community 83 - "NumericInput.tsx"
-Cohesion: 0.13
-Nodes (13): getStudyQuestions(), AIMessage, CommonWrongAnswer, initialState, PrerequisiteProbe, QuestionWithHelp, StudySessionAction, StudySessionState (+5 more)
-
-### Community 84 - "CalculusTangent.tsx"
-Cohesion: 0.15
-Nodes (12): CalculusTangent(), CalculusTangentProps, COLORS, ColumnAddition(), ColumnAdditionProps, GridMultiplier(), GridMultiplierProps, cn() (+4 more)
-
-### Community 85 - "WorkShowPanel.tsx"
-Cohesion: 0.15
-Nodes (14): CompletedStepPill(), CompletedStepPillProps, DiagnosisSummaryProps, FocusedStepProps, isClose(), normalise(), StepBreakdown, StepStatus (+6 more)
-
-### Community 86 - "user_id"
-Cohesion: 0.12
-Nodes (17): enrolled_at, user_id, autoincrement, name, notNull, primaryKey, type, columns (+9 more)
-
-### Community 87 - "Hint System Integration Tests"
-Cohesion: 0.14
-Nodes (16): AdminLayout, ExamResultsTable, GlobalErrorLogger, Header, LoginPromptModal, MathRenderer, PageTransition, ParticleBackground (+8 more)
-
-### Community 88 - "QuoteSeparator.tsx"
-Cohesion: 0.17
-Nodes (10): BlockMath, fadeInUp, iconColors, scaleIn, staggerContainer, QuoteSeparator, QuoteSeparatorProps, ScrollConnector (+2 more)
-
-### Community 89 - "route.ts"
-Cohesion: 0.21
-Nodes (11): POST(), checkRateLimit(), RateLimitEntry, store, build(), FEEDBACK, FeedbackCode, FeedbackResult (+3 more)
-
-### Community 90 - "Integral Inequalities and Comp"
-Cohesion: 0.17
-Nodes (16): Area Between Curves, Asymptote Analysis, Continuity and Differentiability, Graph Sketching and Curve Analysis, Integral Inequalities and Comparison, Limits of Function Sequences and Pointwise Limits, Logarithmic and Exponential Functions, Piecewise Defined Functions and Removable Discontinuities (+8 more)
-
-### Community 91 - "AnalyticsDashboard.tsx"
-Cohesion: 0.17
-Nodes (10): actionTitle(), AnalyticsDashboard(), AnalyticsDashboardProps, AnalyticsMockData, generateMockData(), glass(), MiniMetric(), seededRng() (+2 more)
-
-### Community 92 - "apiKeys"
-Cohesion: 0.27
-Nodes (11): GET(), getAdminSession(), POST(), DELETE(), getAdminSession(), DELETE(), getAdminSession(), apiKeys (+3 more)
-
-### Community 93 - "Fading Steps Learning System"
-Cohesion: 0.15
-Nodes (15): Adaptive Learning Engine, API: /api/check-step Endpoint, Fading Steps Architecture, Bayesian Knowledge Tracing for Mastery, Computer Algebra System (CAS) Grading, Dark/Light Mode with next-themes, Step Fading Algorithm, Fading Steps Learning System (+7 more)
-
-### Community 94 - "Stat()"
-Cohesion: 0.20
-Nodes (11): ALLOWED_MIME_TYPES, ensureCourseDir(), generateExamFileName(), getCourseDir(), getFileInfo(), StorageStats, uploadExamPDF(), UploadResult (+3 more)
-
-### Community 95 - "main.py"
-Cohesion: 0.14
-Nodes (12): BaseModel, check_equivalence(), classify_error(), EquivalenceRequest, Qmath Math Engine — FastAPI sidecar for symbolic CAS operations.  Endpoints:   P, Symbolically check whether student == correct (mod additive constant if ignore_c, Returns simplify(student - correct) as a string.     Useful for debugging why tw, Classify the symbolic distance between student and correct answers.     Returns (+4 more)
-
-### Community 96 - "admin-topics.ts"
-Cohesion: 0.29
-Nodes (11): AdminTopic, checkAdmin(), deleteTopic(), getAdminCourseTopics(), getAllAdminCourses(), reorderTopics(), slugify(), syncAITopics() (+3 more)
-
-### Community 97 - "CourseHub.tsx"
-Cohesion: 0.18
-Nodes (7): CourseExam, getCourseExams(), CourseOverviewData, ExamAnalysisData, CourseExamsTabProps, CourseHubProps, CourseTabId
-
-### Community 98 - "CAS Equation Input System (5-L"
-Cohesion: 0.14
-Nodes (14): CAS Layer 5: API Endpoint, CAS Layer 4: Response Tree (40+ Feedback Codes), CAS Layer 1: Frontend UI (EquationInput), CAS Layer 3: Two-Tier CAS Motor, CAS Layer 2: Pre-parser (Notation Support), CAS Equation Input System (5-Layer Pipeline), Feedback Category: Algebra Errors, Feedback Category: Differentiation Errors (+6 more)
-
-### Community 99 - "AnalyticsHero.tsx"
-Cohesion: 0.18
-Nodes (10): AnalyticsHero(), AnalyticsHeroProps, ChipProps, paceFromReadiness(), MESSAGES, MotivationalCardProps, Pace, PACE_META (+2 more)
-
-### Community 100 - "questionAttempts"
-Cohesion: 0.21
-Nodes (6): PageTransition, DashboardShell(), DashboardShellProps, shellThemeClass(), questionAttempts, enrollments
-
-### Community 101 - "import-tata41-extracted-questi"
-Cohesion: 0.15
-Nodes (13): course, dbPath, existingQuestion, ExtractedQuestion, getTopicId(), insertQuestion, now, questions (+5 more)
-
-### Community 102 - "Core Curriculum Interactive Te"
-Cohesion: 0.15
-Nodes (14): Interactive Learning Integration (JSXGraph + AI), Core Curriculum Interactive Templates (JSXGraph), Interactive Component: Curve Sketching Board, Interactive Component: Derivative Definition Board, Interactive Component: Eigenvector Visualizer, Interactive Component: Inequalities Visualizer, Interactive Component: Matrix Deformation Board, Interactive Component: Polynomial Root Finder (+6 more)
-
-### Community 103 - "Item Response Theory"
-Cohesion: 0.18
-Nodes (13): Adaptive Learning Engine, AdaptiveProvider React Context, Bayesian Knowledge Tracing, Engagement Metrics Type, FSRS Algorithm, Item Response Theory, Knowledge State Type, Knowledge State Manager (+5 more)
-
-### Community 104 - "clsx"
-Cohesion: 0.21
-Nodes (8): BlockMath, InlineMath, MathRenderer, QuestionCard, QuestionCardProps, mockExamQuestions, cn(), clsx
-
-### Community 105 - "MathInputWithToolbar.tsx"
-Cohesion: 0.15
-Nodes (8): I, IntrinsicElements, MathfieldElement, MathInputWithToolbar(), MathInputWithToolbarProps, MathTool, TOOL_GROUPS, ToolGroup
-
-### Community 106 - "DescriptiveSection.tsx"
-Cohesion: 0.15
-Nodes (8): COLOR_MAP, DAYS, DescriptiveSectionProps, OPACITY_MAP, RadarDatum, accuracyColor(), ModuleProgress, StudentProgress
-
-### Community 107 - "StudyLayout.tsx"
-Cohesion: 0.18
-Nodes (8): BlockMath, ContextPanel(), ContextPanelProps, Formula, SessionStats, TopicInfo, StudyLayout(), StudyLayoutProps
-
-### Community 108 - "Improper Integrals (Generalise"
-Cohesion: 0.29
-Nodes (13): Antiderivative of Piecewise / Absolute Value Functions, Reverse Chain Rule (Inner Derivative Recognition), Improper Integrals (Generaliserade integraler), Integration by Parts (Partiell integration), Polynomial Long Division in Integration, Rolle's Theorem and Applications, Series Bound via Integral Comparison (Integral Test / Under-sum), Integration by Substitution (Variable Substitution) (+5 more)
-
-### Community 109 - "Unknown"
-Cohesion: 0.18
-Nodes (12): DOC_ai-structure, DOC_changelog, DOC_design_principles, DOC_interactive_learning, DOC_platform_structure, DOC_question_view, DOC_redesign, ENDPOINT_classify-error (+4 more)
-
-### Community 110 - "ArticleContent()"
-Cohesion: 0.23
-Nodes (9): getPublishedArticleBySlug(), getPublishedArticles(), ArticleContent(), TableOfContents(), ArticlesPage(), metadata, ArticleReaderPage(), generateMetadata() (+1 more)
-
-### Community 111 - "CourseLearningPlan.tsx"
-Cohesion: 0.21
-Nodes (8): LearningModule, DIFFICULTY_LABEL, getModuleStyle(), getTopicStatus(), MODULE_STYLE, ModuleBlock(), PRIORITY_LABEL, TopicMission()
-
-### Community 112 - "HelpPanel.tsx"
-Cohesion: 0.18
-Nodes (6): HelpButtonProps, HelpPanel(), HelpPanelProps, HintCardProps, StepBreakdownPanelProps, WorkedExamplePanelProps
-
-### Community 113 - "MatrixGridInput.tsx"
-Cohesion: 0.20
-Nodes (9): clampDimension(), getPresentation(), MatrixGridInput(), MatrixGridInputProps, MatrixGridQuestionLike, MatrixGridAnswerConfig, MatrixGridAnswerPayload, MatrixGridGradingConfig (+1 more)
-
-### Community 115 - "page.tsx"
-Cohesion: 0.20
-Nodes (9): AIAnalyticsData, AIAnalyticsPage(), AIOverview, DailyPoint, DAYS_OPTIONS, formatLatency(), formatTokens(), ModelStat (+1 more)
-
-### Community 116 - "DashboardSidebar.tsx"
-Cohesion: 0.18
-Nodes (9): DashboardSidebar(), LT, NAV, rowStyle, SIDEBAR_THEMES, SidebarTheme, T, themeForPath() (+1 more)
-
-### Community 117 - "signals.ts"
-Cohesion: 0.41
-Nodes (11): avoidanceSignal(), clamp(), classify(), cognitiveLoadSignal(), computeSignals(), daysSince(), effortOutcomeSignal(), flowStateSignal() (+3 more)
-
-### Community 118 - "ContentCard.tsx"
+### Community 6 - "Community 6"
 Cohesion: 0.23
 Nodes (8): ContentCard(), ContentCardProps, contentTypeConfig, ConfidenceLevel, FreeFormInput(), FreeFormInputProps, FreeFormProblem, ValidationStatus
 
-### Community 119 - "LiquidGlassQuestionView.tsx"
-Cohesion: 0.17
-Nodes (5): DEFAULT_STEPS, FORMULAS, LiquidGlassQuestionViewProps, ToolId, TOOLS
+### Community 7 - "Community 7"
+Cohesion: 0.05
+Nodes (39): 1. Faded Worked Examples (Scaffolding), 2. Parsons Problems (Logic & Proofs), 3. Line-by-Line Validation (Step-wise CAS Checks), 4. Dynamic Graphical Manipulation (Embodied Cognition), 5. Counter-Example Generation, 6. Error Spotting / Debugging, 7. Free-Form Symbolic Input (Equivalence Checking), 8. Confidence Tagging (Metacognition) (+31 more)
 
-### Community 120 - "Dashboard Card Components"
-Cohesion: 0.18
-Nodes (12): AI Study Recommendation, Course Progress Card, Dashboard Card Components, Topic Mastery Level Card, Quick Action Buttons, Dashboard Quick Navigation, Statistics Card Component, User Streak Display (+4 more)
+### Community 8 - "Community 8"
+Cohesion: 0.10
+Nodes (20): flashcardCardState, flashcardCardStateRelations, flashcardDecks, flashcardDecksRelations, flashcardReviewsRelations, flashcards, flashcardsRelations, questionAttemptsRelations (+12 more)
 
-### Community 121 - "TATA41 TEN1 Exam – 7 June 2022"
-Cohesion: 0.29
-Nodes (12): Asymptotes (Vertical and Horizontal), Integration Techniques, Partial Fraction Decomposition, Existence of Primitives with Finite Limit at Infinity, Tangent, Normal Lines, and Geometric Optimization, Trigonometric Integrals and Identities, Integration by Parts (Partialintegration), Partial Fraction Decomposition (+4 more)
+### Community 9 - "Community 9"
+Cohesion: 0.05
+Nodes (37): 1000 Students (Multi-Instance), 100 Students (Single Instance), 5000 Students (Distributed), Alert Thresholds, Application Logs, Building for Production, Cloud Platform (Vercel / Netlify), Database Migration Steps (+29 more)
 
-### Community 122 - "Unknown"
-Cohesion: 0.18
-Nodes (11): DOCKER_compose, DOC_README, DOC_adaptive_logic, DOC_articles, DOC_content_gen, DOC_docs_README, DOC_infrastructure, DOC_user_profile_flow (+3 more)
+### Community 10 - "Community 10"
+Cohesion: 0.13
+Nodes (14): getQuestionWithSteps(), mapDbQuestion(), MCOption, parseExplanationMarkdown(), PracticeTopic, getRevealedSteps(), QuestionStep, RevealedStep (+6 more)
 
-### Community 123 - "ArticleBlock.tsx"
-Cohesion: 0.18
-Nodes (6): ArticleBlock(), BlockMath, C, calloutConfig, InlineMath, Segment
+### Community 11 - "Community 11"
+Cohesion: 0.06
+Nodes (35): API & Integration, ✅ Completeness Checks, Database, Deployment, Documentation Issues, 📚 Documentation Structure, 🗂️ File Structure, For Developers (+27 more)
 
-### Community 124 - "ArticleSidebar.tsx"
-Cohesion: 0.18
-Nodes (6): ArticleNavigation, NavArticle, NavCourse, NavTopic, ArticleSidebarProps, C
+### Community 12 - "Community 12"
+Cohesion: 0.06
+Nodes (34): 400 Bad Request, 401 Unauthorized, 404 Not Found, 429 Too Many Requests, 500 Internal Server Error, Answer Leakage Prevention, Authentication, Authentication Details (+26 more)
 
-### Community 125 - "ExamReadinessBar.tsx"
-Cohesion: 0.29
-Nodes (9): CircularReadiness(), ExamReadinessBar(), ExamReadinessBarProps, getReadinessColor(), getReadinessGradient(), getStageIndex(), StageIndicator(), STAGES (+1 more)
+### Community 13 - "Community 13"
+Cohesion: 0.09
+Nodes (24): calculateGridBounds(), DEFAULT_HEX_CONFIG, generateArrowPath(), generateDependencyLayout(), getHexCorners(), getHexDimensions(), getHexPath(), HexCoord (+16 more)
 
-### Community 126 - "MarkdownMessage.tsx"
-Cohesion: 0.24
-Nodes (9): BlockMath, InlineMath, MarkdownMessage(), MarkdownMessageProps, renderLineWithMath(), renderTable(), renderTextBlock(), Token (+1 more)
+### Community 14 - "Community 14"
+Cohesion: 0.12
+Nodes (23): ALLOWED_ANTHROPIC_MODELS, ALLOWED_GOOGLE_MODELS, anthropic, buildMessages(), buildOllamaSystemPrompt(), buildSystemPrompt(), ChatMessage, chatRequestSchema (+15 more)
 
-### Community 127 - "Qmath Redesign: Study Hub Mode"
-Cohesion: 0.20
-Nodes (11): Interactive AI Tutor with Math Validation, Progressive Help System (5 Layers), Socratic AI Tutor - Contextual Guidance, Study Hub - Central Learning Interface, Phase 1 Implementation Complete, Qmath Redesign: Study Hub Model, Help Layer 5: AI Contextual Chat, Help Layer 2: Guided Hint (+3 more)
+### Community 15 - "Community 15"
+Cohesion: 0.33
+Nodes (5): getQuestionSteps(), PHASE_PRESETS, StudentPreview(), StudentPreviewProps, FadingStepsSession()
 
-### Community 128 - "cas-grader.ts"
-Cohesion: 0.27
-Nodes (10): buildTestPoints(), computePartialScore(), extractNumber(), gradeAnswer(), GradeOptions, GradeResult, numericProbe(), quickGrade() (+2 more)
+### Community 16 - "Community 16"
+Cohesion: 0.09
+Nodes (31): AIExamAnalysisResult, AIExamTopic, anthropic, CacheEntry, computeExamFingerprint(), courseCodeSchema, examAnalysisCache, ExamAnalysisCacheEntry (+23 more)
 
-### Community 129 - "curriculum_standards"
-Cohesion: 0.18
-Nodes (11): checkConstraints, columns, isUnique, name, compositePrimaryKeys, foreignKeys, indexes, name (+3 more)
+### Community 17 - "Community 17"
+Cohesion: 0.23
+Nodes (21): AISolutionStepReview, analyzeQuestionDifficulty(), analyzeQuestionsBatch(), anthropic, buildAnalysisPrompt(), buildSolutionReviewPrompt(), checkAdmin(), collectAnthropicTextBlocks() (+13 more)
 
-### Community 130 - "articles"
-Cohesion: 0.18
-Nodes (11): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, columns, isUnique, name (+3 more)
+### Community 18 - "Community 18"
+Cohesion: 0.03
+Nodes (59): getCourses(), getStudyQuestions(), SessionSummary, extractKeywords(), retrieveContext(), RetrievedContext, currentDir, databaseClient (+51 more)
 
-### Community 131 - "curriculum_standards"
-Cohesion: 0.18
-Nodes (11): checkConstraints, columns, isUnique, name, compositePrimaryKeys, foreignKeys, indexes, name (+3 more)
+### Community 19 - "Community 19"
+Cohesion: 0.09
+Nodes (12): DashboardStats, APIKey, PERMISSION_OPTIONS, Toast, AdminLayout(), NavGroup, navGroups, NavItem (+4 more)
 
-### Community 132 - "Definition of Derivative (Deri"
-Cohesion: 0.35
-Nodes (11): Area under Curve and Optimization, Continuity and Parameter Matching, Definite Integrals, Definition of Derivative (Derivatans definition), Poisson Kernel / Dirac Delta Limit, Indefinite Integrals and Antiderivatives, Intermediate Value Theorem, Series Convergence (Alternating Series) (+3 more)
+### Community 20 - "Community 20"
+Cohesion: 0.06
+Nodes (30): For /graphify query, /graphify, Honesty Rules, Part A - Structural extraction for code files, Part B - Semantic extraction (parallel subagents), Part C - Merge AST + semantic into final extraction, Step 1 - Ensure graphify is installed, Step 2 - Detect files (+22 more)
 
-### Community 133 - "Unknown"
-Cohesion: 0.24
-Nodes (10): FeedbackCode, FeedbackResult, GradeResult, gradeAnswer, numericProbe, preParseInput, quickGrade, runFeedbackTree (+2 more)
+### Community 21 - "Community 21"
+Cohesion: 0.11
+Nodes (11): AIExamSection, AIAnalysisSummary, CourseProfile, ExamAnalysisData, ExamSection, ExamTopicNode, GradeThreshold, AI_FOCUS_CONFIG (+3 more)
 
-### Community 134 - "ArticleEditor()"
-Cohesion: 0.22
-Nodes (7): getAdminArticles(), getAllCoursesAndTopics(), ArticleEditor(), AdminArticlesPage(), statusStyles, ArticleBlock, ArticleStatus
+### Community 22 - "Community 22"
+Cohesion: 0.11
+Nodes (21): getUniversities(), getUserCoursesForAnalysis(), profileSchema, updateProfile(), getCurrentUser(), getUserProgress(), onboardingProfileSchema, saveOnboardingProfile() (+13 more)
 
-### Community 135 - "CourseOverview.tsx"
+### Community 23 - "Community 23"
+Cohesion: 0.15
+Nodes (5): Header(), headerVariants, mobileMenuVariants, navItems, navItemVariants
+
+### Community 24 - "Community 24"
+Cohesion: 0.09
+Nodes (14): AI_MESSAGES, BlockMath, ChatMsg, DEMO_QUESTIONS, DemoQ, EASE_OUT, ENGINE_STEPS, FEATURE_TILES (+6 more)
+
+### Community 25 - "Community 25"
+Cohesion: 0.19
+Nodes (14): CachedClassification, classificationCache, classifyError(), ClassifyRequest, classifyRequestSchema, ErrorClassification, getCacheKey(), getFallbackClassification() (+6 more)
+
+### Community 26 - "Community 26"
+Cohesion: 0.14
+Nodes (15): AIContext, AIMessage, AIPanel(), AIPanelProps, AIRequestContext, ConversationalMode(), ConversationalModeProps, CleanFlag (+7 more)
+
+### Community 27 - "Community 27"
+Cohesion: 0.13
+Nodes (19): ArticleNavigation, createArticle(), deleteArticle(), generateUniqueSlug(), getAdminArticleById(), NavArticle, NavCourse, NavTopic (+11 more)
+
+### Community 28 - "Community 28"
+Cohesion: 0.26
+Nodes (14): QuestionItem, AdaptiveRecommendation, StudentLearningState, AdaptiveContext, AdaptiveContextType, AdaptiveProvider(), AdaptiveProviderProps, SubmitResult (+6 more)
+
+### Community 29 - "Community 29"
+Cohesion: 0.13
+Nodes (3): AdaptiveLearningEngine, AnswerAnalysis, StudySession
+
+### Community 30 - "Community 30"
 Cohesion: 0.31
-Nodes (8): CourseOverview(), getModuleConfig(), glass(), ModuleJourney(), PHASE_CONFIG, PRIORITY_CONFIG, RecommendedMission(), TopicNode()
+Nodes (11): getCourseExams(), getCourseOverview(), getCourseByCode(), getCourseById(), buildCourseProfileFromAI(), buildExamTopicMap(), getExamAnalysis(), CoursePage() (+3 more)
 
-### Community 136 - "MultipleChoiceInput.tsx"
-Cohesion: 0.22
-Nodes (8): GuidedStepSession(), GuidedStepSessionProps, MCQProps, MultipleChoiceInput(), GuidedStep, GuidedStepQuestion, MultipleChoiceOption, MultipleChoiceQuestion
+### Community 31 - "Community 31"
+Cohesion: 0.11
+Nodes (9): FlashcardType, OcclusionMask, ImageOcclusionCardProps, DragState, ImageOcclusionEditorProps, CaptureScreenProps, InlineMath, QuickAddOverlayProps (+1 more)
 
-### Community 138 - "theme-provider.tsx"
-Cohesion: 0.24
-Nodes (5): metadata, GlobalErrorLogger, safeSerialize, ThemeProvider, FlashcardDock()
+### Community 32 - "Community 32"
+Cohesion: 0.10
+Nodes (30): AIGraph(), AIGraphProps, buildData(), fmtX(), Range, ALLOWED_FUNCTIONS, ALLOWED_OPERATORS, assertSafeNode() (+22 more)
 
-### Community 139 - "providers.tsx"
-Cohesion: 0.22
-Nodes (5): Providers(), SidebarContext, SidebarContextValue, sidebarPreferenceListeners, SidebarProvider()
+### Community 33 - "Community 33"
+Cohesion: 0.07
+Nodes (6): CityProgress, getAchievementById(), getRarityColor(), AchievementToast(), CityState, VirtualCityProps
 
-### Community 140 - "next-themes"
-Cohesion: 0.22
-Nodes (8): ParticleBackground, useTheme(), Particle, ParticleBackground, ThemeToggle, next-themes, next-themes, QuestionViewPage()
+### Community 34 - "Community 34"
+Cohesion: 0.13
+Nodes (12): AchievementDefinition, ACHIEVEMENTS, BuildingDefinition, BUILDINGS, BuildingState, CITY_LEVEL_NAMES, CITY_LEVEL_XP, TimeOfDay (+4 more)
 
-### Community 141 - "StudyIntelligencePanel.tsx"
+### Community 35 - "Community 35"
+Cohesion: 0.08
+Nodes (25): 1. Current vs. Proposed Implementation Status, 2. Structure Validation by Category, 3. User Flow Expectations by Persona, 4. Cross-Persona Page Priority Matrix, 5. Recommendations, 6. Implementation Priority, ✅ AUTHENTICATION - Standard & Complete, Currently Implemented Routes (+17 more)
+
+### Community 36 - "Community 36"
+Cohesion: 0.06
+Nodes (31): dependencies, @anthropic-ai/sdk, argon2, bcryptjs, better-sqlite3, clsx, dotenv, @dotenvx/dotenvx-ops (+23 more)
+
+### Community 37 - "Community 37"
+Cohesion: 0.08
+Nodes (19): { auth, signIn, signOut, handlers }, jwt(), session(), users, User, CLAUDE_MODELS, ClaudeModelMeta, GET() (+11 more)
+
+### Community 38 - "Community 38"
+Cohesion: 0.11
+Nodes (15): DailyFocus(), DailyFocusProps, DailyRecommendation, getActionButtonText(), getModeLabel(), getTypeColors(), getTypeLabel(), getUrgencyBadge() (+7 more)
+
+### Community 39 - "Community 39"
+Cohesion: 0.16
+Nodes (15): FSRS_PARAMS, FSRSCard, FSRSRating, SM2Card, SM2Quality, applyReview(), fromAlgorithmCard(), initialState() (+7 more)
+
+### Community 40 - "Community 40"
+Cohesion: 0.08
+Nodes (23): For /graphify query, /graphify, Honesty Rules, Part A - Structural extraction for code files, Part B - Semantic extraction (parallel subagents), Part C - Merge AST + semantic into final extraction, Step 1 - Ensure graphify is installed, Step 2 - Detect files (+15 more)
+
+### Community 41 - "Community 41"
+Cohesion: 0.11
+Nodes (16): getPublishedArticleBySlug(), getPublishedArticles(), ArticleBlock(), ArticleContent(), BlockMath, C, calloutConfig, InlineMath (+8 more)
+
+### Community 42 - "Community 42"
+Cohesion: 0.09
+Nodes (21): addCourseEnrollment(), CourseSearchCatalogItem, getCourseSearchCatalog(), getEnrolledCourseIds(), saveUserCourses(), searchCoursesWithExams(), DiscoverResult, Props (+13 more)
+
+### Community 43 - "Community 43"
+Cohesion: 0.12
+Nodes (17): completeDiagnosticOnboarding(), DiagnosticGap, DiagnosticQuestion, DiagnosticResponse, getScreeningQuestions(), saveAnxietyScreening(), SCREENING_QUESTIONS, submitDiagnosticScreening() (+9 more)
+
+### Community 44 - "Community 44"
+Cohesion: 0.16
+Nodes (20): createFlashcard(), createFlashcardDeck(), CreateFlashcardInput, deserialiseMasks(), draftFlashcardsFromContext(), DraftFlashcardsInput, FlashcardReviewResult, getCardsWithState() (+12 more)
+
+### Community 45 - "Community 45"
+Cohesion: 0.13
+Nodes (5): BayesianKnowledgeTracing, BKTParams, DEFAULT_BKT_PARAMS, KnowledgeStateManager, KnowledgeState
+
+### Community 46 - "Community 46"
+Cohesion: 0.19
+Nodes (21): isMatrixAnswer(), isRichMathAnswer(), isSolutionStepsAnswer(), LEGACY_MODE_MAP, normalizeAnswerMode(), normalizeString(), serializeStudentAnswer(), validateDragDropAnswer() (+13 more)
+
+### Community 47 - "Community 47"
+Cohesion: 0.13
+Nodes (15): ArticleEditorProps, BlockMath, C, SLASH_COMMANDS, ALLOWED_IMAGE_SCHEMES, Article, CalloutBlock, CodeBlock (+7 more)
+
+### Community 48 - "Community 48"
+Cohesion: 0.09
+Nodes (19): ACCENT, ACCENT_BASE, AIRecommendationProps, COURSE_ICON_MAP, COURSE_PALETTES, CourseCard(), CourseCardProps, CourseIconKey (+11 more)
+
+### Community 49 - "Community 49"
+Cohesion: 0.14
+Nodes (12): FlashcardWithState, BlockMath, FlashcardReviewSessionProps, MILESTONES, RATING_STYLE, RATING_SUB, SessionSummary, XpToast (+4 more)
+
+### Community 50 - "Community 50"
+Cohesion: 0.15
+Nodes (12): FlashcardDashboard, buildUserPrompt(), CardDraft, draftCards(), DraftInput, ModelResponse, sanitiseDraft(), DockMode (+4 more)
+
+### Community 51 - "Community 51"
 Cohesion: 0.20
-Nodes (5): C, StudyAction, StudyIntelligencePanelProps, URGENCY_COLORS, URGENCY_LABELS
+Nodes (13): awardQuestionXP(), awardStreakXP(), awardXP(), checkAndAwardAchievement(), checkProgressAchievements(), updatePersonalRecords(), BUILDING_UNLOCKS, calculateMasteryXP() (+5 more)
 
-### Community 142 - "route.ts"
-Cohesion: 0.24
-Nodes (9): bkt, CACHE, CacheEntry, GradeRequest, GradeResponse, hashKey(), POST(), TelemetryPayload (+1 more)
+### Community 52 - "Community 52"
+Cohesion: 0.13
+Nodes (15): AsymptoteMark, CriticalMark, drawGrid(), END_OPTIONS, GraphDrawingInput(), makeCoordFns(), niceTick(), PEN_COLORS (+7 more)
 
-### Community 143 - "Theme Provider Component"
-Cohesion: 0.20
-Nodes (10): JSXGraphBoard, LinearSpanExplorer, MatrixDeformationBoard, PolynomialRootFinder, RiemannSumsVisualizer, TaylorSeriesApproximation, Theme Provider Component, VectorOperationsBoard (+2 more)
+### Community 53 - "Community 53"
+Cohesion: 0.08
+Nodes (25): Admin Guide: Creating and Managing Fading Steps Questions, Before Publishing: Test Your Question, Best Practices: How Many Steps? What Makes a Good Step?, Creating a Fading Steps Question, Example: Step Builder for Factoring $x^2 + 2x + 1$, Fade Logic, Glossary, Hint Strategy (+17 more)
 
-### Community 144 - "katex"
-Cohesion: 0.22
-Nodes (10): Answer Confidence Slider, Tiered Math Feedback Display, Animated Math Formula Display, KaTeX Math Preview, Math CAS Equation Input, Mathematical Symbol Keyboard, Student Answer Confidence Tracking, KaTeX Math Rendering (+2 more)
+### Community 54 - "Community 54"
+Cohesion: 0.10
+Nodes (20): Adding a New Block Type, Admin Actions (require admin session), Admin User Guide, Articles Feature — Technical Documentation, Content Block Types, Creating an Article, Database Schema, Editing and Publishing (+12 more)
 
-### Community 145 - "setup-db.sh"
-Cohesion: 0.40
-Nodes (9): setup-db.sh script, check_docker(), check_postgres(), main(), run_migrations(), run_seed(), setup_docker(), setup_native() (+1 more)
+### Community 55 - "Community 55"
+Cohesion: 0.17
+Nodes (9): CourseExam, CourseOverviewData, CourseExamsTabProps, CourseHub(), CourseHubProps, CourseTabId, isAnalysisData(), isOverviewData() (+1 more)
 
-### Community 146 - "TopicPage.tsx"
-Cohesion: 0.25
-Nodes (6): OverviewTopic, glass(), PHASE_CONFIG, PRIORITY_CONFIG, TopicPage(), TopicPageProps
+### Community 56 - "Community 56"
+Cohesion: 0.14
+Nodes (14): ACCENT_CLASSES, BehavioralSection(), BehavioralSectionProps, buildNarrativeInsights(), ConcentrationTooltip(), FOCUS_BG, FOCUS_COLORS, FOCUS_LABELS (+6 more)
 
-### Community 147 - "hint-engine.ts"
+### Community 57 - "Community 57"
+Cohesion: 0.10
+Nodes (20): 1. Why math.js for CAS Grading?, 2. Why Bayesian Knowledge Tracing (BKT)?, 3. Why Redis for Rate Limiting & Caching?, 4. Why Mastery Cache Separately from Steps?, Architecture: Tonande Lösningssteg System, Code Locations, Data Flow Diagram (Detailed), Design Decisions & Trade-Offs (+12 more)
+
+### Community 58 - "Community 58"
+Cohesion: 0.10
+Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
+
+### Community 59 - "Community 59"
+Cohesion: 0.15
+Nodes (13): completeReview(), getReviewInterval(), getReviewNotifications(), NotificationSummary, REVIEW_INTERVALS, ReviewNotification, snoozeReview(), updateReviewSchedule() (+5 more)
+
+### Community 60 - "Community 60"
+Cohesion: 0.07
+Nodes (35): validateAnswer(), focusSpring, DragDropProps, EngineeringContextProps, ExpressionBuilderProps, FillBlankProps, GuidedStepSessionProps, BlockMath (+27 more)
+
+### Community 61 - "Community 61"
+Cohesion: 0.11
+Nodes (19): devDependencies, autoprefixer, drizzle-kit, eslint, eslint-config-next, postcss, puppeteer, tailwindcss (+11 more)
+
+### Community 62 - "Community 62"
+Cohesion: 0.10
+Nodes (16): forgotPassword(), register(), profiles, AuditEventType, safeDescription(), safeMetadata(), LoginFormSchema, SignupFormSchema (+8 more)
+
+### Community 63 - "Community 63"
+Cohesion: 0.14
+Nodes (15): glass(), INTENSITY_TONE, PsychInsightsPanel(), PsychInsightsPanelProps, SignalCard(), TECHNIQUE_ICONS, VALENCE_ACCENT, BehavioralSignal (+7 more)
+
+### Community 64 - "Community 64"
 Cohesion: 0.31
 Nodes (8): CachedHint, generateHint(), getFallbackHint(), getHintCacheKey(), hintCache, HintRequest, HintResult, parseHintJson()
 
-### Community 148 - "route.ts"
-Cohesion: 0.25
-Nodes (6): AttemptEvent, Question, StudentProfile, TopicNode, TopicStatus, bkt
+### Community 65 - "Community 65"
+Cohesion: 0.14
+Nodes (15): BaseModel, Expr, check_equivalence(), classify_error(), EquivalenceRequest, math_engine_websocket(), Qmath Math Engine — FastAPI sidecar for symbolic CAS operations.  Endpoints:   P, Symbolically check whether student == correct (mod additive constant if ignore_c (+7 more)
 
-### Community 149 - "ErrorAnalysis.tsx"
+### Community 66 - "Community 66"
+Cohesion: 0.13
+Nodes (40): createKeySchema, GET(), getAdminSession(), POST(), DELETE(), getAdminSession(), DELETE(), getAdminSession() (+32 more)
+
+### Community 67 - "Community 67"
+Cohesion: 0.11
+Nodes (18): Behöver du hjälp?, De fyra faserna av tonande, FAQ — Vanliga frågor, Fas 1: Full vägling (Masterskapspoäng 0.0–0.35), Fas 2: Partiell tonande (Masterskapspoäng 0.35–0.55), Fas 3: Kraftig tonande (Masterskapspoäng 0.55–0.75), Fas 4: Ingen vägling (Masterskapspoäng 0.75–1.0), Glossarium (+10 more)
+
+### Community 68 - "Community 68"
+Cohesion: 0.23
+Nodes (15): checkAdmin(), createQuestion(), createTopic(), deleteQuestion(), deleteTopic(), getAdminCourses(), getAdminQuestions(), getAdminTopics() (+7 more)
+
+### Community 69 - "Community 69"
+Cohesion: 0.15
+Nodes (8): buildSvgPaths(), CriticalPointRow, END_OPTIONS, evalAt(), GraphSketchPanel(), PlotterProps, Props, uid()
+
+### Community 70 - "Community 70"
+Cohesion: 0.15
+Nodes (14): AchievementBadge(), AchievementBadgeProps, ICON_MAP, AnalyticsHero(), AnalyticsHeroProps, ChipProps, paceFromReadiness(), MESSAGES (+6 more)
+
+### Community 71 - "Community 71"
+Cohesion: 0.29
+Nodes (11): AdminTopic, checkAdmin(), deleteTopic(), getAdminCourseTopics(), getAllAdminCourses(), reorderTopics(), slugify(), syncAITopics() (+3 more)
+
+### Community 72 - "Community 72"
+Cohesion: 0.12
+Nodes (17): Applying the database migration, Database (`db/schema.ts`), Files Added, Files Modified, How to Use, Layer 1 — Frontend (`components/study/EquationInput/`), Layer 2 — Pre-parser (`lib/math/pre-parser.ts`), Layer 3 — CAS Motor (`lib/math/cas-grader.ts` + `math-engine/main.py`) (+9 more)
+
+### Community 73 - "Community 73"
+Cohesion: 0.12
+Nodes (17): As a student — Browsing courses, As an admin — Adding questions to a course, Deep-link from courses to questions, Enhanced Admin Page — Questions (`/admin/questions`), Files Added, Files Modified, How to Use, Multi-step LaTeX Solution Editor (+9 more)
+
+### Community 74 - "Community 74"
+Cohesion: 0.16
+Nodes (12): CalculusTangent(), CalculusTangentProps, COLORS, ColumnAddition(), ColumnAdditionProps, GridMultiplier(), GridMultiplierProps, cn() (+4 more)
+
+### Community 75 - "Community 75"
+Cohesion: 0.09
+Nodes (23): scripts, build, db:generate, db:generate:production, db:migrate, db:migrate:production, db:migrate:security, db:push (+15 more)
+
+### Community 76 - "Community 76"
+Cohesion: 0.20
+Nodes (9): FlashcardDeckSummary, getFlashcardDashboard(), CreateCardButton(), CreateCardButtonProps, BUCKET_STYLES, BucketTrack(), clampPct(), DeckCard() (+1 more)
+
+### Community 77 - "Community 77"
+Cohesion: 0.14
+Nodes (10): BG, ERROR_COLORS, ERROR_ICONS, ErrorPatternCard(), HeroTodoCard(), ICON_BG, labelForType(), SEVERITY_WEIGHT (+2 more)
+
+### Community 78 - "Community 78"
+Cohesion: 0.12
+Nodes (16): As a student, As an admin, Cache Invalidation, Cost Impact, Exam Fingerprinting, Files Added, Files Modified, How to Use (+8 more)
+
+### Community 79 - "Community 79"
+Cohesion: 0.12
+Nodes (16): As a student — Seeing managed topics in Course Overview, As an admin — Attaching questions to topics, As an admin — Syncing and managing AI topics, Files Added, Files Modified, How to Use, New Admin Page — Topics Management (`/admin/courses/[courseId]/topics`), New Database Columns — `topics` table (+8 more)
+
+### Community 80 - "Community 80"
+Cohesion: 0.26
+Nodes (11): bktKindFor(), gradeQuestion(), submitAttempt(), SubmitAttemptInput, SubmitAttemptResult, submitAttemptSchema, fadePhase(), applyMasteryUpdate() (+3 more)
+
+### Community 81 - "Community 81"
+Cohesion: 0.12
+Nodes (15): 🧠 Adaptiv Felanalys, 📊 Analys & Självreflektion, 🧭 Dashboard – “Control Center”, 🧩 Flashcards & Repetition, Kunskapsvisualisering, Qmath – UI/UX Funktionell Översiktslista, 🚀 Strategiska Differentieringsfunktioner, 🧘 Stressreducerande UX-element (+7 more)
+
+### Community 82 - "Community 82"
+Cohesion: 0.12
+Nodes (16): Bayesian Knowledge Tracing (BKT), Core Fading Algorithm, Developer Guide: Integrating Fading Steps, Example, Fetching a Question with Revealed Steps, Frontend State Management, Handling the `/api/check-step` Response, How Mastery Updates (+8 more)
+
+### Community 83 - "Community 83"
+Cohesion: 0.12
+Nodes (16): Alert 1: High Latency on `/api/check-step` (p95 > 300ms), Alert 2: Rate Limit Spike (429 errors spike 10x), Alert 3: Redis Connection Failure (Rate Limit Down), Alert 4: SymPy Sidecar Timeout (CAS Grading Tier 2 Failing), Alert Response Procedures, Debugging Common Issues, Emergency: Disable Fading Steps for a Question, Escalation Path (+8 more)
+
+### Community 84 - "Community 84"
+Cohesion: 0.14
+Nodes (9): classifyError(), Attempt, CONCEPT_TREE, ERROR_COLORS, ERROR_LABELS, ErrorAnalysisProps, MICRO_QUESTIONS, ERROR_TYPES (+1 more)
+
+### Community 85 - "Community 85"
+Cohesion: 0.21
+Nodes (10): EditableStep, emptyStep(), MisconceptionOption, nextKey(), StepEditor(), StepEditorProps, questionStepsSchema, StepInput (+2 more)
+
+### Community 86 - "Community 86"
+Cohesion: 0.27
+Nodes (10): buildTestPoints(), computePartialScore(), extractNumber(), gradeAnswer(), GradeOptions, GradeResult, numericProbe(), quickGrade() (+2 more)
+
+### Community 87 - "Community 87"
+Cohesion: 0.33
+Nodes (6): 1. Leaking the Correct Answer, 2. Not Caching Mastery, 3. Forgetting Rate Limit Checks, 4. Not Sorting Steps by Step Number, 5. Assuming Mastery Only Increases, Common Pitfalls & How to Avoid Them
+
+### Community 88 - "Community 88"
+Cohesion: 0.13
+Nodes (15): As an admin — Full question workflow, Files Added, Files Modified, How to Use, New Database Columns — `questions` table, New Server Action — `analyzeQuestionDifficulty(questionId)`, New Server Action — `analyzeQuestionsBatch(questionIds)`, Problem Solved (+7 more)
+
+### Community 89 - "Community 89"
+Cohesion: 0.13
+Nodes (15): Design Principles Applied, Files Added, Files Modified, New Server Action — `app/actions/study-questions.ts`, Problem Solved, Security Notes, Security Notes (Agent B — No new endpoints or auth surface), Student Experience (+7 more)
+
+### Community 90 - "Community 90"
+Cohesion: 0.11
+Nodes (33): loadPdfAsBase64(), GET(), GET(), payloadSchema, POST(), fetchQuestionContextById(), PageProps, context() (+25 more)
+
+### Community 91 - "Community 91"
 Cohesion: 0.22
-Nodes (6): Attempt, CONCEPT_TREE, ERROR_COLORS, ERROR_LABELS, ErrorAnalysisProps, MICRO_QUESTIONS
+Nodes (6): EngagementMetrics, ErrorPattern, HintUsageStats, PerformanceMetrics, QuestionParameters, TemporalMetrics
 
-### Community 150 - "StudySkillsLesson.tsx"
+### Community 92 - "Community 92"
+Cohesion: 0.10
+Nodes (21): ErrorType, endStudySession(), startStudySession(), AIMessage, CommonWrongAnswer, initialState, PrerequisiteProbe, QuestionWithHelp (+13 more)
+
+### Community 94 - "Community 94"
+Cohesion: 0.14
+Nodes (14): API Reference — Course Endpoints, Error Response — `500 Internal Server Error`, Error Responses, `GET /api/admin/courses`, `GET /api/courses`, Implementation details, Notes, Request (+6 more)
+
+### Community 95 - "Community 95"
+Cohesion: 0.14
+Nodes (13): 1. Core Layout Components (`/components/layout/`), 2. Help System (`/components/study/HelpSystem/`), 3. AI Integration (`/components/ai/`), 4. State Management (`/lib/hooks/`), 5. Pages, 6. API Routes (`/app/api/`), Completed Components, File Structure (+5 more)
+
+### Community 96 - "Community 96"
+Cohesion: 0.14
+Nodes (14): API Reference, Architecture Overview, Data Flow, Features, `generateExamBreakdown(simulation, answers, totalTimeTakenMs): Promise<ExamResult>`, `generateExamSimulation(config: ExamSimConfig): Promise<ExamSimulation | { error: string }>`, Grade Scale, How to Use (+6 more)
+
+### Community 97 - "Community 97"
+Cohesion: 0.24
+Nodes (9): BlockMath, InlineMath, MarkdownMessage(), MarkdownMessageProps, renderLineWithMath(), renderTable(), renderTextBlock(), Token (+1 more)
+
+### Community 98 - "Community 98"
+Cohesion: 0.15
+Nodes (13): course, dbPath, existingQuestion, ExtractedQuestion, getTopicId(), insertQuestion, now, questions (+5 more)
+
+### Community 99 - "Community 99"
+Cohesion: 0.12
+Nodes (13): COLOR_MAP, DAYS, OPACITY_MAP, RadarDatum, ProgressionRingProps, SIZE_MAP, accuracyColor(), AchievementId (+5 more)
+
+### Community 100 - "Community 100"
+Cohesion: 0.15
+Nodes (13): Changelog, Enhanced Security and Stability (Agent B Audited), New AI Study Plan Engine, New React UI Components Added (components/interactive/templates/), Problem Solved, Summary, Summary, Test Coverage (+5 more)
+
+### Community 101 - "Community 101"
+Cohesion: 0.20
+Nodes (9): AIAnalyticsData, AIAnalyticsPage(), AIOverview, DailyPoint, DAYS_OPTIONS, formatLatency(), formatTokens(), ModelStat (+1 more)
+
+### Community 102 - "Community 102"
+Cohesion: 0.18
+Nodes (8): BlockMath, ContextPanel(), ContextPanelProps, Formula, SessionStats, TopicInfo, StudyLayout(), StudyLayoutProps
+
+### Community 103 - "Community 103"
+Cohesion: 0.17
+Nodes (15): AnalyticsMockData, actionTitle(), AnalyticsProgressReport(), AnalyticsProgressReportProps, mockDate, severityRank, surface(), DescriptiveSectionProps (+7 more)
+
+### Community 104 - "Community 104"
+Cohesion: 0.41
+Nodes (11): avoidanceSignal(), clamp(), classify(), cognitiveLoadSignal(), computeSignals(), daysSince(), effortOutcomeSignal(), flowStateSignal() (+3 more)
+
+### Community 105 - "Community 105"
+Cohesion: 0.17
+Nodes (7): I, IntrinsicElements, MathfieldElement, MathInputWithToolbarProps, MathTool, TOOL_GROUPS, ToolGroup
+
+### Community 106 - "Community 106"
+Cohesion: 0.24
+Nodes (9): clampDimension(), getPresentation(), MatrixGridInput(), MatrixGridInputProps, MatrixGridQuestionLike, MatrixGridAnswerConfig, MatrixGridAnswerPayload, MatrixGridGradingConfig (+1 more)
+
+### Community 107 - "Community 107"
+Cohesion: 0.21
+Nodes (7): BlockMath, InlineMath, MathRenderer(), QuestionCard(), QuestionCardProps, mockExamQuestions, cn()
+
+### Community 108 - "Community 108"
+Cohesion: 0.17
+Nodes (11): AI Study Plan Feature, API Response, Architecture, Caching, Environment, File Structure, Overview, Rate Limit Strategy (+3 more)
+
+### Community 109 - "Community 109"
+Cohesion: 0.17
+Nodes (11): API Reference, Architecture, Data Model, Exam Analysis Feature, For Administrators, For Students, `getExamAnalysis(courseId: string): Promise<ExamAnalysisData>`, `getUserCoursesForAnalysis(): Promise<Course[]>` (+3 more)
+
+### Community 110 - "Community 110"
+Cohesion: 0.17
+Nodes (15): checkStep(), CheckStepActionResult, recordQuestionCompleted(), recordStepRevealed(), emitLearningEvent(), build(), FEEDBACK, FeedbackCode (+7 more)
+
+### Community 112 - "Community 112"
+Cohesion: 0.17
+Nodes (12): 1. **Dashboard** (`/admin`), 2. **Course Overview** (`/admin/courses`), 3. **User Management** (`/admin/users`), 4. **Question Bank** (`/admin/questions`), 5. **Exam Management** (`/admin/exams`), 6. **Upload Exam** (`/admin/upload-exam`), 7. **Activity Logs** (`/admin/logs`), 8. **Settings** (`/admin/settings`) (+4 more)
+
+### Community 113 - "Community 113"
+Cohesion: 0.07
+Nodes (23): COLORS, MilestoneCelebrationProps, PageTransition(), FocusedStudyLayoutProps, drawerTransition, focusTransition, motionDuration, motionEase (+15 more)
+
+### Community 115 - "Community 115"
+Cohesion: 0.24
+Nodes (5): getModuleConfig(), ModuleJourney(), PHASE_CONFIG, PRIORITY_CONFIG, TopicNode()
+
+### Community 116 - "Community 116"
+Cohesion: 0.18
+Nodes (7): 1. Overview, 2. New Data Fields, 3. Data Flow, 4. Database Schema, 5. Security & Robustness, 6. How to Use (User Guide), User Profile Data Flow & Registration
+
+### Community 117 - "Community 117"
 Cohesion: 0.25
+Nodes (8): actionTitle(), AnalyticsDashboard(), AnalyticsDashboardProps, generateMockData(), glass(), MiniMetric(), seededRng(), FocusState
+
+### Community 118 - "Community 118"
+Cohesion: 0.21
+Nodes (8): LearningModule, DIFFICULTY_LABEL, getModuleStyle(), getTopicStatus(), MODULE_STYLE, ModuleBlock(), PRIORITY_LABEL, TopicMission()
+
+### Community 119 - "Community 119"
+Cohesion: 0.21
+Nodes (6): ConstellationBG(), SEARCH_ITEMS, DashboardShell(), DashboardShellProps, shellThemeClass(), questionAttempts
+
+### Community 120 - "Community 120"
+Cohesion: 0.22
+Nodes (4): CubeArt(), CurveArt(), LineArtProps, RipplesArt()
+
+### Community 121 - "Community 121"
+Cohesion: 0.14
+Nodes (17): learningEvents, answerSubmittedPayload, base, EVENT_VERSIONS, fadePhase, hintRequestedPayload, LEARNING_EVENT_TYPES, LearningEvent (+9 more)
+
+### Community 122 - "Community 122"
+Cohesion: 0.49
+Nodes (7): generateAIExamSimulation(), anthropicModel(), createAnthropicClient(), directApiKey(), gatewayCredential(), isAnthropicConfigured(), usesVercelAiGateway()
+
+### Community 123 - "Community 123"
+Cohesion: 0.29
+Nodes (6): 1. Provision isolated services, 2. Configure Vercel environment variables, 3. Initialize and deploy, 4. Release verification, 5. Operational controls, Vercel production deployment
+
+### Community 124 - "Community 124"
+Cohesion: 0.22
+Nodes (9): overrides, @babel/core, fast-uri, js-yaml, postcss, systeminformation, undici, vite (+1 more)
+
+### Community 125 - "Community 125"
+Cohesion: 0.20
+Nodes (10): Files Added, Files Modified, Problem Solved, Security Notes (Agent B Audit — 4/4 tests passed), Socratic Prompting & Context Pipeline, Summary, Tool-Assisted Math Validation, [Unreleased] — Interactive AI Tutor & Math Validation (+2 more)
+
+### Community 126 - "Community 126"
+Cohesion: 0.31
+Nodes (8): CircularReadiness(), ExamReadinessBar(), ExamReadinessBarProps, getReadinessColor(), getStageIndex(), StageIndicator(), STAGES, TopicBreakdown
+
+### Community 127 - "Community 127"
+Cohesion: 0.20
+Nodes (5): C, StudyAction, StudyIntelligencePanelProps, URGENCY_COLORS, URGENCY_LABELS
+
+### Community 128 - "Community 128"
+Cohesion: 0.20
+Nodes (10): API Reference, `completeReview(topicId, questionsCorrect, totalQuestions): Promise<void>`, Components, `getReviewNotifications(): Promise<NotificationSummary>`, How to Use, Interval Schedule, Overview, Phase 5: Spaced Repetition Notifications (+2 more)
+
+### Community 129 - "Community 129"
+Cohesion: 0.40
+Nodes (9): setup-db.sh script, check_docker(), check_postgres(), main(), run_migrations(), run_seed(), setup_docker(), setup_native() (+1 more)
+
+### Community 130 - "Community 130"
+Cohesion: 0.20
+Nodes (10): 📋 Available Scripts, 🤝 Contributing, 📦 Environment Setup, Generate Auth Secret, 📝 License, 📂 Project Structure, Qmath - Adaptive Learning Platform, 🆕 Recent Updates (+2 more)
+
+### Community 131 - "Community 131"
+Cohesion: 0.40
+Nodes (3): team, timeline, values
+
+### Community 132 - "Community 132"
+Cohesion: 0.22
+Nodes (7): Architecture — single source of truth, Browsing available courses (`/archive`), Feature Guide: Course-Linked Question Bank, For Students, Overview, Related documentation, Searching by course code
+
+### Community 134 - "Community 134"
+Cohesion: 0.44
+Nodes (3): ContentGenerator, GenerationRequest, ContentType
+
+### Community 135 - "Community 135"
+Cohesion: 0.22
+Nodes (9): 2. The Adaptive Loop Workflow, 3. Data & Metrics Tracked, 4. Scaffolding System, 5. Exam Readiness & Risk, Engagement, Overview, Performance, Qmath Adaptive Learning Engine Logic (+1 more)
+
+### Community 136 - "Community 136"
+Cohesion: 0.05
+Nodes (26): metadata, Providers(), ThemeContext, ThemeContextValue, useTheme(), VARS, GlobalErrorLogger(), MotionPressFeedback() (+18 more)
+
+### Community 137 - "Community 137"
+Cohesion: 0.22
+Nodes (9): Backend Architecture, Files Added, Files Modified, Frontend Architecture, Problem Solved, Security Notes (Agent B Audit), Summary, [Unreleased] — Interactive Learning Integration (JSXGraph + AI) (+1 more)
+
+### Community 138 - "Community 138"
+Cohesion: 0.27
+Nodes (8): DEFAULT_TOOLBAR, RichMathTextInputProps, RichMathTextQuestionLike, TOOLBAR_ICONS, RichMathTextAnswerConfig, RichMathTextAnswerPayload, RichMathTextGradingConfig, RichMathToolbarAction
+
+### Community 139 - "Community 139"
+Cohesion: 0.27
+Nodes (7): SolutionStepsInputProps, SolutionStepsQuestionLike, validateStep(), SolutionStepRule, SolutionStepsAnswerConfig, SolutionStepsAnswerPayload, SolutionStepsGradingConfig
+
+### Community 140 - "Community 140"
+Cohesion: 0.22
+Nodes (8): Current Implementation, Executive Summary, Future Requirements, Key Characteristics, Project Structure, Qmath Infrastructure Report, Security Considerations, Table of Contents
+
+### Community 141 - "Community 141"
+Cohesion: 0.22
+Nodes (9): Animation & Interactivity, Data Visualization, Database (Planned), Frontend Framework, Icons, Math Rendering, Styling, Technology Stack (+1 more)
+
+### Community 142 - "Community 142"
+Cohesion: 0.22
+Nodes (9): For Admins, LaTeX tips, Step 1 of 3 — Select a course, Step 1 — Upload an exam to activate a course, Step 2 — Browse courses (`/admin/courses`), Step 2 of 3 — Select or create a topic, Step 3 — Add questions (`/admin/questions`), Step 3 of 3 — Add a question (+1 more)
+
+### Community 143 - "Community 143"
+Cohesion: 0.22
+Nodes (9): API Reference, Components, Features, `getDashboardInsights(): Promise<DashboardInsight[]>`, `getExamReadiness(): Promise<ExamReadiness[]>`, `getStudyPatterns(): Promise<StudyPattern | null>`, How to Use, Overview (+1 more)
+
+### Community 144 - "Community 144"
+Cohesion: 0.22
+Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
+
+### Community 145 - "Community 145"
+Cohesion: 0.28
+Nodes (6): OverviewTopic, glass(), PHASE_CONFIG, PRIORITY_CONFIG, TopicPage(), TopicPageProps
+
+### Community 146 - "Community 146"
+Cohesion: 0.28
 Nodes (4): LessonSection, STUDY_SKILLS_LESSONS, StudySkillsLesson, StudySkillsLessonProps
 
-### Community 151 - "rate-limit.test.ts"
-Cohesion: 0.22
-Nodes (8): blocked, first, later, now, { remaining }, result, resultB, stillBlocked
-
-### Community 153 - "Sidebar.tsx"
-Cohesion: 0.36
-Nodes (7): colorMap, examPrepItems, secondaryNavItems, Sidebar, SidebarLayout, studyItems, useSidebar()
-
-### Community 154 - "Question Flow System (Draft→AI"
-Cohesion: 0.25
-Nodes (8): AI Analysis: Bloom's Taxonomy Level, AI Analysis: Concepts Tested, AI Analysis: Prerequisite Topics, Question Flow System (Draft→AI Review→Published), Question Status: AI Review, Question Status: Draft, Question Status: Published, Question Status: Ready for Publication
-
-### Community 156 - "ModelSelector.tsx"
-Cohesion: 0.25
-Nodes (7): ClaudeModelMeta, DEFAULT_MODEL, GoogleModelMeta, ModelSelector(), ModelSelectorProps, OllamaModelMeta, SelectedModel
-
-### Community 158 - "attempt_logs_question_id_quest"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, attempt_logs_question_id_questions_id_fk
-
-### Community 159 - "attempt_logs_user_id_users_id_"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, attempt_logs_user_id_users_id_fk
-
-### Community 160 - "calibration_logs_user_id_users"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, calibration_logs_user_id_users_id_fk
-
-### Community 161 - "diagnostic_item_responses_diag"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, diagnostic_item_responses_diagnostic_result_id_diagnostic_results_id_fk
-
-### Community 162 - "diagnostic_results_course_id_c"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, diagnostic_results_course_id_courses_id_fk
-
-### Community 163 - "diagnostic_results_user_id_use"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, diagnostic_results_user_id_users_id_fk
-
-### Community 164 - "Home Page"
+### Community 147 - "Community 147"
 Cohesion: 0.29
-Nodes (8): Home Page Feature Card, Header Component, QuoteSeparator, Visual Scroll Connector, Scroll-triggered Animation Section, Bayesian Knowledge Tracing, Lucide React Icon Library, Home Page
+Nodes (5): AttemptEvent, Question, StudentProfile, TopicNode, TopicStatus
 
-### Community 165 - "Global Stylesheet"
+### Community 149 - "Community 149"
+Cohesion: 0.27
+Nodes (6): FlashcardSourceContextType, FlashcardContextBridge(), FlashcardContextBridgeProps, CaptureContext, QuickAddContext, QuickAddTriggerProps
+
+### Community 152 - "Community 152"
 Cohesion: 0.25
-Nodes (8): Flashcard Dock Component, Global Error Logger, NextAuth Session Provider, Sidebar Context Provider, Global Stylesheet, Root Layout, NextAuth Authentication, App Providers
+Nodes (8): 1. Core Algorithms, A. Item Response Theory (IRT), Adaptive Selection (CAT), B. Bayesian Knowledge Tracing (BKT), C. Spaced Repetition (SM-2 / FSRS), The Model (3-Parameter Logistic - 3PL), The Parameters, The Update Loop
 
-### Community 166 - "courses_university_id_universi"
+### Community 153 - "Community 153"
 Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, courses_university_id_universities_id_fk
+Nodes (7): Architecture Overview, Available Modules, Integration Guide, Interactive Learning: Core Templates Reference, Linear Algebra (TATA24), Prerequisites, Single-Variable Calculus
 
-### Community 167 - "attempt_logs_question_id_quest"
+### Community 154 - "Community 154"
+Cohesion: 0.32
+Nodes (3): SymbolicValidator, ValidationRequest, ValidationResult
+
+### Community 155 - "Community 155"
 Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, attempt_logs_question_id_questions_id_fk
+Nodes (3): ExamMeta, failures, sampleResult
 
-### Community 168 - "attempt_logs_user_id_users_id_"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, attempt_logs_user_id_users_id_fk
-
-### Community 169 - "0004_snapshot.json"
-Cohesion: 0.25
-Nodes (7): name, dialect, id, prevId, tables, diagnostic_item_responses, version
-
-### Community 170 - "articles_author_id_users_id_fk"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, articles_author_id_users_id_fk
-
-### Community 171 - "articles_course_id_courses_id_"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, articles_course_id_courses_id_fk
-
-### Community 172 - "articles_topic_id_topics_id_fk"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, articles_topic_id_topics_id_fk
-
-### Community 173 - "calibration_logs_user_id_users"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, calibration_logs_user_id_users_id_fk
-
-### Community 174 - "courses_university_id_universi"
-Cohesion: 0.25
-Nodes (8): columnsFrom, columnsTo, name, onDelete, onUpdate, tableFrom, tableTo, courses_university_id_universities_id_fk
-
-### Community 175 - "Mean Value Theorem (Medelvärde"
-Cohesion: 0.29
-Nodes (8): Mean Value Theorem (Medelvärdessatsen), Monotonicity and Bounded Functions, Number of Solutions / Equation Analysis, Series Inequalities and Integral Test, Trigonometric Integrals, Trigonometric Substitution in Integrals, TATA41 TEN1 Exam 2022-06-07, TATA41 TEN1 Solution Sketches 2023-06-05
-
-### Community 176 - "getUserCoursesForAnalysis()"
-Cohesion: 0.38
-Nodes (5): getEnrolledCourseIds(), getUserCoursesForAnalysis(), courseGradients, CoursesPage(), metadata
-
-### Community 177 - "PdfViewer.tsx"
+### Community 156 - "Community 156"
 Cohesion: 0.29
 Nodes (3): ExamViewerProps, PdfViewerProps, SCALE_STEPS
 
-### Community 178 - "calibration_logs"
+### Community 157 - "Community 157"
+Cohesion: 0.25
+Nodes (3): AuditLog, EVENT_TYPES, LogsResponse
+
+### Community 158 - "Community 158"
 Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, calibration_logs
+Nodes (6): 1. The FastAPI Math Engine, 2. The Next.js Frontend, Exploring the Features, Interactive Learning: User Guide, Prerequisites, Starting the Environment
 
-### Community 179 - "attempt_logs"
-Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, attempt_logs
-
-### Community 180 - "course_exam_analysis_cache"
-Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, course_exam_analysis_cache
-
-### Community 181 - "diagnostic_item_responses"
-Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, diagnostic_item_responses
-
-### Community 182 - "diagnostic_results"
-Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, diagnostic_results
-
-### Community 183 - "Articles Feature - Rich Study "
-Cohesion: 0.29
-Nodes (7): Article Block Type: Callout Box, Article Block Type: Heading, Article Block Type: Image, Article Block Type: LaTeX Formula, Article Block Type: Text (Markdown), Articles Feature - Rich Study Materials, XSS Prevention via Typed Blocks
-
-### Community 184 - "Qmath Design System"
-Cohesion: 0.29
-Nodes (7): Keyframe Animation Library, CSS Color Design Tokens, Dark Mode CSS Variables, Dashboard Shell Theme System, Qmath Design System, Glass Morphism UI Pattern, Liquid Theme Variant
-
-### Community 185 - "columns"
-Cohesion: 0.29
-Nodes (7): autoincrement, name, notNull, primaryKey, type, category, columns
-
-### Community 186 - "columns"
-Cohesion: 0.29
-Nodes (7): name_sv, columns, autoincrement, name, notNull, primaryKey, type
-
-### Community 187 - "courses"
-Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, courses
-
-### Community 188 - "exams_analyzed"
-Cohesion: 0.29
-Nodes (7): exams_analyzed, autoincrement, default, name, notNull, primaryKey, type
-
-### Community 189 - "learning_path_generated"
-Cohesion: 0.29
-Nodes (7): learning_path_generated, autoincrement, default, name, notNull, primaryKey, type
-
-### Community 190 - "sort_order"
-Cohesion: 0.29
-Nodes (7): sort_order, autoincrement, default, name, notNull, primaryKey, type
-
-### Community 191 - "status"
-Cohesion: 0.29
-Nodes (7): status, autoincrement, default, name, notNull, primaryKey, type
-
-### Community 192 - "view_count"
-Cohesion: 0.29
-Nodes (7): view_count, autoincrement, default, name, notNull, primaryKey, type
-
-### Community 193 - "columns"
-Cohesion: 0.29
-Nodes (7): columns, feedback_code, autoincrement, name, notNull, primaryKey, type
-
-### Community 194 - "attempt_logs"
-Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, attempt_logs
-
-### Community 195 - "calibration_logs"
-Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, calibration_logs
-
-### Community 196 - "course_exam_analysis_cache"
-Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, course_exam_analysis_cache
-
-### Community 197 - "courses"
-Cohesion: 0.29
-Nodes (7): checkConstraints, compositePrimaryKeys, foreignKeys, indexes, name, uniqueConstraints, courses
-
-### Community 198 - "route.ts"
-Cohesion: 0.29
-Nodes (5): CLAUDE_MODELS, ClaudeModelMeta, GOOGLE_MODELS, GoogleModelMeta, OllamaModelMeta
-
-### Community 199 - "Math Utilities for Visualizati"
-Cohesion: 0.43
-Nodes (7): 3D Templates, Analysis Templates, Calculus Templates, Function Templates, Math Utilities for Visualizations, Series Templates, Templates Registry
-
-### Community 201 - "Unknown"
+### Community 159 - "Community 159"
 Cohesion: 0.40
-Nodes (6): QuestionWithHelp, StudySessionState, checkMathEquivalence, classifyError, getStudyQuestions, useStudySession
+Nodes (3): deleteAdminCourse(), AdminCourse, SMOOTH_TRANSITION
 
-### Community 202 - "ollama.ts"
-Cohesion: 0.40
-Nodes (4): callOllama(), callOllamaModel(), OllamaCallOptions, OllamaMessage
+### Community 160 - "Community 160"
+Cohesion: 0.29
+Nodes (7): Enhanced Component — `components/dashboard/ErrorAnalysis.tsx`, Enhanced Component — `components/dashboard/StreakTracker.tsx`, Enhanced Page — `app/(dashboard)/exam-sim/page.tsx`, New Component — `components/dashboard/StudyIntelligencePanel.tsx`, Rewritten Component — `components/dashboard/ExamReadinessBar.tsx`, Updated Page — `app/(dashboard)/dashboard/page.tsx`, What Changed
 
-### Community 203 - "ai-chat.test.ts"
-Cohesion: 0.33
-Nodes (4): {
-    anthropicCreateMock,
-    dbLimitMock,
-    dbWhereMock,
-    dbLeftJoinMock,
-    dbFromMock,
-    dbSelectMock,
-}, hugeMessage, mockContext, req
-
-### Community 205 - "InsightCards.tsx"
+### Community 162 - "Community 162"
 Cohesion: 0.33
 Nodes (3): DashboardInsight, insightConfig, StudyPattern
 
-### Community 207 - "AIGraph.tsx"
-Cohesion: 0.40
-Nodes (4): AIGraph(), AIGraphProps, fmtX(), Range
+### Community 165 - "Community 165"
+Cohesion: 0.25
+Nodes (11): getExamReadiness(), DashboardHeader(), StreakCard(), WeeklyActivityChart(), DashboardLayout(), DashboardPage(), metadata, checkAndMaintainStreak() (+3 more)
 
-### Community 208 - "MarkdownMessage"
-Cohesion: 0.40
-Nodes (6): CollapsibleBlockMath, MarkdownMessage, renderLineWithMath, renderTable, renderTextBlock, tokenize
-
-### Community 209 - "0003_snapshot.json"
+### Community 166 - "Community 166"
 Cohesion: 0.33
-Nodes (5): dialect, id, prevId, tables, version
+Nodes (6): 1. Bayesian Knowledge Tracing (BKT), 2. Item Response Theory (IRT), 3. Question Selection Algorithm, 4. Spaced Repetition (SM-2 + FSRS), Adaptive Learning Engine, Algorithm Deep Dive
 
-### Community 210 - "Adaptive Engine Parameters"
+### Community 167 - "Community 167"
+Cohesion: 0.33
+Nodes (5): Correct Answer State, Hint System, Question Presentation, Question View — Design Description, Wrong Answer State
+
+### Community 168 - "Community 168"
+Cohesion: 0.33
+Nodes (5): Component Architecture, Data Flow (Proximity Gradients Example), Interactive Learning Architecture, Overview, Security Considerations
+
+### Community 169 - "Community 169"
+Cohesion: 0.40
+Nodes (5): getCityProgress(), updateCityWeather(), calculateCityProgress(), calculateWeather(), getTimeOfDay()
+
+### Community 170 - "Community 170"
+Cohesion: 0.33
+Nodes (6): 🤖 AI Content Generation, API Endpoints, Configuration, Free-Form Symbolic Input, Supported Content Types, Testing AI Generation
+
+### Community 171 - "Community 171"
+Cohesion: 0.33
+Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
+
+### Community 172 - "Community 172"
+Cohesion: 0.28
+Nodes (7): buildModulesFromAICache(), buildOverviewFromTopicsTable(), estimateStudyHours(), groupByPhase(), nodeToOverviewTopic(), OverviewTopicSource, PHASE_CONFIG
+
+### Community 174 - "Community 174"
+Cohesion: 0.40
+Nodes (3): availableExams, pastExams, upcomingExams
+
+### Community 175 - "Community 175"
+Cohesion: 0.40
+Nodes (5): 1. Adaptive Learning Engine (`/lib/adaptive-engine/`), 2. Study Components (`/components/study/`), Components:, Core Modules, Key Classes:
+
+### Community 177 - "Community 177"
+Cohesion: 0.40
+Nodes (5): **Admin Account**, Admin Panel Routes:, 🔐 Default Login Credentials, 🚀 Quick Start, **Student Account**
+
+### Community 178 - "Community 178"
+Cohesion: 0.40
+Nodes (5): Admin Panel Security, Authentication & Authorization, Data Protection, Route Protection, 🔒 Security
+
+### Community 179 - "Community 179"
+Cohesion: 0.25
+Nodes (6): getAdminArticles(), getAllCoursesAndTopics(), ArticleEditor(), AdminArticlesPage(), statusStyles, ArticleStatus
+
+### Community 180 - "Community 180"
+Cohesion: 0.25
+Nodes (7): ClaudeModelMeta, DEFAULT_MODEL, GoogleModelMeta, ModelSelector(), ModelSelectorProps, OllamaModelMeta, SelectedModel
+
+### Community 181 - "Community 181"
+Cohesion: 0.29
+Nodes (4): colorClasses, LibraryItem, PersonalLibraryProps, typeConfig
+
+### Community 182 - "Community 182"
+Cohesion: 0.15
+Nodes (15): estimateGrade(), ExamResult, ExamSimConfig, ExamSimulation, generateExamBreakdown(), generateExamSimulation(), generateImprovements(), generateInsights() (+7 more)
+
+### Community 187 - "Community 187"
+Cohesion: 0.50
+Nodes (4): Adaptive Engine State, Current Approach, Future Considerations, State Management
+
+### Community 188 - "Community 188"
+Cohesion: 0.50
+Nodes (4): Animation Patterns, Component Design Principles, Dark Mode Implementation, Frontend Patterns
+
+### Community 189 - "Community 189"
+Cohesion: 0.50
+Nodes (4): API Layer, Current Endpoints, Planned Endpoints, `POST /api/grade`
+
+### Community 190 - "Community 190"
+Cohesion: 0.50
+Nodes (4): Build & Deployment, Deployment Options, NPM Scripts, Requirements
+
+### Community 191 - "Community 191"
+Cohesion: 0.50
+Nodes (4): Common Patterns, Design Tokens (from CSS Variables), Styling System, Tailwind Configuration
+
+### Community 192 - "Community 192"
+Cohesion: 0.50
+Nodes (4): Data Model & Database, Entity Relationships, PostgreSQL Schema, TypeScript Interfaces (Key Types)
+
+### Community 193 - "Community 193"
+Cohesion: 0.50
+Nodes (4): Future Considerations, Planned Features, Scalability Considerations, Technical Debt
+
+### Community 195 - "Community 195"
+Cohesion: 0.29
+Nodes (6): restart.sh script, AUTH_TRUST_HOST, AUTH_URL, clear_next_cache(), DOTENV_CONFIG_QUIET, NEXTAUTH_URL
+
+### Community 198 - "Community 198"
+Cohesion: 0.33
+Nodes (5): engines, node, name, private, version
+
+### Community 199 - "Community 199"
+Cohesion: 0.50
+Nodes (4): 1. Item Response Theory (IRT), 2. Bayesian Knowledge Tracing (BKT), 3. Spaced Repetition (SM-2/FSRS), 🧠 Adaptive Learning Engine
+
+### Community 200 - "Community 200"
+Cohesion: 0.50
+Nodes (4): Adding New Features, Daily Development, 🛠️ Development Workflow, Making Schema Changes
+
+### Community 201 - "Community 201"
+Cohesion: 0.50
+Nodes (4): Administrator, Default Credentials, Student (Default), 🎓 User Roles & Access
+
+### Community 202 - "Community 202"
+Cohesion: 0.50
+Nodes (4): Build and Deploy, 🚀 Deployment, Docker Deployment (Optional), Environment Variables (Production)
+
+### Community 203 - "Community 203"
+Cohesion: 0.50
+Nodes (4): 🗄️ Database, Database Commands, Database Schema, Drizzle Studio
+
+### Community 204 - "Community 204"
+Cohesion: 0.50
+Nodes (4): Database Issues, Missing Dependencies, Port Already in Use, 🆘 Troubleshooting
+
+### Community 205 - "Community 205"
+Cohesion: 0.50
+Nodes (4): 📚 Exam Archive Feature, For Admins, For Students, How It Works
+
+### Community 206 - "Community 206"
+Cohesion: 0.50
+Nodes (4): ✨ Features, For Administrators, For Students, General
+
+### Community 207 - "Community 207"
+Cohesion: 0.50
+Nodes (3): For /graphify add, For --watch, graphify reference: add a URL and watch a folder
+
+### Community 208 - "Community 208"
+Cohesion: 0.50
+Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify reference: commit hook and native CLAUDE.md integration
+
+### Community 209 - "Community 209"
+Cohesion: 0.50
+Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
+
+### Community 212 - "Community 212"
+Cohesion: 0.29
+Nodes (5): EXTENSIONS, FILES, findings, ROOTS, RULES
+
+### Community 213 - "Community 213"
+Cohesion: 0.33
+Nodes (5): buildCommand, framework, installCommand, regions, $schema
+
+### Community 221 - "Community 221"
+Cohesion: 0.40
+Nodes (3): GraphDrawingInputProps, GraphAnalysisCorrect, MathInputWithToolbar()
+
+### Community 222 - "Community 222"
 Cohesion: 0.67
-Nodes (6): Adaptive Engine Export Index, Adaptive Learning Engine, Item Response Theory, Knowledge Tracing Module, Adaptive Engine Parameters, Adaptive Engine React Hook
+Nodes (3): App Router Structure, Navigation Components, Routing & Navigation
 
-### Community 211 - "code"
-Cohesion: 0.33
-Nodes (6): autoincrement, name, notNull, primaryKey, type, code
+### Community 223 - "Community 223"
+Cohesion: 0.67
+Nodes (3): Appendix, Dependency Graph, File Size Summary
 
-### Community 212 - "description"
-Cohesion: 0.33
-Nodes (6): description, autoincrement, name, notNull, primaryKey, type
-
-### Community 213 - "level"
-Cohesion: 0.33
-Nodes (6): level, autoincrement, name, notNull, primaryKey, type
-
-### Community 214 - "name"
-Cohesion: 0.33
-Nodes (6): name, autoincrement, name, notNull, primaryKey, type
-
-### Community 215 - "semester"
-Cohesion: 0.33
-Nodes (6): semester, autoincrement, name, notNull, primaryKey, type
-
-### Community 216 - "title"
-Cohesion: 0.33
-Nodes (6): title, autoincrement, name, notNull, primaryKey, type
-
-### Community 217 - "title_sv"
-Cohesion: 0.33
-Nodes (6): title_sv, autoincrement, name, notNull, primaryKey, type
-
-### Community 218 - "university_id"
-Cohesion: 0.33
-Nodes (6): university_id, autoincrement, name, notNull, primaryKey, type
-
-### Community 219 - "course_id"
-Cohesion: 0.33
-Nodes (6): course_id, autoincrement, name, notNull, primaryKey, type
-
-### Community 220 - "created_at"
-Cohesion: 0.33
-Nodes (6): created_at, autoincrement, name, notNull, primaryKey, type
-
-### Community 221 - "detailed_results"
-Cohesion: 0.33
-Nodes (6): detailed_results, autoincrement, name, notNull, primaryKey, type
-
-### Community 222 - "diagnostic_result_id"
-Cohesion: 0.33
-Nodes (6): diagnostic_result_id, autoincrement, name, notNull, primaryKey, type
-
-### Community 223 - "exam_fingerprint"
-Cohesion: 0.33
-Nodes (6): exam_fingerprint, autoincrement, name, notNull, primaryKey, type
-
-### Community 224 - "gaps_identified"
-Cohesion: 0.33
-Nodes (6): gaps_identified, autoincrement, name, notNull, primaryKey, type
+### Community 224 - "Community 224"
+Cohesion: 0.67
+Nodes (3): Application Flow, Study Session Flow, User Journey Flow
 
 ### Community 225 - "Community 225"
-Cohesion: 0.33
-Nodes (6): id, autoincrement, name, notNull, primaryKey, type
-
-### Community 226 - "session_id"
-Cohesion: 0.33
-Nodes (6): session_id, autoincrement, name, notNull, primaryKey, type
-
-### Community 227 - "time_taken_ms"
-Cohesion: 0.33
-Nodes (6): time_taken_ms, autoincrement, name, notNull, primaryKey, type
-
-### Community 228 - "enrollments_user_id_users_id_f"
-Cohesion: 0.33
-Nodes (6): columnsFrom, columnsTo, name, tableFrom, tableTo, enrollments_user_id_users_id_fk
-
-### Community 229 - "predicted_score"
-Cohesion: 0.33
-Nodes (6): predicted_score, autoincrement, name, notNull, primaryKey, type
-
-### Community 230 - "actual_score"
-Cohesion: 0.33
-Nodes (6): autoincrement, name, notNull, primaryKey, type, actual_score
-
-### Community 231 - "code"
-Cohesion: 0.33
-Nodes (6): autoincrement, name, notNull, primaryKey, type, code
-
-### Community 232 - "content_blocks"
-Cohesion: 0.33
-Nodes (6): content_blocks, autoincrement, name, notNull, primaryKey, type
-
-### Community 233 - "course_id"
-Cohesion: 0.33
-Nodes (6): course_id, autoincrement, name, notNull, primaryKey, type
-
-### Community 234 - "created_at"
-Cohesion: 0.33
-Nodes (6): created_at, autoincrement, name, notNull, primaryKey, type
-
-### Community 235 - "exam_fingerprint"
-Cohesion: 0.33
-Nodes (6): exam_fingerprint, autoincrement, name, notNull, primaryKey, type
-
-### Community 236 - "excerpt"
-Cohesion: 0.33
-Nodes (6): excerpt, autoincrement, name, notNull, primaryKey, type
-
-### Community 237 - "published_at"
-Cohesion: 0.33
-Nodes (6): published_at, autoincrement, name, notNull, primaryKey, type
-
-### Community 238 - "reading_time_minutes"
-Cohesion: 0.33
-Nodes (6): reading_time_minutes, autoincrement, name, notNull, primaryKey, type
-
-### Community 239 - "session_id"
-Cohesion: 0.33
-Nodes (6): session_id, autoincrement, name, notNull, primaryKey, type
-
-### Community 240 - "tags"
-Cohesion: 0.33
-Nodes (6): tags, autoincrement, name, notNull, primaryKey, type
-
-### Community 241 - "title"
-Cohesion: 0.33
-Nodes (6): title, autoincrement, name, notNull, primaryKey, type
-
-### Community 242 - "user_id"
-Cohesion: 0.33
-Nodes (6): user_id, autoincrement, name, notNull, primaryKey, type
-
-### Community 243 - "course_code"
-Cohesion: 0.33
-Nodes (6): course_code, autoincrement, name, notNull, primaryKey, type
-
-### Community 244 - "confidence_rating"
-Cohesion: 0.33
-Nodes (6): confidence_rating, autoincrement, name, notNull, primaryKey, type
-
-### Community 245 - "is_correct"
-Cohesion: 0.33
-Nodes (6): is_correct, autoincrement, name, notNull, primaryKey, type
-
-### Community 246 - "partial_score"
-Cohesion: 0.33
-Nodes (6): partial_score, autoincrement, name, notNull, primaryKey, type
-
-### Community 247 - "student_answer_raw"
-Cohesion: 0.33
-Nodes (6): student_answer_raw, autoincrement, name, notNull, primaryKey, type
-
-### Community 248 - "symbolically_checked"
-Cohesion: 0.33
-Nodes (6): symbolically_checked, autoincrement, name, notNull, primaryKey, type
-
-### Community 249 - "time_taken_ms"
-Cohesion: 0.33
-Nodes (6): time_taken_ms, autoincrement, name, notNull, primaryKey, type
-
-### Community 250 - "timestamp"
-Cohesion: 0.33
-Nodes (6): timestamp, autoincrement, name, notNull, primaryKey, type
-
-### Community 251 - "Unknown"
 Cohesion: 0.40
-Nodes (5): AILogger, AuditLogger, AuthHelpers, ExamStorage, RateLimiter
+Nodes (3): config, MUTATING_METHODS, proxy
 
-### Community 252 - "react-katex"
+### Community 226 - "Community 226"
+Cohesion: 0.67
+Nodes (3): Component Architecture, Shared Component Patterns, Study Question Components
+
+### Community 227 - "Community 227"
+Cohesion: 0.67
+Nodes (3): Current Integrations, Planned Integrations, Third-Party Integrations
+
+### Community 233 - "Community 233"
 Cohesion: 0.40
-Nodes (5): MarkdownMessage Component, MathRenderer, QuestionCard, react-katex, react-katex
+Nodes (3): callOllamaModel(), OllamaCallOptions, OllamaMessage
 
-### Community 254 - "ArticleThemeWrapper.tsx"
+### Community 234 - "Community 234"
 Cohesion: 0.40
-Nodes (3): ThemeContext, ThemeContextValue, VARS
+Nodes (5): 1. Acceptera det känner sig svårare i senare faser, 2. Använd tipsen aktivt i fas 1, 3. I fas 2–3, försök först utan att kolla stegen, 4. I fas 4, träna tills du är säker, Tips för lärande med tonande steg
 
-### Community 255 - "MinimalHelpPanel.tsx"
+### Community 235 - "Community 235"
+Cohesion: 0.47
+Nodes (5): RepetitionCalendar(), RepetitionCalendarProps, WEEKDAY_LABELS_SV, weekdayIndexMondayFirst(), ymd()
+
+### Community 242 - "Community 242"
+Cohesion: 0.33
+Nodes (5): Explicit production blockers, Mandatory release gate, Production security readiness, Required deployment configuration, SIEM contract
+
+### Community 243 - "Community 243"
 Cohesion: 0.40
-Nodes (3): BlockMath, Formula, MinimalHelpPanelProps
+Nodes (3): benefits, stats, testimonials
 
-### Community 256 - "route.ts"
-Cohesion: 0.70
-Nodes (4): GET(), DELETE(), deleteFile(), PUT()
+### Community 247 - "Community 247"
+Cohesion: 0.33
+Nodes (5): config, goldRamp, sandRamp, slateBlueRamp, tealRamp
 
-### Community 257 - "slugify"
-Cohesion: 0.40
-Nodes (5): generateStudyPlan, estimateGrade, makeTopicSlug, slugify, stripMarkdownFences
-
-### Community 258 - "package.json"
+### Community 254 - "Community 254"
 Cohesion: 0.50
-Nodes (3): name, private, version
+Nodes (4): Complete Examples, Example 1: Integral with Constant (Calculus), Example 2: Derivative (Calculus), Example 3: Algebraic Simplification
 
-### Community 259 - "react-pdf"
-Cohesion: 0.50
-Nodes (4): ExamViewer Component, PdfViewer Component, react-pdf, React PDF Library
+### Community 260 - "Community 260"
+Cohesion: 0.67
+Nodes (3): getAnalyticsProgress(), AnalyticsPage(), metadata
 
-### Community 261 - "JSXTemplate.tsx"
+### Community 261 - "Community 261"
 Cohesion: 0.67
 Nodes (3): JSXTemplate(), JSXTemplateProps, getTemplate()
 
-### Community 262 - "_journal.json"
+### Community 262 - "Community 262"
+Cohesion: 0.10
+Nodes (14): AIQuestionAnalysis, AISolutionReview, GuidanceStep, SuggestedSolutionStep, DEFAULT_FORM, DIFFICULTY_COLORS, DIFFICULTY_LABELS, FormData (+6 more)
+
+### Community 263 - "Community 263"
+Cohesion: 0.67
+Nodes (3): Architecture Overview, Component Hierarchy, High-Level System Architecture
+
+### Community 270 - "Community 270"
 Cohesion: 0.50
-Nodes (3): dialect, entries, version
-
-### Community 263 - "Qmath Platform Structure Analy"
-Cohesion: 0.50
-Nodes (4): Qmath Platform Structure Analysis, User Persona: Active Learner, User Persona: Discovery Phase, User Persona: Teacher/Admin
-
-### Community 264 - "User Profile Data Flow & Regis"
-Cohesion: 0.50
-Nodes (4): User Field: Study Year (1-10), User Field: University ID (Foreign Key), User Field: University Program, User Profile Data Flow & Registration
-
-### Community 266 - "vercel.json"
-Cohesion: 0.50
-Nodes (3): buildCommand, framework, installCommand
-
-### Community 267 - "next-auth.d.ts"
-Cohesion: 0.50
-Nodes (3): JWT, Session, User
-
-### Community 268 - "Unknown"
-Cohesion: 0.67
-Nodes (3): BoardStateSnapshot, api_board_narrate, useBoardNarration
-
-### Community 269 - "Unknown"
-Cohesion: 1.00
-Nodes (3): CASGrader, FeedbackTree, PreParser
-
-### Community 270 - "Unknown"
-Cohesion: 0.67
-Nodes (3): CardDraft, FSRSAdapter, StateBuckets
-
-### Community 271 - "Card State Row Type"
-Cohesion: 0.67
-Nodes (3): Card State Row Type, Card State Bucket, Apply FSRS Review
-
-### Community 272 - "Unknown"
-Cohesion: 1.00
-Nodes (3): AnswerValidation, MathEquivalence, SymbolicValidator
-
-### Community 273 - "app/api/grade/route.ts"
-Cohesion: 0.67
-Nodes (3): BayesianKnowledgeTracing, POST /api/grade, app/api/grade/route.ts
-
-### Community 278 - "Free-Form Symbolic Prompt"
-Cohesion: 0.67
-Nodes (3): Error Spotting Prompt, Free-Form Symbolic Prompt, Prompts Index
-
-### Community 279 - "Persistent AI Exam Analysis Ca"
-Cohesion: 0.67
-Nodes (3): Persistent AI Exam Analysis Cache, Exam Cache Invalidation Strategy, Exam Fingerprinting (MD5-based)
-
-### Community 280 - "Unknown"
-Cohesion: 0.67
-Nodes (3): RevealedStep, fadePhase, getRevealedSteps
-
-### Community 281 - "components/QuestionCard.tsx"
-Cohesion: 0.67
-Nodes (3): components/MathRenderer.tsx, components/QuestionCard.tsx, react-katex
-
-### Community 283 - "Next.js Logging Configuration"
-Cohesion: 0.67
-Nodes (3): Next.js Logging Configuration, Server Actions Body Size Limit, Turbopack Configuration
-
-### Community 285 - "Tailwind Color Scheme"
-Cohesion: 0.67
-Nodes (3): Tailwind Custom Animations, Tailwind Color Scheme, Tailwind Shadow System
-
-### Community 286 - "estimateStudyHours()"
-Cohesion: 0.67
-Nodes (3): clamp(), estimateStudyHours(), round()
-
-### Community 287 - "TypeScript Compiler Options"
-Cohesion: 0.67
-Nodes (3): TypeScript Compiler Options, Next.js TypeScript Plugin, Strict Type Checking
+Nodes (3): databasePath, hasSessionVersion, sqlite
 
 ## Knowledge Gaps
-- **1657 isolated node(s):** `{ auth, signIn, signOut, handlers }`, `target`, `lib`, `allowJs`, `skipLibCheck` (+1652 more)
+- **1426 isolated node(s):** `insertedValues`, `validEvents`, `metadata`, `PageProps`, `CourseResult` (+1421 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **95 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **43 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Framer Motion Animation Library` connect `GuidancePanel.tsx` to `page.tsx`, `CourseOverview.tsx`, `MultipleChoiceInput.tsx`, `VirtualCity.tsx`, `ExamResultsTable.tsx`, `QuizEngine.tsx`, `flashcardReviews`, `RichMathTextInput.tsx`, `StudyIntelligencePanel.tsx`, `TopicPage.tsx`, `LoginPromptModal.tsx`, `courseExamAnalysisCache`, `StudySkillsLesson.tsx`, `KnowledgeMap.tsx`, `QuickAddTrigger.tsx`, `Sidebar.tsx`, `SolutionBuilderInput.tsx`, `MasteryRadar.tsx`, `ErrorAnalysis.tsx`, `InsightCard.tsx`, `DailyFocus.tsx`, `page.tsx`, `universities`, `Home Page`, `CourseAnalysisView.tsx`, `MathRenderer.tsx`, `exam-sim.ts`, `courses`, `curriculumStandards`, `MilestoneCelebration.tsx`, `dependencies`, `MathCASInput.tsx`, `AIPanel.tsx`, `ElaboratedFeedback.tsx`, `BehavioralSection.tsx`, `AchievementBadge.tsx`, `PsychInsightsPanel.tsx`, `ReviewNotifications.tsx`, `auth.ts`, `RepetitionCalendar.tsx`, `InsightCards.tsx`, `PrescriptiveSection.tsx`, `StreakTracker.tsx`, `NumericInput.tsx`, `CalculusTangent.tsx`, `WorkShowPanel.tsx`, `QuoteSeparator.tsx`, `AnalyticsDashboard.tsx`, `CourseHub.tsx`, `AnalyticsHero.tsx`, `questionAttempts`, `MathInputWithToolbar.tsx`, `DescriptiveSection.tsx`, `StudyLayout.tsx`, `CourseLearningPlan.tsx`, `HelpPanel.tsx`, `MatrixGridInput.tsx`, `DashboardSidebar.tsx`, `ContentCard.tsx`, `LiquidGlassQuestionView.tsx`, `ExamReadinessBar.tsx`, `MinimalHelpPanel.tsx`?**
-  _High betweenness centrality (0.072) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `dependencies` to `package.json`, `react-pdf`, `clsx`, `next-themes`, `katex`, `react-katex`?**
+- **Why does `db` connect `Community 18` to `Community 0`, `Community 2`, `Community 8`, `Community 10`, `Community 14`, `Community 16`, `Community 17`, `Community 21`, `Community 22`, `Community 25`, `Community 27`, `Community 37`, `Community 165`, `Community 43`, `Community 172`, `Community 44`, `Community 51`, `Community 182`, `Community 59`, `Community 62`, `Community 66`, `Community 68`, `Community 71`, `Community 80`, `Community 90`, `Community 110`, `Community 119`, `Community 121`?**
+  _High betweenness centrality (0.043) - this node is a cross-community bridge._
+- **Why does `topics` connect `Community 18` to `Community 0`, `Community 2`, `Community 68`, `Community 165`, `Community 71`, `Community 8`, `Community 59`, `Community 10`, `Community 43`, `Community 172`, `Community 44`, `Community 14`, `Community 17`, `Community 182`, `Community 22`, `Community 25`, `Community 27`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Why does `motionDuration` connect `Community 113` to `Community 10`, `Community 92`, `Community 146`, `Community 52`, `Community 60`?**
   _High betweenness centrality (0.019) - this node is a cross-community bridge._
-- **Why does `db` connect `insert_real_exam.ts` to `route.ts`, `content-schema.ts`, `flashcardReviews`, `route.ts`, `schema.ts`, `dashboard-schema.ts`, `admin-questions.ts`, `courseExamAnalysisCache`, `ai-question-analysis.ts`, `test-api.ts`, `universities`, `city.ts`, `CourseAnalysisView.tsx`, `userStreaks`, `exam-sim.ts`, `courses`, `curriculumStandards`, `ElaboratedFeedback.tsx`, `ReviewNotifications.tsx`, `auth.ts`, `course-overview.ts`, `questions`, `articles.ts`, `route.ts`, `apiKeys`, `admin-topics.ts`, `CourseHub.tsx`, `questionAttempts`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Are the 9 inferred relationships involving `Improper Integrals (Generaliserade integraler)` (e.g. with `Integration Techniques` and `Series and Finite Sums (summor och serier)`) actually correct?**
-  _`Improper Integrals (Generaliserade integraler)` has 9 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `{ auth, signIn, signOut, handlers }`, `target`, `lib` to the rest of the system?**
-  _1662 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `content-schema.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05706214689265537 - nodes in this community are weakly interconnected._
-- **Should `recommendation-engine.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.052600818234950324 - nodes in this community are weakly interconnected._
+- **Are the 3 inferred relationships involving `checkRateLimit()` (e.g. with `DELETE()` and `DELETE()`) actually correct?**
+  _`checkRateLimit()` has 3 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 8 inferred relationships involving `problem()` (e.g. with `DELETE()` and `GET()`) actually correct?**
+  _`problem()` has 8 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `insertedValues`, `validEvents`, `metadata` to the rest of the system?**
+  _1431 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Community 0` be split into smaller, more focused modules?**
+  _Cohesion score 0.11666666666666667 - nodes in this community are weakly interconnected._

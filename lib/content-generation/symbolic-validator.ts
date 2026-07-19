@@ -6,6 +6,7 @@
  */
 
 import type { ValidationRequest, ValidationResult } from './types';
+import { evaluateSafeExpression } from '@/lib/math/safe-expression';
 
 export class SymbolicValidator {
     /**
@@ -178,23 +179,9 @@ export class SymbolicValidator {
      */
     private evaluateAt(expr: string, x: number): number | null {
         try {
-            // Replace common math functions and variable
-            const jsExpr = expr
-                .replace(/\^/g, '**')
-                .replace(/sin\(/g, 'Math.sin(')
-                .replace(/cos\(/g, 'Math.cos(')
-                .replace(/tan\(/g, 'Math.tan(')
-                .replace(/log\(/g, 'Math.log(')
-                .replace(/ln\(/g, 'Math.log(')
-                .replace(/sqrt\(/g, 'Math.sqrt(')
-                .replace(/exp\(/g, 'Math.exp(')
-                .replace(/pi/gi, 'Math.PI')
-                .replace(/e(?![a-z])/gi, 'Math.E')
-                .replace(/x/g, `(${x})`);
-
-            // Evaluate (sandboxed would be better in production)
-            const result = Function('"use strict";return (' + jsExpr + ')')();
-            return typeof result === 'number' && !isNaN(result) ? result : null;
+            const normalized = expr.replace(/\*\*/g, '^').replace(/−/g, '-');
+            const result = evaluateSafeExpression(normalized, { x });
+            return typeof result === 'number' && Number.isFinite(result) ? result : null;
         } catch {
             return null;
         }

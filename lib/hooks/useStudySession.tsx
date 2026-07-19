@@ -1,10 +1,12 @@
 'use client';
 
-import { useReducer, useEffect, useCallback, useState } from 'react';
+import { useReducer, useEffect, useCallback, useState, useRef } from 'react';
 import { classifyError } from '@/app/actions/error-classifier';
 import type { ErrorType } from '@/app/actions/error-classifier';
 import { checkMathEquivalence } from '@/lib/utils/mathEquivalence';
 import { getStudyQuestions } from '@/app/actions/study-questions';
+import { startStudySession, endStudySession } from '@/app/actions/study-session';
+import { submitAttempt } from '@/app/actions/attempts';
 
 // Types
 // Common wrong answer structure for diagnostic feedback
@@ -28,6 +30,10 @@ interface QuestionWithHelp {
     difficulty: number;
     content: any;
     correctAnswer?: any;
+    /** True when the question has authored fading steps (question_steps rows) */
+    hasSteps?: boolean;
+    /** Full worked example shown at assistance level 4 (Genomgång) */
+    workedExampleMarkdown?: string | null;
     // NEW: Common wrong answers with targeted feedback
     commonWrongAnswers?: CommonWrongAnswer[];
     // NEW: Prerequisites to probe if student fails
@@ -441,6 +447,15 @@ export function useStudySession(topicId?: string) {
     const [sessionTime, setSessionTime] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [questionsError, setQuestionsError] = useState<string | null>(null);
+    const [mastery, setMastery] = useState<{ value: number; phase: 1 | 2 | 3 | 4; phaseChanged: boolean } | null>(null);
+    const [serverSessionId, setServerSessionId] = useState<string | null>(null);
+
+    // Server-side session id (study_sessions row). Refs so the stable
+    // callbacks below always see the latest values without re-creating.
+    const sessionIdRef = useRef<string | null>(null);
+    const sessionStartedForTopicRef = useRef<string | null>(null);
+    const stateRef = useRef(state);
+    stateRef.current = state;
 
     // Session timer
     useEffect(() => {
@@ -465,6 +480,22 @@ export function useStudySession(topicId?: string) {
             const fetchedQuestions = await getStudyQuestions(topic ?? '');
             dispatch({ type: 'SET_QUESTIONS', payload: fetchedQuestions });
             dispatch({ type: 'START_SESSION' });
+
+            // Create the server-side session row once per topic (guards against
+            // strict-mode double effects). Fire-and-forget: telemetry must not
+            // block the UI.
+            const topicKey = topic ?? '';
+            if (sessionStartedForTopicRef.current !== topicKey) {
+                sessionStartedForTopicRef.current = topicKey;
+                startStudySession(topic || undefined)
+                    .then(({ sessionId }) => {
+                        sessionIdRef.current = sessionId;
+                        setServerSessionId(sessionId);
+                    })
+                    .catch((err) => {
+                        console.error('[Study] Failed to start server session:', err);
+                    });
+            }
         } catch (err) {
             console.error('[Study] Failed to load questions:', err);
             setQuestionsError('Kunde inte ladda frågor. Försök ladda om sidan.');
@@ -499,6 +530,31 @@ export function useStudySession(topicId?: string) {
         }
 
         dispatch({ type: 'SUBMIT_ANSWER', payload: { isCorrect, feedback, misconception, shouldProbePrerequisite } });
+
+        // Persist the attempt server-side (attempt logs + mastery + events).
+        // Optimistic: the UI feedback above never waits for the round-trip.
+        if (question) {
+            const { currentAttempt, helpState } = stateRef.current;
+            submitAttempt({
+                attemptId: crypto.randomUUID(),
+                sessionId: sessionIdRef.current,
+                questionId: question.id,
+                topicId: question.topicId,
+                answerMode: question.type,
+                rawAnswer: answer,
+                timeTakenMs: Math.max(0, Date.now() - currentAttempt.startTime.getTime()),
+                attemptNumber: currentAttempt.attempts + 1,
+                hintsUsed: currentAttempt.hintsUsed,
+                helpLevelReached: helpState.currentLevel,
+                confidenceRating: currentAttempt.confidence > 0 ? currentAttempt.confidence : undefined,
+            })
+                .then((result) => {
+                    setMastery({ value: result.newMastery, phase: result.fadePhase, phaseChanged: result.phaseChanged });
+                })
+                .catch((err) => {
+                    console.error('[Study] Failed to persist attempt:', err);
+                });
+        }
 
         // If wrong and no specific match from commonWrongAnswers, use AI classification
         if (!isCorrect && !misconception && question) {
@@ -569,9 +625,33 @@ export function useStudySession(topicId?: string) {
         dispatch({ type: 'CLEAR_FEEDBACK' });
     }, []);
 
+    const closeServerSession = useCallback(() => {
+        const sessionId = sessionIdRef.current;
+        if (!sessionId) return;
+        sessionIdRef.current = null;
+        const { sessionProgress } = stateRef.current;
+        endStudySession(sessionId, {
+            questionsAnswered: sessionProgress.correct + sessionProgress.incorrect,
+            correct: sessionProgress.correct,
+            incorrect: sessionProgress.incorrect,
+            skipped: sessionProgress.skipped,
+            xpEarned: sessionProgress.xpEarned,
+        }).catch((err) => {
+            console.error('[Study] Failed to end server session:', err);
+        });
+    }, []);
+
     const endSession = useCallback(() => {
         dispatch({ type: 'END_SESSION' });
-    }, []);
+        closeServerSession();
+    }, [closeServerSession]);
+
+    // Close the server session when the surface unmounts mid-session.
+    useEffect(() => {
+        return () => {
+            closeServerSession();
+        };
+    }, [closeServerSession]);
 
     return {
         // State
@@ -579,6 +659,8 @@ export function useStudySession(topicId?: string) {
         sessionTime,
         isLoading,
         questionsError,
+        mastery,
+        serverSessionId,
         progress: state.totalQuestions > 0
             ? Math.round((state.questionIndex / state.totalQuestions) * 100)
             : 0,

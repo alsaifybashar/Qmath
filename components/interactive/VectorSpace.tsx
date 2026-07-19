@@ -57,7 +57,7 @@ export function VectorSpace({ title = "Vector Addition (u + v)", description }: 
 
     // Vector styles
     const uColor = "#f43f5e"; // Rose
-    const vColor = "#3b82f6"; // Blue
+    const vColor = "#3585a3"; // Blue
     const rColor = "#10b981"; // Emerald
 
     // Define arrowhead marker IDs

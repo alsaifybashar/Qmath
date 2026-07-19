@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { MultipleChoiceQuestion, MultipleChoiceOption } from '@/types/study';
 import { MathRenderer } from './MathRenderer';
+import { motionDuration, motionEase } from '@/lib/motion';
 
 interface MCQProps {
     question: MultipleChoiceQuestion | any; // Allow flexible question format
@@ -17,6 +18,8 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [shake, setShake] = useState(false);
+    const [animateFeedback, setAnimateFeedback] = useState(false);
+    const reduceMotion = useReducedMotion();
 
     // Handle both data structures: question.question or question.content.question
     const questionData = question?.question || question?.content?.question;
@@ -28,13 +31,15 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
         setSelectedId(null);
         setIsSubmitted(false);
         setShake(false);
+        setAnimateFeedback(false);
     }, [question?.id]);
 
-    const handleSelect = (optionId: string) => {
+    const handleSelect = (optionId: string, pointerInitiated: boolean) => {
         if (disabled || isSubmitted) return;
 
         setSelectedId(optionId);
         setIsSubmitted(true);
+        setAnimateFeedback(pointerInitiated && !reduceMotion);
 
         const isCorrect = optionId === correctOptionId;
 
@@ -43,15 +48,12 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
             navigator.vibrate(isCorrect ? 10 : [10, 50, 10]);
         }
 
-        if (!isCorrect) {
+        if (!isCorrect && pointerInitiated && !reduceMotion) {
             setShake(true);
-            setTimeout(() => setShake(false), 500);
+            setTimeout(() => setShake(false), motionDuration.wrong * 1000);
         }
 
-        // Delay callback slightly to allow animation to start
-        setTimeout(() => {
-            onAnswer(optionId, isCorrect);
-        }, 300); // 300ms delay for visual feedback before any transition
+        onAnswer(optionId, isCorrect);
     };
 
     // Safety check - if no question data, show loading state
@@ -96,7 +98,16 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
                         if (isSelected) {
                             if (isCorrectOption) {
                                 stateClass = "border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-500";
-                                icon = <CheckCircle2 className="w-6 h-6 text-green-500" />;
+                                icon = (
+                                    <motion.span
+                                        initial={animateFeedback ? { opacity: 0, scale: 0.96 } : false}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: motionDuration.correct, ease: motionEase.out }}
+                                        className="inline-flex"
+                                    >
+                                        <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                                    </motion.span>
+                                );
                             } else {
                                 stateClass = "border-red-500 bg-red-50 dark:bg-red-900/20";
                                 icon = <XCircle className="w-6 h-6 text-red-500" />;
@@ -118,16 +129,11 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
                     return (
                         <motion.button
                             key={option.id}
-                            onClick={() => handleSelect(option.id)}
+                            onClick={(event) => handleSelect(option.id, event.detail > 0)}
                             disabled={isSubmitted || disabled}
-                            className={`w-full relative p-4 rounded-xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${stateClass}`}
-                            whileHover={!isSubmitted ? { scale: 1.01 } : {}}
-                            whileTap={!isSubmitted ? { scale: 0.98 } : {}}
-                            animate={isSelected && !isCorrectOption && shake ? { x: [-5, 5, -5, 5, 0] } : {}}
-                            transition={{
-                                default: { type: "spring", stiffness: 400, damping: 17 },
-                                x: { type: "keyframes" }
-                            }}
+                            className={`relative flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-colors duration-150 ease-out ${stateClass}`}
+                            animate={isSelected && !isCorrectOption && shake ? { x: [-4, 4, -3, 3, 0] } : { x: 0 }}
+                            transition={{ duration: motionDuration.wrong, ease: motionEase.out }}
                         >
                             {/* Selection Indicator */}
                             <div className="flex-shrink-0">
@@ -154,8 +160,9 @@ export function MultipleChoiceInput({ question, onAnswer, disabled, showFeedback
                             {/* Feedback Text (if wrong) */}
                             {isSubmitted && isSelected && !isCorrectOption && option.feedback && (
                                 <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
+                                    initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: reduceMotion ? 0 : motionDuration.correct, ease: motionEase.out }}
                                     className="absolute -bottom-full left-0 right-0 z-10 p-3 mt-2 bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200 text-sm rounded-lg shadow-lg border border-red-200 dark:border-red-800"
                                 >
                                     <div className="flex items-start gap-2">

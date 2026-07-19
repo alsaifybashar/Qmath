@@ -19,7 +19,7 @@ export function RiemannSumsVisualizer({
         });
 
         const f = (x: number) => -0.5 * Math.pow(x - 3, 2) + 8;
-        board.create('functiongraph', [f, 0, 5], { strokeColor: '#3b82f6', strokeWidth: 3 });
+        board.create('functiongraph', [f, 0, 5], { strokeColor: '#3585a3', strokeWidth: 3 });
 
         const clampedN = Math.max(1, Math.min(20, initialN));
         const nSlider = board.create('slider', [[1, -1], [4, -1], [1, clampedN, 20]], { name: 'n', snapWidth: 1 });

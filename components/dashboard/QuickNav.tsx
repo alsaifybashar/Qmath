@@ -17,10 +17,10 @@ import {
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-    { href: '/exams', label: 'Tentor', icon: GraduationCap, accent: '#3B82F6', bg: 'rgba(59, 130, 246, 0.12)' },
+    { href: '/exams', label: 'Tentor', icon: GraduationCap, accent: '#3585a3', bg: 'rgba(53, 133, 163, 0.12)' },
     { href: '/flashcards', label: 'Flashcards', icon: BookOpen, accent: '#10B981', bg: 'rgba(16, 185, 129, 0.12)' },
-    { href: '/courses', label: 'Mina Kurser', icon: LayoutGrid, accent: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.12)' },
-    { href: '/profile', label: 'Profil', icon: User, accent: '#F97316', bg: 'rgba(249, 115, 22, 0.12)' },
+    { href: '/courses', label: 'Mina Kurser', icon: LayoutGrid, accent: '#19647e', bg: 'rgba(25, 100, 126, 0.12)' },
+    { href: '/profile', label: 'Profil', icon: User, accent: '#e87c2b', bg: 'rgba(249, 115, 22, 0.12)' },
     { href: '/settings', label: 'Inställningar', icon: Settings, accent: '#64748B', bg: 'rgba(100, 116, 139, 0.12)' },
     { href: '/help', label: 'Hjälp & Support', icon: HelpCircle, accent: '#06B6D4', bg: 'rgba(6, 182, 212, 0.12)' },
 ];

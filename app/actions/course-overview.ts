@@ -5,6 +5,8 @@ import { topics, questions, courses } from '@/db/schema';
 import { eq, and, inArray, sql, asc } from 'drizzle-orm';
 import { getExamAnalysis } from './exam-analysis';
 import type { ExamAnalysisData, ExamTopicNode } from './exam-analysis';
+import { requireCourseViewer } from '@/lib/auth';
+import { z } from 'zod';
 
 // ============================================================================
 // TYPES — Course Overview data structures
@@ -74,13 +76,13 @@ const PHASE_CONFIG = {
     },
     core: {
         label: 'Kärna',
-        color: '#3B82F6',
+        color: '#3585a3',
         icon: 'core',
         description: 'De viktigaste ämnena som utgör kursens kärna och testas mest på tentan.',
     },
     advanced: {
         label: 'Fördjupning',
-        color: '#8B5CF6',
+        color: '#19647e',
         icon: 'advanced',
         description: 'Avancerade ämnen som krävs för högre betyg och djupare förståelse.',
     },
@@ -302,6 +304,8 @@ function buildModulesFromAICache(nodes: ExamTopicNode[]): LearningModule[] {
 export async function getCourseOverview(
     courseId: string,
 ): Promise<CourseOverviewData | { error: string }> {
+    courseId = z.string().uuid().parse(courseId);
+    await requireCourseViewer(courseId);
 
     // 1. Fetch the exam analysis (for metadata: course name, exams analyzed)
     const analysisResult = await getExamAnalysis(courseId);

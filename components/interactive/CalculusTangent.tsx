@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { cn } from './InteractiveWidgetWrapper';
 import { Target, TrendingUp } from 'lucide-react';
+import { compileSafeExpression } from '@/lib/math/safe-expression';
 
 interface CalculusTangentProps {
     expression: string; // e.g. "x^2"
@@ -25,14 +26,17 @@ export function CalculusTangent({ expression, title = "Derivative Visualization"
     const [points, setPoints] = useState<any[]>([]);
     const [xVal, setXVal] = useState(1);
 
-    const safeExpr = useMemo(() => {
-        return expression
-            .replace(/x\^(\d+)/g, 'Math.pow(x, $1)')
-            .replace(/(\d+)x/g, '$1 * x')
-            .replace(/\^/g, '**');
+    const func = useMemo(() => {
+        try {
+            const compiled = compileSafeExpression(expression, { symbols: ['x'] });
+            return (x: number) => {
+                const value = compiled.evaluate({ x });
+                return typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN;
+            };
+        } catch {
+            return () => Number.NaN;
+        }
     }, [expression]);
-
-    const func = useMemo(() => new Function('x', `return ${safeExpr};`), [safeExpr]);
 
     // Approximate derivative using central difference
     const dFunc = (x: number) => {
@@ -100,7 +104,7 @@ export function CalculusTangent({ expression, title = "Derivative Visualization"
                             data={points}
                             type="monotone"
                             dataKey="y"
-                            stroke="#8b5cf6"
+                            stroke="#19647e"
                             strokeWidth={3}
                             dot={false}
                             isAnimationActive={false}

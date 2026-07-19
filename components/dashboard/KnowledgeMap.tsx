@@ -330,7 +330,7 @@ export default function KnowledgeMap({
                                         <path
                                             d={path}
                                             fill="none"
-                                            stroke={isHighlighted ? '#8b5cf6' : '#d4d4d8'}
+                                            stroke={isHighlighted ? '#19647e' : '#d4d4d8'}
                                             strokeWidth={isHighlighted ? 2.5 : 1.5}
                                             strokeDasharray={isHighlighted ? 'none' : '4,2'}
                                             opacity={isHighlighted ? 1 : 0.5}
@@ -338,7 +338,7 @@ export default function KnowledgeMap({
                                         />
                                         <path
                                             d={arrowHead}
-                                            fill={isHighlighted ? '#8b5cf6' : '#a1a1aa'}
+                                            fill={isHighlighted ? '#19647e' : '#a1a1aa'}
                                             opacity={isHighlighted ? 1 : 0.5}
                                             className="transition-all duration-200"
                                         />
@@ -454,7 +454,7 @@ function HexagonNode({
             <path
                 d={path}
                 fill={colors.fill}
-                stroke={isSelected ? '#8b5cf6' : isHovered ? colors.stroke : colors.stroke}
+                stroke={isSelected ? '#19647e' : isHovered ? colors.stroke : colors.stroke}
                 strokeWidth={isSelected ? 3 : isHovered ? 2.5 : 2}
                 filter={isHovered || isSelected ? 'url(#glow)' : 'url(#shadow)'}
                 style={{
@@ -496,7 +496,7 @@ function HexagonNode({
             {/* Mastery star for completed topics */}
             {node.masteryLevel >= 5 && !node.isLocked && (
                 <g transform={`translate(${center.x + config.hexSize * 0.5}, ${center.y - config.hexSize * 0.5})`}>
-                    <circle cx={0} cy={0} r={12} fill="#fbbf24" stroke="#f59e0b" strokeWidth={1.5} />
+                    <circle cx={0} cy={0} r={12} fill="#f4d35e" stroke="#dfa81b" strokeWidth={1.5} />
                     <text
                         textAnchor="middle"
                         dominantBaseline="middle"

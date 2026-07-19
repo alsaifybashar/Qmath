@@ -9,7 +9,7 @@ type TimerMode = 'focus' | 'shortBreak' | 'longBreak';
 const MODES: Record<TimerMode, { label: string; minutes: number; color: string; icon: React.ElementType }> = {
     focus: { label: 'Fokus', minutes: 25, color: '#ef4444', icon: Brain },
     shortBreak: { label: 'Kort paus', minutes: 5, color: '#22c55e', icon: Coffee },
-    longBreak: { label: 'Lång paus', minutes: 15, color: '#3b82f6', icon: Zap },
+    longBreak: { label: 'Lång paus', minutes: 15, color: '#3585a3', icon: Zap },
 };
 
 export default function PomodoroTimer() {

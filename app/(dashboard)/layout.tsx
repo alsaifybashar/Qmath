@@ -4,6 +4,7 @@ import { db } from '@/db/drizzle';
 import { eq } from 'drizzle-orm';
 import { questionAttempts } from '@/db/dashboard-schema';
 import { courses, enrollments } from '@/db/schema';
+import { levelForXp, xpForAttempts } from '@/lib/gamification/xp';
 
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { PageTransition } from '@/components/PageTransition';
@@ -40,8 +41,8 @@ export default async function DashboardLayout({
         .from(questionAttempts)
         .where(eq(questionAttempts.userId, userId));
 
-    const totalXP = recentAttempts.length * 10;
-    const userLevel = Math.floor(totalXP / 500) + 1;
+    const totalXP = xpForAttempts(recentAttempts.length);
+    const userLevel = levelForXp(totalXP);
 
     return (
         <DashboardShell

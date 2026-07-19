@@ -348,8 +348,8 @@ export function generateMockData(seed = 42): AnalyticsMockData {
 
 function glass(className = '') {
     return [
-        'rounded-lg border border-white/15 bg-white/[0.07]',
-        'shadow-2xl shadow-black/25 backdrop-blur-md ring-1 ring-white/5',
+        'rounded-2xl border border-black/10 bg-white text-zinc-950 shadow-md shadow-black/5',
+        'dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:shadow-black/25',
         className,
     ].join(' ');
 }
@@ -378,9 +378,9 @@ function MiniMetric({
 }) {
     return (
         <div className={glass('p-4')}>
-            <Icon className="mb-3 h-5 w-5 text-blue-200" />
-            <p className="text-[11px] font-bold uppercase text-white/45">{label}</p>
-            <p className="mt-1 text-lg font-bold text-white">{value}</p>
+            <Icon className="mb-3 h-5 w-5 text-blue-600 dark:text-blue-300" />
+            <p className="text-[11px] font-bold uppercase text-zinc-500 dark:text-white/45">{label}</p>
+            <p className="mt-1 text-lg font-bold text-zinc-950 dark:text-white">{value}</p>
         </div>
     );
 }
@@ -389,20 +389,20 @@ function TopicFocusRow({ topic }: { topic: StudentProgress }) {
     const targetPct = Math.max(5, Math.min(100, (topic.masteryLevel / Math.max(topic.targetMastery, 1)) * 100));
 
     return (
-        <div className="rounded-lg border border-white/10 bg-white/[0.045] p-3">
+        <div className="rounded-xl border border-black/10 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/[0.04]">
             <div className="mb-2 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                    <h3 className="truncate text-sm font-bold text-white">{topic.topicName}</h3>
-                    <p className="text-xs text-white/45">{topic.subject}</p>
+                    <h3 className="truncate text-sm font-bold text-zinc-950 dark:text-white">{topic.topicName}</h3>
+                    <p className="text-xs text-zinc-500 dark:text-white/45">{topic.subject}</p>
                 </div>
-                <span className="rounded-lg border border-white/10 bg-white/[0.05] px-2 py-1 text-xs font-bold text-white/70">
+                <span className="rounded-lg border border-black/10 bg-white px-2 py-1 text-xs font-bold text-zinc-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-white/70">
                     {Math.round(topic.accuracy * 100)}%
                 </span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/10">
                 <div
-                    className="h-full rounded-full bg-gradient-to-r from-blue-300 to-emerald-300"
-                    style={{ width: `${targetPct}%` }}
+                    className="h-full origin-left rounded-full bg-blue-600 transition-transform duration-500 ease-out dark:bg-blue-300"
+                    style={{ transform: `scaleX(${targetPct / 100})` }}
                 />
             </div>
         </div>
@@ -432,7 +432,7 @@ function InsightLine({
                 <Icon className="h-4 w-4 shrink-0" />
                 <span className="truncate">{label}</span>
             </span>
-            <span className="text-sm font-bold text-white">{value}</span>
+            <span className="text-sm font-bold text-zinc-950 dark:text-white">{value}</span>
         </div>
     );
 }
@@ -489,7 +489,7 @@ export default function AnalyticsDashboard({
     const firstName = studentName ? `, ${studentName}` : '';
 
     return (
-        <div className="w-full space-y-4 text-white">
+        <div className="w-full space-y-4 text-zinc-950 dark:text-white">
             <motion.section
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -497,35 +497,35 @@ export default function AnalyticsDashboard({
             >
                 <div className="grid gap-6 lg:grid-cols-[1fr_280px] lg:items-center">
                     <div>
-                        <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-blue-200/20 bg-blue-300/10 px-3 py-1.5 text-xs font-bold text-blue-100">
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 dark:border-blue-200/20 dark:bg-blue-300/10 dark:text-blue-100">
                             <Sparkles className="h-3.5 w-3.5" />
                             Läranalys
                         </div>
                         <h1 className="text-3xl font-bold tracking-normal sm:text-4xl">
                             Nästa tydliga steg{firstName}
                         </h1>
-                        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60">
+                        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-white/60">
                             Här visas bara det som hjälper dig plugga bättre nu: beredskap, fokus och en prioriterad åtgärd.
                         </p>
                     </div>
 
-                    <div className="rounded-lg border border-emerald-300/20 bg-emerald-400/10 p-4 shadow-xl shadow-emerald-500/10">
+                    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm dark:border-blue-300/20 dark:bg-blue-400/10">
                         <div className="mb-3 flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-300/15 text-emerald-100">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-300/15 dark:text-blue-100">
                                 <Trophy className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase text-emerald-200">Tentaklarhet</p>
+                                <p className="text-xs font-bold uppercase text-blue-700 dark:text-blue-200">Tentaklarhet</p>
                                 <p className="text-2xl font-bold">{gamification.examReadinessPct}%</p>
                             </div>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-2 overflow-hidden rounded-full bg-blue-200/70 dark:bg-white/10">
                             <div
-                                className="h-full rounded-full bg-gradient-to-r from-emerald-300 to-blue-300"
-                                style={{ width: `${gamification.examReadinessPct}%` }}
+                                className="h-full origin-left rounded-full bg-blue-600 transition-transform duration-500 ease-out dark:bg-blue-300"
+                                style={{ transform: `scaleX(${gamification.examReadinessPct / 100})` }}
                             />
                         </div>
-                        <p className="mt-3 text-sm font-semibold text-white/75">{stageLabel}</p>
+                        <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-white/75">{stageLabel}</p>
                     </div>
                 </div>
             </motion.section>
@@ -533,20 +533,20 @@ export default function AnalyticsDashboard({
             <section className={glass('p-4 sm:p-5')}>
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex items-start gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-emerald-300/25 bg-emerald-400/15 text-emerald-100 shadow-lg shadow-emerald-500/20">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-700 shadow-sm dark:border-blue-300/25 dark:bg-blue-400/15 dark:text-blue-100">
                             <CheckCircle2 className="h-5 w-5" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold uppercase text-emerald-200">Gör detta först</p>
+                            <p className="text-xs font-bold uppercase text-blue-700 dark:text-blue-200">Gör detta först</p>
                             <h2 className="mt-1 text-xl font-bold">{topPattern ? actionTitle(topPattern) : 'Fortsätt med adaptiv träning'}</h2>
-                            <p className="mt-1 max-w-2xl text-sm leading-6 text-white/60">
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-white/60">
                                 {topPattern?.actionableMessage ?? 'Systemet har inget tydligt felmönster just nu. Fortsätt med nästa träningspass.'}
                             </p>
                         </div>
                     </div>
                     <Link
                         href="/study"
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-zinc-950 transition hover:bg-emerald-100"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
                     >
                         Starta träning
                         <Play className="h-4 w-4 fill-current" />
@@ -572,7 +572,7 @@ export default function AnalyticsDashboard({
             <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr]">
                 <section className={glass('p-4')}>
                     <div className="mb-3 flex items-center gap-2">
-                        <Target className="h-5 w-5 text-blue-200" />
+                        <Target className="h-5 w-5 text-blue-600 dark:text-blue-200" />
                         <h2 className="text-base font-bold">Ämnen att lyfta</h2>
                     </div>
                     <div className="space-y-2">
@@ -584,7 +584,7 @@ export default function AnalyticsDashboard({
 
                 <section className={glass('p-4')}>
                     <div className="mb-3 flex items-center gap-2">
-                        <Gauge className="h-5 w-5 text-violet-200" />
+                        <Gauge className="h-5 w-5 text-blue-600 dark:text-blue-200" />
                         <h2 className="text-base font-bold">Sessionens signal</h2>
                     </div>
                     <div className="space-y-3">
@@ -602,7 +602,7 @@ export default function AnalyticsDashboard({
                                 tone="blue"
                             />
                         )}
-                        <p className="rounded-lg border border-white/10 bg-white/[0.045] p-3 text-sm leading-6 text-white/60">
+                        <p className="rounded-xl border border-black/10 bg-zinc-50 p-3 text-sm leading-6 text-zinc-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/60">
                             Håll fokus på ett område i taget. När nästa pass är klart kan analysen visa fler detaljer.
                         </p>
                     </div>
@@ -610,7 +610,7 @@ export default function AnalyticsDashboard({
             </div>
 
             {!progressProp && (
-                <p className="text-center text-[11px] text-white/35">
+                <p className="text-center text-[11px] text-zinc-500 dark:text-white/35">
                     Visar exempeldata · Koppla till riktiga API:er för att visa dina studiedata
                 </p>
             )}

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
                 )
             );
         }
-        if (roleFilter && (roleFilter === 'admin' || roleFilter === 'student')) {
+        if (roleFilter && (roleFilter === 'admin' || roleFilter === 'professor' || roleFilter === 'student')) {
             conditions.push(eq(users.role, roleFilter));
         }
 

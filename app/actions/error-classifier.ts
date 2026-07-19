@@ -2,7 +2,11 @@
 
 import { callOllama } from '@/lib/ollama';
 import { db } from '@/db/drizzle';
-import { misconceptions } from '@/db/schema';
+import { misconceptions, topics } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { z } from 'zod';
+import { requireCourseViewer } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // ============ TYPES ============
 
@@ -35,6 +39,16 @@ export interface ClassifyRequest {
     timeTakenMs?: number;
 }
 
+const classifyRequestSchema = z.object({
+    questionText: z.string().trim().min(1).max(2000),
+    questionMath: z.string().max(2000).optional(),
+    correctAnswer: z.string().min(1).max(1000),
+    studentAnswer: z.string().max(1000),
+    topicId: z.string().uuid(),
+    conceptsTested: z.array(z.string().trim().min(1).max(100)).max(30).optional(),
+    timeTakenMs: z.number().int().min(0).max(24 * 60 * 60 * 1000).optional(),
+}).strict();
+
 // ============ CACHE ============
 
 interface CachedClassification {
@@ -54,9 +68,18 @@ function getCacheKey(questionText: string, studentAnswer: string): string {
 // ============ MAIN FUNCTION ============
 
 export async function classifyError(request: ClassifyRequest): Promise<ErrorClassification> {
+    request = classifyRequestSchema.parse(request);
     const { questionText, questionMath, correctAnswer, studentAnswer, topicId, conceptsTested, timeTakenMs } = request;
-
-    console.log(`[ErrorClassifier] Classifying error for topic "${topicId}": "${studentAnswer}" vs correct "${correctAnswer}"`);
+    const topic = await db
+        .select({ courseId: topics.courseId })
+        .from(topics)
+        .where(eq(topics.id, topicId))
+        .limit(1)
+        .get();
+    if (!topic?.courseId) throw new Error('Topic not found');
+    const user = await requireCourseViewer(topic.courseId);
+    const rateLimit = await checkRateLimit(user.id, 'ai');
+    if (!rateLimit.allowed) throw new Error('Rate limit exceeded');
 
     // --- 1. Quick heuristics (no AI needed) ---
     const quickResult = quickClassify(correctAnswer, studentAnswer, timeTakenMs);
@@ -132,8 +155,7 @@ Return JSON only (feedback MUST be in Swedish):
 
         return getFallbackClassification(correctAnswer, studentAnswer);
 
-    } catch (error: any) {
-        console.error('[ErrorClassifier] ❌ Error:', error?.message || error);
+    } catch {
         return getFallbackClassification(correctAnswer, studentAnswer);
     }
 }

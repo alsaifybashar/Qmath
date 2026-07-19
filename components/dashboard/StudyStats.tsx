@@ -145,7 +145,7 @@ export default function StudyStats({ attempts, totalMinutes }: StudyStatsProps) 
                             />
                             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                                 {weeklyData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.day === 'Sön' || entry.day === 'Lör' ? '#8b5cf6' : '#3b82f6'} />
+                                    <Cell key={`cell-${index}`} fill={entry.day === 'Sön' || entry.day === 'Lör' ? '#19647e' : '#3585a3'} />
                                 ))}
                             </Bar>
                         </BarChart>
@@ -153,8 +153,8 @@ export default function StudyStats({ attempts, totalMinutes }: StudyStatsProps) 
                         <AreaChart data={hourlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                    <stop offset="5%" stopColor="#19647e" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#19647e" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" opacity={0.5} />
@@ -179,7 +179,7 @@ export default function StudyStats({ attempts, totalMinutes }: StudyStatsProps) 
                             <Area
                                 type="monotone"
                                 dataKey="count"
-                                stroke="#8b5cf6"
+                                stroke="#19647e"
                                 strokeWidth={3}
                                 fillOpacity={1}
                                 fill="url(#colorCount)"

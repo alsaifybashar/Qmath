@@ -40,7 +40,7 @@ const C = {
     textSec: '#6B7194',
     textMuted: '#A0A5C0',
     blue: '#4361EE',
-    indigo: '#6366F1',
+    indigo: '#28afb0',
     green: '#22C55E',
     yellow: '#EAB308',
     cardShadow: '0 2px 12px rgba(26,29,46,0.06)',
@@ -48,7 +48,7 @@ const C = {
 
 const URGENCY_COLORS: Record<number, string> = {
     5: '#EF4444',
-    4: '#F97316',
+    4: '#e87c2b',
     3: '#EAB308',
     2: '#22C55E',
     1: '#A0A5C0',

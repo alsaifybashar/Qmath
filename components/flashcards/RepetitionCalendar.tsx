@@ -85,7 +85,7 @@ export default function RepetitionCalendar({ upcomingByDay }: RepetitionCalendar
                             ].join(' ')}
                             style={{
                                 background: c.due > 0
-                                    ? `rgba(139, 92, 246, ${intensity})`
+                                    ? `rgba(25, 100, 126, ${intensity})`
                                     : 'rgba(255,255,255,0.04)',
                                 border: c.due > 0
                                     ? '1px solid rgba(167, 139, 250, 0.35)'

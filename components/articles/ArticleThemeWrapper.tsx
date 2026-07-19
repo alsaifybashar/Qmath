@@ -39,7 +39,7 @@ const VARS: Record<'light' | 'dark', Record<string, string>> = {
         '--art-text-sec':           '#94A3B8',
         '--art-text-muted':         '#5E7490',
         '--art-blue':               '#7B96FF',
-        '--art-purple':             '#A78BFA',
+        '--art-purple':             '#5ea6bd',
         '--art-blue-light':         '#1A2045',
         '--art-blue-border':        '#2D3A6B',
         '--art-border':             '#2A2F45',
@@ -104,7 +104,7 @@ export default function ArticleThemeWrapper({ children }: { children: React.Reac
                         }}
                     >
                         {dark
-                            ? <><Sun  className="w-4 h-4" style={{ color: '#FBBF24' }} /> Ljust</>
+                            ? <><Sun  className="w-4 h-4" style={{ color: '#f4d35e' }} /> Ljust</>
                             : <><Moon className="w-4 h-4" style={{ color: '#4361EE' }} /> Mörkt</>
                         }
                     </button>

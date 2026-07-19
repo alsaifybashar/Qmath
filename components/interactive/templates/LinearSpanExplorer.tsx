@@ -20,10 +20,10 @@ export function LinearSpanExplorer({
 
         const origin = board.create('point', [0, 0], { visible: false });
 
-        const b1 = board.create('point', [initialV1[0], initialV1[1]], { name: 'v_1', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        const b1 = board.create('point', [initialV1[0], initialV1[1]], { name: 'v_1', size: 4, fillColor: '#3585a3', strokeColor: '#24718e' });
         const b2 = board.create('point', [initialV2[0], initialV2[1]], { name: 'v_2', size: 4, fillColor: '#10b981', strokeColor: '#059669' });
 
-        board.create('arrow', [origin, b1], { strokeColor: '#3b82f6', strokeWidth: 2 });
+        board.create('arrow', [origin, b1], { strokeColor: '#3585a3', strokeWidth: 2 });
         board.create('arrow', [origin, b2], { strokeColor: '#10b981', strokeWidth: 2 });
 
         const checkSpan = () => {

@@ -132,7 +132,7 @@ export default function AdminExamsPage() {
             <div className="p-8 relative">
                 {/* Toast Notification */}
                 {toast && (
-                    <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-top-2 fade-in duration-300">
+                    <div className="enter fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                         {toast.type === 'success' ? (
                             <div className="p-1 rounded-full bg-green-500/10">
                                 <CheckCircle className="w-5 h-5 text-green-500" />
@@ -335,8 +335,8 @@ export default function AdminExamsPage() {
 
             {/* Delete Confirmation Modal */}
             {deleteConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl max-w-md w-full p-6 border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200">
+                <div className="enter fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="enter bg-white dark:bg-zinc-900 rounded-xl shadow-xl max-w-md w-full p-6 border border-zinc-200 dark:border-zinc-800">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
                                 <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />

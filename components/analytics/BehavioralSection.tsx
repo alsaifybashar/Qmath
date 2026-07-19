@@ -44,14 +44,14 @@ const GLASS_CARD =
 
 const FOCUS_COLORS: Record<FocusState, string> = {
     focused: '#10b981',
-    distracted: '#f59e0b',
-    stressed: '#f59e0b',
+    distracted: '#dfa81b',
+    stressed: '#dfa81b',
 };
 
 const FOCUS_BG: Record<FocusState, string> = {
     focused: 'rgba(16, 185, 129, 0.08)',
-    distracted: 'rgba(245, 158, 11, 0.08)',
-    stressed: 'rgba(245, 158, 11, 0.14)',
+    distracted: 'rgba(223, 168, 27, 0.08)',
+    stressed: 'rgba(223, 168, 27, 0.14)',
 };
 
 const FOCUS_LABELS: Record<FocusState, string> = {
@@ -373,9 +373,9 @@ function ConcentrationTimeline({
                         yAxisId="stress"
                         type="monotone"
                         dataKey="stress"
-                        stroke="#f59e0b"
+                        stroke="#dfa81b"
                         strokeWidth={1.5}
-                        fill="rgba(245,158,11,0.12)"
+                        fill="rgba(223, 168, 27,0.12)"
                         dot={false}
                         name="Spänning"
                     />
@@ -384,10 +384,10 @@ function ConcentrationTimeline({
                         yAxisId="rt"
                         type="monotone"
                         dataKey="normRt"
-                        stroke="#6366f1"
+                        stroke="#28afb0"
                         strokeWidth={2}
-                        fill="rgba(99,102,241,0.10)"
-                        dot={{ r: 3, fill: '#6366f1', strokeWidth: 0 }}
+                        fill="rgba(40, 175, 176,0.10)"
+                        dot={{ r: 3, fill: '#28afb0', strokeWidth: 0 }}
                         activeDot={{ r: 5 }}
                         name="Svarstid"
                     />
@@ -395,14 +395,14 @@ function ConcentrationTimeline({
                     <Scatter
                         yAxisId="rt"
                         dataKey="rapidGuess"
-                        fill="#f59e0b"
+                        fill="#dfa81b"
                         shape={(props: { cx?: number; cy?: number; rapidGuess?: number | null }) => {
                             const { cx, cy, rapidGuess } = props;
                             if (rapidGuess == null || cx == null || cy == null) return <></>;
                             return (
                                 <polygon
                                     points={`${cx},${cy - 6} ${cx - 5},${cy + 4} ${cx + 5},${cy + 4}`}
-                                    fill="#f59e0b"
+                                    fill="#dfa81b"
                                 />
                             );
                         }}
@@ -427,7 +427,7 @@ function Sessionsrytm({ dataPoints }: { dataPoints: BehaviouralDataPoint[] }) {
     function rhythmColor(level: number): string {
         if (level < 0.3) return `rgba(16, 185, 129, ${0.25 + level * 0.7})`;
         if (level < 0.65) return `rgba(132, 178, 80, ${0.3 + level * 0.6})`;
-        return `rgba(245, 158, 11, ${0.35 + level * 0.55})`;
+        return `rgba(223, 168, 27, ${0.35 + level * 0.55})`;
     }
 
     const COLS = 10;
@@ -447,10 +447,10 @@ function Sessionsrytm({ dataPoints }: { dataPoints: BehaviouralDataPoint[] }) {
                         {row.map((pt, ci) => {
                             const qNum = ri * COLS + ci + 1;
                             const borderStyle = pt.isRapidGuess
-                                ? '2px solid #f59e0b'
+                                ? '2px solid #dfa81b'
                                 : pt.isCorrect
                                     ? '2px solid rgba(16,185,129,0.4)'
-                                    : '2px solid rgba(245,158,11,0.4)';
+                                    : '2px solid rgba(223, 168, 27,0.4)';
 
                             return (
                                 <motion.div

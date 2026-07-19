@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/db/drizzle';
 import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { count, eq, sql } from 'drizzle-orm';
 import { logAuditEvent } from '@/lib/audit-log';
+import { z } from 'zod';
+import { getTrustedClientAddress, parseStrictJson, problem, requireSameOrigin } from '@/lib/security/request';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+const roleChangeSchema = z.object({
+    role: z.enum(['student', 'professor', 'admin']),
+}).strict();
 
 async function getAdminSession() {
     const session = await auth();
@@ -17,21 +24,23 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const csrfFailure = requireSameOrigin(request);
+        if (csrfFailure) return csrfFailure;
         const session = await getAdminSession();
         if (!session) {
             return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
+        const limit = await checkRateLimit(session.user.id, 'admin-mutation');
+        if (!limit.allowed) return problem(429, 'rate_limit_exceeded');
         const { id } = await params;
-        const body = await request.json();
-        const { role } = body;
-
-        if (role !== 'admin' && role !== 'student') {
-            return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
-        }
+        if (!/^[0-9a-f-]{36}$/i.test(id)) return problem(400, 'invalid_user_id');
+        const parsed = await parseStrictJson(request, roleChangeSchema);
+        if (!parsed.success) return parsed.response;
+        const { role } = parsed.data;
 
         const [target] = await db
-            .select({ id: users.id, email: users.email, role: users.role })
+            .select({ id: users.id, role: users.role })
             .from(users)
             .where(eq(users.id, id))
             .limit(1);
@@ -40,17 +49,26 @@ export async function PATCH(
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        await db.update(users).set({ role, updatedAt: new Date() }).where(eq(users.id, id));
+        if (target.role === 'admin' && role !== 'admin') {
+            const [adminCount] = await db.select({ value: count() }).from(users).where(eq(users.role, 'admin'));
+            if ((adminCount?.value ?? 0) <= 1) return problem(409, 'last_admin_cannot_be_removed');
+        }
+
+        await db.update(users).set({
+            role,
+            sessionVersion: sql`${users.sessionVersion} + 1`,
+            updatedAt: new Date(),
+        }).where(eq(users.id, id));
 
         await logAuditEvent({
             type: 'user_role_change',
             actorId: session.user.id,
-            actorEmail: session.user.email ?? '',
-            description: `Changed role of ${target.email} from ${target.role} to ${role}`,
+            actorRole: session.user.role,
+            description: `Changed user role from ${target.role} to ${role}`,
             targetId: id,
             targetType: 'user',
-            metadata: { previousRole: target.role, newRole: role, targetEmail: target.email },
-            ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+            metadata: { previousRole: target.role, newRole: role },
+            sourceAddress: getTrustedClientAddress(request),
         });
 
         return NextResponse.json({ success: true });
@@ -65,12 +83,17 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const csrfFailure = requireSameOrigin(request);
+        if (csrfFailure) return csrfFailure;
         const session = await getAdminSession();
         if (!session) {
             return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
+        const limit = await checkRateLimit(session.user.id, 'admin-mutation');
+        if (!limit.allowed) return problem(429, 'rate_limit_exceeded');
         const { id } = await params;
+        if (!/^[0-9a-f-]{36}$/i.test(id)) return problem(400, 'invalid_user_id');
 
         if (id === session.user.id) {
             return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
@@ -91,12 +114,11 @@ export async function DELETE(
         await logAuditEvent({
             type: 'user_delete',
             actorId: session.user.id,
-            actorEmail: session.user.email ?? '',
-            description: `Deleted user account: ${target.email}`,
+            actorRole: session.user.role,
+            description: 'Deleted user account',
             targetId: id,
             targetType: 'user',
-            metadata: { deletedEmail: target.email },
-            ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+            sourceAddress: getTrustedClientAddress(request),
         });
 
         return NextResponse.json({ success: true });

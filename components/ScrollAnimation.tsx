@@ -42,7 +42,7 @@ export function ScrollConnector() {
         <div className="absolute left-[50%] top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-blue-500/20 to-transparent -translate-x-1/2 hidden md:block z-0">
             <motion.div
                 style={{ scaleY, transformOrigin: "top" }}
-                className="w-full h-full bg-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                className="w-full h-full bg-blue-500/50 shadow-[0_0_15px_rgba(53, 133, 163,0.5)]"
             />
         </div>
     )

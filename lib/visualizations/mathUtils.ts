@@ -1,40 +1,33 @@
 /**
  * Utility helpers shared across all JSXGraph visualization templates.
  */
+import { compileSafeExpression } from '@/lib/math/safe-expression';
+
+export function makeJSFunctionForSymbols(expr: string, symbols: readonly string[]): (...values: number[]) => number {
+    try {
+        const compiled = compileSafeExpression(expr, { symbols });
+        return (...values: number[]) => {
+            try {
+                const scope = Object.fromEntries(symbols.map((symbol, index) => [symbol, values[index]]));
+                const result = compiled.evaluate(scope);
+                return typeof result === 'number' && Number.isFinite(result) ? result : Number.NaN;
+            } catch {
+                return Number.NaN;
+            }
+        };
+    } catch {
+        return () => Number.NaN;
+    }
+}
 
 /** Convert a math expression string (with ^ for exponentiation) into a safe JS function of x. */
 export function makeJSFunction(expr: string): (x: number) => number {
-    try {
-        const js = expr
-            .replace(/\^/g, '**')
-            .replace(/(\d)\s*([a-zA-Z])/g, '$1*$2'); // 2x → 2*x
-        return new Function('x', `
-            "use strict";
-            const {sin,cos,tan,asin,acos,atan,atan2,sinh,cosh,tanh,
-                   exp,log,sqrt,cbrt,abs,ceil,floor,round,sign,pow,hypot} = Math;
-            const ln = Math.log, lg = Math.log10, PI = Math.PI, E = Math.E;
-            const arcsin = Math.asin, arccos = Math.acos, arctan = Math.atan;
-            try { return +(${js}); } catch(e) { return NaN; }
-        `) as (x: number) => number;
-    } catch {
-        return () => NaN;
-    }
+    return makeJSFunctionForSymbols(expr, ['x']);
 }
 
 /** Convert a math expression string into a safe JS function of (x, y). */
 export function makeJSFunction2D(expr: string): (x: number, y: number) => number {
-    try {
-        const js = expr.replace(/\^/g, '**');
-        return new Function('x', 'y', `
-            "use strict";
-            const {sin,cos,tan,asin,acos,atan,sinh,cosh,tanh,
-                   exp,log,sqrt,cbrt,abs,ceil,floor,round,sign,pow} = Math;
-            const ln = Math.log, PI = Math.PI, E = Math.E;
-            try { return +(${js}); } catch(e) { return NaN; }
-        `) as (x: number, y: number) => number;
-    } catch {
-        return () => NaN;
-    }
+    return makeJSFunctionForSymbols(expr, ['x', 'y']);
 }
 
 /** Numerical derivative via central differences. */
@@ -68,11 +61,11 @@ export const BOARD_BASE_OPTS = {
 
 /** App colour palette for consistent visual style. */
 export const C = {
-    primary:   '#6366f1', // violet  — main curve
+    primary:   '#28afb0', // violet  — main curve
     secondary: '#ef4444', // red     — secondary curve / tangent
     tertiary:  '#10b981', // emerald — area fill / third curve
-    amber:     '#f59e0b', // amber   — special points
-    blue:      '#3b82f6', // blue    — fourth element
-    orange:    '#f97316', // orange  — sliders / labels
+    amber:     '#dfa81b', // amber   — special points
+    blue:      '#3585a3', // blue    — fourth element
+    orange:    '#e87c2b', // orange  — sliders / labels
     fillOpacity: 0.25,
 } as const;

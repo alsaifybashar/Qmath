@@ -3,7 +3,7 @@
 import { type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
-import ConstellationBG from '@/components/dashboard/ConstellationBG';
+import DashboardSearch from '@/components/dashboard/DashboardSearch';
 
 interface DashboardShellProps {
     children: ReactNode;
@@ -13,7 +13,7 @@ interface DashboardShellProps {
 
 function shellThemeClass(pathname: string) {
     if (pathname.startsWith('/analytics')) return 'shell-theme-analytics';
-    if (pathname.startsWith('/courses') || pathname.startsWith('/study')) return 'shell-theme-courses';
+    if (pathname.startsWith('/courses')) return 'shell-theme-courses';
     if (pathname.startsWith('/articles')) return 'shell-theme-articles';
     if (pathname.startsWith('/flashcards')) return 'shell-theme-flashcards';
     if (pathname.startsWith('/archive') || pathname.startsWith('/exam')) return 'shell-theme-exams';
@@ -24,16 +24,16 @@ function shellThemeClass(pathname: string) {
 export function DashboardShell({ children, userName, userLevel }: DashboardShellProps) {
     const pathname = usePathname();
     const theme = shellThemeClass(pathname);
+    const showDashboardSearch = pathname !== '/courses';
 
     return (
         <div className={`page-shell ${theme}`}>
             <div className="page-shell-bg" aria-hidden />
-            <div className="page-shell-sheen" aria-hidden />
-            <ConstellationBG />
             <div className="page-shell-content">
                 <DashboardSidebar userName={userName} userLevel={userLevel} />
                 {/* No z-index on main — sidebar owns the stacking context */}
                 <main style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+                    {showDashboardSearch && <DashboardSearch />}
                     {children}
                 </main>
             </div>

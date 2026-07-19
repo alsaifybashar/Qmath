@@ -12,6 +12,7 @@ import {
     ReferenceLine,
 } from 'recharts';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { compileSafeExpression } from '@/lib/math/safe-expression';
 
 interface AIGraphProps {
     expression: string;
@@ -26,27 +27,14 @@ const POINTS = 300;
 const ZOOM_FACTOR = 1.35;
 
 function buildData(expression: string, min: number, max: number) {
-    const safeExpr = expression
-        .replace(/x\^(\d+)/g, 'Math.pow(x, $1)')
-        .replace(/(\d+)x/g, '$1 * x')
-        .replace(/\bsin\b/g, 'Math.sin')
-        .replace(/\bcos\b/g, 'Math.cos')
-        .replace(/\btan\b/g, 'Math.tan')
-        .replace(/\bexp\b/g, 'Math.exp')
-        .replace(/\bln\b/g, 'Math.log')
-        .replace(/\blog\b/g, 'Math.log')
-        .replace(/\bsqrt\b/g, 'Math.sqrt')
-        .replace(/\babs\b/g, 'Math.abs')
-        .replace(/\^/g, '**');
-
     try {
-        const fn = new Function('x', `return ${safeExpr};`);
+        const compiled = compileSafeExpression(expression, { symbols: ['x'] });
         const step = (max - min) / POINTS;
         const pts: { x: number; y: number }[] = [];
         for (let i = 0; i <= POINTS; i++) {
             const x = min + i * step;
-            const y = fn(x);
-            if (Number.isFinite(y)) pts.push({ x: +x.toFixed(5), y: +y.toFixed(5) });
+            const y = compiled.evaluate({ x });
+            if (typeof y === 'number' && Number.isFinite(y)) pts.push({ x: +x.toFixed(5), y: +y.toFixed(5) });
         }
         return pts;
     } catch {
@@ -221,7 +209,7 @@ export function AIGraph({ expression, title, x_range = [-10, 10], y_range }: AIG
                                 color: '#e2e8f0',
                                 padding: '6px 10px',
                             }}
-                            labelStyle={{ fontWeight: '600', color: '#a78bfa' }}
+                            labelStyle={{ fontWeight: '600', color: '#5ea6bd' }}
                             labelFormatter={(v) => `x = ${Number(v).toFixed(3)}`}
                             formatter={(v) => [typeof v === 'number' ? v.toFixed(4) : v, 'y']}
                             isAnimationActive={false}
@@ -229,7 +217,7 @@ export function AIGraph({ expression, title, x_range = [-10, 10], y_range }: AIG
                         <Line
                             type="monotone"
                             dataKey="y"
-                            stroke="#8b5cf6"
+                            stroke="#19647e"
                             strokeWidth={2}
                             dot={false}
                             isAnimationActive={false}

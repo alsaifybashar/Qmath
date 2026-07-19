@@ -4,6 +4,8 @@ import { db } from '@/db/drizzle';
 import { apiKeys } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { logAuditEvent } from '@/lib/audit-log';
+import { getTrustedClientAddress, problem, requireSameOrigin } from '@/lib/security/request';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 async function getAdminSession() {
     const session = await auth();
@@ -17,12 +19,17 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const csrfFailure = requireSameOrigin(request);
+        if (csrfFailure) return csrfFailure;
         const session = await getAdminSession();
         if (!session) {
             return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
+        const limit = await checkRateLimit(session.user.id, 'admin-mutation');
+        if (!limit.allowed) return problem(429, 'rate_limit_exceeded');
         const { id } = await params;
+        if (!/^[0-9a-f-]{36}$/i.test(id)) return problem(400, 'invalid_key_id');
 
         const [key] = await db
             .select({ id: apiKeys.id, name: apiKeys.name, isActive: apiKeys.isActive })
@@ -43,11 +50,11 @@ export async function DELETE(
         await logAuditEvent({
             type: 'key_revoke',
             actorId: session.user.id,
-            actorEmail: session.user.email ?? '',
+            actorRole: session.user.role,
             description: `Revoked API key: "${key.name}"`,
             targetId: id,
             targetType: 'api_key',
-            ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+            sourceAddress: getTrustedClientAddress(request),
         });
 
         return NextResponse.json({ success: true });

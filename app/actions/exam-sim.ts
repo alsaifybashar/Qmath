@@ -7,6 +7,11 @@ import { userTopicMastery, questionAttempts } from '@/db/dashboard-schema';
 import { courses, topics, questions } from '@/db/schema';
 import { enrollments } from '@/db/schema';
 import { logAIRequest } from '@/lib/ai-logger';
+import {
+    anthropicModel,
+    createAnthropicClient,
+    isAnthropicConfigured,
+} from '@/lib/ai/anthropic-client';
 
 // ============ TYPES ============
 
@@ -155,7 +160,6 @@ export async function generateExamSimulation(config: ExamSimConfig): Promise<Exa
 }
 
 import { getExamAnalysis } from './exam-analysis';
-import Anthropic from '@anthropic-ai/sdk';
 import { callOllama } from '@/lib/ollama';
 
 /**
@@ -189,7 +193,7 @@ export async function generateAIExamSimulation(config: ExamSimConfig): Promise<E
         ? `Make every question worth exactly ${config.pointsPerQuestion} points.`
         : `Assign appropriate points (1-10) based on question difficulty.`;
 
-    const useAnthropic = !!process.env.ANTHROPIC_API_KEY;
+    const useAnthropic = isAnthropicConfigured();
     const simQuestions: SimQuestion[] = [];
     const chunkSize = 3;
     const totalNeeded = config.questionCount;
@@ -230,10 +234,10 @@ Return ONLY raw JSON in exactly this format (no markdown, no backticks, no expla
                     temperature: 0.7,
                 });
             } else {
-                const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+                const anthropic = createAnthropicClient();
                 const _examSimStart = Date.now();
                 const message = await anthropic.messages.create({
-                    model: 'claude-3-5-sonnet-20241022',
+                    model: anthropicModel('claude-3-5-sonnet-20241022'),
                     max_tokens: 2000,
                     temperature: 0.7,
                     system: 'You are a precise JSON-generating math tutor AI. Return ONLY JSON without markdown.',

@@ -12,6 +12,7 @@
  */
 
 import { preParseInput } from './pre-parser';
+import { compileSafeExpression } from './safe-expression';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -318,8 +319,8 @@ export async function runFeedbackTree(
         const math = await import('mathjs');
         type Compiled = import('mathjs').EvalFunction;
 
-        const compiledStudent: Compiled = math.compile(parsedStudent) as unknown as Compiled;
-        const compiledCorrect: Compiled = math.compile(parsedCorrect) as unknown as Compiled;
+        const compiledStudent: Compiled = compileSafeExpression(parsedStudent, { symbols: ['x'] });
+        const compiledCorrect: Compiled = compileSafeExpression(parsedCorrect, { symbols: ['x'] });
 
         const POINTS = [{ x: 1 }, { x: 2 }, { x: -1 }, { x: 0.5 }, { x: 3 }];
 
@@ -384,7 +385,7 @@ export async function runFeedbackTree(
         // ── Pattern matching ───────────────────────────────────────────────
 
         // Sign flip: student ≈ -correct
-        const negCorrect: Compiled = math.compile(`-(${parsedCorrect})`) as unknown as Compiled;
+        const negCorrect: Compiled = compileSafeExpression(`-(${parsedCorrect})`, { symbols: ['x'] });
         if (approxEqual(compiledStudent, negCorrect)) {
             if (context.questionType === 'integral') return build('sign_error_integration');
             if (context.questionType === 'derivative') return build('sign_error_derivative');
@@ -399,7 +400,7 @@ export async function runFeedbackTree(
             // Did they differentiate instead?
             try {
                 const dCorrect = math.derivative(parsedCorrect.replace(/\+\s*C/gi, ''), 'x');
-                const compiledDCorrect: Compiled = math.compile(dCorrect.toString()) as unknown as Compiled;
+                const compiledDCorrect: Compiled = compileSafeExpression(dCorrect.toString(), { symbols: ['x'] });
                 if (approxEqual(compiledStudent, compiledDCorrect)) {
                     return build('differentiated_instead_of_integrated');
                 }
@@ -422,7 +423,7 @@ export async function runFeedbackTree(
             // Did they integrate instead?
             try {
                 const dStudent = math.derivative(parsedStudent, 'x');
-                const compiledDStudent: Compiled = math.compile(dStudent.toString()) as unknown as Compiled;
+                const compiledDStudent: Compiled = compileSafeExpression(dStudent.toString(), { symbols: ['x'] });
                 if (approxEqual(compiledDStudent, compiledCorrect)) {
                     return build('integrated_instead_of_differentiated');
                 }
@@ -441,8 +442,8 @@ export async function runFeedbackTree(
         // Check if student(x_deg) ≈ correct(x_rad) for a trig question
         if (context.questionType === 'trigonometry') {
             try {
-                const degStudent: Compiled = math.compile(parsedStudent) as unknown as Compiled;
-                const radCorrect: Compiled = math.compile(parsedCorrect) as unknown as Compiled;
+                const degStudent: Compiled = compileSafeExpression(parsedStudent, { symbols: ['x'] });
+                const radCorrect: Compiled = compileSafeExpression(parsedCorrect, { symbols: ['x'] });
                 const degPts = [{ x: Math.PI / 6 }, { x: Math.PI / 4 }, { x: Math.PI / 3 }];
                 const misMatch = degPts.every((pt) => {
                     const sv = evalAt(degStudent, { x: pt.x * (180 / Math.PI) });

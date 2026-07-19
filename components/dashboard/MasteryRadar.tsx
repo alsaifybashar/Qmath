@@ -251,8 +251,8 @@ function MasteryRing({ level, size = 60 }: { level: number; size?: number }) {
 
     const getColor = (level: number) => {
         if (level >= 4) return { stroke: '#10b981', bg: '#d1fae5', text: '#059669' }; // Green
-        if (level >= 3) return { stroke: '#f59e0b', bg: '#fef3c7', text: '#d97706' }; // Amber
-        if (level >= 2) return { stroke: '#f97316', bg: '#ffedd5', text: '#ea580c' }; // Orange
+        if (level >= 3) return { stroke: '#dfa81b', bg: '#fef3c7', text: '#c08414' }; // Amber
+        if (level >= 2) return { stroke: '#e87c2b', bg: '#ffedd5', text: '#d96322' }; // Orange
         return { stroke: '#ef4444', bg: '#fee2e2', text: '#dc2626' }; // Red
     };
 
@@ -372,8 +372,8 @@ function RadarChart({ topics }: { topics: MasteryTopic[] }) {
                 {/* Data polygon */}
                 <motion.path
                     d={polygonPath}
-                    fill="rgba(59, 130, 246, 0.2)"
-                    stroke="rgb(59, 130, 246)"
+                    fill="rgba(53, 133, 163, 0.2)"
+                    stroke="rgb(53, 133, 163)"
                     strokeWidth={2}
                     initial={{ opacity: 0, scale: 0.5 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -388,7 +388,7 @@ function RadarChart({ topics }: { topics: MasteryTopic[] }) {
                         cx={p.x}
                         cy={p.y}
                         r={5}
-                        fill="rgb(59, 130, 246)"
+                        fill="rgb(53, 133, 163)"
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.3 + i * 0.1 }}

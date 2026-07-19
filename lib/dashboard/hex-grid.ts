@@ -62,11 +62,11 @@ export const DEFAULT_HEX_CONFIG: HexGridConfig = {
 // Mastery level colors
 export const MASTERY_COLORS = {
     0: { fill: '#f4f4f5', stroke: '#d4d4d8', text: '#71717a', label: 'Not Started' },
-    1: { fill: '#fef3c7', stroke: '#fbbf24', text: '#92400e', label: 'Familiar' },
-    2: { fill: '#fed7aa', stroke: '#f97316', text: '#9a3412', label: 'Practicing' },
+    1: { fill: '#fef3c7', stroke: '#f4d35e', text: '#92400e', label: 'Familiar' },
+    2: { fill: '#fed7aa', stroke: '#e87c2b', text: '#9a3412', label: 'Practicing' },
     3: { fill: '#bbf7d0', stroke: '#22c55e', text: '#166534', label: 'Competent' },
     4: { fill: '#a5f3fc', stroke: '#06b6d4', text: '#0e7490', label: 'Skilled' },
-    5: { fill: '#c4b5fd', stroke: '#8b5cf6', text: '#5b21b6', label: 'Master' },
+    5: { fill: '#92c5d6', stroke: '#19647e', text: '#5b21b6', label: 'Master' },
 } as const;
 
 // Lock styling

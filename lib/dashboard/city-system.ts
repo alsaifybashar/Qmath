@@ -405,28 +405,28 @@ export function getTimeOfDay(hour?: number): TimeState {
         return {
             current: 'dawn',
             hour: currentHour,
-            skyGradient: 'linear-gradient(to bottom, #1e3a5f 0%, #f97316 30%, #fcd34d 100%)',
+            skyGradient: 'linear-gradient(to bottom, #1e3a5f 0%, #e87c2b 30%, #fcd34d 100%)',
             ambientLight: 0.6,
         };
     } else if (currentHour >= 7 && currentHour < 12) {
         return {
             current: 'morning',
             hour: currentHour,
-            skyGradient: 'linear-gradient(to bottom, #3b82f6 0%, #60a5fa 50%, #93c5fd 100%)',
+            skyGradient: 'linear-gradient(to bottom, #3585a3 0%, #5ea6bd 50%, #92c5d6 100%)',
             ambientLight: 0.9,
         };
     } else if (currentHour >= 12 && currentHour < 17) {
         return {
             current: 'afternoon',
             hour: currentHour,
-            skyGradient: 'linear-gradient(to bottom, #2563eb 0%, #60a5fa 100%)',
+            skyGradient: 'linear-gradient(to bottom, #24718e 0%, #5ea6bd 100%)',
             ambientLight: 1.0,
         };
     } else if (currentHour >= 17 && currentHour < 20) {
         return {
             current: 'evening',
             hour: currentHour,
-            skyGradient: 'linear-gradient(to bottom, #1e3a5f 0%, #f97316 40%, #fcd34d 100%)',
+            skyGradient: 'linear-gradient(to bottom, #1e3a5f 0%, #e87c2b 40%, #fcd34d 100%)',
             ambientLight: 0.7,
         };
     } else {
@@ -635,11 +635,11 @@ export function getRarityColor(rarity: AchievementDefinition['rarity']): string 
         case 'uncommon':
             return '#22c55e';
         case 'rare':
-            return '#3b82f6';
+            return '#3585a3';
         case 'epic':
             return '#a855f7';
         case 'legendary':
-            return '#f59e0b';
+            return '#dfa81b';
         default:
             return '#94a3b8';
     }

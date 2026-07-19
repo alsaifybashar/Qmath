@@ -1,5 +1,5 @@
 import { JSXTemplateDef } from './types';
-import { makeJSFunction, factorial, BOARD_BASE_OPTS, C } from '../mathUtils';
+import { makeJSFunction, makeJSFunctionForSymbols, factorial, BOARD_BASE_OPTS, C } from '../mathUtils';
 
 export const seriesTemplates: JSXTemplateDef[] = [
     // ── 15. Taylor series for sine ────────────────────────────────────────────
@@ -119,15 +119,11 @@ export const seriesTemplates: JSXTemplateDef[] = [
         defaultConfig: { expression: '1/n', nTerms: 30, limit: 0 },
         init(JXG, boardId, cfg) {
             const { expression = '1/n', nTerms = 30, limit = 0 } = cfg;
-            let seqFn: (n: number) => number;
-            try {
-                const js = expression.replace(/\^/g, '**');
-                seqFn = new Function('n', `
-                    "use strict";
-                    const {sin,cos,exp,log,sqrt,abs,pow,PI,E} = Math;
-                    try { return +(${js}); } catch(e) { return NaN; }
-                `) as (n: number) => number;
-            } catch { seqFn = (n) => 1 / n; }
+            const parsedSequence = makeJSFunctionForSymbols(expression, ['n']);
+            const seqFn = (n: number) => {
+                const value = parsedSequence(n);
+                return Number.isFinite(value) ? value : 1 / n;
+            };
             const board = JXG.JSXGraph.initBoard(boardId, {
                 boundingbox: [-1, 2, nTerms + 2, -0.5], axis: true, ...BOARD_BASE_OPTS,
             });
@@ -160,15 +156,11 @@ export const seriesTemplates: JSXTemplateDef[] = [
         defaultConfig: { expression: '1/n^2', nTerms: 40 },
         init(JXG, boardId, cfg) {
             const { expression = '1/n^2', nTerms = 40 } = cfg;
-            let seqFn: (n: number) => number;
-            try {
-                const js = expression.replace(/\^/g, '**');
-                seqFn = new Function('n', `
-                    "use strict";
-                    const {sin,cos,exp,log,sqrt,abs,pow,PI,E} = Math;
-                    try { return +(${js}); } catch(e) { return NaN; }
-                `) as (n: number) => number;
-            } catch { seqFn = (n) => 1 / (n * n); }
+            const parsedSequence = makeJSFunctionForSymbols(expression, ['n']);
+            const seqFn = (n: number) => {
+                const value = parsedSequence(n);
+                return Number.isFinite(value) ? value : 1 / (n * n);
+            };
 
             // Compute partial sums
             const partials: number[] = [];

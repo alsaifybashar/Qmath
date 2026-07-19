@@ -26,8 +26,8 @@ import type { OverviewTopic } from '@/app/actions/course-overview';
 
 const PHASE_CONFIG = {
     foundation: { label: 'Start', icon: Layers, accent: '#34D399' },
-    core: { label: 'Kärna', icon: Target, accent: '#60A5FA' },
-    advanced: { label: 'Fördjupning', icon: Brain, accent: '#A78BFA' },
+    core: { label: 'Kärna', icon: Target, accent: '#5ea6bd' },
+    advanced: { label: 'Fördjupning', icon: Brain, accent: '#5ea6bd' },
 } as const;
 
 const PRIORITY_CONFIG = {
@@ -93,7 +93,7 @@ export default function TopicPage({ course, topic, phase, courseCode }: TopicPag
 
     return (
         <div className="liquid-theme relative min-h-screen overflow-hidden bg-slate-50 pb-20 text-zinc-950 dark:bg-[#08091f] dark:text-white">
-            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_14%,rgba(59,130,246,0.18),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(147,51,234,0.14),transparent_30%),radial-gradient(circle_at_52%_90%,rgba(16,185,129,0.13),transparent_34%),linear-gradient(135deg,#f8fbff_0%,#edf4ff_48%,#f7f3ff_100%)] dark:bg-[radial-gradient(circle_at_12%_14%,rgba(59,130,246,0.45),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(147,51,234,0.38),transparent_30%),radial-gradient(circle_at_52%_90%,rgba(16,185,129,0.24),transparent_34%),linear-gradient(135deg,#050816_0%,#11164e_48%,#24104f_100%)]" />
+            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_14%,rgba(53, 133, 163,0.18),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(25, 100, 126,0.14),transparent_30%),radial-gradient(circle_at_52%_90%,rgba(16,185,129,0.13),transparent_34%),linear-gradient(135deg,#f8fbff_0%,#edf4ff_48%,#f7f3ff_100%)] dark:bg-[radial-gradient(circle_at_12%_14%,rgba(53, 133, 163,0.45),transparent_28%),radial-gradient(circle_at_88%_10%,rgba(25, 100, 126,0.38),transparent_30%),radial-gradient(circle_at_52%_90%,rgba(16,185,129,0.24),transparent_34%),linear-gradient(135deg,#050816_0%,#11164e_48%,#24104f_100%)]" />
             <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.55),transparent_24%,rgba(255,255,255,0.24)_52%,transparent_76%)] dark:bg-[linear-gradient(115deg,rgba(255,255,255,0.10),transparent_24%,rgba(255,255,255,0.04)_52%,transparent_76%)]" />
 
             <div className="relative z-10 mx-auto max-w-5xl px-4 py-8">

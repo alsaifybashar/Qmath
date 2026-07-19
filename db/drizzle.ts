@@ -1,28 +1,41 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import * as schema from './schema';
-import * as dashboardSchema from './dashboard-schema';
-import * as contentSchema from './content-schema';
+import { createClient } from '@libsql/client';
+import { drizzle } from 'drizzle-orm/libsql';
 import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as schema from './schema';
+import * as dashboardSchema from './dashboard-schema';
+import * as contentSchema from './content-schema';
 
-const currentFilePath = fileURLToPath(import.meta.url);
-const currentDir = path.dirname(currentFilePath);
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(currentDir, '..');
+dotenv.config({ path: path.join(repoRoot, '.env.local'), quiet: true });
 
-dotenv.config({ path: path.join(repoRoot, '.env.local') });
+const databaseUrl = process.env.TURSO_DATABASE_URL
+    ?? process.env.DATABASE_URL
+    ?? 'file:qmath.db';
+const isLocalFile = databaseUrl.startsWith('file:');
+const isSupportedRemote = databaseUrl.startsWith('libsql:')
+    || databaseUrl.startsWith('https:')
+    || databaseUrl.startsWith('http:')
+    || databaseUrl.startsWith('wss:')
+    || databaseUrl.startsWith('ws:');
 
-if (!process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-    throw new Error('DATABASE_URL is missing in production');
+if (!isLocalFile && !isSupportedRemote) {
+    throw new Error('Unsupported database URL. Configure a Turso/libSQL URL or a local file: URL.');
+}
+if (process.env.VERCEL && isLocalFile) {
+    throw new Error('Production requires TURSO_DATABASE_URL; local SQLite files are ephemeral on Vercel.');
+}
+if (!isLocalFile && !process.env.TURSO_AUTH_TOKEN) {
+    throw new Error('TURSO_AUTH_TOKEN is required in production.');
 }
 
-// In development, we use a local sqlite file
-// In production (if sticking to sqlite), we can point to a file on disk
-const rawDatabasePath = process.env.DATABASE_URL?.replace('file:', '') || 'qmath.db';
-const dbPath = path.isAbsolute(rawDatabasePath)
-    ? rawDatabasePath
-    : path.resolve(repoRoot, rawDatabasePath);
+export const databaseClient = createClient({
+    url: databaseUrl,
+    authToken: isLocalFile ? undefined : process.env.TURSO_AUTH_TOKEN,
+});
 
-const sqlite = new Database(dbPath);
-export const db = drizzle(sqlite, { schema: { ...schema, ...dashboardSchema, ...contentSchema } });
+export const db = drizzle(databaseClient, {
+    schema: { ...schema, ...dashboardSchema, ...contentSchema },
+});

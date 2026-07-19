@@ -35,7 +35,7 @@ export default function PdfViewer({ url, accent = 'blue' }: PdfViewerProps) {
     const observerRef = useRef<IntersectionObserver | null>(null);
 
     const scale = SCALE_STEPS[scaleIdx];
-    const accentColor = accent === 'emerald' ? '#10B981' : '#3B82F6';
+    const accentColor = accent === 'emerald' ? '#10B981' : '#3585a3';
 
     // Track container width
     useEffect(() => {

@@ -1,11 +1,20 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import { courses, topics, universities, users, enrollments, exams, questions } from '@/db/schema';
+import { courses, topics, universities, users, enrollments, exams } from '@/db/schema';
 import { eq, inArray, desc, and } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+
+export interface CourseSearchCatalogItem {
+    id: string;
+    code: string;
+    name: string;
+    nameSv: string | null;
+    universityName: string | null;
+    examCount: number;
+}
 
 // ============ UNIVERSITIES ============
 
@@ -65,6 +74,46 @@ export async function getCourses(universityId?: string) {
     } catch (error) {
         console.error('Failed to fetch courses:', error);
         return { error: 'Failed to fetch courses' };
+    }
+}
+
+export async function getCourseSearchCatalog(): Promise<CourseSearchCatalogItem[]> {
+    try {
+        const examRows = await db
+            .select({
+                courseCode: exams.courseCode,
+            })
+            .from(exams);
+
+        const examCounts = examRows.reduce<Record<string, number>>((acc, exam) => {
+            const code = exam.courseCode?.toUpperCase();
+            if (!code) return acc;
+            acc[code] = (acc[code] ?? 0) + 1;
+            return acc;
+        }, {});
+
+        const validCodes = Object.keys(examCounts);
+        if (validCodes.length === 0) return [];
+
+        const result = await db.query.courses.findMany({
+            where: (courses, { inArray }) => inArray(courses.code, validCodes),
+            with: {
+                university: true,
+            },
+            orderBy: (courses, { asc }) => [asc(courses.code)],
+        });
+
+        return result.map((course) => ({
+            id: course.id,
+            code: course.code,
+            name: course.name,
+            nameSv: course.nameSv ?? null,
+            universityName: course.university?.name ?? null,
+            examCount: examCounts[course.code.toUpperCase()] ?? 0,
+        }));
+    } catch (error) {
+        console.error('Failed to fetch course search catalog:', error);
+        return [];
     }
 }
 
@@ -215,16 +264,16 @@ export async function saveUserCourses(courseIds: string[]) {
 
     try {
         // Use a transaction to safely handle enrollment updates
-        db.transaction((tx) => {
+        await db.transaction(async (tx) => {
             // Existing enrollments check is skipped for simplicity in onboarding
             // We just ensure we don't duplicate (if user re-runs onboarding)
 
             // Delete existing enrollments for this user to allow clean slate updates
-            tx.delete(enrollments).where(eq(enrollments.userId, session.user.id)).run();
+            await tx.delete(enrollments).where(eq(enrollments.userId, session.user.id)).run();
 
             // Bulk insert new enrollments
             if (courseIds.length > 0) {
-                tx.insert(enrollments).values(
+                await tx.insert(enrollments).values(
                     courseIds.map(cid => ({
                         userId: session.user.id!,
                         courseId: cid

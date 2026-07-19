@@ -303,10 +303,10 @@ function ComparisonRadar({ topics }: { topics: StudentProgress[] }) {
                     <RechartsRadar
                         name="Du"
                         dataKey="student"
-                        stroke="rgba(99,102,241,0.95)"
-                        fill="rgba(99,102,241,0.20)"
+                        stroke="rgba(40, 175, 176,0.95)"
+                        fill="rgba(40, 175, 176,0.20)"
                         strokeWidth={2.5}
-                        dot={{ r: 3, fill: 'rgb(99,102,241)', strokeWidth: 0 }}
+                        dot={{ r: 3, fill: 'rgb(40, 175, 176)', strokeWidth: 0 }}
                     />
 
                     <Tooltip

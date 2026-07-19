@@ -1,7 +1,8 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Target, TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
+import { motionDuration, motionEase } from '@/lib/motion';
 
 interface CalibrationResultsProps {
     predictedScore: number;
@@ -24,16 +25,17 @@ export function CalibrationResults({
 }: CalibrationResultsProps) {
     const difference = actualScore - predictedScore;
     const isOverconfident = difference < -1;
-    const isUnderconfident = difference > 1;
     const isCalibrated = Math.abs(difference) <= 1;
 
     const predictedPercent = Math.round((predictedScore / totalQuestions) * 100);
     const actualPercent = Math.round((actualScore / totalQuestions) * 100);
+    const reduceMotion = useReducedMotion();
 
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
             className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 max-w-md mx-auto"
         >
             <div className="text-center mb-6">
@@ -63,10 +65,10 @@ export function CalibrationResults({
                     </div>
                     <div className="w-full h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                         <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${predictedPercent}%` }}
-                            transition={{ duration: 0.8, ease: 'easeOut' }}
-                            className="h-full bg-purple-400 dark:bg-purple-500 rounded-full"
+                            initial={reduceMotion ? false : { scaleX: 0 }}
+                            animate={{ scaleX: predictedPercent / 100 }}
+                            transition={{ duration: reduceMotion ? 0 : motionDuration.base, ease: motionEase.out }}
+                            className="h-full origin-left bg-purple-400 dark:bg-purple-500 rounded-full"
                         />
                     </div>
                 </div>
@@ -81,10 +83,10 @@ export function CalibrationResults({
                     </div>
                     <div className="w-full h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                         <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${actualPercent}%` }}
-                            transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
-                            className={`h-full rounded-full ${
+                            initial={reduceMotion ? false : { scaleX: 0 }}
+                            animate={{ scaleX: actualPercent / 100 }}
+                            transition={{ duration: reduceMotion ? 0 : motionDuration.base, ease: motionEase.out }}
+                            className={`h-full origin-left rounded-full ${
                                 actualScore >= predictedScore
                                     ? 'bg-green-400 dark:bg-green-500'
                                     : 'bg-amber-400 dark:bg-amber-500'
@@ -96,9 +98,9 @@ export function CalibrationResults({
 
             {/* Insight message */}
             <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: reduceMotion ? 0 : motionDuration.correct }}
                 className={`p-4 rounded-xl mb-6 ${
                     isCalibrated
                         ? 'bg-green-50 dark:bg-green-500/5 border border-green-200 dark:border-green-500/15'

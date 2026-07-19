@@ -21,8 +21,8 @@ export function VectorOperationsBoard({
 
         const origin = board.create('point', [0, 0], { visible: false });
 
-        const ptU = board.create('point', [initialU[0], initialU[1]], { name: 'u', size: 4, fillColor: '#3b82f6', strokeColor: '#2563eb' });
-        board.create('arrow', [origin, ptU], { strokeColor: '#3b82f6', strokeWidth: 3 });
+        const ptU = board.create('point', [initialU[0], initialU[1]], { name: 'u', size: 4, fillColor: '#3585a3', strokeColor: '#24718e' });
+        board.create('arrow', [origin, ptU], { strokeColor: '#3585a3', strokeWidth: 3 });
 
         const ptV = board.create('point', [initialV[0], initialV[1]], { name: 'v', size: 4, fillColor: '#ef4444', strokeColor: '#dc2626' });
         board.create('arrow', [origin, ptV], { strokeColor: '#ef4444', strokeWidth: 3 });

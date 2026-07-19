@@ -162,7 +162,7 @@ export function FreeFormInput({
                     {problem.problemMath ? (
                         <BlockMath math={problem.problemMath} />
                     ) : (
-                        <span dangerouslySetInnerHTML={{ __html: problem.problem }} />
+                        <span className="whitespace-pre-wrap">{problem.problem}</span>
                     )}
                 </div>
 

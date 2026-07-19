@@ -29,32 +29,10 @@ function AnimatedFlame({ size = 'normal' }: { size?: 'small' | 'normal' | 'large
     };
 
     return (
-        <motion.div
-            className="relative"
-            animate={{
-                scale: [1, 1.1, 1],
-            }}
-            transition={{
-                duration: 0.5,
-                repeat: Infinity,
-                ease: "easeInOut"
-            }}
-        >
-            <Flame className={`${sizeClasses[size]} text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]`} />
-            {/* Glow effect */}
-            <motion.div
-                className="absolute inset-0 bg-orange-500/30 blur-lg rounded-full"
-                animate={{
-                    opacity: [0.3, 0.6, 0.3],
-                    scale: [0.8, 1.2, 0.8]
-                }}
-                transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                }}
-            />
-        </motion.div>
+        <div className="relative">
+            <Flame className={`animate-flame relative z-10 ${sizeClasses[size]} text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]`} />
+            <div className="absolute inset-0 rounded-full bg-orange-500/25 blur-lg" />
+        </div>
     );
 }
 
@@ -285,7 +263,7 @@ export default function StreakTracker({ streakData }: StreakTrackerProps) {
                                             style={{
                                                 height: h,
                                                 background: isMax
-                                                    ? 'linear-gradient(180deg,#f97316,#ea580c)'
+                                                    ? 'linear-gradient(180deg,#e87c2b,#d96322)'
                                                     : val > 0 ? 'rgba(249,115,22,0.35)' : '#f4f4f5',
                                             }}
                                             title={`${label}: ${val} poäng`}

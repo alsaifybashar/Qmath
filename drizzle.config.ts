@@ -1,20 +1,15 @@
 
 import type { Config } from 'drizzle-kit';
 import dotenv from 'dotenv';
-import path from 'path';
-dotenv.config({ path: '.env.local', override: true });
+dotenv.config({ path: '.env.local', override: true, quiet: true });
 
-// For sqlite, use absolute path
-const dbUrl = process.env.DATABASE_URL || 'file:./qmath.db';
-const relativePath = dbUrl.replace('file:', '').replace('./', '');
-const url = path.resolve(process.cwd(), relativePath);
-console.log('Resolved DB URL:', url);
+const url = process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? 'file:qmath.db';
 
 export default {
     schema: ['./db/schema.ts', './db/dashboard-schema.ts', './db/content-schema.ts'],
     out: './db/migrations',
     dialect: 'sqlite',
     dbCredentials: {
-        url: url,
+        url,
     },
 } satisfies Config;

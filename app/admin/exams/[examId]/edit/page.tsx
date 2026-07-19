@@ -6,6 +6,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { Upload, FileText, Calendar, Tag, CheckCircle, AlertCircle, Loader2, Save, X, Trash2, ExternalLink } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
+import { upload } from '@vercel/blob/client';
+
+const MAX_PDF_BYTES = 50 * 1024 * 1024;
 
 export default function EditExamPage() {
     const { data: session, status } = useSession();
@@ -84,25 +87,38 @@ export default function EditExamPage() {
         setMessage(null);
 
         try {
-            const formPayload = new FormData();
-            formPayload.append('courseCode', formData.courseCode.toUpperCase());
-            formPayload.append('courseName', formData.courseName);
-            formPayload.append('examDate', formData.examDate);
-            formPayload.append('examType', formData.examType);
+            const id = Array.isArray(examId) ? examId[0] : examId;
+            if (!id) throw new Error('Invalid exam identifier');
+            const uploadPdf = async (file: File, kind: 'exam' | 'solution') => {
+                if (file.type !== 'application/pdf') throw new Error('Only PDF files can be uploaded');
+                if (file.size <= 0 || file.size > MAX_PDF_BYTES) throw new Error('PDF files must be 50MB or smaller');
+                const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-100);
+                return upload(`exams/${id}/${kind}-${safeName}`, file, {
+                    access: 'private',
+                    contentType: 'application/pdf',
+                    handleUploadUrl: '/api/admin/exams/blob-upload',
+                    clientPayload: JSON.stringify({ examId: id, kind }),
+                    multipart: file.size >= 5 * 1024 * 1024,
+                });
+            };
 
-            if (examFile) {
-                formPayload.append('examFile', examFile);
-            }
-
-            if (removeSolution) {
-                formPayload.append('removeSolution', 'true');
-            } else if (solutionFile) {
-                formPayload.append('solutionFile', solutionFile);
-            }
+            const [uploadedExam, uploadedSolution] = await Promise.all([
+                examFile ? uploadPdf(examFile, 'exam') : null,
+                solutionFile && !removeSolution ? uploadPdf(solutionFile, 'solution') : null,
+            ]);
 
             const response = await fetch(`/api/admin/exams/${examId}`, {
                 method: 'PUT',
-                body: formPayload,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    courseCode: formData.courseCode.toUpperCase(),
+                    courseName: formData.courseName,
+                    examDate: formData.examDate,
+                    examType: formData.examType,
+                    removeSolution,
+                    ...(uploadedExam ? { examBlobUrl: uploadedExam.url } : {}),
+                    ...(uploadedSolution ? { solutionBlobUrl: uploadedSolution.url } : {}),
+                }),
             });
 
             if (response.ok) {
@@ -114,11 +130,11 @@ export default function EditExamPage() {
                 setRemoveSolution(false);
             } else {
                 const data = await response.json();
-                setMessage({ type: 'error', text: data.error || 'Update failed' });
+                setMessage({ type: 'error', text: data.detail || data.error || 'Update failed' });
             }
         } catch (error) {
             console.error('Update error:', error);
-            setMessage({ type: 'error', text: 'An error occurred during update' });
+            setMessage({ type: 'error', text: error instanceof Error ? error.message : 'An error occurred during update' });
         } finally {
             setSubmitting(false);
         }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import type Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI, SchemaType, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { auth } from '@/auth';
 import {
@@ -17,14 +17,36 @@ import { db } from '@/db/drizzle';
 import { questions, topics } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { logAIRequest } from '@/lib/ai-logger';
+import { evaluateSafeExpression } from '@/lib/math/safe-expression';
+import { z } from 'zod';
+import { parseStrictJson, problem, requireSameOrigin } from '@/lib/security/request';
+import { requireCourseViewer } from '@/lib/auth';
+import {
+    anthropicModel,
+    createAnthropicClient,
+    isAnthropicConfigured,
+} from '@/lib/ai/anthropic-client';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropic = createAnthropicClient();
 const genAI = process.env.GOOGLE_GENERATIVE_AI_API_KEY 
     ? new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY)
     : null;
 
 const MESSAGE_MAX_CHARS = 2000;
 const HISTORY_MAX_MESSAGES = 20;
+const ALLOWED_ANTHROPIC_MODELS = new Set([
+    'claude-sonnet-4-6',
+    'claude-haiku-4-5-20251001',
+    'claude-3-5-sonnet-20241022',
+]);
+const ALLOWED_GOOGLE_MODELS = new Set([
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-2.5-pro',
+    'gemini-3-flash-preview',
+    'gemini-3.1-flash-lite-preview',
+    'gemini-3.1-pro-preview',
+]);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,6 +84,42 @@ interface StudentContext {
     conversationHistory?: ChatMessage[];
 }
 
+const chatRequestSchema = z.object({
+    message: z.string().trim().min(1).max(MESSAGE_MAX_CHARS),
+    provider: z.enum(['anthropic', 'google', 'ollama']).default('anthropic'),
+    model: z.string().regex(/^[a-zA-Z0-9._:-]{1,100}$/).optional(),
+    context: z.object({
+        currentPage: z.string().max(200),
+        mode: z.enum(['explore', 'guided']).optional(),
+        questionId: z.string().uuid().optional(),
+        question: z.object({
+            id: z.string().max(100),
+            content: z.string().max(5000),
+            topic: z.string().max(200),
+            difficulty: z.number().int().min(1).max(5),
+        }).strict().optional(),
+        attempts: z.object({
+            count: z.number().int().min(0).max(1000),
+            lastAnswer: z.string().max(1000).optional(),
+            timeSpent: z.number().min(0).max(24 * 60 * 60),
+        }).strict().optional(),
+        student: z.object({
+            masteryLevel: z.number().min(0).max(1),
+            recentPerformance: z.string().max(500),
+        }).strict(),
+        conversationHistory: z.array(z.object({
+            role: z.enum(['user', 'assistant']),
+            content: z.string().max(MESSAGE_MAX_CHARS),
+        }).strict()).max(HISTORY_MAX_MESSAGES).optional(),
+        uiState: z.object({
+            activeWidget: z.string().max(100).optional(),
+            currentInputValue: z.string().max(1000).optional(),
+            isVisible: z.boolean(),
+        }).strict().optional(),
+        recentConcepts: z.array(z.string().max(100)).max(30).optional(),
+    }).strict(),
+}).strict();
+
 // ─── Server-side guided-question lookup ───────────────────────────────────────
 //
 // For secure guided tutoring, the DB is the source of truth for the question
@@ -75,6 +133,8 @@ async function fetchQuestionContextById(questionId: string): Promise<NonNullable
             content: questions.contentMarkdown,
             difficulty: questions.difficultyTier,
             correctAnswer: questions.correctAnswer,
+            isPublished: questions.isPublished,
+            courseId: topics.courseId,
             topicTitle: topics.title,
             topicTitleSv: topics.titleSv,
         })
@@ -84,7 +144,9 @@ async function fetchQuestionContextById(questionId: string): Promise<NonNullable
         .limit(1);
 
     const question = row[0];
-    if (!question) return null;
+    if (!question?.courseId) return null;
+    const viewer = await requireCourseViewer(question.courseId);
+    if (!question.isPublished && viewer.role === 'student') return null;
 
     return {
         id: question.id,
@@ -119,12 +181,11 @@ function sanitizeMathExpression(expr: string): string {
 
 async function validateMath(studentExpr: string, expectedExpr: string): Promise<boolean> {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const math = require('mathjs');
         const scope = { x: Math.PI / 7, n: 5, t: 1.2 };
-        const sv = math.evaluate(studentExpr.replace(/\^/g, '**'), scope);
-        const ev = math.evaluate(expectedExpr.replace(/\^/g, '**'), scope);
-        return Math.abs(sv - ev) < 1e-6;
+        const sv = evaluateSafeExpression(studentExpr, scope);
+        const ev = evaluateSafeExpression(expectedExpr, scope);
+        return typeof sv === 'number' && typeof ev === 'number' && Number.isFinite(sv) && Number.isFinite(ev)
+            && Math.abs(sv - ev) < 1e-6;
     } catch {
         return false;
     }
@@ -174,7 +235,7 @@ async function handleAnthropic(
     ];
 
     let response = await anthropic.messages.create({
-        model,
+        model: anthropicModel(model),
         max_tokens: 2000,
         system: systemWithCache,
         tools,
@@ -249,7 +310,7 @@ async function handleAnthropic(
         messages.push({ role: 'user', content: toolResults });
 
         response = await anthropic.messages.create({
-            model,
+            model: anthropicModel(model),
             max_tokens: 1500,
             system: systemWithCache,
             tools,
@@ -637,16 +698,14 @@ async function handleGemini(
 export async function POST(req: NextRequest) {
     // 1. Auth check
     const session = await auth();
-    const referer = req.headers.get('referer') || '';
-    const isTestPanel = referer.includes('/test-ai-panel') || process.env.NODE_ENV === 'development';
-    
-    if (!session?.user && !isTestPanel) {
+    if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const csrfFailure = requireSameOrigin(req);
+    if (csrfFailure) return csrfFailure;
 
     // 1b. Rate limit check
-    const rateLimitKey = session?.user?.id ?? req.headers.get('x-forwarded-for') ?? 'anonymous';
-    const { allowed, resetAt } = checkRateLimit(rateLimitKey);
+    const { allowed, resetAt } = await checkRateLimit(session.user.id, 'ai');
     if (!allowed) {
         return NextResponse.json(
             { error: 'Rate limit exceeded', retryAfter: Math.ceil((resetAt - Date.now()) / 1000) },
@@ -658,17 +717,17 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Parse body
-    let body: { message: string; context: StudentContext; provider?: string; model?: string };
-    try {
-        body = await req.json();
-    } catch {
-        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const parsed = await parseStrictJson(req, chatRequestSchema);
+    if (!parsed.success) return parsed.response;
+    const { message: rawMessage, context, provider, model } = parsed.data;
+    if (provider === 'anthropic' && model && !ALLOWED_ANTHROPIC_MODELS.has(model)) {
+        return problem(400, 'unsupported_model');
     }
-
-    const { message: rawMessage, context, provider = 'anthropic', model } = body;
-
-    if (!rawMessage || typeof rawMessage !== 'string') {
-        return NextResponse.json({ error: 'Missing or invalid message' }, { status: 400 });
+    if (provider === 'google' && model && !ALLOWED_GOOGLE_MODELS.has(model)) {
+        return problem(400, 'unsupported_model');
+    }
+    if (provider === 'ollama' && process.env.NODE_ENV === 'production' && !process.env.OLLAMA_BASE_URL) {
+        return problem(400, 'provider_unavailable');
     }
 
     // ── Pre-process: clean the user input before sending to the AI ────────────
@@ -733,9 +792,9 @@ export async function POST(req: NextRequest) {
         }
 
         // Default: Anthropic
-        if (!process.env.ANTHROPIC_API_KEY) {
+        if (!isAnthropicConfigured()) {
             return NextResponse.json(
-                { error: 'Anthropic API key not configured', details: 'Add ANTHROPIC_API_KEY to .env.local' },
+                { error: 'Anthropic provider not configured' },
                 { status: 503 },
             );
         }
@@ -796,7 +855,10 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json(
-            { error: 'Internal server error', details: error.message },
+            {
+                error: 'Internal server error',
+                ...(process.env.NODE_ENV === 'production' ? {} : { details: error.message }),
+            },
             { status: 500 },
         );
     }

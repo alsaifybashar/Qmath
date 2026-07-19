@@ -14,7 +14,8 @@
  * If the Ollama server itself is unreachable the error is thrown immediately.
  */
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434';
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL
+    ?? (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:11434');
 
 // Fallback chain: most-capable first, smallest last.
 const OLLAMA_MODELS: string[] = process.env.OLLAMA_MODELS
@@ -126,6 +127,9 @@ async function callOllamaModel(
  * Returns the assistant's reply text, or throws if all models fail.
  */
 export async function callOllama(options: OllamaCallOptions): Promise<string> {
+    if (!OLLAMA_BASE_URL) {
+        throw new Error('Ollama is disabled in production unless OLLAMA_BASE_URL is explicitly configured.');
+    }
     // Specific model requested — bypass the fallback chain.
     if (options.model) {
         return callOllamaModel(options.model, options);

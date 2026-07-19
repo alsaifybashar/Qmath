@@ -1,5 +1,5 @@
 import { JSXTemplateDef } from './types';
-import { makeJSFunction, factorial, BOARD_BASE_OPTS, C } from '../mathUtils';
+import { makeJSFunction, makeJSFunction2D, makeJSFunctionForSymbols, factorial, BOARD_BASE_OPTS, C } from '../mathUtils';
 
 export const analysisTemplates: JSXTemplateDef[] = [
     // ── 20. Differential equations — slope field ──────────────────────────────
@@ -12,15 +12,11 @@ export const analysisTemplates: JSXTemplateDef[] = [
         defaultConfig: { expression: 'y - x', x0: -2, y0: 0 },
         init(JXG, boardId, cfg) {
             const { expression = 'y - x', x0 = -2, y0 = 0 } = cfg;
-            let rhs: (x: number, y: number) => number;
-            try {
-                const js = expression.replace(/\^/g, '**');
-                rhs = new Function('x', 'y', `
-                    "use strict";
-                    const {sin,cos,exp,log,sqrt,abs,pow,PI,E} = Math;
-                    try { return +(${js}); } catch(e) { return 0; }
-                `) as (x: number, y: number) => number;
-            } catch { rhs = (x, y) => y - x; }
+            const parsedRhs = makeJSFunction2D(expression);
+            const rhs = (x: number, y: number) => {
+                const value = parsedRhs(x, y);
+                return Number.isFinite(value) ? value : y - x;
+            };
             const board = JXG.JSXGraph.initBoard(boardId, {
                 boundingbox: [-4.5, 4.5, 4.5, -4.5], axis: true, ...BOARD_BASE_OPTS,
             });
@@ -328,15 +324,11 @@ export const analysisTemplates: JSXTemplateDef[] = [
                 });
             }
             // Polar curve r(θ)
-            let rFn: (t: number) => number;
-            try {
-                const js = expression.replace(/\^/g, '**');
-                rFn = new Function('t', `
-                    "use strict";
-                    const {sin,cos,tan,exp,log,sqrt,abs,PI,E,pow} = Math;
-                    try { return +(${js}); } catch(e) { return 0; }
-                `) as (t: number) => number;
-            } catch { rFn = (t) => t / (2 * Math.PI); }
+            const parsedRadius = makeJSFunctionForSymbols(expression, ['t']);
+            const rFn = (t: number) => {
+                const value = parsedRadius(t);
+                return Number.isFinite(value) ? value : t / (2 * Math.PI);
+            };
             board.create('curve', [
                 (t: number) => rFn(t) * Math.cos(t),
                 (t: number) => rFn(t) * Math.sin(t),

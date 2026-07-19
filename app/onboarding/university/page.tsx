@@ -1,122 +1,273 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Building2, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, ArrowLeft, Building2, GraduationCap, Search, ChevronDown, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect, useTransition } from 'react';
+import { getUniversities } from '@/app/actions/courses';
+import { saveOnboardingProfile } from '@/app/actions/user';
 
-const universities = [
-    { id: 'kth', name: 'KTH Royal Institute of Technology', location: 'Stockholm', students: '12,000+' },
-    { id: 'chalmers', name: 'Chalmers University of Technology', location: 'Gothenburg', students: '10,000+' },
-    { id: 'lund', name: 'Lund University - LTH', location: 'Lund', students: '8,000+' },
-    { id: 'liu', name: 'Linköping University', location: 'Linköping', students: '6,000+' },
-    { id: 'uu', name: 'Uppsala University', location: 'Uppsala', students: '7,000+' },
-    { id: 'umu', name: 'Umeå University', location: 'Umeå', students: '4,000+' },
-    { id: 'other', name: 'Other University', location: 'Various', students: '' }
+interface University {
+    id: string;
+    name: string;
+    country: string | null;
+}
+
+const PROGRAMS = [
+    'Datateknik',
+    'Design och produktutveckling',
+    'Elektroteknik',
+    'Elektronik och systemdesign',
+    'Energi – miljö – management',
+    'Industriell ekonomi',
+    'Informationsteknologi',
+    'Kemiteknik',
+    'Maskinteknik',
+    'Medicinsk teknik',
+    'Medieteknik och AI',
+    'Mjukvaruteknik',
+    'Teknisk biologi',
+    'Teknisk fysik',
+    'Teknisk matematik',
+    'Samhällsbyggnad',
+    'Civilingenjör (annat)',
+    'Högskoleingenjör',
+    'Annan utbildning',
 ];
 
 export default function OnboardingUniversity() {
     const router = useRouter();
-    const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [universities, setUniversities] = useState<University[]>([]);
+    const [loadingUnis, setLoadingUnis] = useState(true);
+    const [search, setSearch] = useState('');
+    const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
+    const [program, setProgram] = useState('');
+    const [customProgram, setCustomProgram] = useState('');
+    const [studyYear, setStudyYear] = useState<number | null>(null);
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState<string | null>(null);
 
-    const filteredUniversities = universities.filter(uni =>
-        uni.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        uni.location.toLowerCase().includes(searchQuery.toLowerCase())
+    useEffect(() => {
+        getUniversities().then((res) => {
+            if (res.data) setUniversities(res.data);
+            setLoadingUnis(false);
+        });
+    }, []);
+
+    const filteredUniversities = universities.filter((u) =>
+        u.name.toLowerCase().includes(search.toLowerCase())
     );
 
+    const effectiveProgram = program === 'Annan utbildning' ? customProgram : program;
+    const canContinue = selectedUniversity && effectiveProgram.trim().length >= 2 && studyYear !== null;
+
+    const handleContinue = () => {
+        if (!canContinue || !selectedUniversity || !studyYear) return;
+        setError(null);
+
+        startTransition(async () => {
+            const res = await saveOnboardingProfile({
+                universityId: selectedUniversity.id,
+                universityProgram: effectiveProgram,
+                studyYear,
+            });
+
+            if (res?.error) {
+                setError(res.error);
+                return;
+            }
+
+            router.push('/onboarding/courses');
+        });
+    };
+
     return (
-        <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-            <div className="fixed inset-0 bg-gradient-to-br from-blue-900/20 via-black to-purple-900/20"></div>
-            <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear_gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 max-w-2xl w-full"
+                transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                className="w-full max-w-lg"
             >
-                <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 md:p-12">
-                    {/* Header */}
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                            <Building2 className="w-6 h-6 text-blue-400" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-bold">Select your university</h1>
-                            <p className="text-zinc-400">We'll customize content for your curriculum</p>
-                        </div>
-                    </div>
-
-                    {/* Search */}
-                    <div className="relative mb-6">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-                        <input
-                            type="text"
-                            placeholder="Search universities..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                {/* Progress bar */}
+                <div className="flex gap-1.5 mb-8">
+                    {[0, 1, 2, 3].map((i) => (
+                        <div
+                            key={i}
+                            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= 1 ? 'bg-indigo-500' : 'bg-zinc-200 dark:bg-zinc-800'}`}
                         />
+                    ))}
+                </div>
+
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
+                    {/* Header */}
+                    <div className="px-6 pt-6 pb-5 border-b border-zinc-100 dark:border-zinc-800">
+                        <div className="flex items-center gap-2.5 mb-3">
+                            <div className="p-1.5 bg-indigo-50 dark:bg-indigo-950 rounded-lg">
+                                <Building2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Step 2 of 4</span>
+                        </div>
+                        <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Your university & program</h1>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">We'll show courses relevant to your curriculum.</p>
                     </div>
 
-                    {/* University Grid */}
-                    <div className="grid gap-3 max-h-[400px] overflow-y-auto mb-8 pr-2">
-                        {filteredUniversities.map((uni) => (
-                            <motion.button
-                                key={uni.id}
-                                whileHover={{ scale: 1.01 }}
-                                whileTap={{ scale: 0.99 }}
-                                onClick={() => setSelectedUniversity(uni.id)}
-                                className={`w-full p-4 rounded-xl border text-left transition-all ${selectedUniversity === uni.id
-                                    ? 'bg-blue-500/10 border-blue-500'
-                                    : 'bg-zinc-800/50 border-zinc-700 hover:border-zinc-600'
-                                    }`}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <div className="font-semibold text-white">{uni.name}</div>
-                                        <div className="text-sm text-zinc-400">{uni.location}</div>
-                                    </div>
-                                    {uni.students && (
-                                        <div className="text-xs text-zinc-500 bg-zinc-700/50 px-2 py-1 rounded">
-                                            {uni.students} students
+                    <div className="p-6 space-y-6">
+                        {/* University */}
+                        <div>
+                            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+                                University
+                            </label>
+                            <div className="relative mb-2">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    placeholder="Search universities..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                />
+                            </div>
+
+                            <div className="max-h-[176px] overflow-y-auto rounded-xl border border-zinc-100 dark:border-zinc-800 divide-y divide-zinc-50 dark:divide-zinc-800">
+                                {loadingUnis ? (
+                                    <div className="py-6 text-center text-sm text-zinc-400">Loading universities…</div>
+                                ) : filteredUniversities.length === 0 ? (
+                                    <div className="py-6 text-center text-sm text-zinc-400">No universities found</div>
+                                ) : (
+                                    filteredUniversities.map((uni) => {
+                                        const active = selectedUniversity?.id === uni.id;
+                                        return (
+                                            <button
+                                                key={uni.id}
+                                                type="button"
+                                                onClick={() => setSelectedUniversity(uni)}
+                                                className={`w-full flex items-center justify-between text-left px-3 py-2.5 text-sm transition-colors ${active
+                                                    ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold'
+                                                    : 'hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                                                }`}
+                                            >
+                                                <span>{uni.name}</span>
+                                                {active && <Check className="w-4 h-4 shrink-0" />}
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
+
+                            <AnimatePresence>
+                                {selectedUniversity && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="mt-2 flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                                            <Check className="w-3.5 h-3.5" />
+                                            {selectedUniversity.name}
                                         </div>
-                                    )}
-                                </div>
-                            </motion.button>
-                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Program */}
+                        <div>
+                            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+                                <GraduationCap className="inline w-4 h-4 mr-1.5 opacity-50 -mt-0.5" />
+                                Program
+                            </label>
+                            <div className="relative">
+                                <select
+                                    value={program}
+                                    onChange={(e) => setProgram(e.target.value)}
+                                    className="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="">Select your program</option>
+                                    {PROGRAMS.map((p) => (
+                                        <option key={p} value={p}>{p}</option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                            </div>
+                            <AnimatePresence>
+                                {program === 'Annan utbildning' && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <input
+                                            type="text"
+                                            placeholder="Enter your program name"
+                                            value={customProgram}
+                                            onChange={(e) => setCustomProgram(e.target.value)}
+                                            className="mt-2 w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Year of study */}
+                        <div>
+                            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+                                Year of study
+                            </label>
+                            <div className="flex gap-2">
+                                {[1, 2, 3, 4, 5].map((year) => (
+                                    <button
+                                        key={year}
+                                        type="button"
+                                        onClick={() => setStudyYear(year)}
+                                        className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 ${studyYear === year
+                                            ? 'bg-indigo-600 text-white shadow-sm'
+                                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                                        }`}
+                                    >
+                                        {year}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <AnimatePresence>
+                            {error && (
+                                <motion.p
+                                    initial={{ opacity: 0, y: -4 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -4 }}
+                                    className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg"
+                                >
+                                    {error}
+                                </motion.p>
+                            )}
+                        </AnimatePresence>
                     </div>
 
-                    {/* Navigation */}
-                    <div className="flex items-center justify-between">
+                    {/* Footer nav */}
+                    <div className="px-6 pb-6 flex items-center justify-between">
                         <button
                             onClick={() => router.push('/onboarding/welcome')}
-                            className="flex items-center gap-2 px-6 py-3 text-zinc-400 hover:text-white transition-colors"
+                            className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-colors font-medium"
                         >
-                            <ArrowLeft className="w-5 h-5" />
+                            <ArrowLeft className="w-4 h-4" />
                             Back
                         </button>
                         <button
-                            onClick={() => selectedUniversity && router.push('/onboarding/program')}
-                            disabled={!selectedUniversity}
-                            className={`flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all ${selectedUniversity
-                                ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                                }`}
+                            onClick={handleContinue}
+                            disabled={!canContinue || isPending}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 ${canContinue && !isPending
+                                ? 'bg-indigo-600 hover:bg-indigo-500 active:scale-[0.97] text-white shadow-sm'
+                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed'
+                            }`}
                         >
-                            Continue
-                            <ArrowRight className="w-5 h-5" />
+                            {isPending ? 'Saving…' : 'Continue'}
+                            <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>
-                </div>
-
-                {/* Progress */}
-                <div className="flex justify-center gap-2 mt-8">
-                    <div className="w-8 h-1 rounded-full bg-blue-500"></div>
-                    <div className="w-8 h-1 rounded-full bg-blue-500"></div>
-                    <div className="w-8 h-1 rounded-full bg-zinc-700"></div>
-                    <div className="w-8 h-1 rounded-full bg-zinc-700"></div>
-                    <div className="w-8 h-1 rounded-full bg-zinc-700"></div>
                 </div>
             </motion.div>
         </div>

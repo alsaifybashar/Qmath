@@ -25,7 +25,7 @@ export function InteractiveUnitCircle({
 
         const startX = Math.cos(initRad);
         const startY = Math.sin(initRad);
-        const p = board.create('glider', [startX, startY, circle], { name: 'P', size: 5, fillColor: '#3b82f6', strokeColor: '#2563eb' });
+        const p = board.create('glider', [startX, startY, circle], { name: 'P', size: 5, fillColor: '#3585a3', strokeColor: '#24718e' });
 
         // Line from origin to P
         board.create('segment', [origin, p], { strokeColor: '#94a3b8', strokeWidth: 2 });
@@ -33,13 +33,13 @@ export function InteractiveUnitCircle({
         // Triangle for sine/cosine components
         const pX = board.create('point', [() => p.X(), 0], { visible: false });
         // Cosine segment (x-axis)
-        board.create('segment', [origin, pX], { strokeColor: '#f59e0b', strokeWidth: 3 });
+        board.create('segment', [origin, pX], { strokeColor: '#dfa81b', strokeWidth: 3 });
         // Sine segment (vertical)
         const sinSeg = board.create('segment', [pX, p], { strokeColor: '#10b981', strokeWidth: 3 });
 
         // Angle arc
         const pRef = board.create('point', [1, 0], { visible: false });
-        const arc = board.create('angle', [pRef, origin, p], { radius: 0.3, fillColor: '#3b82f6', fillOpacity: 0.2 });
+        const arc = board.create('angle', [pRef, origin, p], { radius: 0.3, fillColor: '#3585a3', fillOpacity: 0.2 });
 
         // Unwrapped Sine Wave logic
         // We will map the angle to the x-axis starting from x = 1.5

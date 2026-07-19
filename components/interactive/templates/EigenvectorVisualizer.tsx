@@ -25,8 +25,8 @@ export function EigenvectorVisualizer({
         const A = [[2, 1], [1, 2]];
 
         const initRad = (initialVectorAngleDeg * Math.PI) / 180;
-        const ptX = board.create('point', [Math.cos(initRad), Math.sin(initRad)], { name: 'x', size: 5, fillColor: '#3b82f6', strokeColor: '#2563eb' });
-        board.create('arrow', [origin, ptX], { strokeColor: '#3b82f6', strokeWidth: 3 });
+        const ptX = board.create('point', [Math.cos(initRad), Math.sin(initRad)], { name: 'x', size: 5, fillColor: '#3585a3', strokeColor: '#24718e' });
+        board.create('arrow', [origin, ptX], { strokeColor: '#3585a3', strokeWidth: 3 });
 
         // Transformed vector Ax
         const ptAx = board.create('point', [
@@ -62,7 +62,7 @@ export function EigenvectorVisualizer({
             } else {
                 setIsEigen(false);
                 setFactor('');
-                ptX.setAttribute({ fillColor: '#3b82f6', strokeColor: '#2563eb' });
+                ptX.setAttribute({ fillColor: '#3585a3', strokeColor: '#24718e' });
                 onStateChangeRef.current?.({
                     vx: parseFloat(ptX.X().toFixed(2)),
                     vy: parseFloat(ptX.Y().toFixed(2)),

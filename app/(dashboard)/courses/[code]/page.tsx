@@ -5,6 +5,10 @@ import { getCourseExams } from '@/app/actions/course-exams';
 import CourseHub from '@/components/courses/CourseHub';
 import { notFound } from 'next/navigation';
 
+function getCourseError(result: Awaited<ReturnType<typeof getCourseByCode>>) {
+    return 'error' in result ? result.error : undefined;
+}
+
 export default async function CoursePage({ params }: { params: Promise<{ code: string }> }) {
     const { code } = await params;
 
@@ -22,7 +26,7 @@ export default async function CoursePage({ params }: { params: Promise<{ code: s
 
     // 3. Also try uppercased code directly (e.g. URL is /courses/TATA24)
     if (!courseResult.data && 'error' in courseResult) {
-        console.log(`[CoursePage] getCourseByCode("${code}") returned error:`, (courseResult as any).error);
+        console.log(`[CoursePage] getCourseByCode("${code}") returned error:`, getCourseError(courseResult));
         // Try the original code as-is (in case toUpperCase isn't matching)
         courseResult = await getCourseByCode(code.toUpperCase());
     }
