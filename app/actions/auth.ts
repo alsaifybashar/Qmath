@@ -45,9 +45,11 @@ export async function register(prevState: unknown, formData: FormData) {
     });
 
     if (!validateFields.success) {
+        const fieldErrors = validateFields.error.flatten().fieldErrors;
+        const firstError = Object.values(fieldErrors).flat().find(Boolean);
         return {
-            errors: validateFields.error.flatten().fieldErrors,
-            message: 'Missing Fields. Failed to Register.',
+            errors: fieldErrors,
+            message: typeof firstError === 'string' ? firstError : 'Missing Fields. Failed to Register.',
         };
     }
 

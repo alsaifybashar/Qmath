@@ -30,8 +30,8 @@ export default function RegisterPage() {
             setError('Passwords do not match.');
             return;
         }
-        if (formData.password.length < 6) {
-            setError('Password must be at least 6 characters.');
+        if (formData.password.length < 15) {
+            setError('Password must be at least 15 characters.');
             return;
         }
 
@@ -166,9 +166,9 @@ export default function RegisterPage() {
                                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
-                                    placeholder="Min. 6 characters"
+                                    placeholder="Min. 15 characters"
                                     required
-                                    minLength={6}
+                                    minLength={15}
                                     autoComplete="new-password"
                                     className="w-full pl-10 pr-10 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"
                                     value={formData.password}
